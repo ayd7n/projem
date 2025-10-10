@@ -1,0 +1,109 @@
+Parfüm Üretim ERP Sistemi – Detaylı Özellik Özeti 
+Bu sistem, parfüm üretim sürecinin başından sonuna kadar — tedarikçiden gelen malzemeden 
+müşteriye teslimata — her aşamayı tek bir çatı altında yönetebilmek için özel olarak tasarlanmıştır. 
+Aşağıda, sistemin işleyişini ve sunduğu temel yetenekleri bulabilirsin. 
+Siparişten Teslimata Süreç Akışı 
+1. Sipariş Oluşumu: 
+Müşteri, sisteme giriş yaptıktan sonra sadece stokta mevcut olan ürünleri görebilir ve sipariş 
+oluşturabilir. 
+2. Stokta Ürün Mevcutsa: 
+Siparişte yer alan ürünün stok miktarı yeterliyse, sistem otomatik olarak stoktan çıkış yapar 
+ve ürün müşteriye sevk edilir. Bu süreçte, sevk işlemini gerçekleştiren personel, sisteme 
+kimlik bilgisiyle giriş yaptığı için her sevk işlemi kişi bazında kayıt altına alınır. 
+3. Stok Yetersizse veya Kritik Seviyenin Altındaysa: 
+• Ürünün stok miktarı kritik stok seviyesinin altına düşerse, sistem otomatik olarak 
+üretim yapılması gerektiğini bildirir. 
+• Eğer ürünün tamamı stokta yoksa, ilgili ürün için montaj iş emri açılır. 
+4. Ürün Üretimi İçin Gerekli Esans Yoksa: 
+• Her ürün, bir esans + ambalaj malzemelerinden oluşur. 
+• Eğer ürüne ait esans stokta yoksa, sistem önce esans üretimini tetikler: ilgili esans 
+için esans iş emri oluşturulur. 
+• Esans üretildikten ve stok miktarı güncellendikten sonra, ürün montajı için gerekli 
+şartlar sağlanmış olur ve montaj iş emri ilerletilebilir. 
+Ürün Yönetimi ve Takip Detayları 
+Her ürün sisteme aşağıdaki bilgilerle tanımlanır: 
+• Ürün adı ve kodu 
+• Satış fiyatı 
+• Birim (örneğin: adet) 
+• Depo ve raf bilgisi 
+• Stok miktarı 
+• Kritik stok seviyesi (kullanıcı tanımlı) 
+• Ürün fotoğrafı 
+• Not alanı 
+Kritik Stok Seviyesi Uyarısı 
+• Ürünün stok miktarı, tanımlanan kritik stok seviyesinin altına düştüğünde, sistem otomatik 
+uyarı verir. 
+• Bu uyarı sayesinde üretim planlaması zamanında yapılır ve müşteri siparişlerinde gecikme 
+yaşanmaz. 
+Otomatik Stok Güncellemesi 
+• Tüm stok hareketleri (giriş, çıkış, fire, sayım farkı, transfer, üretim kullanımı vb.) sisteme 
+kaydedildikten hemen sonra, ilgili ürünün, esansın veya malzemenin stok miktarı anında ve 
+otomatik olarak güncellenir. 
+• Bu sayede stok bilgisi her zaman doğru ve güncel kalır. 
+Malzeme Yönetimi – Esnek ve Detaylı 
+Sistemde “malzeme” ifadesiyle kastedilen: 
+• Şişe 
+• Kutu 
+• Etiket 
+• Pompa 
+• İç ambalaj 
+• Numune şişesi 
+gibi üretimde kullanılan tüm fiziksel bileşenlerdir. 
+Malzeme Türü Esnekliği 
+• Malzeme türü alanı liste tabanlı ve tamamen yönetilebilir bir yapıdadır. 
+• Yeni bir malzeme türü (örneğin “kapak” veya “karton ara bölme”) eklendiğinde, sistem 
+yöneticisi bu türü kolayca tanımlayabilir. 
+• Var olan türler düzenlenebilir veya devre dışı bırakılabilir. 
+• Bu esnek yapı sayesinde sistem, işletmenin üretim yapısındaki değişikliklere kolayca uyum 
+sağlar. 
+Malzeme Takip Özellikleri 
+• Her malzeme için depo ve raf bilgisi tanımlanabilir. 
+• Kritik stok seviyesi belirlenebilir; bu seviyenin altına düşülürse uyarı verilir. 
+• Sistem, son 12 aya ait ortalama aylık tüketim miktarını otomatik hesaplar. 
+• Her malzemenin son tedarikçisi de giriş hareketlerinden otomatik olarak çekilir. 
+Çerçeve Sözleşmeleri 
+• Tedarikçilerle yapılan çerçeve sözleşmeler, sistemde ayrı bir modülle yönetilir. 
+• Sözleşmede aşağıdaki bilgiler kaydedilir: 
+• Tedarikçi bilgisi 
+• Malzeme kodu ve adı 
+• Birim fiyat ve para birimi 
+• Sözleşme türü (peşin ödemeli adet anlaşması, süreli birim fiyatlı vb.) 
+• Toplam anlaşmalı miktar ve kalan miktar 
+• Başlangıç ve bitiş tarihi 
+• Peşin ödeme bilgisi (varsa) 
+• Durum (aktif/tamamlandı/iptal edildi) 
+• Açıklama ve sözleşme numarası 
+• Sözleşmeden yapılan her malzeme kabulü, kalan anlaşmalı miktarı otomatik olarak günceller. 
+• Bu sayede tedarikçi performansı ve sözleşme takibi kolayca yapılabilir. 
+İş Emirleri ve Üretim Yönetimi 
+Esans İş Emirleri 
+• Esans üretimi için ayrı iş emirleri oluşturulur. 
+• Her iş emrinde: esans kodu, tank bilgisi, planlanan miktar, başlangıç ve bitiş tarihi, demlenme 
+süresi gibi detaylar yer alır. 
+• Üretim sırasında oluşabilecek eksiklikler (fire, teknik arıza, eksik malzeme vb.) kayıt altına 
+alınır. 
+Montaj İş Emirleri 
+• Ürün montajı için ayrı iş emirleri açılır. 
+• Her montaj iş emrinde: ürün kodu, planlanan miktar, iş merkezi, başlangıç ve bitiş tarihi gibi 
+bilgiler bulunur. 
+• Montaj sırasında eksiklik oluşursa, bu da ayrı bir kayıt olarak sisteme işlenir. 
+Ürün Ağacı 
+• Her ürünün bileşenleri (esans + ambalaj malzemeleri) “ürün ağacı” ile tanımlanır. 
+• Bu yapı sayesinde üretim sırasında gerekli tüm malzemeler otomatik olarak belirlenir. 
+Stok Hareketleri – Tam Otomasyon 
+• Tüm stok hareketleri (hammadde alımı, üretim kullanımı, müşteri teslimatı, fire, sayım farkı, 
+transfer vb.) sisteme kaydedilir. 
+• Her hareket sonrası, ilgili ürün/esans/malzemenin stok miktarı anında ve otomatik olarak 
+güncellenir. 
+• Çıkış yapılacak miktar mevcut stoğu aştığında veya kritik stok seviyesinin altına düşürmeyecek 
+şekilde uyarı verilir. 
+• Transfer işlemleri sırasında hem çıkış hem de giriş otomatik olarak oluşturulur. 
+Kalite ve Dokümantasyon 
+• Tedarik edilen malzemeler için giriş kalite kontrolü kayıtları tutulabilir. 
+• Reddedilen miktar ve red nedeni (eksik, kirlenmiş, yanlış malzeme vb.) sisteme işlenebilir. 
+• Her stok hareketi, ilgili belge numarası (irsaliye, iş emri, sipariş no vb.) ile ilişkilendirilir. 
+• Tüm işlemler kim tarafından, ne zaman yapıldığıyla birlikte loglanır. 
+Bu ERP sistemi, parfüm üretim sürecinin karmaşıklığını yönetebilmek için esnek, modüler ve kullanıcı 
+dostu bir yapıyla tasarlanmıştır. Özellikle kritik stok seviyesi takibi, otomatik stok güncellemesi, esnek 
+malzeme türü yönetimi ve siparişten teslimata kadar tam süreç entegrasyonu, işletmenin verimliliğini 
+ve müşteri memnuniyetini doğrudan artırır. 
