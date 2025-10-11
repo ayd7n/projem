@@ -1,5 +1,5 @@
 <?php
-include 'config.php';
+include '../config.php';
 
 header('Content-Type: application/json');
 
@@ -30,6 +30,33 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Ürün bulunamadı.'];
         }
     }
+    elseif ($action == 'get_depo_list') {
+        $query = "SELECT DISTINCT depo_ismi FROM lokasyonlar ORDER BY depo_ismi";
+        $result = $connection->query($query);
+        $depolar = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $depolar[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $depolar];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Depo listesi alınamadı.'];
+        }
+    }
+    elseif ($action == 'get_raf_list') {
+        $depo = $_GET['depo'] ?? '';
+        $query = "SELECT DISTINCT raf FROM lokasyonlar WHERE depo_ismi = ? ORDER BY raf";
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param('s', $depo);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $raflar = [];
+        while ($row = $result->fetch_assoc()) {
+            $raflar[] = $row;
+        }
+        $stmt->close();
+        $response = ['status' => 'success', 'data' => $raflar];
+    }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
@@ -49,7 +76,7 @@ if (isset($_GET['action'])) {
         } else {
             $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssisdisi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf);
+            $stmt->bind_param('ssisdiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf);
 
             if ($stmt->execute()) {
                 $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi.'];
@@ -65,7 +92,7 @@ if (isset($_GET['action'])) {
         } else {
             $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ? WHERE urun_kodu = ?";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssisdisii', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_kodu);
+            $stmt->bind_param('ssisdissi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_kodu);
 
             if ($stmt->execute()) {
                 $response = ['status' => 'success', 'message' => 'Ürün başarıyla güncellendi.'];

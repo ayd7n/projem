@@ -225,11 +225,15 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="form-group">
                                 <label for="depo">Depo</label>
-                                <input type="text" class="form-control" id="depo" name="depo">
+                                <select class="form-control" id="depo" name="depo">
+                                    <option value="">Depo Seçin</option>
+                                </select>
                             </div>
                             <div class="form-group">
                                 <label for="raf">Raf</label>
-                                <input type="text" class="form-control" id="raf" name="raf">
+                                <select class="form-control" id="raf" name="raf">
+                                    <option value="">Önce Depo Seçin</option>
+                                </select>
                             </div>
                             <div class="form-group" style="grid-column: 1 / -1;">
                                 <label for="not_bilgisi">Not Bilgisi</label>
@@ -265,6 +269,63 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
             );
         }
 
+        // Load depo list on page load
+        loadDepoList();
+        
+        // Function to load depo list
+        function loadDepoList() {
+            $.ajax({
+                url: 'api_islemleri/urunler_islemler.php?action=get_depo_list',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var depoSelect = $('#depo');
+                        depoSelect.empty();
+                        depoSelect.append('<option value="">Depo Seçin</option>');
+                        $.each(response.data, function(index, depo) {
+                            depoSelect.append('<option value="' + depo.depo_ismi + '">' + depo.depo_ismi + '</option>');
+                        });
+                    }
+                },
+                error: function() {
+                    console.log('Depo listesi yüklenirken bir hata oluştu.');
+                }
+            });
+        }
+        
+        // When depo is selected, load corresponding raf list
+        $('#depo').on('change', function() {
+            var selectedDepo = $(this).val();
+            if (selectedDepo) {
+                loadRafList(selectedDepo);
+            } else {
+                $('#raf').empty().append('<option value="">Önce Depo Seçin</option>');
+            }
+        });
+        
+        // Function to load raf list based on selected depo
+        function loadRafList(depo) {
+            $.ajax({
+                url: 'api_islemleri/urunler_islemler.php?action=get_raf_list&depo=' + encodeURIComponent(depo),
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var rafSelect = $('#raf');
+                        rafSelect.empty();
+                        rafSelect.append('<option value="">Raf Seçin</option>');
+                        $.each(response.data, function(index, raf) {
+                            rafSelect.append('<option value="' + raf.raf + '">' + raf.raf + '</option>');
+                        });
+                    }
+                },
+                error: function() {
+                    console.log('Raf listesi yüklenirken bir hata oluştu.');
+                }
+            });
+        }
+
         // Open modal for adding a new product
         $('#addProductBtn').on('click', function() {
             $('#productForm')[0].reset();
@@ -278,7 +339,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
         $('.edit-btn').on('click', function() {
             var productId = $(this).data('id');
             $.ajax({
-                url: 'urunler_islemler.php?action=get_product&id=' + productId,
+                url: 'api_islemleri/urunler_islemler.php?action=get_product&id=' + productId,
                 type: 'GET',
                 dataType: 'json',
                 success: function(response) {
@@ -293,8 +354,16 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#birim').val(product.birim);
                         $('#satis_fiyati').val(product.satis_fiyati);
                         $('#kritik_stok_seviyesi').val(product.kritik_stok_seviyesi);
+                        // Set depo and initialize raf list
                         $('#depo').val(product.depo);
-                        $('#raf').val(product.raf);
+
+                        // Manually load raf list for the selected depo
+                        loadRafList(product.depo);
+
+                        // Wait for raf list to load before setting raf value
+                        setTimeout(function() {
+                            $('#raf').val(product.raf);
+                        }, 200);
                         $('#not_bilgisi').val(product.not_bilgisi);
                         $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
                         $('#productModal').modal('show');
@@ -314,7 +383,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
             var formData = $(this).serialize();
             
             $.ajax({
-                url: 'urunler_islemler.php',
+                url: 'api_islemleri/urunler_islemler.php',
                 type: 'POST',
                 data: formData,
                 dataType: 'json',
@@ -341,7 +410,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
             var productId = $(this).data('id');
             if (confirm('Bu ürünü silmek istediğinizden emin misiniz?')) {
                 $.ajax({
-                    url: 'urunler_islemler.php',
+                    url: 'api_islemleri/urunler_islemler.php',
                     type: 'POST',
                     data: {
                         action: 'delete_product',

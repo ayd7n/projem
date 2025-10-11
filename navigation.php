@@ -16,207 +16,517 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scent ERP - Ana Panel</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.0/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg-color-start: #fdfbfb;
-            --bg-color-end: #ebedee;
-            --card-bg-color: rgba(255, 255, 255, 0.85);
-            --accent-color: #2c5d63; /* Deep Teal */
-            --accent-dark: #21464a;
-            --text-color: #2c3e50; /* Dark Slate Blue */
-            --text-light: #7f8c8d; /* Greyish */
-            --shadow-color: rgba(44, 93, 99, 0.1);
-            --shadow-light: rgba(44, 93, 99, 0.05);
-            --border-color: rgba(44, 93, 99, 0.2);
-        }
-
         body {
-            font-family: 'Montserrat', sans-serif;
-            margin: 0;
-            background: linear-gradient(135deg, var(--bg-color-start) 0%, var(--bg-color-end) 100%);
-            color: var(--text-color);
+            font-family: 'Ubuntu', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
         }
-
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 30px;
+        
+        .hero.is-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 20px 40px;
-            background: var(--card-bg-color);
-            border-radius: 20px;
-            box-shadow: 0 10px 30px var(--shadow-color);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            margin-bottom: 40px;
-        }
-
-        .header-title h1 {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.5rem;
-            margin: 0;
-            color: var(--accent-color);
-        }
-
-        .header-user {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-user span {
-            font-weight: 500;
-            font-size: 1.1rem;
-        }
-
-        .logout-btn {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            background: var(--accent-color);
-            color: white;
-            text-decoration: none;
-            border-radius: 10px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-            border-bottom: 2px solid var(--accent-dark);
-        }
-
-        .logout-btn:hover {
-            background: var(--accent-dark);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px var(--shadow-color);
-        }
-
-        .section-title {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2rem;
-            font-weight: 600;
-            text-align: center;
-            margin-bottom: 30px;
-            color: var(--text-color);
-        }
-
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 22px;
-        }
-
-        .nav-card {
-            background: linear-gradient(145deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+        
+        .main-container {
+            background-color: white;
             border-radius: 15px;
-            box-shadow: 0 4px 15px var(--shadow-light), 0 1px 4px var(--shadow-light);
-            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            padding: 2rem;
+            margin-top: -3rem;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .page-title {
+            color: #363636;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .page-subtitle {
+            color: #7a7a7a;
+            margin-bottom: 2rem;
+        }
+        
+        .nav-card {
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            height: 100%;
+            background-color: white;
+            border-radius: 10px;
             overflow: hidden;
-            transition: all 0.35s cubic-bezier(.25,.8,.25,1);
-            backdrop-filter: blur(5px);
+            border: 2px solid #f5f5f5;
         }
-
+        
         .nav-card:hover {
-            transform: translateY(-6px) scale(1.02);
-            box-shadow: 0 10px 25px var(--shadow-color), 0 4px 10px var(--shadow-light);
-            border-color: var(--accent-color);
+            transform: translateY(-8px);
+            box-shadow: 0 12px 25px rgba(0,0,0,0.15);
+            border-color: transparent;
         }
-
-        .nav-link {
+        
+        .nav-card a {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            color: #363636;
+            padding: 1.5rem 1rem;
+            min-height: 140px;
+        }
+        
+        .nav-card .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 15px;
-            padding: 20px;
-            text-decoration: none;
-            color: var(--text-color);
+            justify-content: center;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
         }
-
-        .nav-link i {
-            font-size: 1.6rem;
-            width: 40px;
-            height: 40px;
-            line-height: 40px;
-            text-align: center;
-            border-radius: 50%;
-            color: white;
-            background: linear-gradient(135deg, var(--accent-color), var(--accent-dark));
-            flex-shrink: 0;
-            transition: all 0.35s cubic-bezier(.25,.8,.25,1);
+        
+        .nav-card:hover .icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
         }
-
-        .nav-card:hover .nav-link i {
-            transform: scale(1.15);
-            box-shadow: 0 0 20px rgba(44, 93, 99, 0.4);
-        }
-
-        .nav-link h3 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 1.3rem;
+        
+        .nav-card .card-title {
+            font-size: 0.95rem;
             font-weight: 600;
-            margin: 0;
-            letter-spacing: 0.5px;
+            text-align: center;
+            line-height: 1.3;
+            color: #363636;
         }
-
-        @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                gap: 15px;
-                padding: 20px;
+        
+        .nav-card:hover .card-title {
+            color: #667eea;
+        }
+        
+        /* Kategori renkleri */
+        .category-people .icon-wrapper {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .category-product .icon-wrapper {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+        
+        .category-operation .icon-wrapper {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .category-system .icon-wrapper {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+        }
+        
+        .category-finance .icon-wrapper {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+        
+        .category-special .icon-wrapper {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+        
+        .nav-card .fa {
+            color: white;
+            font-size: 1.8rem;
+        }
+        
+        .category-divider {
+            margin: 2rem 0 1.5rem 0;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid #f5f5f5;
+        }
+        
+        .category-divider .title {
+            color: #667eea;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 0.25rem;
+        }
+        
+        .category-divider .subtitle {
+            color: #7a7a7a;
+            font-size: 0.9rem;
+        }
+        
+        .info-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            padding: 1.5rem;
+            color: white;
+            margin-top: 2rem;
+        }
+        
+        .info-box strong {
+            color: white;
+        }
+        
+        .welcome-badge {
+            background-color: rgba(255,255,255,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logout-btn {
+            background-color: rgba(255,255,255,0.2);
+            border-color: white;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .logout-btn:hover {
+            background-color: white;
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+        
+        @media screen and (max-width: 768px) {
+            .main-container {
+                margin-top: -2rem;
+                padding: 1.5rem 1rem;
+                border-radius: 10px;
             }
-            .header-title h1 {
-                font-size: 2rem;
+            
+            .nav-card a {
+                padding: 1.25rem 0.75rem;
+                min-height: 120px;
             }
-            .container {
-                padding: 20px;
+            
+            .nav-card .icon-wrapper {
+                width: 60px;
+                height: 60px;
+            }
+            
+            .nav-card .fa {
+                font-size: 1.5rem;
+            }
+            
+            .nav-card .card-title {
+                font-size: 0.85rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header class="page-header">
-            <div class="header-title">
-                <h1>Scent ERP</h1>
+    <section class="hero is-primary">
+        <div class="hero-body">
+            <div class="container">
+                <div class="level">
+                    <div class="level-left">
+                        <div class="level-item">
+                            <div>
+                                <h1 class="title has-text-white mb-1">
+                                    <i class="fas fa-spa mr-2"></i>Scent ERP
+                                </h1>
+                                <p class="subtitle is-6 has-text-white-ter">Entegre Yönetim Sistemi</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="level-right">
+                        <div class="level-item">
+                            <div class="welcome-badge">
+                                <span class="icon-text">
+                                    <span class="icon has-text-white">
+                                        <i class="fas fa-user"></i>
+                                    </span>
+                                    <span class="has-text-white"><strong><?php echo $kullanici_adi; ?></strong></span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="level-item">
+                            <a href="logout.php" class="button logout-btn">
+                                <span class="icon"><i class="fas fa-sign-out-alt"></i></span>
+                                <span>Çıkış Yap</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="header-user">
-                <span>Hoş geldiniz, <strong><?php echo $kullanici_adi; ?></strong></span>
-                <a href="logout.php" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Çıkış Yap
-                </a>
-            </div>
-        </header>
-
-        <h2 class="section-title">Yönetim Paneli</h2>
-
-        <div class="nav-grid">
-            <div class="nav-card"><a href="musteriler.php" class="nav-link"><i class="fas fa-users"></i><h3>Müşteriler</h3></a></div>
-            <div class="nav-card"><a href="personeller.php" class="nav-link"><i class="fas fa-id-card"></i><h3>Personeller</h3></a></div>
-            <div class="nav-card"><a href="tedarikciler.php" class="nav-link"><i class="fas fa-truck"></i><h3>Tedarikçiler</h3></a></div>
-            <div class="nav-card"><a href="urunler.php" class="nav-link"><i class="fas fa-box"></i><h3>Ürünler</h3></a></div>
-            <div class="nav-card"><a href="esanslar.php" class="nav-link"><i class="fas fa-vial"></i><h3>Esanslar</h3></a></div>
-            <div class="nav-card"><a href="malzemeler.php" class="nav-link"><i class="fas fa-cubes"></i><h3>Malzemeler</h3></a></div>
-            <div class="nav-card"><a href="urun_agaclari.php" class="nav-link"><i class="fas fa-sitemap"></i><h3>Ürün Ağaçları</h3></a></div>
-            <div class="nav-card"><a href="musteri_siparisleri.php" class="nav-link"><i class="fas fa-shopping-cart"></i><h3>Müşteri Siparişleri</h3></a></div>
-            <div class="nav-card"><a href="esans_is_emirleri.php" class="nav-link"><i class="fas fa-clipboard-list"></i><h3>Esans İş Emirleri</h3></a></div>
-            <div class="nav-card"><a href="giris_kalite_kontrolu.php" class="nav-link"><i class="fas fa-clipboard-check"></i><h3>Giriş Kalite Kontrolü</h3></a></div>
-            <div class="nav-card"><a href="manuel_stok_hareket.php" class="nav-link"><i class="fas fa-exchange-alt"></i><h3>Stok Hareketleri</h3></a></div>
-            <div class="nav-card"><a href="gider_yonetimi.php" class="nav-link"><i class="fas fa-money-bill-wave"></i><h3>Gider Yönetimi</h3></a></div>
-            <div class="nav-card"><a href="lokasyonlar.php" class="nav-link"><i class="fas fa-map-marker-alt"></i><h3>Lokasyonlar</h3></a></div>
-            <div class="nav-card"><a href="tanklar.php" class="nav-link"><i class="fas fa-database"></i><h3>Tanklar</h3></a></div>
-            <div class="nav-card"><a href="is_merkezleri.php" class="nav-link"><i class="fas fa-industry"></i><h3>İş Merkezleri</h3></a></div>
-            <div class="nav-card"><a href="cerceve_sozlesmeler.php" class="nav-link"><i class="fas fa-file-contract"></i><h3>Sözleşmeler</h3></a></div>
-            <div class="nav-card"><a href="musteri_geri_bildirimleri.php" class="nav-link"><i class="fas fa-comments"></i><h3>Geri Bildirimler</h3></a></div>
-            <div class="nav-card"><a href="check_stats.php" class="nav-link"><i class="fas fa-chart-line"></i><h3>İstatistikler</h3></a></div>
-            <div class="nav-card"><a href="change_password.php" class="nav-link"><i class="fas fa-key"></i><h3>Şifre Değiştir</h3></a></div>
         </div>
-    </div>
+    </section>
+
+    <section class="section" style="padding-top: 4rem;">
+        <div class="container">
+            <div class="main-container">
+                <h2 class="title is-2 has-text-centered page-title">
+                    <i class="fas fa-th-large has-text-primary mr-2"></i>Yönetim Paneli
+                </h2>
+                <p class="subtitle is-5 has-text-centered page-subtitle">
+                    Sistem modüllerine hızlı erişim için aşağıdaki kartları kullanın. Her modül özel olarak optimize edilmiş yönetim araçları sunar.
+                </p>
+
+                <!-- İnsan Kaynakları ve İlişkiler -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-users-cog mr-2"></i>İnsan Kaynakları ve İlişkiler
+                    </h3>
+                    <p class="subtitle is-6">Müşteriler, personel ve tedarikçi yönetimi</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-people">
+                            <a href="musteriler.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                                <p class="card-title">Müşteriler</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-people">
+                            <a href="personeller.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-id-card fa-2x"></i>
+                                </div>
+                                <p class="card-title">Personeller</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-people">
+                            <a href="tedarikciler.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-truck fa-2x"></i>
+                                </div>
+                                <p class="card-title">Tedarikçiler</p>
+                            </a>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Ürün ve Malzeme Yönetimi -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-boxes mr-2"></i>Ürün ve Malzeme Yönetimi
+                    </h3>
+                    <p class="subtitle is-6">Ürünler, esanslar, malzemeler ve ürün ağaçları</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-product">
+                            <a href="urunler.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-box fa-2x"></i>
+                                </div>
+                                <p class="card-title">Ürünler</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-product">
+                            <a href="esanslar.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-vial fa-2x"></i>
+                                </div>
+                                <p class="card-title">Esanslar</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-product">
+                            <a href="malzemeler.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-cubes fa-2x"></i>
+                                </div>
+                                <p class="card-title">Malzemeler</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-product">
+                            <a href="urun_agaclari.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-sitemap fa-2x"></i>
+                                </div>
+                                <p class="card-title">Ürün Ağaçları</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Operasyonel İşlemler -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-cogs mr-2"></i>Operasyonel İşlemler
+                    </h3>
+                    <p class="subtitle is-6">Siparişler, üretim ve kalite kontrol süreçleri</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-operation">
+                            <a href="musteri_siparisleri.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-shopping-cart fa-2x"></i>
+                                </div>
+                                <p class="card-title">Müşteri Siparişleri</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-operation">
+                            <a href="esans_is_emirleri.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-clipboard-list fa-2x"></i>
+                                </div>
+                                <p class="card-title">Esans İş Emirleri</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-operation">
+                            <a href="giris_kalite_kontrolu.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-clipboard-check fa-2x"></i>
+                                </div>
+                                <p class="card-title">Kalite Kontrolü</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-operation">
+                            <a href="manuel_stok_hareket.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-exchange-alt fa-2x"></i>
+                                </div>
+                                <p class="card-title">Stok Hareketleri</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sistem Altyapısı -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-network-wired mr-2"></i>Sistem Altyapısı
+                    </h3>
+                    <p class="subtitle is-6">Lokasyonlar, tanklar ve iş merkezleri yönetimi</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-system">
+                            <a href="lokasyonlar.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-map-marker-alt fa-2x"></i>
+                                </div>
+                                <p class="card-title">Lokasyonlar</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-system">
+                            <a href="tanklar.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-database fa-2x"></i>
+                                </div>
+                                <p class="card-title">Tanklar</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-system">
+                            <a href="is_merkezleri.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-industry fa-2x"></i>
+                                </div>
+                                <p class="card-title">İş Merkezleri</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Finans ve Raporlama -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-chart-bar mr-2"></i>Finans ve Raporlama
+                    </h3>
+                    <p class="subtitle is-6">Mali işlemler ve sistem analizleri</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-finance">
+                            <a href="gider_yonetimi.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-money-bill-wave fa-2x"></i>
+                                </div>
+                                <p class="card-title">Gider Yönetimi</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-finance">
+                            <a href="cerceve_sozlesmeler.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-file-contract fa-2x"></i>
+                                </div>
+                                <p class="card-title">Sözleşmeler</p>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-finance">
+                            <a href="check_stats.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-chart-line fa-2x"></i>
+                                </div>
+                                <p class="card-title">İstatistikler</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sistem Ayarları -->
+                <div class="category-divider">
+                    <h3 class="title is-4">
+                        <i class="fas fa-cog mr-2"></i>Sistem Ayarları
+                    </h3>
+                    <p class="subtitle is-6">Kullanıcı tercihleri ve güvenlik ayarları</p>
+                </div>
+                
+                <div class="columns is-multiline is-mobile">
+                    <div class="column is-half-mobile is-one-third-tablet is-one-quarter-desktop">
+                        <div class="nav-card category-special">
+                            <a href="change_password.php">
+                                <div class="icon-wrapper">
+                                    <i class="fas fa-key fa-2x"></i>
+                                </div>
+                                <p class="card-title">Şifre Değiştir</p>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box has-text-centered">
+                    <p class="is-size-5 mb-2">
+                        <i class="fas fa-info-circle mr-2"></i><strong>Bilgilendirme</strong>
+                    </p>
+                    <p>
+                        Bu panel üzerinden sistemin tüm temel yönetim işlemlerine erişebilirsiniz. 
+                        Her modül kategorize edilmiş ve renk kodlamasıyla kolayca ayırt edilebilir şekilde düzenlenmiştir. 
+                        İhtiyacınıza göre ilgili modülü seçerek işlemlerinize başlayabilirsiniz.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer has-text-centered" style="background: transparent; padding: 2rem 1.5rem;">
+        <div class="content has-text-white">
+            <p>
+                <strong class="has-text-white">Scent ERP</strong> © <?php echo date('Y'); ?>
+            </p>
+        </div>
+    </footer>
 </body>
 </html>

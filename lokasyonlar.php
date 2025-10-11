@@ -13,65 +13,6 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-$message = '';
-$error = '';
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['create'])) {
-        // Create new location
-        $depo_ismi = $_POST['depo_ismi'];
-        $raf = $_POST['raf'];
-        
-        $query = "INSERT INTO lokasyonlar (depo_ismi, raf) VALUES (?, ?)";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('ss', $depo_ismi, $raf);
-        
-        if ($stmt->execute()) {
-            $message = "Lokasyon başarıyla oluşturuldu.";
-        } else {
-            $error = "Lokasyon oluşturulurken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    } 
-    elseif (isset($_POST['update'])) {
-        // Update location
-        $lokasyon_id = $_POST['lokasyon_id'];
-        $depo_ismi = $_POST['depo_ismi'];
-        $raf = $_POST['raf'];
-        
-        $query = "UPDATE lokasyonlar SET depo_ismi = ?, raf = ? WHERE lokasyon_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('ssi', $depo_ismi, $raf, $lokasyon_id);
-        
-        if ($stmt->execute()) {
-            $message = "Lokasyon başarıyla güncellendi.";
-        } else {
-            $error = "Lokasyon güncellenirken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    } 
-    elseif (isset($_POST['delete'])) {
-        // Delete location
-        $lokasyon_id = $_POST['lokasyon_id'];
-        
-        $query = "DELETE FROM lokasyonlar WHERE lokasyon_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $lokasyon_id);
-        
-        if ($stmt->execute()) {
-            $message = "Lokasyon başarıyla silindi.";
-        } else {
-            $error = "Lokasyon silinirken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    }
-}
-
-// Fetch all locations
-$locations_query = "SELECT * FROM lokasyonlar ORDER BY depo_ismi, raf";
-$locations_result = $connection->query($locations_query);
-
 // Calculate total locations
 $total_result = $connection->query("SELECT COUNT(*) as total FROM lokasyonlar");
 $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
@@ -84,6 +25,8 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Lokasyonlar - Parfüm ERP</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -170,125 +113,238 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
     </style>
 </head>
 <body>
-    <div class="erp-container">
-        <!-- Main Content -->
-        <div class="main-content">
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Lokasyonlar Yönetimi</h1>
+            <p>Depo ve raf tanımlamaları</p>
+        </div>
 
-            <div class="page-header">
-                <h1>Lokasyonlar Yönetimi</h1>
-                <p>Depo ve raf tanımlamaları</p>
+        <div id="alert-placeholder"></div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <button id="addLocationBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
             </div>
-
-            <?php if ($message): ?><div class="alert alert-success"><?php echo htmlspecialchars($message); ?></div><?php endif; ?>
-            <?php if ($error): ?><div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
-
-            <div class="stat-card" style="margin-bottom: 30px;">
-                <div class="stat-icon" style="background: var(--primary)">
-                    <i class="fas fa-map-marker-alt"></i>
-                </div>
-                <div class="stat-info">
-                    <h3><?php echo $total_locations; ?></h3>
-                    <p>Toplam Lokasyon</p>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2><?php echo isset($_GET['edit']) ? 'Lokasyon Güncelle' : 'Yeni Lokasyon Ekle'; ?></h2>
-                </div>
-                <div class="card-body">
-                    <?php
-                    $depo_ismi = '';
-                    $raf = '';
-                    $lokasyon_id = '';
-                    
-                    if (isset($_GET['edit'])) {
-                        $lokasyon_id = $_GET['edit'];
-                        $edit_query = "SELECT * FROM lokasyonlar WHERE lokasyon_id = ?";
-                        $stmt = $connection->prepare($edit_query);
-                        $stmt->bind_param('i', $lokasyon_id);
-                        $stmt->execute();
-                        $result = $stmt->get_result();
-                        $location = $result->fetch_assoc();
-                        
-                        if ($location) {
-                            $depo_ismi = $location['depo_ismi'];
-                            $raf = $location['raf'];
-                        }
-                        $stmt->close();
-                    }
-                    ?>
-                    
-                    <form method="POST">
-                        <?php if (isset($_GET['edit'])): ?>
-                            <input type="hidden" name="lokasyon_id" value="<?php echo $lokasyon_id; ?>">
-                        <?php endif; ?>
-                        
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="depo_ismi">Depo İsmi *</label>
-                                <input type="text" id="depo_ismi" name="depo_ismi" value="<?php echo htmlspecialchars($depo_ismi); ?>" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label for="raf">Raf *</label>
-                                <input type="text" id="raf" name="raf" value="<?php echo htmlspecialchars($raf); ?>" required>
-                            </div>
-                            
-                            <div class="form-actions">
-                                <?php if (isset($_GET['edit'])): ?>
-                                    <button type="submit" name="update" class="btn btn-success"><i class="fas fa-check"></i> Güncelle</button>
-                                    <a href="lokasyonlar.php" class="btn btn-secondary"><i class="fas fa-times"></i> İptal</a>
-                                <?php else: ?>
-                                    <button type="submit" name="create" class="btn btn-primary"><i class="fas fa-plus"></i> Lokasyon Ekle</button>
-                                <?php endif; ?>
-                            </div>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-header">
-                    <h2>Lokasyon Listesi</h2>
-                </div>
-                <div class="card-body">
-                    <div class="table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>İşlemler</th>
-                                    <th>Depo İsmi</th>
-                                    <th>Raf</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if ($locations_result && $locations_result->num_rows > 0): ?>
-                                    <?php while ($location = $locations_result->fetch_assoc()): ?>
-                                        <tr>
-                                            <td class="actions">
-                                                <a href="lokasyonlar.php?edit=<?php echo $location['lokasyon_id']; ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
-                                                <form method="POST" onsubmit="return confirm('Bu lokasyonu silmek istediğinizden emin misiniz?');">
-                                                    <input type="hidden" name="lokasyon_id" value="<?php echo $location['lokasyon_id']; ?>">
-                                                    <button type="submit" name="delete" class="btn btn-danger"><i class="fas fa-trash"></i></button>
-                                                </form>
-                                            </td>
-                                            <td><strong><?php echo htmlspecialchars($location['depo_ismi']); ?></strong></td>
-                                            <td><?php echo htmlspecialchars($location['raf']); ?></td>
-                                        </tr>
-                                    <?php endwhile; ?>
-                                <?php else: ?>
-                                    <tr>
-                                        <td colspan="3" style="text-align: center; padding: 20px;">Henüz kayıtlı lokasyon bulunmuyor.</td>
-                                    </tr>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+            <div class="col-md-4">
+                <div class="stat-card mb-3">
+                    <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="stat-info">
+                        <h3><?php echo $total_locations; ?></h3>
+                        <p>Toplam Lokasyon</p>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Lokasyon Listesi</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>İşlemler</th>
+                                <th>Depo İsmi</th>
+                                <th>Raf</th>
+                            </tr>
+                        </thead>
+                        <tbody id="locationsTableBody">
+                            <tr>
+                                <td colspan="3" class="text-center p-4">Yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Location Modal -->
+    <div class="modal fade" id="locationModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="locationForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Lokasyon Formu</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="lokasyon_id" name="lokasyon_id">
+                        <input type="hidden" id="action" name="action">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="depo_ismi">Depo İsmi *</label>
+                                <input type="text" class="form-control" id="depo_ismi" name="depo_ismi" required>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="raf">Raf *</label>
+                                <input type="text" class="form-control" id="raf" name="raf" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+
+        function showAlert(message, type) {
+            $('#alert-placeholder').html(
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>`
+            );
+        }
+
+        // Load locations on page load
+        loadLocations();
+
+        // Function to load locations
+        function loadLocations() {
+            $.ajax({
+                url: 'api_islemleri/lokasyonlar_islemler.php?action=get_locations',
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var tbody = $('#locationsTableBody');
+                        tbody.empty();
+
+                        if (response.data.length > 0) {
+                            $.each(response.data, function(index, location) {
+                                tbody.append(`
+                                    <tr>
+                                        <td class="actions">
+                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${location.lokasyon_id}"><i class="fas fa-edit"></i></button>
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${location.lokasyon_id}"><i class="fas fa-trash"></i></button>
+                                        </td>
+                                        <td><strong>${location.depo_ismi}</strong></td>
+                                        <td>${location.raf}</td>
+                                    </tr>
+                                `);
+                            });
+                        } else {
+                            tbody.append('<tr><td colspan="3" class="text-center p-4">Henüz kayıtlı lokasyon bulunmuyor.</td></tr>');
+                        }
+                    } else {
+                        $('#locationsTableBody').html('<tr><td colspan="3" class="text-center p-4 text-danger">Lokasyonlar yüklenirken hata oluştu.</td></tr>');
+                    }
+                },
+                error: function() {
+                    $('#locationsTableBody').html('<tr><td colspan="3" class="text-center p-4 text-danger">Lokasyonlar yüklenirken bir hata oluştu.</td></tr>');
+                }
+            });
+        }
+
+        // Open modal for adding a new location
+        $('#addLocationBtn').on('click', function() {
+            $('#locationForm')[0].reset();
+            $('#modalTitle').text('Yeni Lokasyon Ekle');
+            $('#action').val('add_location');
+            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
+            $('#locationModal').modal('show');
+        });
+
+        // Open modal for editing a location
+        $(document).on('click', '.edit-btn', function() {
+            var locationId = $(this).data('id');
+            $.ajax({
+                url: 'api_islemleri/lokasyonlar_islemler.php?action=get_location&id=' + locationId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var location = response.data;
+                        $('#locationForm')[0].reset();
+                        $('#modalTitle').text('Lokasyonu Düzenle');
+                        $('#action').val('update_location');
+                        $('#lokasyon_id').val(location.lokasyon_id);
+                        $('#depo_ismi').val(location.depo_ismi);
+                        $('#raf').val(location.raf);
+                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#locationModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Lokasyon bilgileri alınırken bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle form submission
+        $('#locationForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: 'api_islemleri/lokasyonlar_islemler.php',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#locationModal').modal('hide');
+                        showAlert(response.message, 'success');
+                        // Reload locations to see changes
+                        loadLocations();
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle location deletion
+        $(document).on('click', '.delete-btn', function() {
+            var locationId = $(this).data('id');
+            if (confirm('Bu lokasyonu silmek istediğinizden emin misiniz?')) {
+                $.ajax({
+                    url: 'api_islemleri/lokasyonlar_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_location',
+                        lokasyon_id: locationId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            loadLocations();
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
+            }
+        });
+    });
+    </script>
 </body>
 </html>
