@@ -87,10 +87,33 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
         .stock-normal { background: #e8f5e9; color: #2e7d32; }
         .stock-critical { background: #fff8e1; color: #f57f17; }
         .stock-low { background: #ffebee; color: #c62828; }
-        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
         .modal-body .form-group { display: flex; flex-direction: column; }
         .modal-body .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
         .modal-body .form-group input, .modal-body .form-group select, .modal-body .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+        /* Sadece depo ve raf select'leri için özel stil */
+        #depo, #raf {
+            min-width: 200px;
+            width: auto;
+            font-size: 0.9rem;
+            padding: 0;
+        }
+        #depo + .dropdown-menu, #raf + .dropdown-menu {
+            min-width: 500px;
+            max-width: 700px;
+            left: -150px;
+            z-index: 9999;
+        }
+        #depo + .dropdown-menu .dropdown-item,
+        #raf + .dropdown-menu .dropdown-item {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            padding: 0;
+            font-size: 0.75rem;
+            line-height: 1.1;
+            max-width: 100%;
+        }
     </style>
 </head>
 <body>

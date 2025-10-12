@@ -13,103 +13,13 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-$message = '';
-$error = '';
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['create'])) {
-        // Create new stock movement
-        $stok_turu = $_POST['stok_turu'];
-        $kod = $_POST['kod'];
-        $miktar = $_POST['miktar'];
-        $yon = $_POST['yon'];
-        $hareket_turu = $_POST['hareket_turu'];
-        $depo = isset($_POST['depo']) ? $_POST['depo'] : '';
-        $raf = isset($_POST['raf']) ? $_POST['raf'] : '';
-        $tank_kodu = isset($_POST['tank_kodu']) ? $_POST['tank_kodu'] : '';
-        $aciklama = $_POST['aciklama'];
-        $ilgili_belge_no = isset($_POST['ilgili_belge_no']) ? $_POST['ilgili_belge_no'] : '';
-        $is_emri_numarasi = isset($_POST['is_emri_numarasi']) ? $_POST['is_emri_numarasi'] : null;
-        $musteri_id = isset($_POST['musteri_id']) ? $_POST['musteri_id'] : null;
-        
-        // Get item name and unit based on stock type
-        $item_name = '';
-        $item_unit = '';
-        
-        switch ($stok_turu) {
-            case 'malzeme':
-                $item_query = "SELECT malzeme_ismi, birim FROM malzemeler WHERE malzeme_kodu = ?";
-                $item_stmt = $connection->prepare($item_query);
-                $item_stmt->bind_param('i', $kod);
-                $item_stmt->execute();
-                $item_result = $item_stmt->get_result();
-                $item = $item_result->fetch_assoc();
-                $item_name = $item['malzeme_ismi'];
-                $item_unit = $item['birim'];
-                break;
-            case 'esans':
-                $item_query = "SELECT esans_ismi, birim FROM esanslar WHERE esans_kodu = ?";
-                $item_stmt = $connection->prepare($item_query);
-                $item_stmt->bind_param('s', $kod);
-                $item_stmt->execute();
-                $item_result = $item_stmt->get_result();
-                $item = $item_result->fetch_assoc();
-                $item_name = $item['esans_ismi'];
-                $item_unit = $item['birim'];
-                break;
-            case 'urun':
-                $item_query = "SELECT urun_ismi, birim FROM urunler WHERE urun_kodu = ?";
-                $item_stmt = $connection->prepare($item_query);
-                $item_stmt->bind_param('i', $kod);
-                $item_stmt->execute();
-                $item_result = $item_stmt->get_result();
-                $item = $item_result->fetch_assoc();
-                $item_name = $item['urun_ismi'];
-                $item_unit = $item['birim'];
-                break;
-        }
-        
-        // Insert stock movement
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, is_emri_numarasi, musteri_id, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssisiiis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $is_emri_numarasi, $musteri_id, $aciklama, $_SESSION['id'], $_SESSION['kullanici_adi']);
-        
-        if ($movement_stmt->execute()) {
-            // Update stock based on movement
-            if ($stok_turu === 'malzeme') {
-                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-                $stock_stmt = $connection->prepare($stock_query);
-                $direction = ($yon === 'giris') ? $miktar : -$miktar;
-                $stock_stmt->bind_param('di', $direction, $kod);
-            } elseif ($stok_turu === 'esans') {
-                $stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari + ? WHERE esans_kodu = ?";
-                $stock_stmt = $connection->prepare($stock_query);
-                $direction = ($yon === 'giris') ? $miktar : -$miktar;
-                $stock_stmt->bind_param('ds', $direction, $kod);
-            } else { // urun
-                $stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + ? WHERE urun_kodu = ?";
-                $stock_stmt = $connection->prepare($stock_query);
-                $direction = ($yon === 'giris') ? $miktar : -$miktar;
-                $stock_stmt->bind_param('ii', $direction, $kod);
-            }
-            
-            if ($stock_stmt->execute()) {
-                $message = "Stok hareketi başarıyla kaydedildi.";
-            } else {
-                $error = "Stok hareketi kaydedildi ama stok güncellenirken hata oluştu: " . $connection->error;
-            }
-            $stock_stmt->close();
-        } else {
-            $error = "Stok hareketi kaydedilirken hata oluştu: " . $connection->error;
-        }
-        $movement_stmt->close();
-    }
-}
-
-// Fetch all stock movements
+// Fetch all stock movements for display
 $movement_query = "SELECT * FROM stok_hareket_kayitlari ORDER BY tarih DESC LIMIT 100";
 $movement_result = $connection->query($movement_query);
+
+// Calculate total movements
+$total_result = $connection->query("SELECT COUNT(*) as total FROM stok_hareket_kayitlari");
+$total_movements = $total_result->fetch_assoc()['total'] ?? 0;
 
 // Fetch all locations for dropdown
 $locations_query = "SELECT * FROM lokasyonlar ORDER BY depo_ismi, raf";
@@ -137,335 +47,329 @@ $products_result = $connection->query($products_query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manuel Stok Hareket - Parfüm ERP Sistemi</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Manuel Stok Hareket - Parfüm ERP</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #1abc9c;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --info: #3498db;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --bg-color: #f5f7fb;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --text-primary: #2c3e50;
+            --text-secondary: #8492a6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
         }
+        .main-content { padding: 30px; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
+        .page-header p { color: var(--text-secondary); font-size: 1rem; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+        .card-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+        .card-body { padding: 20px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--secondary); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
+        th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+        tbody tr:hover { background-color: #f5f7fb; }
+        .actions { display: flex; gap: 10px; }
+        .actions button { padding: 8px 12px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 25px; display: flex; align-items: center; }
+        .stat-icon { font-size: 2rem; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: white; }
+        .stat-info h3 { font-size: 1.8rem; font-weight: 700; }
+        .stat-info p { color: var(--text-secondary); }
+        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .modal-body .form-group { display: flex; flex-direction: column; }
+        .modal-body .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
+        .modal-body .form-group input, .modal-body .form-group select, .modal-body .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
         
-        .header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        select {
+            padding: 0 !important;
         }
-        
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .form-section, .list-section {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input, .form-group select, .form-group textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        .form-group textarea {
-            height: 80px;
-            resize: vertical;
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        
-        .btn-update {
-            background-color: #28a745;
-        }
-        
-        .btn-update:hover {
-            background-color: #218838;
-        }
-        
-        .btn-delete {
-            background-color: #dc3545;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .logout {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        .logout:hover {
-            background-color: #d32f2f;
-        }
-        
-        .current-stock, .after-movement-stock {
-            font-weight: bold;
-            padding: 5px;
-            border-radius: 4px;
-        }
-        
-        .current-stock {
-            background-color: #e7f3ff;
-        }
-        
-        .after-movement-stock {
-            background-color: #e8f5e9;
-        }
-        
-        .stock-warning {
-            color: #dc3545;
-            font-weight: bold;
-        }
+        .disabled-row { opacity: 0.6; }
+        .disabled-row .actions button { pointer-events: none; opacity: 0.5; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Manuel Stok Hareket Kaydı</h1>
-        <p>Manuel olarak stok hareketlerini kaydedin</p>
-    </div>
-    
-    <?php if ($message): ?>
-        <div class="message success"><?php echo htmlspecialchars($message); ?></div>
-    <?php endif; ?>
-    
-    <?php if ($error): ?>
-        <div class="message error"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
-    
-    <div class="container">
-        <div class="form-section">
-            <h2>Yeni Stok Hareketi Ekle</h2>
-            
-            <form method="POST">
-                <div class="form-group">
-                    <label for="stok_turu">Stok Türü:</label>
-                    <select id="stok_turu" name="stok_turu" required>
-                        <option value="malzeme">Malzeme</option>
-                        <option value="esans">Esans</option>
-                        <option value="urun">Ürün</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="kod">Kod Seçin:</label>
-                    <select id="kod" name="kod" required>
-                        <option value="">Kod Seçin</option>
-                        <!-- Options will be populated based on stock type -->
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="yon">Yön:</label>
-                    <select id="yon" name="yon" required>
-                        <option value="giris">Giriş</option>
-                        <option value="cikis">Çıkış</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="hareket_turu">Hareket Türü:</label>
-                    <select id="hareket_turu" name="hareket_turu" required>
-                        <option value="stok_giris">Stok Girişi</option>
-                        <option value="stok_cikis">Stok Çıkışı</option>
-                        <option value="uretim">Üretim</option>
-                        <option value="uretimde_kullanim">Üretimde Kullanım</option>
-                        <option value="fire">Fire</option>
-                        <option value="sayim_farki">Sayım Farkı</option>
-                        <option value="stok_duzeltme">Stok Düzeltme</option>
-                        <option value="iade_girisi">İade Girişi</option>
-                        <option value="tedarikciye_iade">TedarikçİYE İade</option>
-                        <option value="numune_cikisi">Numune Çıkışı</option>
-                        <option value="montaj">Montaj</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="miktar">Miktar:</label>
-                    <input type="number" id="miktar" name="miktar" min="0.01" step="0.01" required>
-                </div>
-                
-                <div id="location-fields">
-                    <!-- Location fields will be shown/hidden based on stock type -->
-                </div>
-                
-                <div class="form-group">
-                    <label for="aciklama">Açıklama:</label>
-                    <textarea id="aciklama" name="aciklama" required></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <label for="ilgili_belge_no">İlgili Belge No:</label>
-                    <input type="text" id="ilgili_belge_no" name="ilgili_belge_no">
-                </div>
-                
-                <button type="submit" name="create" class="btn">Kaydet</button>
-            </form>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Manuel Stok Hareket Yönetimi</h1>
+            <p>Manuel olarak stok hareketlerini kaydedin ve yönetin</p>
         </div>
-        
-        <div class="list-section">
-            <h2>Son Stok Hareketleri</h2>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tarih</th>
-                        <th>Stok Türü</th>
-                        <th>Kod</th>
-                        <th>İsim</th>
-                        <th>Miktar</th>
-                        <th>Yön</th>
-                        <th>Hareket Türü</th>
-                        <th>Depo/Raf/Tank</th>
-                        <th>Belge No</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($movement = $movement_result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?php echo $movement['hareket_id']; ?></td>
-                            <td><?php echo $movement['tarih']; ?></td>
-                            <td><?php echo htmlspecialchars($movement['stok_turu']); ?></td>
-                            <td><?php echo htmlspecialchars($movement['kod']); ?></td>
-                            <td><?php echo htmlspecialchars($movement['isim']); ?></td>
-                            <td><?php echo $movement['miktar']; ?></td>
-                            <td><?php echo htmlspecialchars($movement['yon']); ?></td>
-                            <td><?php echo htmlspecialchars($movement['hareket_turu']); ?></td>
-                            <td>
-                                <?php 
-                                if (!empty($movement['depo'])) {
-                                    echo htmlspecialchars($movement['depo']);
-                                    if (!empty($movement['raf'])) {
-                                        echo ' / ' . htmlspecialchars($movement['raf']);
-                                    }
-                                } elseif (!empty($movement['tank_kodu'])) {
-                                    echo 'Tank: ' . htmlspecialchars($movement['tank_kodu']);
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo htmlspecialchars($movement['ilgili_belge_no']); ?></td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+
+        <div id="alert-placeholder"></div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <button id="addMovementBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Stok Hareketi Ekle</button>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card mb-3">
+                    <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-exchange-alt"></i></div>
+                    <div class="stat-info">
+                        <h3><?php echo $total_movements; ?></h3>
+                        <p>Toplam Stok Hareketi</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Stok Hareketleri Listesi</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>İşlemler</th>
+                                <th>ID</th>
+                                <th>Tarih</th>
+                                <th>Stok Türü</th>
+                                <th>Kod</th>
+                                <th>İsim</th>
+                                <th>Miktar</th>
+                                <th>Yön</th>
+                                <th>Hareket Türü</th>
+                                <th>Konum</th>
+                                <th>Belge No</th>
+                                <th>Açıklama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($movement_result && $movement_result->num_rows > 0): ?>
+                                <?php while ($movement = $movement_result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td class="actions">
+                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $movement['hareket_id']; ?>">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $movement['hareket_id']; ?>">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        <td><?php echo $movement['hareket_id']; ?></td>
+                                        <td><?php echo $movement['tarih']; ?></td>
+                                        <td>
+                                            <span class="badge badge-<?php echo $movement['stok_turu'] === 'malzeme' ? 'primary' : ($movement['stok_turu'] === 'esans' ? 'success' : 'info'); ?>">
+                                                <?php echo htmlspecialchars($movement['stok_turu']); ?>
+                                            </span>
+                                        </td>
+                                        <td><strong><?php echo htmlspecialchars($movement['kod']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($movement['isim']); ?></td>
+                                        <td><?php echo number_format($movement['miktar'], 2); ?></td>
+                                        <td>
+                                            <span class="badge badge-<?php echo $movement['yon'] === 'giris' ? 'success' : 'danger'; ?>">
+                                                <?php echo htmlspecialchars($movement['yon']); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($movement['hareket_turu']); ?></td>
+                                        <td>
+                                            <?php
+                                            if (!empty($movement['depo'])) {
+                                                echo htmlspecialchars($movement['depo']);
+                                                if (!empty($movement['raf'])) {
+                                                    echo ' / ' . htmlspecialchars($movement['raf']);
+                                                }
+                                            } elseif (!empty($movement['tank_kodu'])) {
+                                                echo 'Tank: ' . htmlspecialchars($movement['tank_kodu']);
+                                            } else {
+                                                echo '-';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($movement['ilgili_belge_no']); ?></td>
+                                        <td><?php echo htmlspecialchars($movement['aciklama']); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="12" class="text-center p-4">Henüz kayıtlı stok hareketi bulunmuyor.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
-    
-    <a href="navigation.php" class="logout">Ana Sayfaya Dön</a>
-    
+
+    <!-- Stock Movement Modal -->
+    <div class="modal fade" id="movementModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="movementForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Stok Hareketi Formu</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="hareket_id" name="hareket_id">
+                        <input type="hidden" id="action" name="action">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="stok_turu">Stok Türü *</label>
+                                <select class="form-control" id="stok_turu" name="stok_turu" required>
+                                    <option value="malzeme">Malzeme</option>
+                                    <option value="esans">Esans</option>
+                                    <option value="urun">Ürün</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="kod">Kod Seçin *</label>
+                                <select class="form-control" id="kod" name="kod" required>
+                                    <option value="">Kod Seçin</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="yon">Yön *</label>
+                                <select class="form-control" id="yon" name="yon" required>
+                                    <option value="giris">Giriş</option>
+                                    <option value="cikis">Çıkış</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="hareket_turu">Hareket Türü *</label>
+                                <select class="form-control" id="hareket_turu" name="hareket_turu" required>
+                                    <option value="stok_giris">Stok Girişi</option>
+                                    <option value="stok_cikis">Stok Çıkışı</option>
+                                    <option value="uretim">Üretim</option>
+                                    <option value="uretimde_kullanim">Üretimde Kullanım</option>
+                                    <option value="fire">Fire</option>
+                                    <option value="sayim_farki">Sayım Farkı</option>
+                                    <option value="stok_duzeltme">Stok Düzeltme</option>
+                                    <option value="iade_girisi">İade Girişi</option>
+                                    <option value="tedarikciye_iade">Tedarikçiye İade</option>
+                                    <option value="numune_cikisi">Numune Çıkışı</option>
+                                    <option value="montaj">Montaj</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="miktar">Miktar *</label>
+                                <input type="number" class="form-control" id="miktar" name="miktar" min="0.01" step="0.01" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="ilgili_belge_no">İlgili Belge No</label>
+                                <input type="text" class="form-control" id="ilgili_belge_no" name="ilgili_belge_no">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="aciklama">Açıklama *</label>
+                                <textarea class="form-control" id="aciklama" name="aciklama" rows="3" required></textarea>
+                            </div>
+                        </div>
+                        <div id="location-fields">
+                            <!-- Location fields will be shown/hidden based on stock type -->
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
     <script>
-        // Update the kod dropdown based on stock type
-        document.getElementById('stok_turu').addEventListener('change', function() {
-            const stokTuru = this.value;
-            const kodSelect = document.getElementById('kod');
-            kodSelect.innerHTML = '<option value="">Kod Seçin</option>';
-            
-            // Show/hide location fields based on stock type
-            const locationDiv = document.getElementById('location-fields');
-            
-            if (stokTuru === 'malzeme' || stokTuru === 'urun') {
-                locationDiv.innerHTML = `
-                    <div class="form-group">
-                        <label for="depo">Depo:</label>
-                        <select id="depo" name="depo" required>
-                            <option value="">Depo Seçin</option>
-                            <?php 
-                            $locations_result->data_seek(0);
-                            while($location = $locations_result->fetch_assoc()): ?>
-                                <option value="<?php echo htmlspecialchars($location['depo_ismi']); ?>">
-                                    <?php echo htmlspecialchars($location['depo_ismi']); ?>
-                                </option>
-                            <?php endwhile; ?>
-                        </select>
+    $(document).ready(function() {
+
+        function showAlert(message, type) {
+            $('#alert-placeholder').html(
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>`
+            );
+        }
+
+        // Load stock items based on type
+        function loadStockItems(stockType) {
+            $.ajax({
+                url: 'api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=' + stockType,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var kodSelect = $('#kod');
+                        kodSelect.empty();
+                        kodSelect.append('<option value="">Kod Seçin</option>');
+
+                        response.data.forEach(function(item) {
+                            kodSelect.append(`<option value="${item.kod}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
+                        });
+                    }
+                }
+            });
+        }
+
+        // Update location fields based on stock type
+        function updateLocationFields(stockType) {
+            var locationDiv = $('#location-fields');
+
+            if (stockType === 'malzeme' || stockType === 'urun') {
+                locationDiv.html(`
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="depo">Depo *</label>
+                            <select class="form-control" id="depo" name="depo" required>
+                                <option value="">Depo Seçin</option>
+                                <?php
+                                $locations_result->data_seek(0);
+                                while($location = $locations_result->fetch_assoc()): ?>
+                                    <option value="<?php echo htmlspecialchars($location['depo_ismi']); ?>">
+                                        <?php echo htmlspecialchars($location['depo_ismi']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="raf">Raf *</label>
+                            <input type="text" class="form-control" id="raf" name="raf" required>
+                        </div>
                     </div>
+                `);
+            } else if (stockType === 'esans') {
+                locationDiv.html(`
                     <div class="form-group">
-                        <label for="raf">Raf:</label>
-                        <input type="text" id="raf" name="raf" required>
-                    </div>
-                `;
-            } else if (stokTuru === 'esans') {
-                locationDiv.innerHTML = `
-                    <div class="form-group">
-                        <label for="tank_kodu">Tank Kodu:</label>
-                        <select id="tank_kodu" name="tank_kodu" required>
+                        <label for="tank_kodu">Tank Kodu *</label>
+                        <select class="form-control" id="tank_kodu" name="tank_kodu" required>
                             <option value="">Tank Seçin</option>
-                            <?php 
+                            <?php
                             $tanks_result->data_seek(0);
                             while($tank = $tanks_result->fetch_assoc()): ?>
                                 <option value="<?php echo htmlspecialchars($tank['tank_kodu']); ?>">
@@ -474,58 +378,185 @@ $products_result = $connection->query($products_query);
                             <?php endwhile; ?>
                         </select>
                     </div>
-                `;
+                `);
             } else {
-                locationDiv.innerHTML = '';
+                locationDiv.html('');
             }
-            
-            // Populate the kod dropdown based on selected stock type
-            <?php 
-            $materials_result->data_seek(0);
-            $materials = [];
-            while($material = $materials_result->fetch_assoc()) {
-                $materials[] = array('kod' => $material['malzeme_kodu'], 'isim' => $material['malzeme_ismi'], 'stok' => $material['stok_miktari']);
-            }
-            
-            $essences_result->data_seek(0);
-            $essences = [];
-            while($essence = $essences_result->fetch_assoc()) {
-                $essences[] = array('kod' => $essence['esans_kodu'], 'isim' => $essence['esans_ismi'], 'stok' => $essence['stok_miktari']);
-            }
-            
-            $products_result->data_seek(0);
-            $products = [];
-            while($product = $products_result->fetch_assoc()) {
-                $products[] = array('kod' => $product['urun_kodu'], 'isim' => $product['urun_ismi'], 'stok' => $product['stok_miktari']);
-            }
-            ?>
-            
-            if (stokTuru === 'malzeme') {
-                <?php foreach ($materials as $material): ?>
-                    const option = document.createElement('option');
-                    option.value = <?php echo $material['kod']; ?>;
-                    option.textContent = '<?php echo $material['kod']; ?> - <?php echo addslashes($material['isim']); ?> (Stok: <?php echo $material['stok']; ?>)';
-                    kodSelect.appendChild(option);
-                <?php endforeach; ?>
-            } else if (stokTuru === 'esans') {
-                <?php foreach ($essences as $essence): ?>
-                    const option = document.createElement('option');
-                    option.value = '<?php echo addslashes($essence['kod']); ?>';
-                    option.textContent = '<?php echo addslashes($essence['kod']); ?> - <?php echo addslashes($essence['isim']); ?> (Stok: <?php echo $essence['stok']; ?>)';
-                    kodSelect.appendChild(option);
-                <?php endforeach; ?>
-            } else if (stokTuru === 'urun') {
-                <?php foreach ($products as $product): ?>
-                    const option = document.createElement('option');
-                    option.value = <?php echo $product['kod']; ?>;
-                    option.textContent = '<?php echo $product['kod']; ?> - <?php echo addslashes($product['isim']); ?> (Stok: <?php echo $product['stok']; ?>)';
-                    kodSelect.appendChild(option);
-                <?php endforeach; ?>
+        }
+
+        // Stock type change handler
+        $('#stok_turu').on('change', function() {
+            var stockType = $(this).val();
+            if (stockType) {
+                loadStockItems(stockType);
+                updateLocationFields(stockType);
+            } else {
+                $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                $('#location-fields').html('');
             }
         });
-        
-        // Trigger change event to initialize the form
-        document.getElementById('stok_turu').dispatchEvent(new Event('change'));
+
+        // Update movement types based on direction
+        function updateMovementTypes() {
+            var direction = $('#yon').val();
+            var movementTypeSelect = $('#hareket_turu');
+            
+            movementTypeSelect.empty(); // önceki seçenekleri temizle
+            
+            if (direction === 'giris') {
+                // Sadece giriş yönü için uygun türleri ekle
+                movementTypeSelect.append('<option value="stok_giris">Stok Girişi</option>');
+                movementTypeSelect.append('<option value="uretim">Üretim</option>');
+                movementTypeSelect.append('<option value="iade_girisi">İade Girişi</option>');
+                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Artış)</option>');
+                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Artış)</option>');
+                movementTypeSelect.append('<option value="transfer">Transfer (Giriş)</option>');
+            } else if (direction === 'cikis') {
+                // Sadece çıkış yönü için uygun türleri ekle
+                movementTypeSelect.append('<option value="stok_cikis">Stok Çıkışı</option>');
+                movementTypeSelect.append('<option value="uretimde_kullanim">Üretimde Kullanım</option>');
+                movementTypeSelect.append('<option value="fire">Fire</option>');
+                movementTypeSelect.append('<option value="numune_cikisi">Numune Çıkışı</option>');
+                movementTypeSelect.append('<option value="tedarikciye_iade">Tedarikçiye İade</option>');
+                movementTypeSelect.append('<option value="montaj">Montaj</option>');
+                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Azalış)</option>');
+                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Azalış)</option>');
+                movementTypeSelect.append('<option value="transfer">Transfer (Çıkış)</option>');
+            }
+        }
+
+        // Direction change handler
+        $('#yon').on('change', function() {
+            updateMovementTypes();
+        });
+
+        // Open modal for adding a new movement
+        $('#addMovementBtn').on('click', function() {
+            $('#movementForm')[0].reset();
+            $('#modalTitle').text('Yeni Stok Hareketi Ekle');
+            $('#action').val('add_movement');
+            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
+            $('#movementModal').modal('show');
+        });
+
+        // Open modal for editing a movement
+        $('.edit-btn').on('click', function() {
+            var movementId = $(this).data('id');
+
+            $.ajax({
+                url: 'api_islemleri/stok_hareket_islemler.php?action=get_movement&id=' + movementId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var movement = response.data;
+                        $('#movementForm')[0].reset();
+                        $('#modalTitle').text('Stok Hareketini Düzenle');
+                        $('#action').val('update_movement');
+                        $('#hareket_id').val(movement.hareket_id);
+                        $('#stok_turu').val(movement.stok_turu);
+                        $('#kod').val(movement.kod);
+                        $('#yon').val(movement.yon);
+                        $('#hareket_turu').val(movement.hareket_turu);
+                        $('#miktar').val(movement.miktar);
+                        $('#ilgili_belge_no').val(movement.ilgili_belge_no);
+                        $('#aciklama').val(movement.aciklama);
+
+                        // Update location fields and load stock items
+                        updateLocationFields(movement.stok_turu);
+                        loadStockItems(movement.stok_turu);
+
+                        // Set location values after a short delay to ensure fields are created
+                        setTimeout(function() {
+                            if (movement.depo) {
+                                $('#depo').val(movement.depo);
+                                $('#raf').val(movement.raf);
+                            } else if (movement.tank_kodu) {
+                                $('#tank_kodu').val(movement.tank_kodu);
+                            }
+                            // Also update movement types for the loaded direction
+                            updateMovementTypes();
+                            // Set the correct movement type value after the options are loaded
+                            $('#hareket_turu').val(movement.hareket_turu);
+                        }, 100);
+
+                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#movementModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Stok hareketi bilgileri alınırken bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Initialize movement types based on default direction when modal opens for adding
+        $('#addMovementBtn').on('click', function() {
+            // Set a default direction and update movement types
+            $('#yon').val('giris'); // Default olarak giriş seç
+            updateMovementTypes(); // Hareket türlerini güncelle
+        });
+
+        // Handle form submission
+        $('#movementForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: 'api_islemleri/stok_hareket_islemler.php',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#movementModal').modal('hide');
+                        showAlert(response.message, 'success');
+                        // Reload page to see changes
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle movement deletion
+        $('.delete-btn').on('click', function() {
+            var movementId = $(this).data('id');
+
+            if (confirm('Bu stok hareketini silmek istediğinizden emin misiniz?')) {
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_movement',
+                        hareket_id: movementId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
+            }
+        });
+    });
     </script>
 </body>
 </html>

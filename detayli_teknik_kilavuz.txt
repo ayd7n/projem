@@ -1,0 +1,753 @@
+# Parfüm üreten işletme için ERP Sistemi
+
+## Sayfalar ve Bileşenler
+
+### 1. Login Sayfası
+- **Alanlar:**
+  - Kullanıcı Adı / Telefon Numarası
+  - Şifre
+  - Giriş Yap Butonu
+- **İşlemler:**
+  - Giriş Yap butonuna tıklanınca kullanıcı adı/telefon numarası ve şifre sistem_kullanicilari tablosunda doğrulanır
+  - Şifre yanlışsa uyarı verilir
+  - Şifre doğruysa sistem_kullanicilari tablosundaki taraf kolonuna göre yönlendirme yapılır
+    - Taraf: "Müşteri" ise Müşteri Paneli sayfasına yönlendirilir
+    - Taraf: "Personel" ise Navigasyon sayfasına yönlendirilir
+
+### 2. Navigasyon Sayfası
+- **Navigasyon Butonları:**
+  - Giderler → Gider Yönetimi Tablosu
+  - Personeller → Personeller Tablosu
+  - Tedarikçiler → Tedarikçiler Tablosu
+  - Lokasyonlar → Lokasyonlar Tablosu
+  - Ürünler → Ürün Ağaçları Tablosu
+  - Esanslar → Esanslar Tablosu
+  - Sistem Kullanıcıları → Sistem Kullanıcıları Tablosu
+  - Müşteriler → Müşteriler Tablosu
+  - Tanklar → Tanklar Tablosu
+  - Malzemeler → Malzemeler Tablosu
+  - Ürün Ağaçları → Ürün Ağaçları Tablosu
+  - Esans İş Emirleri → Esans İş Emirleri Tablosu
+  - Müşteri Geri Bildirimleri → Müşteri Geri Bildirimleri Tablosu
+  - İş Merkezleri → İş Merkezleri Tablosu
+
+### 8. Lokasyonlar Sayfası
+- **Açıklama:** Depo ve raf tanımlamaları için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** lokasyon_id, depo_ismi, raf
+
+### 9. Malzemeler Sayfası
+- **Açıklama:** Malzeme bilgilerini ve detaylı analizleri yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil ve detaylı analiz özellikleri
+- **Alanlar:** malzeme_kodu, malzeme_ismi, malzeme_turu, malzeme_foto_ismi, not_bilgisi, stok_miktari, birim, termin_suresi, depo, raf, kritik_stok_seviyesi, ortalama_aylik_tuketim, son_tedarikci_adi
+
+- **kritik_stok_seviyesi:** Kullanıcının tanımladığı kritik stok seviyesi; bu seviyenin altındayken uyarı verilir
+- **ortalama_aylik_tuketim:** vw_malzemeler_detayli view'ından alınan bilgi; son 12 aydaki ortalama tüketimi gösterir
+- **son_tedarikci_adi:** Giriş stok hareketlerinden alınan son tedarikçi bilgisi
+
+### 10. Ürün Ağaçları Sayfası
+- **Açıklama:** Ürünlerin bileşenlerini tanımlamak için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** urun_agaci_id, urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari
+
+### 11. Tanklar Sayfası
+- **Açıklama:** Tank bilgilerini yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** tank_id, tank_kodu, tank_ismi, not_bilgisi, kapasite
+
+### 12. Personeller Sayfası
+- **Açıklama:** Personel bilgilerini yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar
+
+### 13. Sistem Kullanıcıları Sayfası
+- **Açıklama:** Kullanıcı hesaplarını ve yetkilerini yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** kullanici_id, taraf, id, kullanici_adi, telefon, sifre, rol, aktif
+
+### 14. Gider Yönetimi Sayfası
+- **Açıklama:** Gider takibi ve yönetimi için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** gider_id, tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi
+
+### 15. Çerçeve Sözleşmeler Sayfası
+- **Açıklama:** Tedarikçilerle yapılan çerçeve sözleşmeleri yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** sozlesme_id, tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, sozlesme_turu, toplam_anlasilan_miktar, kalan_anlasilan_miktar, baslangic_tarihi, bitis_tarihi, pesin_odeme_yapildi_mi, toplam_pesin_odeme_tutari, durum, olusturan, olusturulma_tarihi, aciklama
+
+### 16. Giriş Kalite Kontrolü Sayfası
+- **Açıklama:** Tedarik edilen malzemelerin kalite kontrolünü yönetmek için kullanılan CRUD arayüzü
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** kontrol_id, tarih, tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim, reddedilen_miktar, red_nedeni, kontrol_eden_personel_id, kontrol_eden_personel_adi, ilgili_belge_no, aciklama
+
+### 17. Manuel Stok Hareket Kaydı Sayfası
+- **Açıklama:** Manuel olarak stok hareketlerini kaydetmek için kullanılan arayüz
+- **İşlemler:**
+  - Hareket türü seçimi: sayım farkı, fire, stok düzeltme, iade girişi, tedarikçiye iade, transfer, numune çıkışı vb.
+  - Stok türü seçimi: malzeme, esans, ürün
+  - Kod seçimi dropdown (malzeme_kodu, esans_kodu, urun_kodu), seçilen koda göre isim, birim ve malzeme türü otomatik olarak gelir
+  - Yön seçimi: giriş veya çıkış
+  - Miktar girişi için input alanı
+  - Miktar girişinin altındaki bir alanda mevcut stok ve işlem sonrası stok miktarı canlı olarak hesaplanarak gösterilir
+  - Lokasyon bilgisi: stok_türü "malzeme" veya "ürün" ise "depo" ve "raf" seçimleri, "esans" ise "tank_kodu" seçimi
+  - Açıklama textarea (zorunlu alan)
+  - İlgili belge numarası girişi için input
+  - İş emri, müşteri, tedarikçi seçimleri hareket türüne göre dinamik olarak görünür/aktif olur
+  - Transfer hareketi seçildiğinde, kaynak ve hedef lokasyon seçimi yapılır, her iki lokasyon için (kaynakta çıkış, hedefte giriş) iki ayrı stok hareket kaydı oluşturulur
+  - Validasyon: çıkış yapılacak miktar mevcut stoktan fazla ise veya kritik seviyenin altına düşecekse kullanıcı uyarılır
+  - Kaydet butonuna basıldığında, girilen bilgilerin özetini gösteren bir onay modalı açılır
+  - Onay sonrasında hem stok_hareket_kayitlari tablosuna hem de ilgili stok tablosuna (malzemeler, esanslar veya ürünler) kayıt yapılır
+
+### 3. Müşteri Paneli Sayfası
+- **Açıklama:** Müşterilerin ürünleri görüntüleyip sipariş oluşturabildiği arayüz
+- **İşlemler:**
+  - Müşteriler giriş yaptıktan sonra stok miktarı 0'dan büyük olan ürünleri görebilir
+  - Ürünleri sepete ekleyebilir ve sipariş listesi oluşturabilir
+  - Siparişleri siparisler tablosuna kaydedebilir
+  - Siparişler tablosunda durum "beklemede" olarak işaretlenir
+  - Sipariş kalemleri siparis_kalemleri tablosunda saklanır
+  - Eğer müşteri sadece ürünleri inceledikten sonra çıkarsa, musteri_davranis_logu tablosunda bu kayıt tutulur
+
+### 4. Şifremi Değiştir Sayfası
+- **Açıklama:** Bu sayfaya müşteri, admin ve personel kullanıcılar giriş yapabilir
+- **İşlemler:**
+  - Kullanıcılar mevcut şifrelerini doğruladıktan sonra yeni şifre belirleyebilir
+  - Şifre değiştirme işlemi sistem_kullanicilari tablosunda ilgili kullanıcı kaydında gerçekleştirilir
+  - Yeni şifre sistem güvenlik politikalarına uygun olmalıdır (örn. minimum uzunluk, özel karakter içermelidir)
+
+### 5. Yetki Tabloları Sayfası
+- **Açıklama:** Admin kullanıcıların personelin hangi sayfalara erişebileceğini tanımladığı arayüz
+- **İşlemler:**
+  - Sadece admin kullanıcılar bu sayfaya erişebilir
+  - Admin, personelin erişebileceği sayfaları seçebilir
+  - Seçilen sayfalara personel erişebilir, seçilmediklerine sadece admin erişebilir
+  - Bu sayfada yapılan ayarlar yetki_tablolari tablosunda saklanır
+
+### 6. Siparişler Sayfası
+- **Açıklama:** Tüm siparişlerin ve sipariş kalemlerinin görüntülendiği arayüz
+- **İşlemler:**
+  - Tüm siparişler ve sipariş kalemleri bu sayfada gösterilir
+  - Bekleyen siparişler için "Onayla" ve "Reddet" butonları bulunur
+  - Onaylanan siparişler "Sevk Et" butonu ile sevk edilebilir
+  - Onaylama ve sevk etme aşamalarında müşterinin girdiği adetler değiştirilebilir
+  - Sipariş kalemleri düzenlenebilir ve yeni kalemler eklenebilir
+  - Siparişler "Onaylanır", ardından "Sevk Edilir"
+  - Her iki aşamada da düzenleme işlemleri yapılabilir (adet değiştirme, yeni kalem ekleme, kalem düzenleme)
+  - Tamamlanmış siparişlerin yanında "Geri Bildirim Yap" butonu yer alır
+
+### 7. Müşteri Siparişleri Sayfası
+- **Açıklama:** Admin kullanıcıların müşteri siparişlerini yönetebildiği arayüz
+- **İşlemler:**
+  - Admin kullanıcılar navigasyon sayfasındaki "Müşteri Siparişleri" butonuna tıklayarak bu sayfaya erişebilir
+  - Onay bekleyen siparişleri görebilir
+  - Siparişleri onaylayabilir veya reddedebilir
+  - Gerekirse sipariş miktarında değişiklik yapabilir
+  - Onaylanan siparişlerin durumu "onaylandi" olarak güncellenir
+
+### 18. Müşteri Geri Bildirimleri Sayfası
+- **Açıklama:** Müşterilerin ürün ve siparişlerle ilgili geri bildirimlerini, puanlamalarını ve yorumlarını görüntülemek ve yönetmek için kullanılan arayüz
+- **İşlemler:**
+  - Geri bildirimlerin listelenmesi
+  - Filtreleme: tümü, değerlendirme, şikayet, öneri
+  - Cevaplanan/cevaplanmayan olarak ayırma
+  - Cevaplama işlemi: personel cevap metni girebilir
+  - Geri bildirim detaylarının görüntülenmesi
+  - Silme işlemi: sadece admin yetkisiyle
+- **Alanlar:** geri_bildirim_id, musteri_adi, siparis_id, urun_ismi, puanlama, baslik, aciklama, geri_bildirim_turu, cevaplandi_mi, cevap_metni
+
+### 25. Yetki Tabloları Tablosu
+- **Tablo Adı:** yetki_tablolari
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: yetki_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: personel_id, Tip: Integer, Açıklama: Personeller tablosundan seçilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: erisim_sayfasi, Tip: Metin, Açıklama: Erişim izni verilen sayfa adı, Görünüm: Kullanıcı Seçim
+  - Alan Adı: olusturma_tarihi, Tip: Tarih + saat, Açıklama: Kayıt oluşturulma tarihi, Görünüm: Sistem Otomatik
+  - Alan Adı: olusturan_personel_id, Tip: Integer, Açıklama: Yetkiyi oluşturan personel (genellikle admin), Görünüm: Sistem Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: yetki_id DB otomatik atar, diğer alanlar admin tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: yetki_id ile backend'e gönderilir
+  - Delete: yetki_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - Bu tablo, personellerin hangi sayfalara erişimine izin verildiğini tanımlar
+  - Erişim sayfaları, sistemdeki mevcut sayfalar listesinden seçilir
+  - Bu tablodaki bilgiler, kullanıcı girişi sırasında erişim kontrolü için kullanılır
+
+## Tablolar ve İşlemleri
+
+### 1. Sistem Kullanıcıları Tablosu
+- **Tablo Adı:** sistem_kullanicilari
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: kullanici_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: taraf, Tip: Metin, Açıklama: "personel" veya "musteri", Görünüm: Kullanıcı Seçim
+  - Alan Adı: id, Tip: Integer, Açıklama: personel_id veya musteri_id, Görünüm: Kullanıcı Seçim
+  - Alan Adı: kullanici_adi, Tip: Metin, Açıklama: Benzersiz kullanıcı adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: telefon, Tip: Metin, Açıklama: Telefon numarası, Görünüm: Otomatik
+  - Alan Adı: sifre, Tip: Metin, Açıklama: Şifrelenmiş şifre, Görünüm: Admin Only
+  - Alan Adı: rol, Tip: Metin, Açıklama: "admin" veya "personel", Görünüm: Kullanıcı Seçim
+  - Alan Adı: aktif, Tip: Boolean, Açıklama: Yetki durumu, Görünüm: Kullanıcı Seçim
+- **CRUD İşlem Detayları:**
+  - Create: kullanici_id DB otomatik atar, telefon seçime göre otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir (şifre hash'li)
+  - Update: kullanici_id ile backend'e gönderilir, şifre yetkili kullanıcı tarafından değiştirilebilir
+  - Delete: kullanici_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - taraf: "personel" veya "musteri" seçilir
+  - id: seçilen tarafa göre personel_id veya musteri_id
+  - sifre: yetkili kullanıcı resetler/atar, şifrelenmiş saklanır
+
+### 2. Personeller Tablosu
+- **Tablo Adı:** personeller
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: personel_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: ad_soyad, Tip: Metin, Açıklama: Personelin tam adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: tc_kimlik_no, Tip: Metin, Açıklama: 11 haneli kimlik no, Görünüm: Kullanıcı Girişi
+  - Alan Adı: dogum_tarihi, Tip: Tarih, Açıklama: Doğum tarihi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: ise_giris_tarihi, Tip: Tarih, Açıklama: İşe giriş tarihi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: pozisyon, Tip: Metin, Açıklama: İş pozisyonu, Görünüm: Kullanıcı Girişi
+  - Alan Adı: departman, Tip: Metin, Açıklama: Çaliştığı departman, Görünüm: Kullanıcı Girişi
+  - Alan Adı: e_posta, Tip: Metin, Açıklama: E-posta adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: telefon, Tip: Metin, Açıklama: Telefon numarası, Görünüm: Kullanıcı Girişi
+  - Alan Adı: adres, Tip: Metin, Açıklama: Ikametgah adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: notlar, Tip: Metin, Açıklama: Ek bilgiler, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: personel_id DB otomatik atar, tüm alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: personel_id ile backend'e gönderilir
+  - Delete: personel_id ile silme işlemi yapılır
+
+### 3. Gider Yönetimi Tablosu
+- **Tablo Adı:** gider_yonetimi
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: gider_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: tarih, Tip: Tarih, Açıklama: Gider tarihi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: tutar, Tip: Float, Açıklama: Gider tutarı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: kategori, Tip: Metin, Açıklama: Gider kategorisi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Açıklama, Görünüm: Kullanıcı Girişi
+  - Alan Adı: kaydeden_personel_id, Tip: Integer, Açıklama: Personel ID, Görünüm: Otomatik (Session)
+  - Alan Adı: kaydeden_personel_ismi, Tip: Metin, Açıklama: Personel ismi, Görünüm: Otomatik (Session)
+  - Alan Adı: fatura_no, Tip: Metin, Açıklama: Fatura numarası, Görünüm: Kullanıcı Girişi
+  - Alan Adı: odeme_tipi, Tip: Metin, Açıklama: Ödeme tipi, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: gider_id DB otomatik atar, kaydeden_personel bilgileri session'dan alınır
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: gider_id ile backend'e gönderilir, personel bilgileri güncellenmez
+  - Delete: gider_id ile silme işlemi yapılır
+
+### 4. Tedarikçiler Tablosu
+- **Tablo Adı:** tedarikciler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: tedarikci_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: tedarikci_adi, Tip: Metin, Açıklama: Tedarikçi firma adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: vergi_no_tc, Tip: Metin, Açıklama: Vergi no/TC kimlik no, Görünüm: Kullanıcı Girişi
+  - Alan Adı: adres, Tip: Metin, Açıklama: Tedarikçi adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: telefon, Tip: Metin, Açıklama: İletişim telefonu, Görünüm: Kullanıcı Girişi
+  - Alan Adı: e_posta, Tip: Metin, Açıklama: E-posta adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: yetkili_kisi, Tip: Metin, Açıklama: Yetkili kişi adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama_notlar, Tip: Metin, Açıklama: Açıklama ve notlar, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: tedarikci_id DB otomatik atar, tüm alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: tedarikci_id ile backend'e gönderilir
+  - Delete: tedarikci_id ile silme işlemi yapılır
+
+### 5. Lokasyonlar Tablosu
+- **Tablo Adı:** lokasyonlar
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: lokasyon_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: depo_ismi, Tip: Metin, Açıklama: Örn: "Merkez Depo", "Uretim Ara Depo", Görünüm: Kullanıcı Girişi
+  - Alan Adı: raf, Tip: Metin, Açıklama: Örn: "A5 Rafi", Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: lokasyon_id DB otomatik atar, depo_ismi ve raf kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: lokasyon_id ile backend'e gönderilir
+  - Delete: lokasyon_id ile silme işlemi yapılır
+- **Özel Not:** Bu tablo Ürünler tablosunda Depo ve Raf seçimleri için kullanılır
+
+### 6. Esanslar Tablosu
+- **Tablo Adı:** esanslar
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: esans_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: esans_kodu, Tip: Metin, Açıklama: Esans kodu, Görünüm: Kullanıcı Girişi
+  - Alan Adı: esans_ismi, Tip: Metin, Açıklama: Esans adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: not_bilgisi, Tip: Metin, Açıklama: Esans notları, Görünüm: Kullanıcı Girişi
+  - Alan Adı: stok_miktari, Tip: Float, Açıklama: Stok miktarı, Görünüm: Kullanıcı/Sistem
+  - Alan Adı: birim, Tip: Metin, Açıklama: adet, litre vs., Görünüm: Kullanıcı Girişi
+  - Alan Adı: demlenme_suresi_gun, Tip: Float, Açıklama: Demlenme süresi (gün), Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: esans_id DB otomatik atar, tüm diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: esans_id ile backend'e gönderilir, stok_miktari kullanıcı veya sistem tarafından güncellenir
+  - Delete: esans_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - stok_miktari: mal girişi/üretim işlemlerinden sonra otomatik güncellenir
+  - demlenme_suresi_gun: esansının demlenme süresi gün cinsinden
+
+### 7. Müşteriler Tablosu
+- **Tablo Adı:** musteriler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: musteri_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: musteri_adi, Tip: Metin, Açıklama: Müşteri adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: vergi_no_tc, Tip: Metin, Açıklama: Vergi no veya TC kimlik, Görünüm: Kullanıcı Girişi
+  - Alan Adı: adres, Tip: Metin, Açıklama: Müşteri adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: telefon, Tip: Metin, Açıklama: Telefon numarası, Görünüm: Kullanıcı Girişi
+  - Alan Adı: e_posta, Tip: Metin, Açıklama: E-posta adresi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: sistem_sifresi, Tip: Metin, Açıklama: Sistem şifresi, Görünüm: Admin Only
+  - Alan Adı: aciklama_notlar, Tip: Metin, Açıklama: Açıklama ve notlar, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: musteri_id DB otomatik atar, tüm alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: musteri_id ile backend'e gönderilir, sistem_sifresi yetkili kullanıcı tarafından değiştirilebilir
+  - Delete: musteri_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - sistem_sifresi: yetkili kullanıcı atar/düzenler
+  - Bu tablo sistem_kullanicilari tablosunda "musteri" tarafı için referans olarak kullanılır
+
+### 8. Malzemeler Tablosu
+- **Tablo Adı:** malzemeler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Primary Key (20 binden başlar), Görünüm: DB Otomatik
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Malzeme adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: ic_kutu, kutu_ici_adet, etiket, sise vs., Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_foto_ismi, Tip: Metin, Açıklama: static/urunresimleri klasöründeki dosya adı, Görünüm: Sistem Otomatik
+  - Alan Adı: not_bilgisi, Tip: Metin, Açıklama: Malzeme notları, Görünüm: Kullanıcı Girişi
+  - Alan Adı: stok_miktari, Tip: Float, Açıklama: Stok miktarı, Görünüm: Kullanıcı/Sistem
+  - Alan Adı: birim, Tip: Metin, Açıklama: adet, litre vs., Görünüm: Kullanıcı Girişi
+  - Alan Adı: termin_suresi, Tip: Integer, Açıklama: Temin süresi (gün), Görünüm: Kullanıcı Seçim
+  - Alan Adı: depo, Tip: Metin, Açıklama: Lokasyonlar tablosundan seçim, Görünüm: Kullanıcı Seçim
+  - Alan Adı: raf, Tip: Metin, Açıklama: Seçilen depoya göre raf seçimi, Görünüm: Kullanıcı Seçim
+  - **Alan Adı: kritik_stok_seviyesi, Tip: Integer, Açıklama: Kullanıcının tanımladığı kritik stok seviyesi, Görünüm: Kullanıcı Girişi**
+- **CRUD İşlem Detayları:**
+  - Create: malzeme_kodu DB otomatik atar (20.000'den başlar), kritik_stok_seviyesi kullanıcı tarafından belirlenir
+  - Read: Tüm alanlar kullanıcıya gösterilir, ortalama_aylik_tuketim ve son_tedarikci_adi vw_malzemeler_detayli view'ından gelir
+  - Update: malzeme_kodu ile backend'e gönderilir, stok_miktari kullanıcı veya sistem tarafından güncellenir
+  - Delete: malzeme_kodu ile silme işlemi yapılır
+- **Özel Notlar:**
+  - malzeme_turu: Liste seçimi (ic_kutu, kutu_ici_adet, etiket, sise vs.)
+  - stok_miktari: mal girişi/üretim işlemlerinden sonra otomatik güncellenir
+  - **kritik_stok_seviyesi: kullanıcı tanımlı değerdir**
+  - depo/raf: lokasyonlar tablosundan seçim yapılır
+
+### 9. Ürün Ağaçları Tablosu
+- **Tablo Adı:** urun_agaci
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: urun_agaci_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: urun_kodu, Tip: Integer, Açıklama: Ürün kodu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: Ürün adı, Görünüm: Otomatik
+  - Alan Adı: bilesenin_malzeme_turu, Tip: Metin, Açıklama: esans veya malzeme_turu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: bilesen_kodu, Tip: Metin, Açıklama: esans_kodu veya malzeme_kodu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: bilesen_ismi, Tip: Metin, Açıklama: Bileşen adı, Görünüm: Otomatik
+  - Alan Adı: bilesen_miktari, Tip: Float, Açıklama: Bileşen miktarı, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: urun_agaci_id DB otomatik atar, urun_ismi ve bilesen_ismi seçime göre otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: urun_agaci_id ile backend'e gönderilir
+  - Delete: urun_agaci_id ile silme işlemi yapılır
+
+### 10. Tanklar Tablosu
+- **Tablo Adı:** tanklar
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: tank_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: tank_kodu, Tip: Metin, Açıklama: Tank kodu, Görünüm: Kullanıcı Girişi
+  - Alan Adı: tank_ismi, Tip: Metin, Açıklama: Tank adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: not_bilgisi, Tip: Metin, Açıklama: Tank notları, Görünüm: Kullanıcı Girişi
+  - Alan Adı: kapasite, Tip: Float, Açıklama: Kapasite (litre), Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: tank_id DB otomatik atar, tüm alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: tank_id ile backend'e gönderilir
+  - Delete: tank_id ile silme işlemi yapılır
+
+### 11. Esans İş Emirleri Tablosu
+- **Tablo Adı:** esans_is_emirleri
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Primary Key (4000'den başlar), Görünüm: DB Otomatik
+  - Alan Adı: olusturulma_tarihi, Tip: Tarih, Açıklama: Oluşturulma tarihi, Görünüm: Sistem Otomatik
+  - Alan Adı: olusturan, Tip: Metin, Açıklama: Oluşturan kullanıcı, Görünüm: Sistem Otomatik
+  - Alan Adı: esans_kodu, Tip: Metin, Açıklama: Esans kodu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: esans_ismi, Tip: Metin, Açıklama: Esans adı, Görünüm: Otomatik
+  - Alan Adı: tank_kodu, Tip: Metin, Açıklama: Tank kodu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: tank_ismi, Tip: Metin, Açıklama: Tank adı, Görünüm: Otomatik
+  - Alan Adı: planlanan_miktar, Tip: Float, Açıklama: Planlanan miktar, Görünüm: Kullanıcı Girişi
+  - Alan Adı: birim, Tip: Metin, Açıklama: Birim, Görünüm: Otomatik
+  - Alan Adı: planlanan_baslangic_tarihi, Tip: Tarih, Açıklama: Başlangıç tarihi, Görünüm: Kullanıcı Girişi
+  - Alan Adı: demlenme_suresi_gun, Tip: Integer, Açıklama: Demlenme süresi, Görünüm: Otomatik
+  - Alan Adı: planlanan_bitis_tarihi, Tip: Tarih, Açıklama: Bitiş tarihi, Görünüm: Sistem Öneri
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Açıklama, Görünüm: Kullanıcı Girişi
+  - Alan Adı: durum, Tip: Metin, Açıklama: İş emri durumu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: tamamlanan_miktar, Tip: Float, Açıklama: Tamamlanan miktar, Görünüm: Kullanıcı Girişi
+  - Alan Adı: eksik_miktar_toplami, Tip: Float, Açıklama: Eksik miktar, Görünüm: Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: is_emri_numarasi DB otomatik atar (4000'den), tarih ve kullanıcı otomatik, diğer alanlar otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: is_emri_numarasi ile backend'e gönderilir
+  - Delete: is_emri_numarasi ile silme işlemi yapılır
+
+### 12. Esans İş Emirleri Eksik Miktar Kayıtları
+- **Tablo Adı:** esans_is_emirleri_eksik_miktar_kayitlari
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: kayit_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: İş emri numarası, Görünüm: Otomatik
+  - Alan Adı: eksik_miktar, Tip: Float, Açıklama: Eksik miktar, Görünüm: Kullanıcı Girişi
+  - Alan Adı: eksik_kalma_nedeni, Tip: Metin, Açıklama: fire, teknik_ariza, eksik_malzeme, diger, Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Malzeme kodu, Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Malzeme adı, Görünüm: Otomatik
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: Malzeme türü, Görünüm: Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: kayit_id DB otomatik atar, is_emri_numarasi seçime göre otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: kayit_id ile backend'e gönderilir
+  - Delete: kayit_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - is_emri_numarasi: seçilen iş emrine göre otomatik gelir
+  - eksik_kalma_nedeni: liste seçimi (fire, teknik_ariza, eksik_malzeme, diger)
+  - malzeme_ismi ve malzeme_turu: seçilen malzeme koduna göre otomatik gelir
+
+### 13. Ürünler Tablosu
+- **Tablo Adı:** urunler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: urun_kodu, Tip: Integer, Açıklama: Sistem her ürüne otomatik artan bir numara verecek, 200 binden başlayacak, Görünüm: DB Otomatik
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: Kullanıcı kendisi arayüzden girecek, Görünüm: Kullanıcı Girişi
+  - Alan Adı: urun_foto_ismi, Tip: Metin, Açıklama: Ürünlere ait fotolar static/urunresimleri klasöründe; dosya adı burada tutulur. Yükleme/silme ile otomatik güncellenir, Görünüm: Sistem Otomatik
+  - Alan Adı: not_bilgisi, Tip: Metin, Açıklama: Kullanıcı ürüne ait not yazabilecek, Görünüm: Kullanıcı Girişi
+  - Alan Adı: stok_miktari, Tip: Integer, Açıklama: Kullanıcı editleyebilir; üretim/teslimat sonrası otomatik güncellenir, Görünüm: Kullanıcı/Sistem
+  - Alan Adı: birim, Tip: Metin, Açıklama: adet, litre vs., Görünüm: Kullanıcı Girişi
+  - Alan Adı: satis_fiyati, Tip: Float, Açıklama: Kullanıcı elle girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: kritik_stok_seviyesi, Tip: Integer, Açıklama: Altına düşünce üretim için hedef seviye; kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: depo, Tip: Metin, Açıklama: Kullanıcı arayüzden seçecek. lokasyonlar tablosundaki uniq depolar listelenir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: raf, Tip: Metin, Açıklama: Depo seçimine gore lokasyonlar tablosundaki raflar listelenir, kullanıcı secer, Görünüm: Kullanıcı Seçim
+- **CRUD İşlem Detayları:**
+  - Create: urun_kodu DB otomatik atar (200.000'den başlar), tüm diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: urun_kodu ile backend'e gönderilir, stok_miktari kullanıcı veya sistem tarafından güncellenir
+  - Delete: urun_kodu ile silme işlemi yapılır
+
+### 14. Esans İş Emri Malzeme Listesi Tablosu
+- **Tablo Adı:** esans_is_emri_malzeme_listesi
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: miktar, Tip: Float, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: birim, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: is_emri_numarasi ile birlikte diğer alanlar otomatik olarak doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: Bu tablo sadece sistem tarafından güncellenir, kullanıcı müdahale edemez
+  - Delete: is_emri_numarasi ile silme işlemi yapılır
+
+### 15. Montaj İş Emirleri Tablosu
+- **Tablo Adı:** montaj_is_emirleri
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Otomatik artan, 5000’den baslar, Görünüm: DB Otomatik
+  - Alan Adı: olusturulma_tarihi, Tip: Tarih, Açıklama: Sistem otomatik olusturur, Görünüm: Sistem Otomatik
+  - Alan Adı: olusturan, Tip: Metin, Açıklama: Oturumdaki kullanici adi otomatik yazilir, Görünüm: Sistem Otomatik
+  - Alan Adı: urun_kodu, Tip: Metin, Açıklama: Listeden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: Secime gore otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: planlanan_miktar, Tip: Float, Açıklama: Kullanıcı elle girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: birim, Tip: Metin, Açıklama: Secilen urun koduna gore otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: planlanan_baslangic_tarihi, Tip: Tarih, Açıklama: Kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: planlanan_bitis_tarihi, Tip: Tarih, Açıklama: Kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Kullanıcı aciklama girebilir, Görünüm: Kullanıcı Girişi
+  - Alan Adı: durum, Tip: Metin, Açıklama: (olusturuldu, basladi, tamamlandi, iptal_edildi), Görünüm: Kullanıcı Seçim
+  - Alan Adı: tamamlanan_miktar, Tip: Float, Açıklama: Kapatirken girilir, Görünüm: Kullanıcı Girişi
+  - Alan Adı: eksik_miktar_toplami, Tip: Float, Açıklama: Otomatik: planlanan_miktar - eksik_miktar, Görünüm: Otomatik
+  - Alan Adı: is_merkezi_id, Tip: Integer, Açıklama: İş merkezi ID'si, Görünüm: Kullanıcı Seçim
+- **CRUD İşlem Detayları:**
+  - Create: is_emri_numarasi DB otomatik atar (5000'den), tarih ve kullanıcı otomatik, diğer alanlar otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: is_emri_numarasi ile backend'e gönderilir
+  - Delete: is_emri_numarasi ile silme işlemi yapılır
+- **Özel Notlar:**
+  - is_merkezi_id: "İş Merkezleri" tablosundan seçilen iş merkezinin ID'sidir
+  - Montaj iş emri oluşturulurken veya düzenlenirken "İş Merkezi" seçimi yapılmalıdır
+
+### 16. Montaj İş Emirleri Eksik Miktar Kayıtları Tablosu
+- **Tablo Adı:** montaj_is_emirleri_eksik_miktar_kayitlari
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Secilen is emrine gore otomatik, Görünüm: Otomatik
+  - Alan Adı: eksik_miktar, Tip: Float, Açıklama: Kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: eksik_kalma_nedeni, Tip: Metin, Açıklama: ("fire", "teknik_ariza", "eksik_malzeme", "diger"), Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_kodu, Tip: Sayısal, Açıklama: Listeden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Secilen koda gore otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: Secilen koda gore otomatik gelir, Görünüm: Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: is_emri_numarasi seçime göre otomatik dolar
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: is_emri_numarasi ile backend'e gönderilir
+  - Delete: is_emri_numarasi ile silme işlemi yapılır
+- **Özel Notlar:**
+  - is_emri_numarasi: seçilen iş emrine göre otomatik gelir
+  - eksik_kalma_nedeni: liste seçimi ("fire", "teknik_ariza", "eksik_malzeme", "diger")
+  - malzeme_ismi ve malzeme_turu: seçilen malzeme koduna göre otomatik gelir
+
+### 17. Montaj İş Emri Malzeme Listesi Tablosu
+- **Tablo Adı:** montaj_is_emri_malzeme_listesi
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: miktar, Tip: Float, Açıklama: Otomatik atanır, Görünüm: Otomatik
+  - Alan Adı: birim, Tip: Metin, Açıklama: Otomatik atanır, Görünüm: Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: is_emri_numarasi ile birlikte diğer alanlar otomatik olarak doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: Bu tablo sadece sistem tarafından güncellenir, kullanıcı müdahale edemez
+  - Delete: is_emri_numarasi ile silme işlemi yapılır
+
+### 18. Stok Hareket Kayıtları Tablosu
+- **Tablo Adı:** stok_hareket_kayitlari
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: hareket_id, Tip: Integer, Açıklama: Otomatik artan, Görünüm: DB Otomatik
+  - Alan Adı: tarih, Tip: Tarih + saat, Açıklama: Sistem otomatik kaydeder, Görünüm: Sistem Otomatik
+  - Alan Adı: stok_turu, Tip: Metin, Açıklama: (malzeme, esans, urun), Görünüm: Otomatik
+  - Alan Adı: kod, Tip: Metin/Integer, Açıklama: Ture gore: malzeme→malzeme_kodu, esans→esans_kodu, urun→urun_kodu, Görünüm: Otomatik
+  - Alan Adı: isim, Tip: Metin, Açıklama: Koda gore otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: birim, Tip: Metin, Açıklama: Otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: miktar, Tip: Float, Açıklama: Her zaman pozitif, Görünüm: Otomatik
+  - Alan Adı: yon, Tip: Metin, Açıklama: (giris, cikis), Görünüm: Otomatik
+  - Alan Adı: hareket_turu, Tip: Metin, Açıklama: (stok_giris, stok_cikis, uretim, uretimde_kullanim, fire, sayim_farki, stok_duzeltme, montaj), Görünüm: Otomatik
+  - Alan Adı: depo, Tip: Metin, Açıklama: Lokasyonlardan secilir (malzeme/urun icin), Görünüm: Sistem Otomatik
+  - Alan Adı: raf, Tip: Metin, Açıklama: Depoya ait raf; varsayilan “Raf etiketi yok”, Görünüm: Sistem Otomatik
+  - Alan Adı: tank_kodu, Tip: Metin, Açıklama: Tanklardan secilir (esans icin), Görünüm: Sistem Otomatik
+  - Alan Adı: ilgili_belge_no, Tip: Metin, Açıklama: Sozlesme, is_emri_no, siparis_no, sayim_rapor_no vb., Görünüm: Otomatik
+  - Alan Adı: is_emri_numarasi, Tip: Integer, Açıklama: Iliskiliyse secilir, Görünüm: Otomatik
+  - Alan Adı: musteri_id, Tip: Integer, Açıklama: Musteriye cikis ise secilir, Görünüm: Otomatik
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Zorunlu (fire/sayim_farki/duzeltme vb.), Görünüm: Otomatik
+  - Alan Adı: kaydeden_personel_id, Tip: Integer, Açıklama: Oturumdaki personel, Görünüm: Sistem Otomatik
+  - Alan Adı: kaydeden_personel_adi, Tip: Metin, Açıklama: Personel ID’ye gore otomatik, Görünüm: Sistem Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: hareket_id DB otomatik atar, diğer alanlar sistem tarafından otomatik doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: Bu tablo sadece sistem tarafından güncellenir, kullanıcı müdahale edemez
+  - Delete: Yetkili kullanıcı silme işlemi yapabilir
+
+### 19. Çerçeve Sözleşmeler Tablosu
+- **Tablo Adı:** cerceve_sozlesmeler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: sozlesme_id, Tip: Integer, Açıklama: Otomatik artan, Görünüm: DB Otomatik
+  - Alan Adı: tedarikci_id, Tip: Integer, Açıklama: Tedarikcilerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: tedarikci_adi, Tip: Metin, Açıklama: ID’ye gore otomatik, Görünüm: Otomatik
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Malzemelerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Koda gore otomatik, Görünüm: Otomatik
+  - Alan Adı: birim_fiyat, Tip: Float, Açıklama: Yetkili kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: para_birimi, Tip: Metin, Açıklama: (tl, usd, eur), Görünüm: Kullanıcı Seçim
+  - Alan Adı: sozlesme_turu, Tip: Metin, Açıklama: (pesin_odemeli_adet_anlasmasi, sureli_birim_fiyatli, suresiz_birim_fiyatli), Görünüm: Kullanıcı Seçim
+  - Alan Adı: toplam_anlasilan_miktar, Tip: Float, Açıklama: Yetkili kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: kalan_anlasilan_miktar, Tip: Float, Açıklama: Sistem: toplam - kabul_edilen_toplam, Görünüm: Otomatik
+  - Alan Adı: baslangic_tarihi, Tip: Tarih, Açıklama: , Görünüm: Kullanıcı Girişi
+  - Alan Adı: bitis_tarihi, Tip: Tarih, Açıklama: , Görünüm: Kullanıcı Girişi
+  - Alan Adı: pesin_odeme_yapildi_mi, Tip: Evet/Hayir, Açıklama: Sadece pesin odemeli ture "evet", Görünüm: Otomatik
+  - Alan Adı: toplam_pesin_odeme_tutari, Tip: Float, Açıklama: Pesin odemeli sozlesmelerde yetkili kullanıcı girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: durum, Tip: Metin, Açıklama: (aktif, tamamlandi, iptal_edildi), Görünüm: Kullanıcı Seçim
+  - Alan Adı: olusturan, Tip: Metin, Açıklama: Kaydeden personel (yetkili kullanıcı), Görünüm: Sistem Otomatik
+  - Alan Adı: olusturulma_tarihi, Tip: Tarih + saat, Açıklama: Sistem otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Yetkili kullanıcı notu, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: sozlesme_id DB otomatik atar, diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: sozlesme_id ile backend'e gönderilir
+  - Delete: sozlesme_id ile silme işlemi yapılır
+
+### 20. Giriş Kalite Kontrolü Tablosu
+- **Tablo Adı:** giris_kalite_kontrolu
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: kontrol_id, Tip: Integer, Açıklama: Otomatik artan, Görünüm: DB Otomatik
+  - Alan Adı: tarih, Tip: Tarih + saat, Açıklama: Sistem otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: tedarikci_id, Tip: Integer, Açıklama: Tedarikcilerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: tedarikci_adi, Tip: Metin, Açıklama: ID’ye gore otomatik, Görünüm: Otomatik
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: Malzemelerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: Koda gore otomatik, Görünüm: Otomatik
+  - Alan Adı: birim, Tip: Metin, Açıklama: , Görünüm: Otomatik
+  - Alan Adı: reddedilen_miktar, Tip: Float, Açıklama: Kullanıcı doldurur, Görünüm: Kullanıcı Girişi
+  - Alan Adı: red_nedeni, Tip: Metin, Açıklama: (eksik, gedikli, kirlenmis, yanlis_malzeme, diger), Görünüm: Kullanıcı Seçim
+  - Alan Adı: kontrol_eden_personel_id, Tip: Integer, Açıklama: , Görünüm: Sistem Otomatik
+  - Alan Adı: kontrol_eden_personel_adi, Tip: Metin, Açıklama: , Görünüm: Otomatik
+  - Alan Adı: ilgili_belge_no, Tip: Metin, Açıklama: Örn: sevk_irsaliyesi_no, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Opsiyonel, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: kontrol_id DB otomatik atar, diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: kontrol_id ile backend'e gönderilir
+  - Delete: kontrol_id ile silme işlemi yapılır
+
+### 21. Siparişler Tablosu
+- **Tablo Adı:** siparisler
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: siparis_id, Tip: Integer, Açıklama: Otomatik artan, 1000’den baslar, Görünüm: DB Otomatik
+  - Alan Adı: musteri_id, Tip: Integer, Açıklama: Musterilerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: musteri_adi, Tip: Metin, Açıklama: ID’ye gore otomatik, Görünüm: Otomatik
+  - Alan Adı: tarih, Tip: Tarih + saat, Açıklama: Sistem otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: durum, Tip: Metin, Açıklama: (beklemede, onaylandi, iptal_edildi, tamamlandi), Görünüm: Kullanıcı Seçim
+  - Alan Adı: toplam_adet, Tip: Integer, Açıklama: Kalemlerden otomatik hesaplanır, Görünüm: Otomatik
+  - Alan Adı: olusturan_musteri, Tip: Metin, Açıklama: Musteri portal giris adi, Görünüm: Sistem Otomatik
+  - Alan Adı: onaylayan_personel_id, Tip: Integer, Açıklama: Sadece "onaylandi" durumunda, Görünüm: Sistem Otomatik
+  - Alan Adı: onaylayan_personel_adi, Tip: Metin, Açıklama: ID’ye gore otomatik, Görünüm: Otomatik
+  - Alan Adı: onay_tarihi, Tip: Tarih + saat, Açıklama: Onayda otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Musteri notu (opsiyonel), Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: siparis_id DB otomatik atar (1000'den), diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: siparis_id ile backend'e gönderilir
+  - Delete: siparis_id ile silme işlemi yapılır
+
+### 22. Sipariş Kalemleri Tablosu
+- **Tablo Adı:** siparis_kalemleri
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: siparis_id, Tip: Integer, Açıklama: Siparislerden otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: urun_kodu, Tip: Integer, Açıklama: Urunlerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: Koda gore otomatik, Görünüm: Otomatik
+  - Alan Adı: adet, Tip: Integer, Açıklama: Musteri girer, Görünüm: Kullanıcı Girişi
+  - Alan Adı: birim, Tip: Metin, Açıklama: , Görünüm: Otomatik
+  - Alan Adı: birim_fiyat, Tip: Float, Açıklama: O anki satis fiyati (yetkili kullanıcılar gorur), Görünüm: Kullanıcı Girişi
+  - Alan Adı: toplam_tutar, Tip: Float, Açıklama: adet × birim_fiyat (yetkisiz calisanlar gormezecek), Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: siparis_id ile birlikte diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir (fiyatlar yetkili kullanıcılar için)
+  - Update: siparis_id ile backend'e gönderilir
+  - Delete: siparis_id ile silme işlemi yapılır
+
+### 23. Müşteri Davranış Logu Tablosu
+- **Tablo Adı:** musteri_davranis_logu
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: log_id, Tip: Integer, Açıklama: Otomatik artan, Görünüm: DB Otomatik
+  - Alan Adı: musteri_id, Tip: Integer, Açıklama: Musterilerden secilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: musteri_adi, Tip: Metin, Açıklama: ID’ye gore otomatik, Görünüm: Otomatik
+  - Alan Adı: giris_tarihi, Tip: Tarih + saat, Açıklama: Portal girisi anı, Görünüm: Sistem Otomatik
+  - Alan Adı: cikis_tarihi, Tip: Tarih + saat, Açıklama: Oturum bitisinde otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: siparis_olusturdu_mu, Tip: Evet/Hayir, Açıklama: Oturumda siparis olustuysa "evet", Görünüm: Sistem Otomatik
+  - Alan Adı: oturum_suresi_dakika, Tip: Float, Açıklama: (cikis - giris) dakika. Sistem hesaplar, Görünüm: Sistem Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: log_id DB otomatik atar, diğer alanlar sistem tarafından otomatik doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: Bu tablo sadece sistem tarafından güncellenir, kullanıcı müdahale edemez
+  - Delete: Yetkili kullanıcı silme işlemi yapabilir
+
+### 24. Malzemeler Detaylı View
+- **View Adı:** vw_malzemeler_detayli
+- **Alanlar:**
+  - Alan Adı: malzeme_kodu, Tip: Integer, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: malzeme_ismi, Tip: Metin, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: malzeme_turu, Tip: Metin, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: stok_miktari, Tip: Integer, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: birim, Tip: Metin, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: depo, Tip: Metin, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: raf, Tip: Metin, Açıklama: malzemeler tablosundan çekilir
+  - Alan Adı: kritik_stok_seviyesi, Tip: Integer, Açıklama: malzemeler tablosundan çekilir
+  - **Alan Adı: ortalama_aylik_tuketim, Tip: Float, Açıklama: Son 12 aydaki ortalama aylık tüketim miktarı, hesaplanır**
+  - **Alan Adı: son_tedarikci_adi, Tip: Metin, Açıklama: En son yapılan giriş hareketinden alınan tedarikçi adı**
+- **Özel Notlar:**
+  - vw_malzemeler_detayli view'ı, malzemeler tablosundaki verileri ve ek hesaplamaları bir araya getirerek sunar
+  - ortalama_aylik_tuketim: Son 12 aydaki çıkış hareketlerinden hesaplanır
+  - son_tedarikci_adi: Giriş hareketlerindeki son tedarikçi adını çeker
+
+### 25. Ürünler Master View
+- **View Adı:** vw_urunler_master
+- **Alanlar:**
+  - Alan Adı: urun_kodu, Tip: Integer, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: urun_foto_ismi, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: depo, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: raf, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: not_bilgisi, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: stok_miktari, Tip: Integer, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: birim, Tip: Metin, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: satis_fiyati, Tip: Float, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: kritik_stok_seviyesi, Tip: Integer, Açıklama: urunler tablosundan çekilir
+  - Alan Adı: birim_maliyet, Tip: Float, Açıklama: Ürün ağacına göre otomatik hesaplanır. Kullanıcı tarafından düzenlenemez
+  - Alan Adı: fiili_maliyet, Tip: Float, Açıklama: Birim Maliyet + (aylık sabit gider / aylık üretim miktarı) + fire etkisi ile otomatik hesaplanır
+  - Alan Adı: kar_orani, Tip: Float, Açıklama: (Satış Fiyatı / Fiili Maliyet) * 100 formülüyle otomatik hesaplanır
+  - Alan Adı: stok_degeri, Tip: Float, Açıklama: Stok Miktarı × Satış Fiyatı şeklinde otomatik hesaplanır
+  - Alan Adı: esans_is_emri_miktari, Tip: Float, Açıklama: Açık esans iş emirlerinde bu üründen üretilecek miktar toplamı. Otomatik toplanır
+  - Alan Adı: montaj_is_emri_miktari, Tip: Float, Açıklama: Açık montaj iş emirlerinde planlanan bu ürün miktarı. Otomatik toplanır
+  - Alan Adı: teslimat_bekleyen_musteri_siparisi_miktari, Tip: Integer, Açıklama: Durumu "Onaylandı" olan ve henüz stok çıkış yapılmamış siparişlerdeki toplam adet. Otomatik toplanır
+  - Alan Adı: son_teslimat_tarihi, Tip: Tarih, Açıklama: Bu ürüne ait en son "Stok Çıkış" hareketinin tarihi. Otomatik çekilir
+- **Özel Notlar:**
+  - vw_urunler_master view'ı, urunler tablosundaki verileri ve ek hesaplamaları bir araya getirerek sunar
+  - Maliyet ve kar oranları gibi değerler otomatik olarak hesaplanmaktadır
+
+### 25. Müşteri Geri Bildirimleri Tablosu
+- **Tablo Adı:** musteri_geri_bildirimleri
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: geri_bildirim_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: musteri_id, Tip: Integer, Açıklama: musteriler tablosundan seçilir, Görünüm: Otomatik (Session)
+  - Alan Adı: musteri_adi, Tip: Metin, Açıklama: musteri_id'den otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: siparis_id, Tip: Integer, Açıklama: siparisler tablosundan seçilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: urun_kodu, Tip: Integer, Açıklama: siparis_kalemleri ile ilişkili, Görünüm: Kullanıcı Seçim
+  - Alan Adı: urun_ismi, Tip: Metin, Açıklama: urun_kodu'ndan otomatik gelir, Görünüm: Otomatik
+  - Alan Adı: puanlama, Tip: Integer, Açıklama: 1-5 arası puan, Görünüm: Kullanıcı Girişi
+  - Alan Adı: baslik, Tip: Metin, Açıklama: Geri bildirim başlığı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: Ayrıntılı geri bildirim, Görünüm: Kullanıcı Girişi
+  - Alan Adı: geri_bildirim_turu, Tip: Metin, Açıklama: "degerlendirme", "sikayet", "oneri", Görünüm: Kullanıcı Seçim
+  - Alan Adı: gizlilik_durumu, Tip: Boolean, Açıklama: Müşteri isterse ismini gizleyebilir, Görünüm: Kullanıcı Seçim
+  - Alan Adı: cevaplandi_mi, Tip: Boolean, Açıklama: Personel cevap verdi mi, Görünüm: Sistem Otomatik
+  - Alan Adı: cevap_metni, Tip: Metin, Açıklama: Personel cevabı, Görünüm: Yetkili Girişi
+  - Alan Adı: olusturma_tarihi, Tip: Tarih + saat, Açıklama: Sistem otomatik, Görünüm: Sistem Otomatik
+  - Alan Adı: guncelleme_tarihi, Tip: Tarih + saat, Açıklama: Cevaplama tarihi, Görünüm: Sistem Otomatik
+- **CRUD İşlem Detayları:**
+  - Create: geri_bildirim_id DB otomatik atar, musteri_id session'dan alınır
+  - Read: Personel ve admin tüm geri bildirimleri görebilir, müşteri sadece kendi kayıtlarını görebilir
+  - Update: sadece cevap_metni alanı personel tarafından güncellenebilir
+  - Delete: sadece admin yetkisi ile silinebilir
+- **Özel Notlar:**
+  - Müşteri sadece kendi verdiği siparişlerle ilgili geri bildirimde bulunabilir
+  - Puanlama zorunlu değil ama önerilir
+  - 5 gün içinde sadece bir geri bildirim yapılabilir (aynı müşteri için)
+
+### 26. İş Merkezleri Sayfası
+- **Açıklama:** İş merkezlerini tanımlamak ve yönetmek için kullanılan CRUD arayüzü.
+- **İşlemler:** Ekle, Görüntüle, Güncelle, Sil
+- **Alanlar:** 
+  - is_merkezi_id (Integer, Otomatik artan, Primary Key)
+  - isim (Metin, Zorunlu)
+  - aciklama (Metin, Opsiyonel)
+
+### CRUD İşlem Detayları:
+- **Create:** is_merkezi_id DB otomatik atar, diğer alanlar kullanıcı tarafından doldurulur
+- **Read:** Tüm alanlar kullanıcıya gösterilir
+- **Update:** is_merkezi_id ile backend'e gönderilir
+- **Delete:** is_merkezi_id ile silme işlemi yapılır
+
+---
+
+### 27. İş Merkezleri Tablosu
+- **Tablo Adı:** is_merkezleri
+- **CRUD İşlemleri:** Create • Read • Update • Delete
+- **Veri Alanları:**
+  - Alan Adı: is_merkezi_id, Tip: Integer, Açıklama: Primary Key, Görünüm: DB Otomatik
+  - Alan Adı: isim, Tip: Metin, Açıklama: İş merkezinin adı, Görünüm: Kullanıcı Girişi
+  - Alan Adı: aciklama, Tip: Metin, Açıklama: İş merkezi açıklaması, Görünüm: Kullanıcı Girişi
+- **CRUD İşlem Detayları:**
+  - Create: is_merkezi_id DB otomatik atar, diğer alanlar kullanıcı tarafından doldurulur
+  - Read: Tüm alanlar kullanıcıya gösterilir
+  - Update: is_merkezi_id ile backend'e gönderilir
+  - Delete: is_merkezi_id ile silme işlemi yapılır
+- **Özel Notlar:**
+  - Bu tablo, montaj iş emirlerinin hangi iş merkezinde yapılacağını belirlemek için kullanılır

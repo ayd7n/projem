@@ -16,7 +16,7 @@ if ($_SESSION['taraf'] !== 'personel') {
 $message = '';
 $error = '';
 
-// Handle form submissions
+// Handle form submissions (for non-JS fallback)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['create'])) {
         // Create new incoming quality control record
@@ -118,13 +118,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $controls_query = "SELECT * FROM giris_kalite_kontrolu ORDER BY tarih DESC";
 $controls_result = $connection->query($controls_query);
 
-// Fetch all suppliers for dropdown
-$suppliers_query = "SELECT * FROM tedarikciler ORDER BY tedarikci_adi";
-$suppliers_result = $connection->query($suppliers_query);
-
-// Fetch all materials for dropdown
-$materials_query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
-$materials_result = $connection->query($materials_query);
+// Calculate total quality control records
+$total_result = $connection->query("SELECT COUNT(*) as total FROM giris_kalite_kontrolu");
+$total_controls = $total_result->fetch_assoc()['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -132,328 +128,384 @@ $materials_result = $connection->query($materials_query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Giriş Kalite Kontrolü - Parfüm ERP Sistemi</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Giriş Kalite Kontrolü - Parfüm ERP</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #1abc9c;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --info: #3498db;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --bg-color: #f5f7fb;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --text-primary: #2c3e50;
+            --text-secondary: #8492a6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
         }
-        
-        .header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .form-section, .list-section {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        .form-group textarea {
-            height: 80px;
-            resize: vertical;
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        
-        .btn-update {
-            background-color: #28a745;
-        }
-        
-        .btn-update:hover {
-            background-color: #218838;
-        }
-        
-        .btn-delete {
-            background-color: #dc3545;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .logout {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        .logout:hover {
-            background-color: #d32f2f;
-        }
-        
-        .red-nedeni {
+        .main-content { padding: 30px; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
+        .page-header p { color: var(--text-secondary); font-size: 1rem; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+        .card-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+        .card-body { padding: 20px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--secondary); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
+        th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+        tbody tr:hover { background-color: #f5f7fb; }
+        .actions { display: flex; gap: 10px; }
+        .actions button { padding: 8px 12px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 25px; display: flex; align-items: center; }
+        .stat-icon { font-size: 2rem; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: white; }
+        .stat-info h3 { font-size: 1.8rem; font-weight: 700; }
+        .stat-info p { color: var(--text-secondary); }
+        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .modal-body .form-group { display: flex; flex-direction: column; }
+        .modal-body .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
+        .modal-body .form-group input, .modal-body .form-group select, .modal-body .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+        .disabled-row { opacity: 0.6; }
+        .disabled-row .actions button { pointer-events: none; opacity: 0.5; }
+        .status-badge {
             padding: 4px 8px;
             border-radius: 4px;
             color: white;
             font-size: 0.9em;
         }
-        
-        .eksik { background-color: #ffc107; }
-        .gedikli { background-color: #fd7e14; }
-        .kirlenmis { background-color: #6f42c1; }
-        .yanlis_malzeme { background-color: #e83e8c; }
-        .diger { background-color: #6c757d; }
+        .status-eksik { background-color: #ffc107; color: #000; }
+        .status-gedikli { background-color: #fd7e14; }
+        .status-kirlenmis { background-color: #6f42c1; }
+        .status-yanlis-malzeme { background-color: #e83e8c; }
+        .status-diger { background-color: #6c757d; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Giriş Kalite Kontrolü</h1>
-        <p>Tedarik edilen malzemelerin kalite kontrolünü yönetin</p>
-    </div>
-    
-    <?php if ($message): ?>
-        <div class="message success"><?php echo htmlspecialchars($message); ?></div>
-    <?php endif; ?>
-    
-    <?php if ($error): ?>
-        <div class="message error"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
-    
-    <div class="container">
-        <div class="form-section">
-            <h2><?php echo isset($_GET['edit']) ? 'Kalite Kontrolü Güncelle' : 'Yeni Kalite Kontrolü Ekle'; ?></h2>
-            
-            <?php
-            $kontrol_id = '';
-            $tedarikci_id = '';
-            $malzeme_kodu = '';
-            $red_edilen_miktar = 0;
-            $red_nedeni = '';
-            $ilgili_belge_no = '';
-            $aciklama = '';
-            
-            if (isset($_GET['edit'])) {
-                $kontrol_id = $_GET['edit'];
-                $edit_query = "SELECT * FROM giris_kalite_kontrolu WHERE kontrol_id = ?";
-                $stmt = $connection->prepare($edit_query);
-                $stmt->bind_param('i', $kontrol_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $control = $result->fetch_assoc();
-                
-                if ($control) {
-                    $tedarikci_id = $control['tedarikci_id'];
-                    $malzeme_kodu = $control['malzeme_kodu'];
-                    $red_edilen_miktar = $control['reddedilen_miktar'];
-                    $red_nedeni = $control['red_nedeni'];
-                    $ilgili_belge_no = $control['ilgili_belge_no'];
-                    $aciklama = $control['aciklama'];
-                }
-                $stmt->close();
-            }
-            ?>
-            
-            <form method="POST">
-                <?php if (isset($_GET['edit'])): ?>
-                    <input type="hidden" name="kontrol_id" value="<?php echo $kontrol_id; ?>">
-                <?php endif; ?>
-                
-                <div class="form-group">
-                    <label for="tedarikci_id">Tedarikçi:</label>
-                    <select id="tedarikci_id" name="tedarikci_id" required>
-                        <option value="">Tedarikçi Seçin</option>
-                        <?php while($supplier = $suppliers_result->fetch_assoc()): ?>
-                            <option value="<?php echo $supplier['tedarikci_id']; ?>" 
-                                <?php echo $tedarikci_id == $supplier['tedarikci_id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="malzeme_kodu">Malzeme:</label>
-                    <select id="malzeme_kodu" name="malzeme_kodu" required>
-                        <option value="">Malzeme Seçin</option>
-                        <?php while($material = $materials_result->fetch_assoc()): ?>
-                            <option value="<?php echo $material['malzeme_kodu']; ?>" 
-                                <?php echo $malzeme_kodu == $material['malzeme_kodu'] ? 'selected' : ''; ?>>
-                                <?php echo $material['malzeme_kodu']; ?> - <?php echo htmlspecialchars($material['malzeme_ismi']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="red_edilen_miktar">Red Edilen Miktar:</label>
-                    <input type="number" id="red_edilen_miktar" name="red_edilen_miktar" value="<?php echo $red_edilen_miktar; ?>" step="0.01" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="red_nedeni">Red Nedeni:</label>
-                    <select id="red_nedeni" name="red_nedeni" required>
-                        <option value="eksik" <?php echo $red_nedeni === 'eksik' ? 'selected' : ''; ?>>Eksik</option>
-                        <option value="gedikli" <?php echo $red_nedeni === 'gedikli' ? 'selected' : ''; ?>>Gedikli/Bozuk</option>
-                        <option value="kirlenmis" <?php echo $red_nedeni === 'kirlenmis' ? 'selected' : ''; ?>>Kirli/Kirlenmiş</option>
-                        <option value="yanlis_malzeme" <?php echo $red_nedeni === 'yanlis_malzeme' ? 'selected' : ''; ?>>Yanlış Malzeme</option>
-                        <option value="diger" <?php echo $red_nedeni === 'diger' ? 'selected' : ''; ?>>Diğer</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="ilgili_belge_no">İlgili Belge No:</label>
-                    <input type="text" id="ilgili_belge_no" name="ilgili_belge_no" value="<?php echo htmlspecialchars($ilgili_belge_no); ?>">
-                </div>
-                
-                <div class="form-group">
-                    <label for="aciklama">Açıklama:</label>
-                    <textarea id="aciklama" name="aciklama"><?php echo htmlspecialchars($aciklama); ?></textarea>
-                </div>
-                
-                <?php if (isset($_GET['edit'])): ?>
-                    <button type="submit" name="update" class="btn btn-update">Güncelle</button>
-                    <a href="giris_kalite_kontrolu.php" class="btn">İptal</a>
-                <?php else: ?>
-                    <button type="submit" name="create" class="btn">Oluştur</button>
-                <?php endif; ?>
-            </form>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Giriş Kalite Kontrolü</h1>
+            <p>Tedarik edilen malzemelerin kalite kontrolünü yönetin</p>
         </div>
-        
-        <div class="list-section">
-            <h2>Kalite Kontrol Listesi</h2>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tarih</th>
-                        <th>Tedarikçi</th>
-                        <th>Malzeme</th>
-                        <th>Birim</th>
-                        <th>Red Miktarı</th>
-                        <th>Red Nedeni</th>
-                        <th>Belge No</th>
-                        <th>Kontrol Eden</th>
-                        <th>İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($control = $controls_result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?php echo $control['kontrol_id']; ?></td>
-                            <td><?php echo $control['tarih']; ?></td>
-                            <td><?php echo htmlspecialchars($control['tedarikci_adi']); ?></td>
-                            <td><?php echo htmlspecialchars($control['malzeme_ismi']); ?></td>
-                            <td><?php echo htmlspecialchars($control['birim']); ?></td>
-                            <td><?php echo $control['reddedilen_miktar']; ?></td>
-                            <td>
-                                <span class="red-nedeni <?php echo str_replace('_', '-', $control['red_nedeni']); ?>">
-                                    <?php 
-                                    switch($control['red_nedeni']) {
-                                        case 'eksik': echo 'Eksik'; break;
-                                        case 'gedikli': echo 'Gedikli/Bozuk'; break;
-                                        case 'kirlenmis': echo 'Kirli/Kirlenmiş'; break;
-                                        case 'yanlis_malzeme': echo 'Yanlış Malzeme'; break;
-                                        case 'diger': echo 'Diğer'; break;
-                                        default: echo htmlspecialchars($control['red_nedeni']); break;
-                                    }
+
+        <div id="alert-placeholder"></div>
+
+        <div class="row">
+            <div class="col-md-8">
+                <button id="addControlBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Kalite Kontrol Kaydı Ekle</button>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-card mb-3">
+                    <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-clipboard-check"></i></div>
+                    <div class="stat-info">
+                        <h3><?php echo $total_controls; ?></h3>
+                        <p>Toplam Kontrol Kaydı</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Kalite Kontrol Listesi</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>İşlemler</th>
+                                <th>ID</th>
+                                <th>Tarih</th>
+                                <th>Tedarikçi</th>
+                                <th>Malzeme</th>
+                                <th>Birim</th>
+                                <th>Red Miktarı</th>
+                                <th>Red Nedeni</th>
+                                <th>Belge No</th>
+                                <th>Kontrol Eden</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($controls_result && $controls_result->num_rows > 0): ?>
+                                <?php while ($control = $controls_result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td class="actions">
+                                            <button class="btn btn-primary btn-sm edit-btn" 
+                                                    data-id="<?php echo $control['kontrol_id']; ?>" 
+                                                    title="Düzenle">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" 
+                                                    data-id="<?php echo $control['kontrol_id']; ?>" 
+                                                    title="Sil">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        <td><?php echo $control['kontrol_id']; ?></td>
+                                        <td><?php echo $control['tarih']; ?></td>
+                                        <td><strong><?php echo htmlspecialchars($control['tedarikci_adi']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($control['malzeme_ismi']); ?></td>
+                                        <td><?php echo htmlspecialchars($control['birim']); ?></td>
+                                        <td><?php echo $control['reddedilen_miktar']; ?></td>
+                                        <td>
+                                            <span class="status-badge status-<?php echo str_replace('_', '-', $control['red_nedeni']); ?>">
+                                                <?php 
+                                                switch($control['red_nedeni']) {
+                                                    case 'eksik': echo 'Eksik'; break;
+                                                    case 'gedikli': echo 'Gedikli/Bozuk'; break;
+                                                    case 'kirlenmis': echo 'Kirli/Kirlenmiş'; break;
+                                                    case 'yanlis_malzeme': echo 'Yanlış Malzeme'; break;
+                                                    case 'diger': echo 'Diğer'; break;
+                                                    default: echo htmlspecialchars($control['red_nedeni']); break;
+                                                }
+                                                ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($control['ilgili_belge_no']); ?></td>
+                                        <td><?php echo htmlspecialchars($control['kontrol_eden_personel_adi']); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="10" class="text-center p-4">Henüz kalite kontrol kaydı bulunmuyor.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quality Control Modal -->
+    <div class="modal fade" id="controlModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="controlForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Kalite Kontrol Formu</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="kontrol_id" name="kontrol_id">
+                        <input type="hidden" id="action" name="action">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="tedarikci_id">Tedarikçi *</label>
+                                <select class="form-control" id="tedarikci_id" name="tedarikci_id" required>
+                                    <option value="">Tedarikçi Seçin</option>
+                                    <?php
+                                    $suppliers_query = "SELECT * FROM tedarikciler ORDER BY tedarikci_adi";
+                                    $suppliers_result = $connection->query($suppliers_query);
+                                    while($supplier = $suppliers_result->fetch_assoc()):
                                     ?>
-                                </span>
-                            </td>
-                            <td><?php echo htmlspecialchars($control['ilgili_belge_no']); ?></td>
-                            <td><?php echo htmlspecialchars($control['kontrol_eden_personel_adi']); ?></td>
-                            <td class="actions">
-                                <a href="giris_kalite_kontrolu.php?edit=<?php echo $control['kontrol_id']; ?>" class="btn">Düzenle</a>
-                                <form method="POST" style="display: inline;" onsubmit="return confirm('Bu kalite kontrol kaydını silmek istediğinizden emin misiniz?');">
-                                    <input type="hidden" name="kontrol_id" value="<?php echo $control['kontrol_id']; ?>">
-                                    <button type="submit" name="delete" class="btn btn-delete">Sil</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
+                                        <option value="<?php echo $supplier['tedarikci_id']; ?>">
+                                            <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="malzeme_kodu">Malzeme *</label>
+                                <select class="form-control" id="malzeme_kodu" name="malzeme_kodu" required>
+                                    <option value="">Malzeme Seçin</option>
+                                    <?php
+                                    $materials_query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
+                                    $materials_result = $connection->query($materials_query);
+                                    while($material = $materials_result->fetch_assoc()):
+                                    ?>
+                                        <option value="<?php echo $material['malzeme_kodu']; ?>">
+                                            <?php echo $material['malzeme_kodu']; ?> - <?php echo htmlspecialchars($material['malzeme_ismi']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="red_edilen_miktar">Red Edilen Miktar *</label>
+                                <input type="number" class="form-control" id="red_edilen_miktar" name="red_edilen_miktar" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="red_nedeni">Red Nedeni *</label>
+                                <select class="form-control" id="red_nedeni" name="red_nedeni" required>
+                                    <option value="">Red Nedeni Seçin</option>
+                                    <option value="eksik">Eksik</option>
+                                    <option value="gedikli">Gedikli/Bozuk</option>
+                                    <option value="kirlenmis">Kirli/Kirlenmiş</option>
+                                    <option value="yanlis_malzeme">Yanlış Malzeme</option>
+                                    <option value="diger">Diğer</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="ilgili_belge_no">İlgili Belge No</label>
+                                <input type="text" class="form-control" id="ilgili_belge_no" name="ilgili_belge_no">
+                            </div>
+                            <div class="form-group">
+                                <label for="aciklama">Açıklama</label>
+                                <textarea class="form-control" id="aciklama" name="aciklama" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+        
+        function showAlert(message, type) {
+            $('#alert-placeholder').html(
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>`
+            );
+        }
+
+        // Open modal for adding a new quality control record
+        $('#addControlBtn').on('click', function() {
+            $('#controlForm')[0].reset();
+            $('#modalTitle').text('Yeni Kalite Kontrol Kaydı Ekle');
+            $('#action').val('add_control');
+            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
+            $('#controlModal').modal('show');
+        });
+
+        // Open modal for editing a quality control record
+        $('.edit-btn').on('click', function() {
+            var kontrolId = $(this).data('id');
+            
+            $.ajax({
+                url: 'api_islemleri/giris_kalite_kontrolu_islemler.php?action=get_control&id=' + kontrolId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var control = response.data;
+                        $('#controlForm')[0].reset();
+                        $('#modalTitle').text('Kalite Kontrol Kaydını Düzenle');
+                        $('#action').val('update_control');
+                        $('#kontrol_id').val(control.kontrol_id);
+                        $('#tedarikci_id').val(control.tedarikci_id);
+                        $('#malzeme_kodu').val(control.malzeme_kodu);
+                        $('#red_edilen_miktar').val(control.reddedilen_miktar);
+                        $('#red_nedeni').val(control.red_nedeni);
+                        $('#ilgili_belge_no').val(control.ilgili_belge_no);
+                        $('#aciklama').val(control.aciklama);
+                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#controlModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Kalite kontrol bilgileri alınırken bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle form submission
+        $('#controlForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+            
+            $.ajax({
+                url: 'api_islemleri/giris_kalite_kontrolu_islemler.php',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#controlModal').modal('hide');
+                        showAlert(response.message, 'success');
+                        // Reload page to see changes
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle quality control deletion
+        $('.delete-btn').on('click', function() {
+            var kontrolId = $(this).data('id');
+            
+            if (confirm('Bu kalite kontrol kaydını silmek istediğinizden emin misiniz?')) {
+                $.ajax({
+                    url: 'api_islemleri/giris_kalite_kontrolu_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_control',
+                        kontrol_id: kontrolId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
+            }
+        });
+    });
+    </script>
+    
+    <!-- Navigation button -->
+    <div class="main-content">
+        <div class="text-center">
+            <a href="navigation.php" class="btn btn-secondary" style="background-color: var(--dark); margin-top: 20px;">Ana Sayfaya Dön</a>
         </div>
     </div>
     
-    <a href="navigation.php" class="logout">Ana Sayfaya Dön</a>
 </body>
 </html>

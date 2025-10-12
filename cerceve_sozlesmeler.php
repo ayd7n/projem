@@ -13,120 +13,17 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-$message = '';
-$error = '';
-
-// Handle form submissions
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['create'])) {
-        // Create new framework contract
-        $tedarikci_id = $_POST['tedarikci_id'];
-        $malzeme_kodu = $_POST['malzeme_kodu'];
-        $birim_fiyat = $_POST['birim_fiyat'];
-        $para_birimi = $_POST['para_birimi'];
-        $sozlesme_turu = $_POST['sozlesme_turu'];
-        $toplam_anlasilan_miktar = $_POST['toplam_anlasilan_miktar'];
-        $baslangic_tarihi = $_POST['baslangic_tarihi'];
-        $bitis_tarihi = $_POST['bitis_tarihi'];
-        $pesin_odeme_yapildi_mi = isset($_POST['pesin_odeme_yapildi_mi']) ? 1 : 0;
-        $toplam_pesin_odeme_tutari = $pesin_odeme_yapildi_mi ? $_POST['toplam_pesin_odeme_tutari'] : 0;
-        $durum = $_POST['durum'];
-        $aciklama = $_POST['aciklama'];
-        
-        // Get tedarikci name
-        $tedarikci_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
-        $tedarikci_stmt = $connection->prepare($tedarikci_query);
-        $tedarikci_stmt->bind_param('i', $tedarikci_id);
-        $tedarikci_stmt->execute();
-        $tedarikci_result = $tedarikci_stmt->get_result();
-        $tedarikci = $tedarikci_result->fetch_assoc();
-        $tedarikci_adi = $tedarikci['tedarikci_adi'];
-        
-        // Get malzeme name
-        $malzeme_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
-        $malzeme_stmt = $connection->prepare($malzeme_query);
-        $malzeme_stmt->bind_param('i', $malzeme_kodu);
-        $malzeme_stmt->execute();
-        $malzeme_result = $malzeme_stmt->get_result();
-        $malzeme = $malzeme_result->fetch_assoc();
-        $malzeme_ismi = $malzeme['malzeme_ismi'];
-        
-        $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, sozlesme_turu, toplam_anlasilan_miktar, kalan_anlasilan_miktar, baslangic_tarihi, bitis_tarihi, pesin_odeme_yapildi_mi, toplam_pesin_odeme_tutari, durum, olusturan, aciklama) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('isssddssssddisss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $sozlesme_turu, $toplam_anlasilan_miktar, $toplam_anlasilan_miktar, $baslangic_tarihi, $bitis_tarihi, $pesin_odeme_yapildi_mi, $toplam_pesin_odeme_tutari, $durum, $_SESSION['kullanici_adi'], $aciklama);
-        
-        if ($stmt->execute()) {
-            $message = "Çerçeve sözleşme başarıyla oluşturuldu.";
-        } else {
-            $error = "Çerçeve sözleşme oluşturulurken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    } 
-    elseif (isset($_POST['update'])) {
-        // Update framework contract
-        $sozlesme_id = $_POST['sozlesme_id'];
-        $tedarikci_id = $_POST['tedarikci_id'];
-        $malzeme_kodu = $_POST['malzeme_kodu'];
-        $birim_fiyat = $_POST['birim_fiyat'];
-        $para_birimi = $_POST['para_birimi'];
-        $sozlesme_turu = $_POST['sozlesme_turu'];
-        $toplam_anlasilan_miktar = $_POST['toplam_anlasilan_miktar'];
-        $baslangic_tarihi = $_POST['baslangic_tarihi'];
-        $bitis_tarihi = $_POST['bitis_tarihi'];
-        $pesin_odeme_yapildi_mi = isset($_POST['pesin_odeme_yapildi_mi']) ? 1 : 0;
-        $toplam_pesin_odeme_tutari = $pesin_odeme_yapildi_mi ? $_POST['toplam_pesin_odeme_tutari'] : 0;
-        $durum = $_POST['durum'];
-        $aciklama = $_POST['aciklama'];
-        
-        // Get tedarikci name
-        $tedarikci_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
-        $tedarikci_stmt = $connection->prepare($tedarikci_query);
-        $tedarikci_stmt->bind_param('i', $tedarikci_id);
-        $tedarikci_stmt->execute();
-        $tedarikci_result = $tedarikci_stmt->get_result();
-        $tedarikci = $tedarikci_result->fetch_assoc();
-        $tedarikci_adi = $tedarikci['tedarikci_adi'];
-        
-        // Get malzeme name
-        $malzeme_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
-        $malzeme_stmt = $connection->prepare($malzeme_query);
-        $malzeme_stmt->bind_param('i', $malzeme_kodu);
-        $malzeme_stmt->execute();
-        $malzeme_result = $malzeme_stmt->get_result();
-        $malzeme = $malzeme_result->fetch_assoc();
-        $malzeme_ismi = $malzeme['malzeme_ismi'];
-        
-        $query = "UPDATE cerceve_sozlesmeler SET tedarikci_id = ?, tedarikci_adi = ?, malzeme_kodu = ?, malzeme_ismi = ?, birim_fiyat = ?, para_birimi = ?, sozlesme_turu = ?, toplam_anlasilan_miktar = ?, baslangic_tarihi = ?, bitis_tarihi = ?, pesin_odeme_yapildi_mi = ?, toplam_pesin_odeme_tutari = ?, durum = ?, aciklama = ? WHERE sozlesme_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('isssddssssddssi', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $sozlesme_turu, $toplam_anlasilan_miktar, $baslangic_tarihi, $bitis_tarihi, $pesin_odeme_yapildi_mi, $toplam_pesin_odeme_tutari, $durum, $aciklama, $sozlesme_id);
-        
-        if ($stmt->execute()) {
-            $message = "Çerçeve sözleşme başarıyla güncellendi.";
-        } else {
-            $error = "Çerçeve sözleşme güncellenirken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    } 
-    elseif (isset($_POST['delete'])) {
-        // Delete framework contract
-        $sozlesme_id = $_POST['sozlesme_id'];
-        
-        $query = "DELETE FROM cerceve_sozlesmeler WHERE sozlesme_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $sozlesme_id);
-        
-        if ($stmt->execute()) {
-            $message = "Çerçeve sözleşme başarıyla silindi.";
-        } else {
-            $error = "Çerçeve sözleşme silinirken hata oluştu: " . $connection->error;
-        }
-        $stmt->close();
-    }
-}
-
-// Fetch all framework contracts
+// Fetch all framework contracts for display
 $contracts_query = "SELECT * FROM cerceve_sozlesmeler ORDER BY olusturulma_tarihi DESC";
 $contracts_result = $connection->query($contracts_query);
+
+// Calculate total contracts
+$total_result = $connection->query("SELECT COUNT(*) as total FROM cerceve_sozlesmeler");
+$total_contracts = $total_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate active contracts
+$active_result = $connection->query("SELECT COUNT(*) as total FROM cerceve_sozlesmeler WHERE durum = 'aktif'");
+$active_contracts = $active_result->fetch_assoc()['total'] ?? 0;
 
 // Fetch all suppliers for dropdown
 $suppliers_query = "SELECT * FROM tedarikciler ORDER BY tedarikci_adi";
@@ -142,396 +39,435 @@ $materials_result = $connection->query($materials_query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Çerçeve Sözleşmeler - Parfüm ERP Sistemi</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Çerçeve Sözleşmeler - Parfüm ERP</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #1abc9c;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --info: #3498db;
+            --light: #f8f9fa;
+            --dark: #2c3e50;
+            --bg-color: #f5f7fb;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --text-primary: #2c3e50;
+            --text-secondary: #8492a6;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s ease;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f5f5f5;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
         }
-        
-        .header {
-            background-color: #007bff;
-            color: white;
-            padding: 15px;
-            text-align: center;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        
-        .container {
-            display: flex;
-            gap: 20px;
-            flex-wrap: wrap;
-        }
-        
-        .form-section, .list-section {
-            background-color: white;
-            padding: 20px;
-            border-radius: 5px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            flex: 1;
-            min-width: 300px;
-        }
-        
-        .form-group {
-            margin-bottom: 15px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        
-        .form-group input, .form-group textarea, .form-group select {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        
-        .form-group textarea {
-            height: 80px;
-            resize: vertical;
-        }
-        
-        .form-group.checkbox-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .btn {
-            padding: 10px 15px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        
-        .btn:hover {
-            background-color: #0056b3;
-        }
-        
-        .btn-update {
-            background-color: #28a745;
-        }
-        
-        .btn-update:hover {
-            background-color: #218838;
-        }
-        
-        .btn-delete {
-            background-color: #dc3545;
-        }
-        
-        .btn-delete:hover {
-            background-color: #c82333;
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        
-        th, td {
-            padding: 10px;
-            text-align: left;
-            border-bottom: 1px solid #ddd;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-        }
-        
-        .actions {
-            display: flex;
-            gap: 5px;
-        }
-        
-        .message {
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-        }
-        
-        .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .logout {
-            background-color: #f44336;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 4px;
-            display: inline-block;
-            margin-top: 20px;
-        }
-        
-        .logout:hover {
-            background-color: #d32f2f;
-        }
-        
-        .status {
-            padding: 4px 8px;
-            border-radius: 4px;
-            color: white;
-            font-size: 0.9em;
-        }
-        
-        .aktif { background-color: #28a745; }
-        .tamamlandi { background-color: #17a2b8; }
-        .iptal_edildi { background-color: #dc3545; }
-        
-        .remaining-amount {
-            font-weight: bold;
-            color: #007bff;
-        }
+        .main-content { padding: 30px; }
+        .page-header { margin-bottom: 30px; }
+        .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
+        .page-header p { color: var(--text-secondary); font-size: 1rem; }
+        .card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
+        .card-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .card-header h2 { font-size: 1.2rem; font-weight: 600; }
+        .card-body { padding: 20px; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--secondary); }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
+        th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
+        tbody tr:hover { background-color: #f5f7fb; }
+        .actions { display: flex; gap: 10px; }
+        .actions button { padding: 8px 12px; }
+        .stat-card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 25px; display: flex; align-items: center; }
+        .stat-icon { font-size: 2rem; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: white; }
+        .stat-info h3 { font-size: 1.8rem; font-weight: 700; }
+        .stat-info p { color: var(--text-secondary); }
+        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+        .modal-body .form-group { display: flex; flex-direction: column; }
+        .modal-body .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
+        .modal-body .form-group input, .modal-body .form-group select, .modal-body .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .badge-success { background-color: #28a745; color: white; }
+        .badge-danger { background-color: #dc3545; color: white; }
+        .badge-info { background-color: #17a2b8; color: white; }
+        .badge-primary { background-color: #007bff; color: white; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>Çerçeve Sözleşmeler Yönetimi</h1>
-        <p>Tedarikçilerle yapılan çerçeve sözleşmeleri yönetin</p>
+    <div class="main-content">
+        <div class="page-header">
+            <h1>Çerçeve Sözleşmeler Yönetimi</h1>
+            <p>Tedarikçilerle yapılan çerçeve sözleşmeleri yönetin</p>
+        </div>
+
+        <div id="alert-placeholder"></div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <button id="addContractBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Sözleşme Ekle</button>
+            </div>
+            <div class="col-md-6">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stat-card mb-3">
+                            <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-file-contract"></i></div>
+                            <div class="stat-info">
+                                <h3><?php echo $total_contracts; ?></h3>
+                                <p>Toplam Sözleşme</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-card mb-3">
+                            <div class="stat-icon" style="background: var(--success)"><i class="fas fa-check-circle"></i></div>
+                            <div class="stat-info">
+                                <h3><?php echo $active_contracts; ?></h3>
+                                <p>Aktif Sözleşme</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h2>Sözleşme Listesi</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-wrapper">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>İşlemler</th>
+                                <th>ID</th>
+                                <th>Tedarikçi</th>
+                                <th>Malzeme</th>
+                                <th>Birim Fiyat</th>
+                                <th>Para Birimi</th>
+                                <th>Sözleşme Türü</th>
+                                <th>Toplam Miktar</th>
+                                <th>Kalan Miktar</th>
+                                <th>Başlangıç</th>
+                                <th>Bitiş</th>
+                                <th>Durum</th>
+                                <th>Oluşturulma</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if ($contracts_result && $contracts_result->num_rows > 0): ?>
+                                <?php while ($contract = $contracts_result->fetch_assoc()): ?>
+                                    <tr>
+                                        <td class="actions">
+                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        <td><?php echo $contract['sozlesme_id']; ?></td>
+                                        <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
+                                        <td><?php echo number_format($contract['birim_fiyat'], 2); ?></td>
+                                        <td><?php echo htmlspecialchars($contract['para_birimi']); ?></td>
+                                        <td>
+                                            <?php
+                                            switch($contract['sozlesme_turu']) {
+                                                case 'pesin_odemeli_adet_anlasmasi': echo 'Peşin Ödemeli'; break;
+                                                case 'sureli_birim_fiyatli': echo 'Süreli Birim Fiyatlı'; break;
+                                                case 'suresiz_birim_fiyatli': echo 'Süresiz Birim Fiyatlı'; break;
+                                                default: echo htmlspecialchars($contract['sozlesme_turu']); break;
+                                            }
+                                            ?>
+                                        </td>
+                                        <td><?php echo number_format($contract['toplam_anlasilan_miktar'], 2); ?></td>
+                                        <td>
+                                            <span class="badge badge-<?php echo $contract['kalan_anlasilan_miktar'] > 0 ? 'primary' : 'secondary'; ?>">
+                                                <?php echo number_format($contract['kalan_anlasilan_miktar'], 2); ?>
+                                            </span>
+                                        </td>
+                                        <td><?php echo date("d.m.Y", strtotime($contract['baslangic_tarihi'])); ?></td>
+                                        <td><?php echo date("d.m.Y", strtotime($contract['bitis_tarihi'])); ?></td>
+                                        <td>
+                                            <?php
+                                            switch($contract['durum']) {
+                                                case 'aktif':
+                                                    echo '<span class="badge badge-success">Aktif</span>';
+                                                    break;
+                                                case 'tamamlandi':
+                                                    echo '<span class="badge badge-info">Tamamlandı</span>';
+                                                    break;
+                                                case 'iptal_edildi':
+                                                    echo '<span class="badge badge-danger">İptal Edildi</span>';
+                                                    break;
+                                                default:
+                                                    echo '<span class="badge badge-secondary">' . htmlspecialchars($contract['durum']) . '</span>';
+                                                    break;
+                                            }
+                                            ?>
+                                        </td>
+                                        <td><?php echo date("d.m.Y H:i", strtotime($contract['olusturulma_tarihi'])); ?></td>
+                                    </tr>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="13" class="text-center p-4">Henüz kayıtlı sözleşme bulunmuyor.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </div>
-    
-    <?php if ($message): ?>
-        <div class="message success"><?php echo htmlspecialchars($message); ?></div>
-    <?php endif; ?>
-    
-    <?php if ($error): ?>
-        <div class="message error"><?php echo htmlspecialchars($error); ?></div>
-    <?php endif; ?>
-    
-    <div class="container">
-        <div class="form-section">
-            <h2><?php echo isset($_GET['edit']) ? 'Sözleşme Güncelle' : 'Yeni Sözleşme Oluştur'; ?></h2>
-            
-            <?php
-            $sozlesme_id = '';
-            $tedarikci_id = '';
-            $malzeme_kodu = '';
-            $birim_fiyat = 0;
-            $para_birimi = 'TL';
-            $sozlesme_turu = 'sureli_birim_fiyatli';
-            $toplam_anlasilan_miktar = 0;
-            $baslangic_tarihi = date('Y-m-d');
-            $bitis_tarihi = date('Y-m-d', strtotime('+1 year'));
-            $pesin_odeme_yapildi_mi = 0;
-            $toplam_pesin_odeme_tutari = 0;
-            $durum = 'aktif';
-            $aciklama = '';
-            
-            if (isset($_GET['edit'])) {
-                $sozlesme_id = $_GET['edit'];
-                $edit_query = "SELECT * FROM cerceve_sozlesmeler WHERE sozlesme_id = ?";
-                $stmt = $connection->prepare($edit_query);
-                $stmt->bind_param('i', $sozlesme_id);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $contract = $result->fetch_assoc();
-                
-                if ($contract) {
-                    $tedarikci_id = $contract['tedarikci_id'];
-                    $malzeme_kodu = $contract['malzeme_kodu'];
-                    $birim_fiyat = $contract['birim_fiyat'];
-                    $para_birimi = $contract['para_birimi'];
-                    $sozlesme_turu = $contract['sozlesme_turu'];
-                    $toplam_anlasilan_miktar = $contract['toplam_anlasilan_miktar'];
-                    $baslangic_tarihi = $contract['baslangic_tarihi'];
-                    $bitis_tarihi = $contract['bitis_tarihi'];
-                    $pesin_odeme_yapildi_mi = $contract['pesin_odeme_yapildi_mi'];
-                    $toplam_pesin_odeme_tutari = $contract['toplam_pesin_odeme_tutari'];
-                    $durum = $contract['durum'];
-                    $aciklama = $contract['aciklama'];
+
+    <!-- Contract Modal -->
+    <div class="modal fade" id="contractModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="contractForm">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalTitle">Sözleşme Formu</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="sozlesme_id" name="sozlesme_id">
+                        <input type="hidden" id="action" name="action">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="tedarikci_id">Tedarikçi *</label>
+                                <select class="form-control" id="tedarikci_id" name="tedarikci_id" required>
+                                    <option value="">Tedarikçi Seçin</option>
+                                    <?php
+                                    $suppliers_result->data_seek(0);
+                                    while($supplier = $suppliers_result->fetch_assoc()): ?>
+                                        <option value="<?php echo $supplier['tedarikci_id']; ?>">
+                                            <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="malzeme_kodu">Malzeme *</label>
+                                <select class="form-control" id="malzeme_kodu" name="malzeme_kodu" required>
+                                    <option value="">Malzeme Seçin</option>
+                                    <?php
+                                    $materials_result->data_seek(0);
+                                    while($material = $materials_result->fetch_assoc()): ?>
+                                        <option value="<?php echo $material['malzeme_kodu']; ?>">
+                                            <?php echo $material['malzeme_kodu']; ?> - <?php echo htmlspecialchars($material['malzeme_ismi']); ?>
+                                        </option>
+                                    <?php endwhile; ?>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="birim_fiyat">Birim Fiyat *</label>
+                                <input type="number" class="form-control" id="birim_fiyat" name="birim_fiyat" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="para_birimi">Para Birimi *</label>
+                                <select class="form-control" id="para_birimi" name="para_birimi" required>
+                                    <option value="TL">TL</option>
+                                    <option value="USD">USD</option>
+                                    <option value="EUR">EUR</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="sozlesme_turu">Sözleşme Türü *</label>
+                                <select class="form-control" id="sozlesme_turu" name="sozlesme_turu" required>
+                                    <option value="pesin_odemeli_adet_anlasmasi">Peşin Ödemeli Adet Anlaşması</option>
+                                    <option value="sureli_birim_fiyatli">Süreli Birim Fiyatlı</option>
+                                    <option value="suresiz_birim_fiyatli">Süresiz Birim Fiyatlı</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="toplam_anlasilan_miktar">Toplam Anlaşilan Miktar *</label>
+                                <input type="number" class="form-control" id="toplam_anlasilan_miktar" name="toplam_anlasilan_miktar" step="0.01" min="0" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="baslangic_tarihi">Başlangıç Tarihi *</label>
+                                <input type="date" class="form-control" id="baslangic_tarihi" name="baslangic_tarihi" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="bitis_tarihi">Bitiş Tarihi *</label>
+                                <input type="date" class="form-control" id="bitis_tarihi" name="bitis_tarihi" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="durum">Durum *</label>
+                                <select class="form-control" id="durum" name="durum" required>
+                                    <option value="aktif">Aktif</option>
+                                    <option value="tamamlandi">Tamamlandı</option>
+                                    <option value="iptal_edildi">İptal Edildi</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="pesin_odeme_yapildi_mi" name="pesin_odeme_yapildi_mi">
+                                    <label class="form-check-label" for="pesin_odeme_yapildi_mi">
+                                        Peşin Ödeme Yapıldı mı?
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="toplam_pesin_odeme_tutari">Toplam Peşin Ödeme Tutarı</label>
+                                <input type="number" class="form-control" id="toplam_pesin_odeme_tutari" name="toplam_pesin_odeme_tutari" step="0.01" min="0">
+                            </div>
+                            <div class="form-group" style="grid-column: 1 / -1;">
+                                <label for="aciklama">Açıklama</label>
+                                <textarea class="form-control" id="aciklama" name="aciklama" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+    $(document).ready(function() {
+
+        function showAlert(message, type) {
+            $('#alert-placeholder').html(
+                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+                    ${message}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>`
+            );
+        }
+
+        // Open modal for adding a new contract
+        $('#addContractBtn').on('click', function() {
+            $('#contractForm')[0].reset();
+            $('#modalTitle').text('Yeni Sözleşme Ekle');
+            $('#action').val('add_contract');
+            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
+            $('#contractModal').modal('show');
+        });
+
+        // Open modal for editing a contract
+        $('.edit-btn').on('click', function() {
+            var contractId = $(this).data('id');
+
+            $.ajax({
+                url: 'api_islemleri/sozlesme_islemler.php?action=get_contract&id=' + contractId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var contract = response.data;
+                        $('#contractForm')[0].reset();
+                        $('#modalTitle').text('Sözleşmeyi Düzenle');
+                        $('#action').val('update_contract');
+                        $('#sozlesme_id').val(contract.sozlesme_id);
+                        $('#tedarikci_id').val(contract.tedarikci_id);
+                        $('#malzeme_kodu').val(contract.malzeme_kodu);
+                        $('#birim_fiyat').val(contract.birim_fiyat);
+                        $('#para_birimi').val(contract.para_birimi);
+                        $('#sozlesme_turu').val(contract.sozlesme_turu);
+                        $('#toplam_anlasilan_miktar').val(contract.toplam_anlasilan_miktar);
+                        $('#baslangic_tarihi').val(contract.baslangic_tarihi);
+                        $('#bitis_tarihi').val(contract.bitis_tarihi);
+                        $('#pesin_odeme_yapildi_mi').prop('checked', contract.pesin_odeme_yapildi_mi == 1);
+                        $('#toplam_pesin_odeme_tutari').val(contract.toplam_pesin_odeme_tutari);
+                        $('#durum').val(contract.durum);
+                        $('#aciklama').val(contract.aciklama);
+                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#contractModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Sözleşme bilgileri alınırken bir hata oluştu.', 'danger');
                 }
-                $stmt->close();
+            });
+        });
+
+        // Handle form submission
+        $('#contractForm').on('submit', function(e) {
+            e.preventDefault();
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: 'api_islemleri/sozlesme_islemler.php',
+                type: 'POST',
+                data: formData,
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#contractModal').modal('hide');
+                        showAlert(response.message, 'success');
+                        // Reload page to see changes
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle contract deletion
+        $('.delete-btn').on('click', function() {
+            var contractId = $(this).data('id');
+
+            if (confirm('Bu sözleşmeyi silmek istediğinizden emin misiniz?')) {
+                $.ajax({
+                    url: 'api_islemleri/sozlesme_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'delete_contract',
+                        sozlesme_id: contractId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
             }
-            ?>
-            
-            <form method="POST">
-                <?php if (isset($_GET['edit'])): ?>
-                    <input type="hidden" name="sozlesme_id" value="<?php echo $sozlesme_id; ?>">
-                <?php endif; ?>
-                
-                <div class="form-group">
-                    <label for="tedarikci_id">Tedarikçi:</label>
-                    <select id="tedarikci_id" name="tedarikci_id" required>
-                        <option value="">Tedarikçi Seçin</option>
-                        <?php while($supplier = $suppliers_result->fetch_assoc()): ?>
-                            <option value="<?php echo $supplier['tedarikci_id']; ?>" 
-                                <?php echo $tedarikci_id == $supplier['tedarikci_id'] ? 'selected' : ''; ?>>
-                                <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="malzeme_kodu">Malzeme:</label>
-                    <select id="malzeme_kodu" name="malzeme_kodu" required>
-                        <option value="">Malzeme Seçin</option>
-                        <?php while($material = $materials_result->fetch_assoc()): ?>
-                            <option value="<?php echo $material['malzeme_kodu']; ?>" 
-                                <?php echo $malzeme_kodu == $material['malzeme_kodu'] ? 'selected' : ''; ?>>
-                                <?php echo $material['malzeme_kodu']; ?> - <?php echo htmlspecialchars($material['malzeme_ismi']); ?>
-                            </option>
-                        <?php endwhile; ?>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="birim_fiyat">Birim Fiyat:</label>
-                    <input type="number" id="birim_fiyat" name="birim_fiyat" value="<?php echo $birim_fiyat; ?>" step="0.01" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="para_birimi">Para Birimi:</label>
-                    <select id="para_birimi" name="para_birimi" required>
-                        <option value="TL" <?php echo $para_birimi === 'TL' ? 'selected' : ''; ?>>TL</option>
-                        <option value="USD" <?php echo $para_birimi === 'USD' ? 'selected' : ''; ?>>USD</option>
-                        <option value="EUR" <?php echo $para_birimi === 'EUR' ? 'selected' : ''; ?>>EUR</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="sozlesme_turu">Sözleşme Türü:</label>
-                    <select id="sozlesme_turu" name="sozlesme_turu" required>
-                        <option value="pesin_odemeli_adet_anlasmasi" <?php echo $sozlesme_turu === 'pesin_odemeli_adet_anlasmasi' ? 'selected' : ''; ?>>Peşin Ödemeli Adet Anlaşması</option>
-                        <option value="sureli_birim_fiyatli" <?php echo $sozlesme_turu === 'sureli_birim_fiyatli' ? 'selected' : ''; ?>>Süreli Birim Fiyatlı</option>
-                        <option value="suresiz_birim_fiyatli" <?php echo $sozlesme_turu === 'suresiz_birim_fiyatli' ? 'selected' : ''; ?>>Süresiz Birim Fiyatlı</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="toplam_anlasilan_miktar">Toplam Anlaşilan Miktar:</label>
-                    <input type="number" id="toplam_anlasilan_miktar" name="toplam_anlasilan_miktar" value="<?php echo $toplam_anlasilan_miktar; ?>" step="0.01" min="0" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="baslangic_tarihi">Başlangıç Tarihi:</label>
-                    <input type="date" id="baslangic_tarihi" name="baslangic_tarihi" value="<?php echo $baslangic_tarihi; ?>" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="bitis_tarihi">Bitiş Tarihi:</label>
-                    <input type="date" id="bitis_tarihi" name="bitis_tarihi" value="<?php echo $bitis_tarihi; ?>" required>
-                </div>
-                
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="pesin_odeme_yapildi_mi" name="pesin_odeme_yapildi_mi" <?php echo $pesin_odeme_yapildi_mi ? 'checked' : ''; ?>>
-                    <label for="pesin_odeme_yapildi_mi">Peşin Ödeme Yapıldı mı?</label>
-                </div>
-                
-                <div class="form-group">
-                    <label for="toplam_pesin_odeme_tutari">Toplam Peşin Ödeme Tutarı:</label>
-                    <input type="number" id="toplam_pesin_odeme_tutari" name="toplam_pesin_odeme_tutari" value="<?php echo $toplam_pesin_odeme_tutari; ?>" step="0.01" min="0">
-                </div>
-                
-                <div class="form-group">
-                    <label for="durum">Durum:</label>
-                    <select id="durum" name="durum" required>
-                        <option value="aktif" <?php echo $durum === 'aktif' ? 'selected' : ''; ?>>Aktif</option>
-                        <option value="tamamlandi" <?php echo $durum === 'tamamlandi' ? 'selected' : ''; ?>>Tamamlandı</option>
-                        <option value="iptal_edildi" <?php echo $durum === 'iptal_edildi' ? 'selected' : ''; ?>>İptal Edildi</option>
-                    </select>
-                </div>
-                
-                <div class="form-group">
-                    <label for="aciklama">Açıklama:</label>
-                    <textarea id="aciklama" name="aciklama"><?php echo htmlspecialchars($aciklama); ?></textarea>
-                </div>
-                
-                <?php if (isset($_GET['edit'])): ?>
-                    <button type="submit" name="update" class="btn btn-update">Güncelle</button>
-                    <a href="cerceve_sozlesmeler.php" class="btn">İptal</a>
-                <?php else: ?>
-                    <button type="submit" name="create" class="btn">Oluştur</button>
-                <?php endif; ?>
-            </form>
-        </div>
-        
-        <div class="list-section">
-            <h2>Sözleşme Listesi</h2>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Tedarikçi</th>
-                        <th>Malzeme</th>
-                        <th>Birim Fiyat</th>
-                        <th>Para Birimi</th>
-                        <th>Tür</th>
-                        <th>Toplam Miktar</th>
-                        <th>Kalan Miktar</th>
-                        <th>Başlangıç</th>
-                        <th>Bitiş</th>
-                        <th>Durum</th>
-                        <th>İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php while ($contract = $contracts_result->fetch_assoc()): ?>
-                        <tr>
-                            <td><?php echo $contract['sozlesme_id']; ?></td>
-                            <td><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></td>
-                            <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
-                            <td><?php echo number_format($contract['birim_fiyat'], 2); ?></td>
-                            <td><?php echo htmlspecialchars($contract['para_birimi']); ?></td>
-                            <td>
-                                <?php 
-                                switch($contract['sozlesme_turu']) {
-                                    case 'pesin_odemeli_adet_anlasmasi': echo 'Peşin Ödemeli Adet Anlaşması'; break;
-                                    case 'sureli_birim_fiyatli': echo 'Süreli Birim Fiyatlı'; break;
-                                    case 'suresiz_birim_fiyatli': echo 'Süresiz Birim Fiyatlı'; break;
-                                    default: echo htmlspecialchars($contract['sozlesme_turu']); break;
-                                }
-                                ?>
-                            </td>
-                            <td><?php echo $contract['toplam_anlasilan_miktar']; ?></td>
-                            <td class="remaining-amount"><?php echo $contract['kalan_anlasilan_miktar']; ?></td>
-                            <td><?php echo $contract['baslangic_tarihi']; ?></td>
-                            <td><?php echo $contract['bitis_tarihi']; ?></td>
-                            <td>
-                                <span class="status <?php echo $contract['durum']; ?>">
-                                    <?php 
-                                    switch($contract['durum']) {
-                                        case 'aktif': echo 'Aktif'; break;
-                                        case 'tamamlandi': echo 'Tamamlandı'; break;
-                                        case 'iptal_edildi': echo 'İptal Edildi'; break;
-                                        default: echo htmlspecialchars($contract['durum']); break;
-                                    }
-                                    ?>
-                                </span>
-                            </td>
-                            <td class="actions">
-                                <a href="cerceve_sozlesmeler.php?edit=<?php echo $contract['sozlesme_id']; ?>" class="btn">Düzenle</a>
-                                <form method="POST" style="display: inline;" onsubmit="return confirm('Bu sözleşmeyi silmek istediğinizden emin misiniz?');">
-                                    <input type="hidden" name="sozlesme_id" value="<?php echo $contract['sozlesme_id']; ?>">
-                                    <button type="submit" name="delete" class="btn btn-delete">Sil</button>
-                                </form>
-                            </td>
-                        </tr>
-                    <?php endwhile; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
-    
-    <a href="navigation.php" class="logout">Ana Sayfaya Dön</a>
+        });
+    });
+    </script>
 </body>
 </html>
