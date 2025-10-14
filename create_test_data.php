@@ -23,15 +23,15 @@ echo "Malzemeler oluşturuldu.<br>";
 
 // Create sample products
 $products = [
-    ['Parfüm A', 'urun_a.jpg', 'Lavanta aromalı parfüm', 50, 'adet', 150.00, 10, 'Depo 3', 'Raf C1'],
-    ['Parfüm B', 'urun_b.jpg', 'Gül aromalı parfüm', 30, 'adet', 180.00, 5, 'Depo 3', 'Raf C2'],
-    ['Parfüm C', 'urun_c.jpg', 'Vanilya aromalı parfüm', 25, 'adet', 200.00, 3, 'Depo 3', 'Raf C3']
+    ['Parfüm A', 'Lavanta aromalı parfüm', 50, 'adet', 150.00, 10, 'Depo 3', 'Raf C1'],
+    ['Parfüm B', 'Gül aromalı parfüm', 30, 'adet', 180.00, 5, 'Depo 3', 'Raf C2'],
+    ['Parfüm C', 'Vanilya aromalı parfüm', 25, 'adet', 200.00, 3, 'Depo 3', 'Raf C3']
 ];
 
 foreach ($products as $prod) {
-    $query = "INSERT IGNORE INTO urunler (urun_ismi, urun_foto_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT IGNORE INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($query);
-    $stmt->bind_param('sssisdisi', ...$prod);
+    $stmt->bind_param('ssisdisi', ...$prod);
     $stmt->execute();
     $stmt->close();
 }

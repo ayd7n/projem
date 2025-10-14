@@ -7,28 +7,28 @@ $connection->set_charset("utf8mb4");
 // Insert 10 employee records with proper Turkish characters
 $employees = [
     [
-        'ad_soyad' => 'Ahmet Yılmaz',
+        'ad_soyad' => 'Ahmet Yilmaz',
         'tc_kimlik_no' => '12345678901',
         'dogum_tarihi' => '1985-06-15',
         'ise_giris_tarihi' => '2020-01-15',
-        'pozisyon' => 'Satış Müdürü',
-        'departman' => 'Satış',
+        'pozisyon' => 'Satis Muduru',
+        'departman' => 'Satis',
         'e_posta' => 'ahmet.yilmaz@parfum.com',
         'telefon' => '05321234567',
-        'adres' => 'İstanbul, Beşiktaş',
-        'notlar' => 'Tecrübeli satış personeli'
+        'adres' => 'Istanbul, Besiktas',
+        'notlar' => 'Tecrubeli satis personeli'
     ],
     [
-        'ad_soyad' => 'Ayşe Kaya',
+        'ad_soyad' => 'Ayse Kaya',
         'tc_kimlik_no' => '23456789012',
         'dogum_tarihi' => '1990-03-22',
         'ise_giris_tarihi' => '2021-02-10',
-        'pozisyon' => 'Pazarlama Uzmanı',
+        'pozisyon' => 'Pazarlama Uzmani',
         'departman' => 'Pazarlama',
         'e_posta' => 'ayse.kaya@parfum.com',
         'telefon' => '05332345678',
-        'adres' => 'İstanbul, Kadıköy',
-        'notlar' => 'Yaratıcı pazarlama uzmanı'
+        'adres' => 'Istanbul, Kadikoy',
+        'notlar' => 'Yaratici pazarlama uzmani'
     ],
     [
         'ad_soyad' => 'Mehmet Demir',
@@ -39,19 +39,19 @@ $employees = [
         'departman' => 'Lojistik',
         'e_posta' => 'mehmet.demir@parfum.com',
         'telefon' => '05343456789',
-        'adres' => 'İstanbul, Pendik',
-        'notlar' => 'Depo süreçlerinde uzman'
+        'adres' => 'Istanbul, Pendik',
+        'notlar' => 'Depo sureclerinde uzman'
     ],
     [
-        'ad_soyad' => 'Fatma Öztürk',
+        'ad_soyad' => 'Fatma Ozturk',
         'tc_kimlik_no' => '45678901234',
         'dogum_tarihi' => '1992-07-30',
         'ise_giris_tarihi' => '2022-01-05',
-        'pozisyon' => 'Muhasebe Uzmanı',
+        'pozisyon' => 'Muhasebe Uzmani',
         'departman' => 'Muhasebe',
         'e_posta' => 'fatma.ozturk@parfum.com',
         'telefon' => '05354567890',
-        'adres' => 'İstanbul, Üsküdar',
+        'adres' => 'Istanbul, Uskudar',
         'notlar' => 'Muhasebe sistemlerinde deneyimli'
     ],
     [
@@ -59,72 +59,72 @@ $employees = [
         'tc_kimlik_no' => '56789012345',
         'dogum_tarihi' => '1988-12-10',
         'ise_giris_tarihi' => '2018-09-12',
-        'pozisyon' => 'Üretim Müdürü',
-        'departman' => 'Üretim',
+        'pozisyon' => 'Uretim Muduru',
+        'departman' => 'Uretim',
         'e_posta' => 'ali.can@parfum.com',
         'telefon' => '05365678901',
-        'adres' => 'İstanbul, Tuzla',
-        'notlar' => 'Üretim süreçlerinde lider'
+        'adres' => 'Istanbul, Tuzla',
+        'notlar' => 'Uretim sureclerinde lider'
     ],
     [
-        'ad_soyad' => 'Zeynep Şahin',
+        'ad_soyad' => 'Zeynep Sahin',
         'tc_kimlik_no' => '67890123456',
         'dogum_tarihi' => '1993-04-18',
         'ise_giris_tarihi' => '2021-11-03',
-        'pozisyon' => 'İK Uzmanı',
-        'departman' => 'İnsan Kaynakları',
+        'pozisyon' => 'IK Uzmani',
+        'departman' => 'Insan Kaynaklari',
         'e_posta' => 'zeynep.sahin@parfum.com',
         'telefon' => '05376789012',
-        'adres' => 'İstanbul, Şişli',
-        'notlar' => 'Çalışan memnuniyeti uzmanı'
+        'adres' => 'Istanbul, Sisli',
+        'notlar' => 'Calisan memnuniyeti uzmani'
     ],
     [
-        'ad_soyad' => 'Caner Aktaş',
+        'ad_soyad' => 'Caner Aktas',
         'tc_kimlik_no' => '78901234567',
         'dogum_tarihi' => '1986-09-25',
         'ise_giris_tarihi' => '2020-03-18',
-        'pozisyon' => 'Finans Uzmanı',
+        'pozisyon' => 'Finans Uzmani',
         'departman' => 'Finans',
         'e_posta' => 'caner.aktas@parfum.com',
         'telefon' => '05387890123',
-        'adres' => 'İstanbul, Levent',
-        'notlar' => 'Finansal analiz uzmanı'
+        'adres' => 'Istanbul, Levent',
+        'notlar' => 'Finansal analiz uzmani'
     ],
     [
-        'ad_soyad' => 'Ebru Güneş',
+        'ad_soyad' => 'Ebru Gunes',
         'tc_kimlik_no' => '89012345678',
         'dogum_tarihi' => '1991-01-07',
         'ise_giris_tarihi' => '2022-02-28',
-        'pozisyon' => 'Sistem Uzmanı',
-        'departman' => 'Bilgi İşlem',
+        'pozisyon' => 'Sistem Uzmani',
+        'departman' => 'Bilgi Islem',
         'e_posta' => 'ebru.gunes@parfum.com',
         'telefon' => '05398901234',
-        'adres' => 'İstanbul, Maslak',
-        'notlar' => 'IT sistemleri uzmanı'
+        'adres' => 'Istanbul, Maslak',
+        'notlar' => 'IT sistemleri uzmani'
     ],
     [
-        'ad_soyad' => 'Kemal Başbakan',
+        'ad_soyad' => 'Kemal Basbakan',
         'tc_kimlik_no' => '90123456789',
         'dogum_tarihi' => '1984-08-14',
         'ise_giris_tarihi' => '2017-06-01',
-        'pozisyon' => 'Kalite Kontrol Müdürü',
+        'pozisyon' => 'Kalite Kontrol Muduru',
         'departman' => 'Kalite',
         'e_posta' => 'kemal.baskan@parfum.com',
         'telefon' => '05409012345',
-        'adres' => 'İstanbul, Ataşehir',
-        'notlar' => 'ISO kalite sistemleri uzmanı'
+        'adres' => 'Istanbul, Atasehir',
+        'notlar' => 'ISO kalite sistemleri uzmani'
     ],
     [
-        'ad_soyad' => 'Gülşah Arslan',
+        'ad_soyad' => 'Gulsah Arslan',
         'tc_kimlik_no' => '01234567890',
         'dogum_tarihi' => '1994-10-30',
         'ise_giris_tarihi' => '2023-01-10',
-        'pozisyon' => 'Arama Uzmanı',
+        'pozisyon' => 'Arama Uzmani',
         'departman' => 'Arama',
         'e_posta' => 'gulsa.arslan@parfum.com',
         'telefon' => '05410123456',
-        'adres' => 'İstanbul, Bomonti',
-        'notlar' => 'Yeni başlayan arama uzmanı'
+        'adres' => 'Istanbul, Bomonti',
+        'notlar' => 'Yeni baslayan arama uzmani'
     ]
 ];
 

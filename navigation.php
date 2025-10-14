@@ -15,7 +15,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scent ERP - Ana Panel</title>
+    <title>IDO KOZMETIK - Ana Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
@@ -30,7 +30,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .header {
             background: linear-gradient(45deg, #4a0e63, #7c2a99);
             color: #ffffff;
-            padding: 1.5rem 2rem;
+            padding: 0.5rem 1rem;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -38,14 +38,14 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .header-title h1 {
             font-family: 'Ubuntu', sans-serif;
             font-weight: 700;
-            font-size: 2rem;
+            font-size: 1.5rem;
             margin: 0;
             color: #ffffff;
         }
         .header-user {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.5rem;
         }
         .header-user span {
             font-weight: 700;
@@ -53,8 +53,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .logout-btn {
             background-color: rgba(255, 255, 255, 0.1);
             color: #ffffff;
-            padding: 0.6rem 1.2rem;
-            border-radius: 5px;
+            padding: 0.4rem 0.8rem;
+            border-radius: 4px;
             text-decoration: none;
             transition: background-color 0.3s;
         }
@@ -62,34 +62,34 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             background-color: rgba(255, 255, 255, 0.2);
         }
         .main-content {
-            padding: 2rem;
+            padding: 0.25rem;
             max-width: 1400px;
             margin: 0 auto;
         }
         .page-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 0.25rem;
         }
         .page-header h2 {
             font-family: 'Ubuntu', sans-serif;
             font-weight: 700;
-            font-size: 2.8rem;
+            font-size: 2rem;
             color: #4a0e63;
         }
         .page-header p {
-            font-size: 1.1rem;
+            font-size: 0.9rem;
             color: #6b7280;
             max-width: 600px;
-            margin: 0.5rem auto 0;
+            margin: 0.25rem auto 0;
         }
         .category-divider {
-            margin: 2rem 0 1.5rem 0;
+            margin: 0.25rem 0 0.25rem 0;
             text-align: center;
         }
         .category-divider h3 {
             font-family: 'Ubuntu', sans-serif;
             font-weight: 700;
-            font-size: 2rem;
+            font-size: 1.4rem;
             color: #4a0e63;
             display: inline-block;
             position: relative;
@@ -97,25 +97,25 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .category-divider h3::after {
             content: '';
             position: absolute;
-            bottom: -10px;
+            bottom: -5px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
+            width: 40px;
+            height: 2px;
             background-color: #d4af37; /* Gold */
         }
         .nav-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 1rem;
+            gap: 0.1rem;
         }
         .nav-card {
             background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
             text-decoration: none;
             color: #4a0e63;
-            padding: 1.5rem 1rem;
+            padding: 0.25rem 0.2rem;
             text-align: center;
             transition: transform 0.3s, box-shadow 0.3s;
             border: 1px solid #f0e9e4;
@@ -125,18 +125,18 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
         }
         .nav-card .icon-wrapper {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+            font-size: 1.3rem;
+            margin-bottom: 0.1rem;
             color: #d4af37; /* Gold */
         }
         .nav-card .card-title {
             font-weight: 700;
-            font-size: 1rem;
+            font-size: 0.8rem;
         }
         footer {
             text-align: center;
-            padding: 2rem;
-            margin-top: 2rem;
+            padding: 0.25rem;
+            margin-top: 0.25rem;
             color: #9ca3af;
         }
         footer strong {
@@ -146,17 +146,17 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         @media (max-width: 768px) {
             .header {
                 flex-direction: column;
-                gap: 1rem;
+                gap: 0.25rem;
             }
             .main-content {
-                padding: 2rem 1rem;
+                padding: 0.5rem;
             }
             .page-header h2 {
-                font-size: 2.2rem;
+                font-size: 1.5rem;
             }
             .nav-grid {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 1rem;
+                gap: 0.1rem;
             }
         }
     </style>
@@ -164,7 +164,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 <body>
     <header class="header">
         <div class="header-title">
-            <h1><i class="fas fa-spa"></i> Scent ERP</h1>
+            <h1><i class="fas fa-spa"></i> IDO KOZMETIK</h1>
         </div>
         <div class="header-user">
             <span><i class="fas fa-user-circle"></i> <?php echo $kullanici_adi; ?></span>
@@ -289,7 +289,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     </main>
 
     <footer>
-        <p><strong style="font-family: 'Ubuntu', sans-serif;">Scent ERP</strong> © <?php echo date('Y'); ?></p>
+        <p><strong style="font-family: 'Ubuntu', sans-serif;">IDO KOZMETIK</strong> © <?php echo date('Y'); ?></p>
     </footer>
 </body>
 </html>

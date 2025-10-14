@@ -211,6 +211,15 @@ $user_name = $_SESSION['kullanici_adi'];
                 flex: 1;
             }
         }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 0; /* Remove padding on smaller mobile devices */
+            }
+            .form-container, .info-container {
+                padding: 1.5rem; /* Reduce padding inside containers on mobile */
+            }
+        }
     </style>
 </head>
 <body>

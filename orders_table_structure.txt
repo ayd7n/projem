@@ -1,0 +1,25 @@
+Müşteri Siparişleri Tablo Yapısı (siparisler ve siparis_kalemleri)
+
+1. siparisler (Siparişler) Tablosu:
+   - siparis_id (INT, PRIMARY KEY, AUTO_INCREMENT) - Sipariş numarası
+   - musteri_id (INT) - Müşteri numarası
+   - musteri_adi (VARCHAR) - Müşteri adı
+   - tarih (DATETIME) - Sipariş tarihi
+   - aciklama (TEXT) - Sipariş açıklaması
+   - olusturan_musteri (VARCHAR) - Siparişi oluşturan müşteri
+   - durum (VARCHAR) - Sipariş durumu (beklemede, onaylandi, iptal_edildi, tamamlandi)
+   - onaylayan_personel_id (INT) - Onaylayan personel ID
+   - onaylayan_personel_adi (VARCHAR) - Onaylayan personel adı
+   - onay_tarihi (DATETIME) - Onay tarihi
+   - toplam_adet (INT) - Toplam adet
+
+2. siparis_kalemleri (Sipariş Kalemleri) Tablosu:
+   - siparis_id (INT) - Sipariş numarası (foreign key)
+   - urun_kodu (INT) - Ürün kodu
+   - urun_ismi (VARCHAR) - Ürün ismi
+   - adet (INT) - Adet
+   - birim (VARCHAR) - Birim
+   - birim_fiyat (DECIMAL) - Birim fiyat
+   - toplam_tutar (DECIMAL) - Toplam tutar
+
+Bu tablolar müşteri siparişlerinin yönetimini sağlar.

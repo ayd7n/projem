@@ -1,0 +1,11 @@
+komut satiri Uzerinden Siteye ve veritabanina Erisim Talimatlari:
+
+1. CMD'yi acin
+2. Asagidaki komutu girerek siteye erisebilirsiniz:
+   curl http://localhost/projem/
+   
+3. Login islemi icin su komutu kullanabilirsiniz:
+   curl -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php
+
+veritabanina erismek icin asagidaki komutu kullanabilirsiniz
+mysql -h localhost -u root parfum_erp

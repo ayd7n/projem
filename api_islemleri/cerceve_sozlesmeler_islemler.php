@@ -17,7 +17,7 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
 switch ($action) {
     case 'get_contract':
-        $id = $_GET['id'] ?? 0;
+        $id = $_GET['id'] ?? $_POST['id'] ?? 0;
 
         if (!$id) {
             echo json_encode(['status' => 'error', 'message' => 'Sözleşme ID belirtilmedi.']);
@@ -39,22 +39,34 @@ switch ($action) {
         $stmt->close();
         break;
 
+    case 'get_all_contracts':
+        $query = "SELECT * FROM cerceve_sozlesmeler ORDER BY olusturulma_tarihi DESC";
+        $result = $connection->query($query);
+
+        if ($result) {
+            $contracts = [];
+            while ($row = $result->fetch_assoc()) {
+                $contracts[] = $row;
+            }
+            echo json_encode(['status' => 'success', 'data' => $contracts]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Veri alınırken hata oluştu: ' . $connection->error]);
+        }
+        break;
+
     case 'add_contract':
         $tedarikci_id = $_POST['tedarikci_id'] ?? '';
         $malzeme_kodu = $_POST['malzeme_kodu'] ?? '';
         $birim_fiyat = $_POST['birim_fiyat'] ?? 0;
         $para_birimi = $_POST['para_birimi'] ?? '';
-        $sozlesme_turu = $_POST['sozlesme_turu'] ?? '';
-        $toplam_anlasilan_miktar = $_POST['toplam_anlasilan_miktar'] ?? 0;
+        $limit_miktar = $_POST['limit_miktar'] ?? 0;
+        $toplu_odenen_miktar = $_POST['toplu_odenen_miktar'] ?? 0;
         $baslangic_tarihi = $_POST['baslangic_tarihi'] ?? '';
         $bitis_tarihi = $_POST['bitis_tarihi'] ?? '';
-        $pesin_odeme_yapildi_mi = isset($_POST['pesin_odeme_yapildi_mi']) ? 1 : 0;
-        $toplam_pesin_odeme_tutari = $_POST['toplam_pesin_odeme_tutari'] ?? 0;
-        $durum = $_POST['durum'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
 
         // Validation
-        if (!$tedarikci_id || !$malzeme_kodu || !$birim_fiyat || !$para_birimi || !$sozlesme_turu || !$toplam_anlasilan_miktar || !$baslangic_tarihi || !$bitis_tarihi || !$durum) {
+        if (!$tedarikci_id || !$malzeme_kodu || !$birim_fiyat || !$para_birimi || $limit_miktar === '' || !$baslangic_tarihi || !$bitis_tarihi) {
             echo json_encode(['status' => 'error', 'message' => 'Lütfen tüm zorunlu alanları doldurun.']);
             break;
         }
@@ -90,9 +102,9 @@ switch ($action) {
         $malzeme_stmt->close();
 
         // Insert contract
-        $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, sozlesme_turu, toplam_anlasilan_miktar, kalan_anlasilan_miktar, baslangic_tarihi, bitis_tarihi, pesin_odeme_yapildi_mi, toplam_pesin_odeme_tutari, durum, olusturan, aciklama) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, aciklama, olusturan) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $connection->prepare($query);
-        $stmt->bind_param('isssddssssddisss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $sozlesme_turu, $toplam_anlasilan_miktar, $toplam_anlasilan_miktar, $baslangic_tarihi, $bitis_tarihi, $pesin_odeme_yapildi_mi, $toplam_pesin_odeme_tutari, $durum, $_SESSION['kullanici_adi'], $aciklama);
+        $stmt->bind_param('isssdsssssss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $limit_miktar, $toplu_odenen_miktar, $baslangic_tarihi, $bitis_tarihi, $aciklama, $_SESSION['kullanici_adi']);
 
         if ($stmt->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme başarıyla oluşturuldu.']);
@@ -108,17 +120,14 @@ switch ($action) {
         $malzeme_kodu = $_POST['malzeme_kodu'] ?? '';
         $birim_fiyat = $_POST['birim_fiyat'] ?? 0;
         $para_birimi = $_POST['para_birimi'] ?? '';
-        $sozlesme_turu = $_POST['sozlesme_turu'] ?? '';
-        $toplam_anlasilan_miktar = $_POST['toplam_anlasilan_miktar'] ?? 0;
+        $limit_miktar = $_POST['limit_miktar'] ?? 0;
+        $toplu_odenen_miktar = $_POST['toplu_odenen_miktar'] ?? 0;
         $baslangic_tarihi = $_POST['baslangic_tarihi'] ?? '';
         $bitis_tarihi = $_POST['bitis_tarihi'] ?? '';
-        $pesin_odeme_yapildi_mi = isset($_POST['pesin_odeme_yapildi_mi']) ? 1 : 0;
-        $toplam_pesin_odeme_tutari = $_POST['toplam_pesin_odeme_tutari'] ?? 0;
-        $durum = $_POST['durum'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
 
         // Validation
-        if (!$sozlesme_id || !$tedarikci_id || !$malzeme_kodu || !$birim_fiyat || !$para_birimi || !$sozlesme_turu || !$toplam_anlasilan_miktar || !$baslangic_tarihi || !$bitis_tarihi || !$durum) {
+        if (!$sozlesme_id || !$tedarikci_id || !$malzeme_kodu || !$birim_fiyat || !$para_birimi || $limit_miktar === '' || !$baslangic_tarihi || !$bitis_tarihi) {
             echo json_encode(['status' => 'error', 'message' => 'Lütfen tüm zorunlu alanları doldurun.']);
             break;
         }
@@ -154,9 +163,9 @@ switch ($action) {
         $malzeme_stmt->close();
 
         // Update contract
-        $query = "UPDATE cerceve_sozlesmeler SET tedarikci_id = ?, tedarikci_adi = ?, malzeme_kodu = ?, malzeme_ismi = ?, birim_fiyat = ?, para_birimi = ?, sozlesme_turu = ?, toplam_anlasilan_miktar = ?, kalan_anlasilan_miktar = ?, baslangic_tarihi = ?, bitis_tarihi = ?, pesin_odeme_yapildi_mi = ?, toplam_pesin_odeme_tutari = ?, durum = ?, aciklama = ? WHERE sozlesme_id = ?";
+        $query = "UPDATE cerceve_sozlesmeler SET tedarikci_id = ?, tedarikci_adi = ?, malzeme_kodu = ?, malzeme_ismi = ?, birim_fiyat = ?, para_birimi = ?, limit_miktar = ?, toplu_odenen_miktar = ?, baslangic_tarihi = ?, bitis_tarihi = ?, aciklama = ? WHERE sozlesme_id = ?";
         $stmt = $connection->prepare($query);
-        $stmt->bind_param('isssddssdssdissi', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $sozlesme_turu, $toplam_anlasilan_miktar, $toplam_anlasilan_miktar, $baslangic_tarihi, $bitis_tarihi, $pesin_odeme_yapildi_mi, $toplam_pesin_odeme_tutari, $durum, $aciklama, $sozlesme_id);
+        $stmt->bind_param('isssdssssssi', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim_fiyat, $para_birimi, $limit_miktar, $toplu_odenen_miktar, $baslangic_tarihi, $bitis_tarihi, $aciklama, $sozlesme_id);
 
         if ($stmt->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme başarıyla güncellendi.']);

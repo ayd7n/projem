@@ -51,9 +51,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param('issssdssiss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim, $red_edilen_miktar, $red_nedeni, $_SESSION['id'], $_SESSION['kullanici_adi'], $ilgili_belge_no, $aciklama);
         
         if ($stmt->execute()) {
-            $message = "Giriş kalite kontrolü kaydı başarıyla oluşturuldu.";
+            $message = "Giris kalite kontrolu kaydi basariyla olusturuldu.";
         } else {
-            $error = "Giriş kalite kontrolü kaydı oluşturulurken hata oluştu: " . $connection->error;
+            $error = "Giris kalite kontrolu kaydi olusturulurken hata olustu: " . $connection->error;
         }
         $stmt->close();
     } 
@@ -91,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param('issssdsssi', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim, $red_edilen_miktar, $red_nedeni, $ilgili_belge_no, $aciklama, $kontrol_id);
         
         if ($stmt->execute()) {
-            $message = "Giriş kalite kontrolü kaydı başarıyla güncellendi.";
+            $message = "Giris kalite kontrolu kaydi basariyla guncellendi.";
         } else {
-            $error = "Giriş kalite kontrolü kaydı güncellenirken hata oluştu: " . $connection->error;
+            $error = "Giris kalite kontrolu kaydi guncellenirken hata olustu: " . $connection->error;
         }
         $stmt->close();
     } 
@@ -106,9 +106,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $stmt->bind_param('i', $kontrol_id);
         
         if ($stmt->execute()) {
-            $message = "Giriş kalite kontrolü kaydı başarıyla silindi.";
+            $message = "Giris kalite kontrolu kaydi basariyla silindi.";
         } else {
-            $error = "Giriş kalite kontrolü kaydı silinirken hata oluştu: " . $connection->error;
+            $error = "Giris kalite kontrolu kaydi silinirken hata olustu: " . $connection->error;
         }
         $stmt->close();
     }
@@ -129,7 +129,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Giriş Kalite Kontrolü - Parfüm ERP</title>
+    <title>Giris Kalite Kontrolu - Parfüm ERP</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -161,6 +161,10 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
             color: var(--text-primary);
         }
         .main-content { padding: 30px; }
+        
+        @media (max-width: 768px) {
+            .main-content { padding: 0; }
+        }
         .page-header { margin-bottom: 30px; }
         .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
         .page-header p { color: var(--text-secondary); font-size: 1rem; }
@@ -206,22 +210,22 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
 <body>
     <div class="main-content">
         <div class="page-header">
-            <h1>Giriş Kalite Kontrolü</h1>
-            <p>Tedarik edilen malzemelerin kalite kontrolünü yönetin</p>
+            <h1>Giris Kalite Kontrolu</h1>
+            <p>Tedarik edilen malzemelerin kalite kontrolunu yonetin</p>
         </div>
 
         <div id="alert-placeholder"></div>
 
         <div class="row">
             <div class="col-md-8">
-                <button id="addControlBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Kalite Kontrol Kaydı Ekle</button>
+                <button id="addControlBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Kalite Kontrol Kaydi Ekle</button>
             </div>
             <div class="col-md-4">
                 <div class="stat-card mb-3">
                     <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-clipboard-check"></i></div>
                     <div class="stat-info">
                         <h3><?php echo $total_controls; ?></h3>
-                        <p>Toplam Kontrol Kaydı</p>
+                        <p>Toplam Kontrol Kaydi</p>
                     </div>
                 </div>
             </div>
@@ -236,13 +240,13 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>İşlemler</th>
+                                <th>Islemler</th>
                                 <th>ID</th>
                                 <th>Tarih</th>
-                                <th>Tedarikçi</th>
+                                <th>Tedarikci</th>
                                 <th>Malzeme</th>
                                 <th>Birim</th>
-                                <th>Red Miktarı</th>
+                                <th>Red Miktari</th>
                                 <th>Red Nedeni</th>
                                 <th>Belge No</th>
                                 <th>Kontrol Eden</th>
@@ -255,7 +259,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                                         <td class="actions">
                                             <button class="btn btn-primary btn-sm edit-btn" 
                                                     data-id="<?php echo $control['kontrol_id']; ?>" 
-                                                    title="Düzenle">
+                                                    title="Duzenle">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <button class="btn btn-danger btn-sm delete-btn" 
@@ -276,9 +280,9 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                                                 switch($control['red_nedeni']) {
                                                     case 'eksik': echo 'Eksik'; break;
                                                     case 'gedikli': echo 'Gedikli/Bozuk'; break;
-                                                    case 'kirlenmis': echo 'Kirli/Kirlenmiş'; break;
-                                                    case 'yanlis_malzeme': echo 'Yanlış Malzeme'; break;
-                                                    case 'diger': echo 'Diğer'; break;
+                                                    case 'kirlenmis': echo 'Kirli/Kirlenmis'; break;
+                                                    case 'yanlis_malzeme': echo 'Yanlis Malzeme'; break;
+                                                    case 'diger': echo 'Diger'; break;
                                                     default: echo htmlspecialchars($control['red_nedeni']); break;
                                                 }
                                                 ?>
@@ -290,7 +294,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center p-4">Henüz kalite kontrol kaydı bulunmuyor.</td>
+                                    <td colspan="10" class="text-center p-4">Henuz kalite kontrol kaydi bulunmuyor.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -316,9 +320,9 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                         <input type="hidden" id="action" name="action">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="tedarikci_id">Tedarikçi *</label>
+                                <label for="tedarikci_id">Tedarikci *</label>
                                 <select class="form-control" id="tedarikci_id" name="tedarikci_id" required>
-                                    <option value="">Tedarikçi Seçin</option>
+                                    <option value="">Tedarikci Secin</option>
                                     <?php
                                     $suppliers_query = "SELECT * FROM tedarikciler ORDER BY tedarikci_adi";
                                     $suppliers_result = $connection->query($suppliers_query);
@@ -333,7 +337,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="form-group">
                                 <label for="malzeme_kodu">Malzeme *</label>
                                 <select class="form-control" id="malzeme_kodu" name="malzeme_kodu" required>
-                                    <option value="">Malzeme Seçin</option>
+                                    <option value="">Malzeme Secin</option>
                                     <?php
                                     $materials_query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
                                     $materials_result = $connection->query($materials_query);
@@ -352,26 +356,26 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="form-group">
                                 <label for="red_nedeni">Red Nedeni *</label>
                                 <select class="form-control" id="red_nedeni" name="red_nedeni" required>
-                                    <option value="">Red Nedeni Seçin</option>
+                                    <option value="">Red Nedeni Secin</option>
                                     <option value="eksik">Eksik</option>
                                     <option value="gedikli">Gedikli/Bozuk</option>
-                                    <option value="kirlenmis">Kirli/Kirlenmiş</option>
-                                    <option value="yanlis_malzeme">Yanlış Malzeme</option>
-                                    <option value="diger">Diğer</option>
+                                    <option value="kirlenmis">Kirli/Kirlenmis</option>
+                                    <option value="yanlis_malzeme">Yanlis Malzeme</option>
+                                    <option value="diger">Diger</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="ilgili_belge_no">İlgili Belge No</label>
+                                <label for="ilgili_belge_no">Ilgili Belge No</label>
                                 <input type="text" class="form-control" id="ilgili_belge_no" name="ilgili_belge_no">
                             </div>
                             <div class="form-group">
-                                <label for="aciklama">Açıklama</label>
+                                <label for="aciklama">Aciklama</label>
                                 <textarea class="form-control" id="aciklama" name="aciklama" rows="3"></textarea>
                             </div>
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Iptal</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
                     </div>
                 </form>
@@ -401,7 +405,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
         // Open modal for adding a new quality control record
         $('#addControlBtn').on('click', function() {
             $('#controlForm')[0].reset();
-            $('#modalTitle').text('Yeni Kalite Kontrol Kaydı Ekle');
+            $('#modalTitle').text('Yeni Kalite Kontrol Kaydi Ekle');
             $('#action').val('add_control');
             $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
             $('#controlModal').modal('show');
@@ -419,7 +423,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                     if (response.status === 'success') {
                         var control = response.data;
                         $('#controlForm')[0].reset();
-                        $('#modalTitle').text('Kalite Kontrol Kaydını Düzenle');
+                        $('#modalTitle').text('Kalite Kontrol Kaydini Duzenle');
                         $('#action').val('update_control');
                         $('#kontrol_id').val(control.kontrol_id);
                         $('#tedarikci_id').val(control.tedarikci_id);
@@ -428,14 +432,14 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#red_nedeni').val(control.red_nedeni);
                         $('#ilgili_belge_no').val(control.ilgili_belge_no);
                         $('#aciklama').val(control.aciklama);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#submitBtn').text('Guncelle').removeClass('btn-primary').addClass('btn-success');
                         $('#controlModal').modal('show');
                     } else {
                         showAlert(response.message, 'danger');
                     }
                 },
                 error: function() {
-                    showAlert('Kalite kontrol bilgileri alınırken bir hata oluştu.', 'danger');
+                    showAlert('Kalite kontrol bilgileri alinirken bir hata olustu.', 'danger');
                 }
             });
         });
@@ -463,7 +467,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                     }
                 },
                 error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    showAlert('Islem sirasinda bir hata olustu.', 'danger');
                 }
             });
         });
@@ -472,7 +476,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
         $('.delete-btn').on('click', function() {
             var kontrolId = $(this).data('id');
             
-            if (confirm('Bu kalite kontrol kaydını silmek istediğinizden emin misiniz?')) {
+            if (confirm('Bu kalite kontrol kaydini silmek istediginizden emin misiniz?')) {
                 $.ajax({
                     url: 'api_islemleri/giris_kalite_kontrolu_islemler.php',
                     type: 'POST',
@@ -492,7 +496,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
                         }
                     },
                     error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                        showAlert('Silme islemi sirasinda bir hata olustu.', 'danger');
                     }
                 });
             }
@@ -503,7 +507,7 @@ $total_controls = $total_result->fetch_assoc()['total'] ?? 0;
     <!-- Navigation button -->
     <div class="main-content">
         <div class="text-center">
-            <a href="navigation.php" class="btn btn-secondary" style="background-color: var(--dark); margin-top: 20px;">Ana Sayfaya Dön</a>
+            <a href="navigation.php" class="btn btn-secondary" style="background-color: var(--dark); margin-top: 20px;">Ana Sayfaya Don</a>
         </div>
     </div>
     

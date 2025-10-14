@@ -34,6 +34,6 @@ foreach ($raf_names as $raf) {
     $stmt->close();
 }
 
-echo "<br>$added_count adet lokasyon başarıyla eklendi.";
+echo "<br>$added_count adet lokasyon basariyla eklendi.";
 $connection->close();
 ?>

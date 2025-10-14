@@ -1,0 +1,3 @@
+@echo off
+echo MySQL sunucusuna baglanmaya calisiyorum...
+"C:\xampp\mysql\bin\mysql.exe" -u root -e "USE parfum_erp; SHOW TABLES;"

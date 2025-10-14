@@ -230,17 +230,102 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         /* Mobile responsiveness */
-        @media (max-width: 480px) {
+        @media (max-width: 768px) {
+            body {
+                padding: 10px;
+            }
+            
             .login-container {
                 padding: 30px 25px;
                 margin: 0 15px;
+                width: calc(100% - 30px);
             }
 
             .login-header h2 {
                 font-size: 2.4rem;
+                margin: 0 0 10px;
             }
+            
             .login-header p {
                 font-size: 1.2rem;
+                margin-bottom: 25px;
+            }
+            
+            .form-group input {
+                padding: 12px 16px;
+                font-size: 1rem;
+            }
+            
+            .btn {
+                padding: 14px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 5px;
+            }
+            
+            .login-container {
+                padding: 25px 20px;
+                margin: 0 10px;
+            }
+
+            .login-header h2 {
+                font-size: 2rem;
+            }
+            
+            .login-header p {
+                font-size: 1.1rem;
+                margin-bottom: 20px;
+            }
+            
+            .perfume-icon {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .form-group {
+                margin-bottom: 20px;
+            }
+            
+            .form-group input {
+                padding: 12px 15px;
+            }
+            
+            .btn {
+                padding: 13px;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (max-width: 360px) {
+            .login-container {
+                padding: 20px 15px;
+                margin: 0 8px;
+            }
+
+            .login-header h2 {
+                font-size: 1.8rem;
+            }
+            
+            .login-header p {
+                font-size: 1rem;
+            }
+            
+            .perfume-icon {
+                width: 35px;
+                height: 35px;
+            }
+            
+            .form-group input {
+                padding: 10px 12px;
+            }
+            
+            .btn {
+                padding: 12px;
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -249,7 +334,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="login-container">
         <svg class="perfume-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z"/></svg>
         <div class="login-header">
-            <h2>Scent ERP</h2>
+            <h2>IDO KOZMETIK</h2>
             <p>Giriş Yap</p>
         </div>
         

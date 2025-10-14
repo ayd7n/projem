@@ -62,6 +62,10 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
 
         /* Main Content */
         .main-content { padding: 30px; }
+        
+        @media (max-width: 768px) {
+            .main-content { padding: 0; }
+        }
         .page-header { margin-bottom: 30px; }
         .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
         .page-header p { color: var(--text-secondary); font-size: 1rem; }

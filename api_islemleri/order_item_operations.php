@@ -1,0 +1,299 @@
+<?php
+include '../config.php';
+
+// Ensure proper character encoding
+header('Content-Type: application/json; charset=utf-8');
+
+// Check if user is logged in as staff
+if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
+    echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim!']);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $action = isset($_POST['action']) ? $_POST['action'] : '';
+    
+    if ($action === 'add_order_item') {
+        $siparis_id = isset($_POST['siparis_id']) ? (int)$_POST['siparis_id'] : 0;
+        $urun_kodu = isset($_POST['urun_kodu']) ? (int)$_POST['urun_kodu'] : 0;
+        $adet = isset($_POST['adet']) ? (int)$_POST['adet'] : 0;
+        
+        if ($siparis_id <= 0 || $urun_kodu <= 0 || $adet <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz sipariş ID, ürün kodu veya adet!']);
+            exit;
+        }
+        
+        try {
+            // Get product details
+            $product_query = "SELECT urun_ismi, birim, satis_fiyati FROM urunler WHERE urun_kodu = ?";
+            $product_stmt = $connection->prepare($product_query);
+            $product_stmt->bind_param('i', $urun_kodu);
+            $product_stmt->execute();
+            $product_result = $product_stmt->get_result();
+            $product = $product_result->fetch_assoc();
+            
+            if (!$product) {
+                echo json_encode(['status' => 'error', 'message' => 'Seçilen ürün bulunamadı!']);
+                exit;
+            }
+            
+            // Ensure product data is valid
+            $product['urun_ismi'] = !empty($product['urun_ismi']) ? $product['urun_ismi'] : 'Bilinmeyen Ürün';
+            $product['birim'] = !empty($product['birim']) ? $product['birim'] : 'adet';
+            $product['satis_fiyati'] = !empty($product['satis_fiyati']) ? floatval($product['satis_fiyati']) : 0;
+            
+            $toplam_tutar = $adet * $product['satis_fiyati'];
+            
+            // Validate data before insertion to ensure non-empty values
+            $urun_ismi_check = trim($product['urun_ismi']);
+            $birim_check = trim($product['birim']);
+            $fiyat_check = floatval($product['satis_fiyati']);
+            
+            // If any critical fields are empty or invalid, use defaults
+            if (empty($urun_ismi_check) || $urun_ismi_check === '0') {
+                $urun_ismi_check = 'Bilinmeyen Ürün';
+            }
+            if (empty($birim_check) || $birim_check === '0') {
+                $birim_check = 'adet';
+            }
+            if ($fiyat_check <= 0) {
+                $fiyat_check = 0.00;
+            }
+            
+            // Insert order item - using escaped values to avoid potential issues with prepared statements
+            $urun_ismi_escaped = $connection->real_escape_string($urun_ismi_check);
+            $birim_escaped = $connection->real_escape_string($birim_check);
+            
+            $item_query = "INSERT INTO siparis_kalemleri (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?)";
+            $item_stmt = $connection->prepare($item_query);
+            $item_stmt->bind_param('iiisidd', $siparis_id, $urun_kodu, $urun_ismi_escaped, $adet, $birim_escaped, $fiyat_check, $toplam_tutar);
+            
+            if ($item_stmt->execute()) {
+                // Update total quantity in order
+                $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                $update_total_stmt = $connection->prepare($update_total_query);
+                $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
+                $update_total_stmt->execute();
+                
+                // Double check that we have the right data by re-fetching it after insertion
+                $verify_query = "SELECT urun_ismi, birim, birim_fiyat FROM siparis_kalemleri WHERE siparis_id = ? AND urun_kodu = ? ORDER BY adet DESC LIMIT 1";
+                $verify_stmt = $connection->prepare($verify_query);
+                $verify_stmt->bind_param('ii', $siparis_id, $urun_kodu);
+                $verify_stmt->execute();
+                $verify_result = $verify_stmt->get_result();
+                $verify_data = $verify_result->fetch_assoc();
+                
+                // Use verified data for the response
+                $return_ismi = $verify_data['urun_ismi'] ?? $product['urun_ismi'];
+                $return_birim = $verify_data['birim'] ?? $product['birim'];
+                $return_fiyat = $verify_data['birim_fiyat'] ?? $product['satis_fiyati'];
+                
+                // Ensure we don't have null/empty values
+                $return_ismi = !empty($return_ismi) ? $return_ismi : 'Bilinmeyen Ürün';
+                $return_birim = !empty($return_birim) ? $return_birim : 'adet';
+                $return_fiyat = !empty($return_fiyat) ? floatval($return_fiyat) : 0;
+                
+                // Return the inserted item data for immediate display
+                echo json_encode([
+                    'status' => 'success', 
+                    'message' => 'Sipariş kalemi başarıyla eklendi.',
+                    'item_data' => [
+                        'siparis_id' => $siparis_id,
+                        'urun_kodu' => $urun_kodu,
+                        'urun_ismi' => $return_ismi,
+                        'adet' => $adet,
+                        'birim' => $return_birim,
+                        'birim_fiyat' => number_format($return_fiyat, 2, '.', ''),
+                        'toplam_tutar' => number_format($adet * $return_fiyat, 2, '.', '')
+                    ]
+                ]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Sipariş kalemi eklenirken hata oluştu: ' . $connection->error]);
+            }
+            
+            $item_stmt->close();
+            $product_stmt->close();
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'İşlem sırasında hata oluştu: ' . $e->getMessage()]);
+        }
+    } 
+    elseif ($action === 'update_order_item') {
+        $siparis_id = isset($_POST['siparis_id']) ? (int)$_POST['siparis_id'] : 0;
+        $urun_kodu = isset($_POST['urun_kodu']) ? (int)$_POST['urun_kodu'] : 0;
+        $adet = isset($_POST['adet']) ? (int)$_POST['adet'] : 0;
+        $old_urun_kodu = isset($_POST['old_urun_kodu']) ? (int)$_POST['old_urun_kodu'] : 0; // This is the item ID to update
+        
+        if ($siparis_id <= 0 || $urun_kodu <= 0 || $adet <= 0 || $old_urun_kodu <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz parametreler!']);
+            exit;
+        }
+        
+        try {
+            // Get product details
+            $product_query = "SELECT urun_ismi, birim, satis_fiyati FROM urunler WHERE urun_kodu = ?";
+            $product_stmt = $connection->prepare($product_query);
+            $product_stmt->bind_param('i', $urun_kodu);
+            $product_stmt->execute();
+            $product_result = $product_stmt->get_result();
+            $product = $product_result->fetch_assoc();
+            
+            if (!$product) {
+                echo json_encode(['status' => 'error', 'message' => 'Seçilen ürün bulunamadı!']);
+                exit;
+            }
+            
+            // Ensure product data is valid
+            $product['urun_ismi'] = !empty($product['urun_ismi']) ? $product['urun_ismi'] : 'Bilinmeyen Ürün';
+            $product['birim'] = !empty($product['birim']) ? $product['birim'] : 'adet';
+            $product['satis_fiyati'] = !empty($product['satis_fiyati']) ? floatval($product['satis_fiyati']) : 0;
+            
+            $toplam_tutar = $adet * $product['satis_fiyati'];
+            
+            // Validate data before update to ensure non-empty values
+            $urun_ismi_check = trim($product['urun_ismi']);
+            $birim_check = trim($product['birim']);
+            $fiyat_check = floatval($product['satis_fiyati']);
+            
+            // If any critical fields are empty or invalid, use defaults
+            if (empty($urun_ismi_check) || $urun_ismi_check === '0') {
+                $urun_ismi_check = 'Bilinmeyen Ürün';
+            }
+            if (empty($birim_check) || $birim_check === '0') {
+                $birim_check = 'adet';
+            }
+            if ($fiyat_check <= 0) {
+                $fiyat_check = 0.00;
+            }
+            
+            // Update order item
+            $urun_ismi_escaped = $connection->real_escape_string($urun_ismi_check);
+            $birim_escaped = $connection->real_escape_string($birim_check);
+            
+            $item_query = "UPDATE siparis_kalemleri SET urun_kodu = ?, urun_ismi = ?, adet = ?, birim = ?, birim_fiyat = ?, toplam_tutar = ? WHERE siparis_id = ? AND urun_kodu = ?";
+            $item_stmt = $connection->prepare($item_query);
+            $item_stmt->bind_param('isiiddii', $urun_kodu, $urun_ismi_escaped, $adet, $birim_escaped, $fiyat_check, $toplam_tutar, $siparis_id, $old_urun_kodu);
+            
+            if ($item_stmt->execute()) {
+                if ($item_stmt->affected_rows > 0) {
+                    // Update total quantity in order
+                    $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                    $update_total_stmt = $connection->prepare($update_total_query);
+                    $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
+                    $update_total_stmt->execute();
+                    
+                    echo json_encode([
+                        'status' => 'success', 
+                        'message' => 'Sipariş kalemi başarıyla güncellendi.',
+                        'item_data' => [
+                            'siparis_id' => $siparis_id,
+                            'urun_kodu' => $urun_kodu,
+                            'urun_ismi' => $product['urun_ismi'],
+                            'adet' => $adet,
+                            'birim' => $product['birim'],
+                            'birim_fiyat' => number_format($product['satis_fiyati'], 2, '.', ''),
+                            'toplam_tutar' => number_format($toplam_tutar, 2, '.', ''),
+                            'old_urun_kodu' => $old_urun_kodu
+                        ]
+                    ]);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Güncellenecek sipariş kalemi bulunamadı!']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Sipariş kalemi güncellenirken hata oluştu: ' . $connection->error]);
+            }
+            
+            $item_stmt->close();
+            $product_stmt->close();
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'İşlem sırasında hata oluştu: ' . $e->getMessage()]);
+        }
+    } 
+    elseif ($action === 'delete_order_item') {
+        $siparis_id = isset($_POST['siparis_id']) ? (int)$_POST['siparis_id'] : 0;
+        $urun_kodu = isset($_POST['urun_kodu']) ? (int)$_POST['urun_kodu'] : 0;
+        
+        if ($siparis_id <= 0 || $urun_kodu <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz parametreler!']);
+            exit;
+        }
+        
+        try {
+            // Delete order item
+            $delete_query = "DELETE FROM siparis_kalemleri WHERE siparis_id = ? AND urun_kodu = ?";
+            $delete_stmt = $connection->prepare($delete_query);
+            $delete_stmt->bind_param('ii', $siparis_id, $urun_kodu);
+            
+            if ($delete_stmt->execute()) {
+                if ($delete_stmt->affected_rows > 0) {
+                    // Update total quantity in order
+                    $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                    $update_total_stmt = $connection->prepare($update_total_query);
+                    $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
+                    $update_total_stmt->execute();
+                    
+                    echo json_encode([
+                        'status' => 'success', 
+                        'message' => 'Sipariş kalemi başarıyla silindi.',
+                        'urun_kodu' => $urun_kodu
+                    ]);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Silinecek sipariş kalemi bulunamadı!']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Sipariş kalemi silinirken hata oluştu: ' . $connection->error]);
+            }
+            
+            $delete_stmt->close();
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'İşlem sırasında hata oluştu: ' . $e->getMessage()]);
+        }
+    }
+    else {
+        echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem!']);
+    }
+} 
+elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    // Handle GET requests if needed
+    $action = isset($_GET['action']) ? $_GET['action'] : '';
+    
+    if ($action === 'get_product_info') {
+        $urun_kodu = isset($_GET['urun_kodu']) ? (int)$_GET['urun_kodu'] : 0;
+        
+        if ($urun_kodu <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz ürün kodu!']);
+            exit;
+        }
+        
+        try {
+            $product_query = "SELECT urun_ismi, birim, satis_fiyati FROM urunler WHERE urun_kodu = ?";
+            $product_stmt = $connection->prepare($product_query);
+            $product_stmt->bind_param('i', $urun_kodu);
+            $product_stmt->execute();
+            $product_result = $product_stmt->get_result();
+            $product = $product_result->fetch_assoc();
+            
+            if ($product) {
+                echo json_encode([
+                    'status' => 'success',
+                    'data' => [
+                        'urun_ismi' => $product['urun_ismi'],
+                        'birim' => $product['birim'],
+                        'satis_fiyati' => floatval($product['satis_fiyati'])
+                    ]
+                ]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Ürün bulunamadı!']);
+            }
+            
+            $product_stmt->close();
+        } catch (Exception $e) {
+            echo json_encode(['status' => 'error', 'message' => 'İşlem sırasında hata oluştu: ' . $e->getMessage()]);
+        }
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Geçersiz GET işlemi!']);
+    }
+} 
+else {
+    echo json_encode(['status' => 'error', 'message' => 'Geçersiz istek yöntemi!']);
+}

@@ -80,6 +80,10 @@ $products_result = $connection->query($products_query);
             color: var(--text-primary);
         }
         .main-content { padding: 30px; }
+        
+        @media (max-width: 768px) {
+            .main-content { padding: 0; }
+        }
         .page-header { margin-bottom: 30px; }
         .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
         .page-header p { color: var(--text-secondary); font-size: 1rem; }
@@ -118,8 +122,8 @@ $products_result = $connection->query($products_query);
 <body>
     <div class="main-content">
         <div class="page-header">
-            <h1>Manuel Stok Hareket Yönetimi</h1>
-            <p>Manuel olarak stok hareketlerini kaydedin ve yönetin</p>
+            <h1>Manuel Stok Hareket Yonetimi</h1>
+            <p>Manuel olarak stok hareketlerini kaydedin ve yonetin</p>
         </div>
 
         <div id="alert-placeholder"></div>
@@ -148,18 +152,18 @@ $products_result = $connection->query($products_query);
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>İşlemler</th>
+                                <th>Islemler</th>
                                 <th>ID</th>
                                 <th>Tarih</th>
-                                <th>Stok Türü</th>
+                                <th>Stok Turu</th>
                                 <th>Kod</th>
-                                <th>İsim</th>
+                                <th>Isim</th>
                                 <th>Miktar</th>
-                                <th>Yön</th>
-                                <th>Hareket Türü</th>
+                                <th>Yon</th>
+                                <th>Hareket Turu</th>
                                 <th>Konum</th>
                                 <th>Belge No</th>
-                                <th>Açıklama</th>
+                                <th>Aciklama</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -210,7 +214,7 @@ $products_result = $connection->query($products_query);
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="12" class="text-center p-4">Henüz kayıtlı stok hareketi bulunmuyor.</td>
+                                    <td colspan="12" class="text-center p-4">Henuz kayitli stok hareketi bulunmuyor.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -236,39 +240,39 @@ $products_result = $connection->query($products_query);
                         <input type="hidden" id="action" name="action">
                         <div class="form-grid">
                             <div class="form-group">
-                                <label for="stok_turu">Stok Türü *</label>
+                                <label for="stok_turu">Stok Turu *</label>
                                 <select class="form-control" id="stok_turu" name="stok_turu" required>
                                     <option value="malzeme">Malzeme</option>
                                     <option value="esans">Esans</option>
-                                    <option value="urun">Ürün</option>
+                                    <option value="urun">Urun</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="kod">Kod Seçin *</label>
+                                <label for="kod">Kod Secin *</label>
                                 <select class="form-control" id="kod" name="kod" required>
-                                    <option value="">Kod Seçin</option>
+                                    <option value="">Kod Secin</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="yon">Yön *</label>
+                                <label for="yon">Yon *</label>
                                 <select class="form-control" id="yon" name="yon" required>
-                                    <option value="giris">Giriş</option>
-                                    <option value="cikis">Çıkış</option>
+                                    <option value="giris">Giris</option>
+                                    <option value="cikis">Cikis</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label for="hareket_turu">Hareket Türü *</label>
+                                <label for="hareket_turu">Hareket Turu *</label>
                                 <select class="form-control" id="hareket_turu" name="hareket_turu" required>
-                                    <option value="stok_giris">Stok Girişi</option>
-                                    <option value="stok_cikis">Stok Çıkışı</option>
-                                    <option value="uretim">Üretim</option>
-                                    <option value="uretimde_kullanim">Üretimde Kullanım</option>
+                                    <option value="stok_giris">Stok Girisi</option>
+                                    <option value="stok_cikis">Stok Cikisi</option>
+                                    <option value="uretim">Uretim</option>
+                                    <option value="uretimde_kullanim">Uretimde Kullanim</option>
                                     <option value="fire">Fire</option>
-                                    <option value="sayim_farki">Sayım Farkı</option>
-                                    <option value="stok_duzeltme">Stok Düzeltme</option>
-                                    <option value="iade_girisi">İade Girişi</option>
-                                    <option value="tedarikciye_iade">Tedarikçiye İade</option>
-                                    <option value="numune_cikisi">Numune Çıkışı</option>
+                                    <option value="sayim_farki">Sayim Farki</option>
+                                    <option value="stok_duzeltme">Stok Duzeltme</option>
+                                    <option value="iade_girisi">Iade Girisi</option>
+                                    <option value="tedarikciye_iade">Tedarikciye Iade</option>
+                                    <option value="numune_cikisi">Numune Cikisi</option>
                                     <option value="montaj">Montaj</option>
                                 </select>
                             </div>
@@ -277,11 +281,11 @@ $products_result = $connection->query($products_query);
                                 <input type="number" class="form-control" id="miktar" name="miktar" min="0.01" step="0.01" required>
                             </div>
                             <div class="form-group">
-                                <label for="ilgili_belge_no">İlgili Belge No</label>
+                                <label for="ilgili_belge_no">Ilgili Belge No</label>
                                 <input type="text" class="form-control" id="ilgili_belge_no" name="ilgili_belge_no">
                             </div>
                             <div class="form-group" style="grid-column: 1 / -1;">
-                                <label for="aciklama">Açıklama *</label>
+                                <label for="aciklama">Aciklama *</label>
                                 <textarea class="form-control" id="aciklama" name="aciklama" rows="3" required></textarea>
                             </div>
                         </div>
@@ -290,7 +294,7 @@ $products_result = $connection->query($products_query);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Iptal</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
                     </div>
                 </form>
@@ -327,7 +331,7 @@ $products_result = $connection->query($products_query);
                     if (response.status === 'success') {
                         var kodSelect = $('#kod');
                         kodSelect.empty();
-                        kodSelect.append('<option value="">Kod Seçin</option>');
+                        kodSelect.append('<option value="">Kod Secin</option>');
 
                         response.data.forEach(function(item) {
                             kodSelect.append(`<option value="${item.kod}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
@@ -347,7 +351,7 @@ $products_result = $connection->query($products_query);
                         <div class="form-group">
                             <label for="depo">Depo *</label>
                             <select class="form-control" id="depo" name="depo" required>
-                                <option value="">Depo Seçin</option>
+                                <option value="">Depo Secin</option>
                                 <?php
                                 $locations_result->data_seek(0);
                                 while($location = $locations_result->fetch_assoc()): ?>
@@ -368,7 +372,7 @@ $products_result = $connection->query($products_query);
                     <div class="form-group">
                         <label for="tank_kodu">Tank Kodu *</label>
                         <select class="form-control" id="tank_kodu" name="tank_kodu" required>
-                            <option value="">Tank Seçin</option>
+                            <option value="">Tank Secin</option>
                             <?php
                             $tanks_result->data_seek(0);
                             while($tank = $tanks_result->fetch_assoc()): ?>
@@ -391,7 +395,7 @@ $products_result = $connection->query($products_query);
                 loadStockItems(stockType);
                 updateLocationFields(stockType);
             } else {
-                $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                $('#kod').empty().append('<option value="">Kod Secin</option>');
                 $('#location-fields').html('');
             }
         });
@@ -401,27 +405,27 @@ $products_result = $connection->query($products_query);
             var direction = $('#yon').val();
             var movementTypeSelect = $('#hareket_turu');
             
-            movementTypeSelect.empty(); // önceki seçenekleri temizle
+            movementTypeSelect.empty(); // onceki secenekleri temizle
             
             if (direction === 'giris') {
-                // Sadece giriş yönü için uygun türleri ekle
-                movementTypeSelect.append('<option value="stok_giris">Stok Girişi</option>');
-                movementTypeSelect.append('<option value="uretim">Üretim</option>');
-                movementTypeSelect.append('<option value="iade_girisi">İade Girişi</option>');
-                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Artış)</option>');
-                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Artış)</option>');
-                movementTypeSelect.append('<option value="transfer">Transfer (Giriş)</option>');
+                // Sadece giris yonu icin uygun turleri ekle
+                movementTypeSelect.append('<option value="stok_giris">Stok Girisi</option>');
+                movementTypeSelect.append('<option value="uretim">Uretim</option>');
+                movementTypeSelect.append('<option value="iade_girisi">Iade Girisi</option>');
+                movementTypeSelect.append('<option value="sayim_farki">Sayim Farki (Artis)</option>');
+                movementTypeSelect.append('<option value="stok_duzeltme">Stok Duzeltme (Artis)</option>');
+                movementTypeSelect.append('<option value="transfer">Transfer (Giris)</option>');
             } else if (direction === 'cikis') {
-                // Sadece çıkış yönü için uygun türleri ekle
-                movementTypeSelect.append('<option value="stok_cikis">Stok Çıkışı</option>');
-                movementTypeSelect.append('<option value="uretimde_kullanim">Üretimde Kullanım</option>');
+                // Sadece cikis yonu icin uygun turleri ekle
+                movementTypeSelect.append('<option value="stok_cikis">Stok Cikisi</option>');
+                movementTypeSelect.append('<option value="uretimde_kullanim">Uretimde Kullanim</option>');
                 movementTypeSelect.append('<option value="fire">Fire</option>');
-                movementTypeSelect.append('<option value="numune_cikisi">Numune Çıkışı</option>');
-                movementTypeSelect.append('<option value="tedarikciye_iade">Tedarikçiye İade</option>');
+                movementTypeSelect.append('<option value="numune_cikisi">Numune Cikisi</option>');
+                movementTypeSelect.append('<option value="tedarikciye_iade">Tedarikciye Iade</option>');
                 movementTypeSelect.append('<option value="montaj">Montaj</option>');
-                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Azalış)</option>');
-                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Azalış)</option>');
-                movementTypeSelect.append('<option value="transfer">Transfer (Çıkış)</option>');
+                movementTypeSelect.append('<option value="sayim_farki">Sayim Farki (Azalis)</option>');
+                movementTypeSelect.append('<option value="stok_duzeltme">Stok Duzeltme (Azalis)</option>');
+                movementTypeSelect.append('<option value="transfer">Transfer (Cikis)</option>');
             }
         }
 
@@ -451,7 +455,7 @@ $products_result = $connection->query($products_query);
                     if (response.status === 'success') {
                         var movement = response.data;
                         $('#movementForm')[0].reset();
-                        $('#modalTitle').text('Stok Hareketini Düzenle');
+                        $('#modalTitle').text('Stok Hareketini Duzenle');
                         $('#action').val('update_movement');
                         $('#hareket_id').val(movement.hareket_id);
                         $('#stok_turu').val(movement.stok_turu);
@@ -480,14 +484,14 @@ $products_result = $connection->query($products_query);
                             $('#hareket_turu').val(movement.hareket_turu);
                         }, 100);
 
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                        $('#submitBtn').text('Guncelle').removeClass('btn-primary').addClass('btn-success');
                         $('#movementModal').modal('show');
                     } else {
                         showAlert(response.message, 'danger');
                     }
                 },
                 error: function() {
-                    showAlert('Stok hareketi bilgileri alınırken bir hata oluştu.', 'danger');
+                    showAlert('Stok hareketi bilgileri alinirken bir hata olustu.', 'danger');
                 }
             });
         });
@@ -495,8 +499,8 @@ $products_result = $connection->query($products_query);
         // Initialize movement types based on default direction when modal opens for adding
         $('#addMovementBtn').on('click', function() {
             // Set a default direction and update movement types
-            $('#yon').val('giris'); // Default olarak giriş seç
-            updateMovementTypes(); // Hareket türlerini güncelle
+            $('#yon').val('giris'); // Default olarak giris sec
+            updateMovementTypes(); // Hareket turlerini guncelle
         });
 
         // Handle form submission
@@ -522,7 +526,7 @@ $products_result = $connection->query($products_query);
                     }
                 },
                 error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    showAlert('Islem sirasinda bir hata olustu.', 'danger');
                 }
             });
         });
@@ -531,7 +535,7 @@ $products_result = $connection->query($products_query);
         $('.delete-btn').on('click', function() {
             var movementId = $(this).data('id');
 
-            if (confirm('Bu stok hareketini silmek istediğinizden emin misiniz?')) {
+            if (confirm('Bu stok hareketini silmek istediginizden emin misiniz?')) {
                 $.ajax({
                     url: 'api_islemleri/stok_hareket_islemler.php',
                     type: 'POST',
@@ -551,7 +555,7 @@ $products_result = $connection->query($products_query);
                         }
                     },
                     error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                        showAlert('Silme islemi sirasinda bir hata olustu.', 'danger');
                     }
                 });
             }

@@ -13,7 +13,7 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-// İş merkezleri verilerini ekleme
+// Is merkezleri verilerini ekleme
 $work_centers = [
     ['isim' => 'Ana Uretim Alani', 'aciklama' => 'Ana uretim bolumu'],
     ['isim' => 'Kimyasal Hazirlama', 'aciklama' => 'Kimyasal karisimlarin hazirlandigi alan'],
@@ -34,7 +34,7 @@ foreach ($work_centers as $work_center) {
     $isim = $work_center['isim'];
     $aciklama = $work_center['aciklama'];
 
-    // Önce aynı isimde kayıt var mı kontrol et
+    // Once ayni isimde kayit var mi kontrol et
     $check_query = "SELECT COUNT(*) as count FROM is_merkezleri WHERE isim = ?";
     $check_stmt = $connection->prepare($check_query);
     $check_stmt->bind_param('s', $isim);
@@ -49,17 +49,17 @@ foreach ($work_centers as $work_center) {
         $stmt->bind_param('ss', $isim, $aciklama);
 
         if ($stmt->execute()) {
-            $message .= "İş merkezi '$isim' başarıyla eklendi.<br>";
+            $message .= "Is merkezi '$isim' basariyla eklendi.<br>";
         } else {
-            $error .= "İş merkezi '$isim' eklenirken hata oluştu: " . $connection->error . "<br>";
+            $error .= "Is merkezi '$isim' eklenirken hata olustu: " . $connection->error . "<br>";
         }
         $stmt->close();
     } else {
-        $error .= "İş merkezi '$isim' zaten mevcut.<br>";
+        $error .= "Is merkezi '$isim' zaten mevcut.<br>";
     }
 }
 
-// Mevcut iş merkezlerini göster
+// Mevcut is merkezlerini goster
 $work_centers_query = "SELECT * FROM is_merkezleri ORDER BY isim";
 $work_centers_result = $connection->query($work_centers_query);
 ?>
@@ -69,7 +69,7 @@ $work_centers_result = $connection->query($work_centers_query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>İş Merkezleri Ekle - Parfüm ERP Sistemi</title>
+    <title>Is Merkezleri Ekle - Parfüm ERP Sistemi</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -162,7 +162,7 @@ $work_centers_result = $connection->query($work_centers_query);
             <div class="col-md-10">
                 <div class="card">
                     <div class="card-header">
-                        <h2><i class="fas fa-industry mr-2"></i>İş Merkezleri Veri Ekleme</h2>
+                        <h2><i class="fas fa-industry mr-2"></i>Is Merkezleri Veri Ekleme</h2>
                     </div>
                     <div class="card-body">
                         <?php if ($message): ?>
@@ -181,12 +181,12 @@ $work_centers_result = $connection->query($work_centers_query);
 
                         <div class="row">
                             <div class="col-md-6">
-                                <h4>Eklenen İş Merkezleri:</h4>
+                                <h4>Eklenen Is Merkezleri:</h4>
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
-                                            <th>İş Merkezi Adı</th>
-                                            <th>Açıklama</th>
+                                            <th>Is Merkezi Adi</th>
+                                            <th>Aciklama</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -201,13 +201,13 @@ $work_centers_result = $connection->query($work_centers_query);
                             </div>
 
                             <div class="col-md-6">
-                                <h4>Mevcut İş Merkezleri:</h4>
+                                <h4>Mevcut Is Merkezleri:</h4>
                                 <table class="table table-hover">
                                     <thead>
                                         <tr>
                                             <th>ID</th>
-                                            <th>İş Merkezi Adı</th>
-                                            <th>Açıklama</th>
+                                            <th>Is Merkezi Adi</th>
+                                            <th>Aciklama</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -221,7 +221,7 @@ $work_centers_result = $connection->query($work_centers_query);
                                             <?php endwhile; ?>
                                         <?php else: ?>
                                             <tr>
-                                                <td colspan="3" class="text-center p-4">Henüz kayıtlı iş merkezi bulunmuyor.</td>
+                                                <td colspan="3" class="text-center p-4">Henuz kayitli is merkezi bulunmuyor.</td>
                                             </tr>
                                         <?php endif; ?>
                                     </tbody>
@@ -231,10 +231,10 @@ $work_centers_result = $connection->query($work_centers_query);
 
                         <div class="text-center mt-4">
                             <a href="is_merkezleri.php" class="btn btn-primary">
-                                <i class="fas fa-arrow-left mr-2"></i>İş Merkezleri Sayfasına Dön
+                                <i class="fas fa-arrow-left mr-2"></i>Is Merkezleri Sayfasina Don
                             </a>
                             <a href="navigation.php" class="btn btn-secondary">
-                                <i class="fas fa-home mr-2"></i>Ana Sayfaya Dön
+                                <i class="fas fa-home mr-2"></i>Ana Sayfaya Don
                             </a>
                         </div>
                     </div>
