@@ -39,67 +39,51 @@ function display_date($date_string) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #1abc9c;
-            --danger: #e74c3c;
-            --warning: #f1c40f;
-            --info: #3498db;
-            --light: #f8f9fa;
-            --dark: #2c3e50;
-            --bg-color: #f5f7fb;
-            --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #2c3e50;
-            --text-secondary: #8492a6;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05);
-            --transition: all 0.3s ease;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-        }
-        .main-content { padding: 30px; }
-        
-        @media (max-width: 768px) {
-            .main-content { padding: 0; }
-        }
-        .page-header { margin-bottom: 30px; }
-        .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
-        .page-header p { color: var(--text-secondary); font-size: 1rem; }
-        .card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
-        .card-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .card-header h2 { font-size: 1.2rem; font-weight: 600; }
-        .card-body { padding: 20px; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--secondary); }
-        .btn-success { background-color: var(--success); color: white; }
-        .btn-danger { background-color: var(--danger); color: white; }
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
-        th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
-        tbody tr:hover { background-color: #f5f7fb; }
-        .actions { display: flex; gap: 10px; }
-        .actions button { padding: 8px 12px; }
-        .stat-card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 25px; display: flex; align-items: center; }
-        .stat-icon { font-size: 2rem; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: white; }
-        .stat-info h3 { font-size: 1.8rem; font-weight: 700; }
-        .stat-info p { color: var(--text-secondary); }
-        .modal-body .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-        .modal-body .form-group { display: flex; flex-direction: column; }
-        .modal-body .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
-        .modal-body .form-group input, .modal-body .form-group select, .modal-body .form-group textarea { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 0.95rem; }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link rel="stylesheet" href="css/stil.css">
 </head>
 <body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+        <div class="container-fluid">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="navigation.php">Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
     <div class="main-content">
+        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+        
+        <div class="page-header">
+            <div>
+                <h1>Çerçeve Sözleşmeler</h1>
+                <p>Çerçeve sözleşmeleri yönetin ve izleyin</p>
+            </div>
+        </div>
+
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card border-0 shadow-sm">
@@ -197,25 +181,25 @@ function display_date($date_string) {
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <h2>Sözleşme Listesi</h2>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-table"></i> Sözleşme Listesi</h2>
             </div>
             <div class="card-body">
                 <div class="table-wrapper">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>İşlemler</th>
-                                <th>ID</th>
-                                <th>Tedarikçi</th>
-                                <th>Malzeme</th>
-                                <th>Fiyat</th>
-                                <th>Birim</th>
-                                <th>Limit</th>
-                                <th>Ödenen</th>
-                                <th>Başlangıç</th>
-                                <th>Bitiş</th>
-                                <th>Oluşturan</th>
+                                <th><i class="fas fa-cogs"></i> İşlemler</th>
+                                <th><i class="fas fa-hashtag"></i> ID</th>
+                                <th><i class="fas fa-building"></i> Tedarikçi</th>
+                                <th><i class="fas fa-box"></i> Malzeme</th>
+                                <th><i class="fas fa-tag"></i> Fiyat</th>
+                                <th><i class="fas fa-coins"></i> Birim</th>
+                                <th><i class="fas fa-chart-bar"></i> Limit</th>
+                                <th><i class="fas fa-check"></i> Ödenen</th>
+                                <th><i class="fas fa-calendar-plus"></i> Başlangıç</th>
+                                <th><i class="fas fa-calendar-times"></i> Bitiş</th>
+                                <th><i class="fas fa-user"></i> Oluşturan</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -251,7 +235,11 @@ function display_date($date_string) {
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="11" class="text-center p-4">Henüz kayıtlı sözleşme bulunmuyor.</td>
+                                    <td colspan="11" class="text-center p-4">
+                                        <i class="fas fa-file-contract fa-3x mb-3" style="color: var(--text-secondary);"></i>
+                                        <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
+                                        <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle" butonunu kullanabilirsiniz.</p>
+                                    </td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>

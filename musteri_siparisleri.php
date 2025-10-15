@@ -13,6 +13,20 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Get the current user's information to ensure we have the correct name in stock movements
+$user_id = $_SESSION['user_id'];
+$user_info_query = "SELECT ad_soyad FROM personeller WHERE personel_id = ?";
+$user_info_stmt = $connection->prepare($user_info_query);
+$user_info_stmt->bind_param('i', $user_id);
+$user_info_stmt->execute();
+$user_info_result = $user_info_stmt->get_result();
+$user_info = $user_info_result->fetch_assoc();
+$user_name = ($user_info && !empty($user_info['ad_soyad'])) ? $user_info['ad_soyad'] : $_SESSION['kullanici_adi']; // Fallback to session name if not found in database or if ad_soyad is empty
+$user_info_stmt->close();
+
+// Debug logging to check what user_name contains
+error_log("DEBUG - user_id: $user_id, user_info: " . print_r($user_info, true) . ", user_name: $user_name, session_kullanici_adi: " . $_SESSION['kullanici_adi']);
+
 $message = '';
 $error = '';
 
@@ -23,9 +37,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $siparis_id = $_POST['siparis_id'];
         $durum = $_POST['durum'];
 
+        // Get the current status before update
+        $current_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
+        $current_stmt = $connection->prepare($current_query);
+        $current_stmt->bind_param('i', $siparis_id);
+        $current_stmt->execute();
+        $current_result = $current_stmt->get_result();
+        $current_row = $current_result->fetch_assoc();
+        $current_status = $current_row['durum'] ?? '';
+        $current_stmt->close();
+
         if ($durum === 'onaylandi') {
             // When approving, set the approval details
-            $personel_id = $_SESSION['id'];
+            $personel_id = $_SESSION['user_id'];
             $personel_adi = $_SESSION['kullanici_adi'];
 
             $query = "UPDATE siparisler SET durum = ?, onaylayan_personel_id = ?, onaylayan_personel_adi = ?, onay_tarihi = NOW() WHERE siparis_id = ?";
@@ -40,8 +64,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($stmt->execute()) {
             $message = "Sipariş başarıyla güncellendi.";
 
-            // If the order is approved, update stock
-            if ($durum === 'onaylandi') {
+            // If the order is completed, update stock and add movement records
+            // Handle stock movements based on status changes
+            if ($durum === 'tamamlandi') {
+                // Get order information to retrieve customer name and ID
+                $order_query = "SELECT musteri_id, musteri_adi FROM siparisler WHERE siparis_id = ?";
+                $order_stmt = $connection->prepare($order_query);
+                $order_stmt->bind_param('i', $siparis_id);
+                $order_stmt->execute();
+                $order_result = $order_stmt->get_result();
+                $order = $order_result->fetch_assoc();
+                $musteri_id = intval($order['musteri_id']);
+                $musteri_adi = mysqli_real_escape_string($connection, $order['musteri_adi']);
+                $order_stmt->close();
+                
                 // Get order items
                 $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
                 $items_stmt = $connection->prepare($items_query);
@@ -58,12 +94,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update_stock_stmt->close();
 
                     // Add stock movement record
-                    $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
-                                      VALUES ('urun', ?, ?, ?, ?, 'cikis', 'cikis', ?, 'Müşteri siparişi', ?, ?)";
-                    $movement_stmt = $connection->prepare($movement_query);
-                    $movement_stmt->bind_param('ssdissi', $item['urun_kodu'], $item['urun_ismi'], $item['birim'], $item['adet'], $siparis_id, $_SESSION['id'], $_SESSION['kullanici_adi']);
-                    $movement_stmt->execute();
-                    $movement_stmt->close();
+                    $stok_turu = mysqli_real_escape_string($connection, 'urun');
+                    $urun_kodu = mysqli_real_escape_string($connection, $item['urun_kodu']);
+                    $urun_ismi = mysqli_real_escape_string($connection, $item['urun_ismi']);
+                    $birim = mysqli_real_escape_string($connection, $item['birim']);
+                    $adet = floatval($item['adet']); // decimal/miktar için
+                    $yon = mysqli_real_escape_string($connection, 'cikis');
+                    $hareket_turu = mysqli_real_escape_string($connection, 'cikis');
+                    $siparis_id = intval($siparis_id); // integer olarak
+                    $aciklama = mysqli_real_escape_string($connection, 'Müşteri siparişi');
+                    $user_id = intval($_SESSION['user_id']); // integer olarak
+                    $user_name = mysqli_real_escape_string($connection, $user_name);
+
+                    $movement_query = "INSERT INTO stok_hareket_kayitlari 
+                        (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
+                        VALUES 
+                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $siparis_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
+                    
+                    if (!$connection->query($movement_query)) {
+                        error_log("Failed to insert stock movement: " . $connection->error);
+                    }
+                }
+
+                $items_stmt->close();
+            } elseif ($durum === 'onaylandi' && $current_status === 'tamamlandi') {
+                // Reverting from tamamlandi back to onaylandi - reverse stock movements
+                // Get order information to retrieve customer name and ID
+                $order_query = "SELECT musteri_id, musteri_adi FROM siparisler WHERE siparis_id = ?";
+                $order_stmt = $connection->prepare($order_query);
+                $order_stmt->bind_param('i', $siparis_id);
+                $order_stmt->execute();
+                $order_result = $order_stmt->get_result();
+                $order = $order_result->fetch_assoc();
+                $musteri_id = intval($order['musteri_id']);
+                $musteri_adi = mysqli_real_escape_string($connection, $order['musteri_adi']);
+                $order_stmt->close();
+                
+                // Get order items
+                $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
+                $items_stmt = $connection->prepare($items_query);
+                $items_stmt->bind_param('i', $siparis_id);
+                $items_stmt->execute();
+                $items_result = $items_stmt->get_result();
+
+                // Reverse stock updates (add back to stock)
+                while ($item = $items_result->fetch_assoc()) {
+                    $update_stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + ? WHERE urun_kodu = ?";
+                    $update_stock_stmt = $connection->prepare($update_stock_query);
+                    $update_stock_stmt->bind_param('ii', $item['adet'], $item['urun_kodu']);
+                    $update_stock_stmt->execute();
+                    $update_stock_stmt->close();
+
+                    // Add reverse stock movement record (giriş)
+                    $stok_turu = mysqli_real_escape_string($connection, 'urun');
+                    $urun_kodu = mysqli_real_escape_string($connection, $item['urun_kodu']);
+                    $urun_ismi = mysqli_real_escape_string($connection, $item['urun_ismi']);
+                    $birim = mysqli_real_escape_string($connection, $item['birim']);
+                    $adet = floatval($item['adet']); // decimal/miktar için
+                    $yon = mysqli_real_escape_string($connection, 'giriş');
+                    $hareket_turu = mysqli_real_escape_string($connection, 'iptal_cikis');
+                    $siparis_id = intval($siparis_id); // integer olarak
+                    $aciklama = mysqli_real_escape_string($connection, 'Satış İptali - Müşteri siparişi');
+                    $user_id = intval($_SESSION['user_id']); // integer olarak
+                    $user_name = mysqli_real_escape_string($connection, $user_name);
+
+                    $movement_query = "INSERT INTO stok_hareket_kayitlari 
+                        (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
+                        VALUES 
+                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $siparis_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
+                    
+                    if (!$connection->query($movement_query)) {
+                        error_log("Failed to insert reverse stock movement: " . $connection->error);
+                    }
                 }
 
                 $items_stmt->close();
@@ -475,6 +577,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 500;
+            white-space: nowrap;
         }
         
         .order-item {
@@ -697,7 +800,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                 </a>
 
                                                 <?php if ($order['durum'] === 'beklemede'): ?>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi onaylamak istediğinizden emin misiniz? Stok hareketi oluşturulacak.');">
+                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi onaylamak istediğinizden emin misiniz?');">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
                                                         <button type="submit" name="update" class="btn btn-success btn-sm">
@@ -713,11 +816,19 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         </button>
                                                     </form>
                                                 <?php elseif ($order['durum'] === 'onaylandi'): ?>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi tamamlamak istediğinizden emin misiniz?');">
+                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi tamamlamak istediğinizden emin misiniz? Stok hareketi oluşturulacaktır.');">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="tamamlandi">
                                                         <button type="submit" name="update" class="btn btn-info btn-sm">
                                                             <i class="fas fa-check-double"></i> Tamamla
+                                                        </button>
+                                                    </form>
+                                                <?php elseif ($order['durum'] === 'tamamlandi'): ?>
+                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu tamamlanmış siparişi geri almak istediğinizden emin misiniz? Stok hareketleri geri alınacaktır.');">
+                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                        <input type="hidden" name="durum" value="onaylandi">
+                                                        <button type="submit" name="update" class="btn btn-warning btn-sm">
+                                                            <i class="fas fa-undo"></i> Geri Al
                                                         </button>
                                                     </form>
                                                 <?php endif; ?>

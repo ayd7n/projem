@@ -85,7 +85,7 @@ function addExpense() {
     $aciklama = $_POST['aciklama'] ?? '';
     $fatura_no = $_POST['fatura_no'] ?? '';
     $odeme_tipi = $_POST['odeme_tipi'] ?? '';
-    $personel_id = $_SESSION['id'];
+    $personel_id = $_SESSION['user_id'];
     $personel_adi = $_SESSION['kullanici_adi'];
 
     if (empty($tarih) || empty($tutar) || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {

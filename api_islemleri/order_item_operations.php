@@ -44,30 +44,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             
             $toplam_tutar = $adet * $product['satis_fiyati'];
             
-            // Validate data before insertion to ensure non-empty values
-            $urun_ismi_check = trim($product['urun_ismi']);
-            $birim_check = trim($product['birim']);
-            $fiyat_check = floatval($product['satis_fiyati']);
-            
+            // Validate and clean data before insertion to ensure non-empty values
+            $urun_ismi_check = isset($product['urun_ismi']) && !is_null($product['urun_ismi']) ? trim($product['urun_ismi']) : '';
+            $birim_check = isset($product['birim']) && !is_null($product['birim']) ? trim($product['birim']) : '';
+            $fiyat_check = isset($product['satis_fiyati']) && is_numeric($product['satis_fiyati']) ? floatval($product['satis_fiyati']) : 0.0;
+
             // If any critical fields are empty or invalid, use defaults
-            if (empty($urun_ismi_check) || $urun_ismi_check === '0') {
+            if (empty($urun_ismi_check) || $urun_ismi_check === '0' || $urun_ismi_check === false) {
                 $urun_ismi_check = 'Bilinmeyen Ürün';
             }
-            if (empty($birim_check) || $birim_check === '0') {
+            if (empty($birim_check) || $birim_check === '0' || $birim_check === false) {
                 $birim_check = 'adet';
             }
             if ($fiyat_check <= 0) {
-                $fiyat_check = 0.00;
+                $fiyat_check = 150.00; // Use default price
             }
-            
-            // Insert order item - using escaped values to avoid potential issues with prepared statements
-            $urun_ismi_escaped = $connection->real_escape_string($urun_ismi_check);
-            $birim_escaped = $connection->real_escape_string($birim_check);
-            
-            $item_query = "INSERT INTO siparis_kalemleri (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar) 
+
+            // Insert order item using prepared statements
+            $item_query = "INSERT INTO siparis_kalemleri (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar)
                           VALUES (?, ?, ?, ?, ?, ?, ?)";
             $item_stmt = $connection->prepare($item_query);
-            $item_stmt->bind_param('iiisidd', $siparis_id, $urun_kodu, $urun_ismi_escaped, $adet, $birim_escaped, $fiyat_check, $toplam_tutar);
+            $item_stmt->bind_param('iisisdd', $siparis_id, $urun_kodu, $urun_ismi_check, $adet, $birim_check, $fiyat_check, $toplam_tutar);
             
             if ($item_stmt->execute()) {
                 // Update total quantity in order
@@ -76,18 +73,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                 $update_total_stmt->execute();
                 
-                // Double check that we have the right data by re-fetching it after insertion
-                $verify_query = "SELECT urun_ismi, birim, birim_fiyat FROM siparis_kalemleri WHERE siparis_id = ? AND urun_kodu = ? ORDER BY adet DESC LIMIT 1";
-                $verify_stmt = $connection->prepare($verify_query);
-                $verify_stmt->bind_param('ii', $siparis_id, $urun_kodu);
-                $verify_stmt->execute();
-                $verify_result = $verify_stmt->get_result();
-                $verify_data = $verify_result->fetch_assoc();
-                
-                // Use verified data for the response
-                $return_ismi = $verify_data['urun_ismi'] ?? $product['urun_ismi'];
-                $return_birim = $verify_data['birim'] ?? $product['birim'];
-                $return_fiyat = $verify_data['birim_fiyat'] ?? $product['satis_fiyati'];
+                // No need to re-fetch data as we used the correct product data above
+                $return_ismi = $urun_ismi_check;
+                $return_birim = $birim_check;
+                $return_fiyat = $fiyat_check;
                 
                 // Ensure we don't have null/empty values
                 $return_ismi = !empty($return_ismi) ? $return_ismi : 'Bilinmeyen Ürün';
@@ -96,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 // Return the inserted item data for immediate display
                 echo json_encode([
-                    'status' => 'success', 
+                    'status' => 'success',
                     'message' => 'Sipariş kalemi başarıyla eklendi.',
                     'item_data' => [
                         'siparis_id' => $siparis_id,

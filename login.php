@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $_SESSION['user_id'] = $customer['user_id'];
                 $_SESSION['taraf'] = $customer['taraf'];
-                $_SESSION['id'] = $customer['user_id'];
+                // $_SESSION['id'] = $customer['user_id']; // Not used
                 $_SESSION['kullanici_adi'] = $customer['kullanici_adi'];
                 $_SESSION['rol'] = 'musteri';
                 

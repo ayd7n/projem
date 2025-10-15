@@ -534,7 +534,7 @@ $products_result = $connection->query($products_query);
             </div>
             <div class="card-body">
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table id="order-items" class="table table-hover">
                         <thead>
                             <tr>
                                 <th><i class="fas fa-barcode"></i> Ürün Kodu</th>
@@ -942,9 +942,37 @@ $products_result = $connection->query($products_query);
     
     // Function to update the order total display
     function updateOrderTotal() {
-        // For simplicity, we'll do a page refresh to ensure data consistency
-        // In a real implementation, you would call an API to get updated totals
-        location.reload();
+        // Update total quantity by counting items in the table
+        let totalQuantity = 0;
+        const rows = document.querySelectorAll('#order-items tbody tr[id^="order-item-"]');
+
+        rows.forEach(row => {
+            const quantityCell = row.cells[2]; // 3rd column (Adet)
+            if (quantityCell && quantityCell.textContent) {
+                const quantity = parseInt(quantityCell.textContent.trim());
+                if (!isNaN(quantity)) {
+                    totalQuantity += quantity;
+                }
+            }
+        });
+
+        // Update the toplam adet display in the order info card
+        const totalElement = document.querySelector('.card-body .col-md-4 .form-control-plaintext');
+        if (totalElement && totalElement.previousElementSibling && totalElement.previousElementSibling.textContent.includes('Toplam Adet:')) {
+            totalElement.textContent = totalQuantity;
+        }
+
+        // Alternative: Find by class or more specific selector
+        const formGroups = document.querySelectorAll('.card-body .form-group');
+        formGroups.forEach(group => {
+            const label = group.querySelector('label');
+            if (label && label.textContent.includes('Toplam Adet:')) {
+                const valueDiv = group.querySelector('.form-control-plaintext');
+                if (valueDiv) {
+                    valueDiv.textContent = totalQuantity;
+                }
+            }
+        });
     }
     </script>
 </body>

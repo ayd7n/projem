@@ -55,7 +55,7 @@ try {
             
             $query = "INSERT INTO giris_kalite_kontrolu (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim, reddedilen_miktar, red_nedeni, kontrol_eden_personel_id, kontrol_eden_personel_adi, ilgili_belge_no, aciklama) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('issssdssiss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim, $red_edilen_miktar, $red_nedeni, $_SESSION['id'], $_SESSION['kullanici_adi'], $ilgili_belge_no, $aciklama);
+        $stmt->bind_param('issssdssiss', $tedarikci_id, $tedarikci_adi, $malzeme_kodu, $malzeme_ismi, $birim, $red_edilen_miktar, $red_nedeni, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $ilgili_belge_no, $aciklama);
             
             if ($stmt->execute()) {
                 $response = ['status' => 'success', 'message' => 'Giriş kalite kontrolü kaydı başarıyla oluşturuldu.'];
