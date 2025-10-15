@@ -55,7 +55,40 @@ $products_result = $connection->query($products_query);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/stil.css">
+                <link rel="stylesheet" href="css/stil.css">
+                <style>
+                    .form-group-single {
+                        margin-bottom: 0.75rem;
+                        display: block;
+                    }
+                    .form-group-single > .form-group {
+                        margin-bottom: 0;
+                    }
+                    .form-group-aligned {
+                        display: flex;
+                        gap: 15px;
+                        margin-bottom: 1rem;
+                    }
+                    .form-group-aligned .field-container {
+                        flex: 1;
+                    }
+                    .form-group-aligned .field-container label {
+                        display: block;
+                        margin-bottom: 0.25rem;
+                    }
+                    .single-fields {
+                        display: flex;
+                        gap: 15px;
+                        margin-bottom: 1rem;
+                    }
+                    .single-fields .single-field-item {
+                        flex: 1;
+                    }
+                    .single-fields .single-field-item label {
+                        display: block;
+                        margin-bottom: 0.25rem;
+                    }
+                </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -103,7 +136,8 @@ $products_result = $connection->query($products_query);
 
         <div class="row">
             <div class="col-md-8">
-                <!-- "Yeni Stok Hareketi Ekle" butonu kaldırıldı -->
+                <button class="btn btn-success mr-2" id="girisButton"><i class="fas fa-plus-circle"></i> Sayım Fazlası</button>
+                <button class="btn btn-danger mr-2" id="cikislarButton"><i class="fas fa-minus-circle"></i> Fire / Sayım Eksigi</button>
                 <button class="btn btn-primary" id="transferButton"><i class="fas fa-exchange-alt"></i> Yeni Stok Transferi</button>
             </div>
             <div class="col-md-4">
@@ -267,8 +301,8 @@ $products_result = $connection->query($products_query);
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="hareket_turu">Hareket Türü *</label>
-                                    <select class="form-control" id="hareket_turu" name="hareket_turu" required>
-                                        <option value="">Seçiniz</option>
+                                    <select class="form-control" id="hareket_turu" name="hareket_turu">
+                                        <option value="sayim_fazlasi" selected>Sayım Fazlası</option>
                                         <option value="stok_giris">Stok Girişi</option>
                                         <option value="stok_cikis">Stok Çıkışı</option>
                                         <option value="uretim">Üretim</option>
@@ -281,6 +315,8 @@ $products_result = $connection->query($products_query);
                                         <option value="numune_cikisi">Numune Çıkışı</option>
                                         <option value="montaj">Montaj</option>
                                         <option value="transfer">Transfer</option>
+                                        <option value="fire_cikisi">Fire Çıkışı</option>
+                                        <option value="sayim_eksigi">Sayım Eksigi</option>
                                     </select>
                                 </div>
                             </div>
@@ -504,6 +540,33 @@ $products_result = $connection->query($products_query);
             }
         });
 
+        // Item code change handler for auto-filling location fields
+        $('#kod').on('change', function() {
+            var stockType = $('#stok_turu').val();
+            var itemCode = $(this).val();
+
+            if (stockType && itemCode && ($('#depo').length > 0 || $('#raf').length > 0)) {
+                // Get current location from API
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            var location = response.data;
+                            $('#depo').val(location.depo || '');
+                            $('#raf').val(location.raf || '');
+                        }
+                    },
+                    error: function() {
+                        // If API fails, clear fields
+                        $('#depo').val('');
+                        $('#raf').val('');
+                    }
+                });
+            }
+        });
+
         // Update movement types based on direction
         function updateMovementTypes() {
             var direction = $('#yon').val();
@@ -529,6 +592,8 @@ $products_result = $connection->query($products_query);
                 movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Azalış)</option>');
                 movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Azalış)</option>');
                 movementTypeSelect.append('<option value="transfer">Transfer (Çıkış)</option>');
+                movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
+                movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
             }
         }
 
@@ -592,6 +657,19 @@ $products_result = $connection->query($products_query);
         $('#movementForm').on('submit', function(e) {
             e.preventDefault();
             
+            // Get movement type and description
+            var movementType = $('#hareket_turu').val();
+            var description = $('#aciklama').val();
+
+            // Modify description based on movement type
+            if (movementType === 'fire_cikisi' || movementType === 'sayim_eksigi') {
+                if (movementType === 'fire_cikisi') {
+                    $('#aciklama').val('fire çıkışı: ' + description);
+                } else if (movementType === 'sayim_eksigi') {
+                    $('#aciklama').val('sayım eksigi: ' + description);
+                }
+            }
+
             // Show loading state
             const submitBtn = $('#submitBtn');
             const originalText = submitBtn.html();
@@ -1063,7 +1141,205 @@ $products_result = $connection->query($products_query);
                 }
             });
         });
+        
+        // Exit button click handler
+        $('#cikislarButton').on('click', function() {
+            // Reset form
+            $('#movementForm')[0].reset();
+            // Set direction to 'cikis'
+            $('#yon').val('cikis');
+
+            // Set only the required movement types for exits
+            var movementTypeSelect = $('#hareket_turu');
+            movementTypeSelect.empty();
+            movementTypeSelect.append('<option value="">Hareket türü seçin</option>');
+            movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
+            movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
+
+            // Hide the direction field since it's always 'cikis' for exit operations
+            $('#yon').closest('.col-md-6').hide();
+
+            // Adjust the movement type field to span full row with better structure
+            $('#hareket_turu').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
+
+            // Additionally adjust quantity and document number fields to have proper spacing
+            $('#miktar').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
+            $('#ilgili_belge_no').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
+
+            // Set modal title
+            $('#modalTitle').text('Çıkış Hareketi Formu');
+            // Set action to 'add_movement'
+            $('#action').val('add_movement');
+            // Clear hidden fields
+            $('#hareket_id').val('');
+
+            // Show the modal
+            $('#movementModal').modal('show');
+
+            // Add event handlers for the exit form - stok tür ve kod için
+            $('#stok_turu').on('change', function() {
+                var stockType = $(this).val();
+                if (stockType) {
+                    loadStockItems(stockType);
+                    updateLocationFields(stockType);
+                } else {
+                    $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                    $('#location-fields').html('');
+                }
+            });
+
+            // Add location field event handlers for exit form
+            updateLocationFieldsForExit();
+        });
+
+        // Function to update location fields for exit operations
+        function updateLocationFieldsForExit() {
+            var stockType = $('#stok_turu').val();
+
+            if (stockType === 'malzeme' || stockType === 'urun') {
+                updateLocationFields(stockType);
+
+                // Add event handler to fill location fields when item is selected
+                $('#kod').on('change.exit', function() {
+                    var stockType = $('#stok_turu').val();
+                    var itemCode = $(this).val();
+
+                    if (stockType && itemCode) {
+                        // Get current location from API
+                        $.ajax({
+                            url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    var location = response.data;
+                                    $('#depo').val(location.depo || '');
+                                    $('#raf').val(location.raf || '');
+                                }
+                            },
+                            error: function() {
+                                // If API fails, clear fields
+                                $('#depo').val('');
+                                $('#raf').val('');
+                            }
+                        });
+                    } else {
+                        $('#depo').val('');
+                        $('#raf').val('');
+                    }
+                });
+            }
+        }
     });
+    </script>
+
+    <script>
+        // Giriş button click handler - Sadece sayım fazlası için
+        $('#girisButton').on('click', function() {
+            // Reset form
+            $('#movementForm')[0].reset();
+
+            // Set direction to 'giris'
+            $('#yon').val('giris');
+
+            // Set movement type to 'sayim_fazlasi' (always count excess)
+            $('#hareket_turu').val('sayim_fazlasi');
+
+            // Hide the direction and movement type fields
+            $('#yon').closest('.col-md-6').hide();
+            $('#hareket_turu').closest('.col-md-6').hide();
+
+            // Just hide the direction and movement type fields for sayim fazlası
+            $('#yon').closest('.col-md-6').hide();
+            $('#hareket_turu').closest('.col-md-6').hide();
+
+            // Apply visual improvements with CSS classes only
+            $('#stok_turu').closest('.col-md-6').addClass('aligned-field');
+            $('#kod').closest('.col-md-6').addClass('aligned-field');
+            $('#miktar').closest('.col-md-6').addClass('aligned-field-second');
+            $('#ilgili_belge_no').closest('.col-md-6').addClass('aligned-field-second');
+
+            // Set modal title
+            $('#modalTitle').text('Sayım Fazlası');
+            // Set action to 'add_movement'
+            $('#action').val('add_movement');
+            // Clear hidden fields
+            $('#hareket_id').val('');
+
+            // Show the modal
+            $('#movementModal').modal('show');
+
+            // Add event handlers for the new dynamic elements
+            $('#stok_turu').on('change', function() {
+                var stockType = $(this).val();
+                if (stockType) {
+                    loadStockItems(stockType);
+                    updateLocationFields(stockType);
+                } else {
+                    $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                    $('#location-fields').html('');
+                }
+            });
+
+            // Add location field event handlers for entry form
+            updateLocationFieldsForEntry();
+        });
+
+        // Function to update location fields for entry operations
+        function updateLocationFieldsForEntry() {
+            var stockType = $('#stok_turu').val();
+
+            if (stockType === 'malzeme' || stockType === 'urun') {
+                updateLocationFields(stockType);
+
+                // Add event handler to fill location fields when item is selected
+                $('#kod').on('change.entry', function() {
+                    var stockType = $('#stok_turu').val();
+                    var itemCode = $(this).val();
+
+                    if (stockType && itemCode) {
+                        // Get current location from API
+                        $.ajax({
+                            url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                            type: 'GET',
+                            dataType: 'json',
+                            success: function(response) {
+                                if (response.status === 'success') {
+                                    var location = response.data;
+                                    $('#depo').val(location.depo || '');
+                                    $('#raf').val(location.raf || '');
+                                }
+                            },
+                            error: function() {
+                                // For entry, clear location fields as they will be set by user
+                                $('#depo').val('');
+                                $('#raf').val('');
+                            }
+                        });
+                    } else {
+                        $('#depo').val('');
+                        $('#raf').val('');
+                    }
+                });
+            }
+        }
+
+        // Handle form submission for count excess (separate from regular form submission)
+        $('#movementForm').on('submit.count-excess', function(e) {
+            e.preventDefault();
+
+            // Get movement type and description for count excess
+            var movementType = $('#hareket_turu').val();
+            var description = $('#aciklama').val();
+
+            // Only modify description for fire_cikisi and sayim_eksigi, sayim_fazlasi handled differently
+            if (movementType === 'fire_cikisi') {
+                $('#aciklama').val('fire çıkışı: ' + description);
+            } else if (movementType === 'sayim_eksigi') {
+                $('#aciklama').val('sayım eksigi: ' + description);
+            }
+            // sayim_fazlasi gets "sayım fazlası:" prefix from the separate handler in girisButton section
+        });
     </script>
 </body>
 </html>
