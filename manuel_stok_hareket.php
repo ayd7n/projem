@@ -40,10 +40,15 @@ $essences_result = $connection->query($essences_query);
 // Fetch all products for dropdown
 $products_query = "SELECT * FROM urunler ORDER BY urun_ismi";
 $products_result = $connection->query($products_query);
+
+// Fetch all framework contracts for dropdown
+$contracts_query = "SELECT * FROM cerceve_sozlesmeler ORDER BY olusturulma_tarihi DESC";
+$contracts_result = $connection->query($contracts_query);
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -54,49 +59,61 @@ $products_result = $connection->query($products_query);
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-                <link rel="stylesheet" href="css/stil.css">
-                <style>
-                    .form-group-single {
-                        margin-bottom: 0.75rem;
-                        display: block;
-                    }
-                    .form-group-single > .form-group {
-                        margin-bottom: 0;
-                    }
-                    .form-group-aligned {
-                        display: flex;
-                        gap: 15px;
-                        margin-bottom: 1rem;
-                    }
-                    .form-group-aligned .field-container {
-                        flex: 1;
-                    }
-                    .form-group-aligned .field-container label {
-                        display: block;
-                        margin-bottom: 0.25rem;
-                    }
-                    .single-fields {
-                        display: flex;
-                        gap: 15px;
-                        margin-bottom: 1rem;
-                    }
-                    .single-fields .single-field-item {
-                        flex: 1;
-                    }
-                    .single-fields .single-field-item label {
-                        display: block;
-                        margin-bottom: 0.25rem;
-                    }
-                </style>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/stil.css">
+    <style>
+        .form-group-single {
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .form-group-single>.form-group {
+            margin-bottom: 0;
+        }
+
+        .form-group-aligned {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .form-group-aligned .field-container {
+            flex: 1;
+        }
+
+        .form-group-aligned .field-container label {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+
+        .single-fields {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 1rem;
+        }
+
+        .single-fields .single-field-item {
+            flex: 1;
+        }
+
+        .single-fields .single-field-item label {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
+    </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -109,8 +126,10 @@ $products_result = $connection->query($products_query);
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -124,7 +143,7 @@ $products_result = $connection->query($products_query);
     <!-- Main Content -->
     <div class="main-content">
         <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
+
         <div class="page-header">
             <div>
                 <h1>Manuel Stok Hareket Yönetimi</h1>
@@ -136,9 +155,13 @@ $products_result = $connection->query($products_query);
 
         <div class="row">
             <div class="col-md-8">
-                <button class="btn btn-success mr-2" id="girisButton"><i class="fas fa-plus-circle"></i> Sayım Fazlası</button>
-                <button class="btn btn-danger mr-2" id="cikislarButton"><i class="fas fa-minus-circle"></i> Fire / Sayım Eksigi</button>
-                <button class="btn btn-primary" id="transferButton"><i class="fas fa-exchange-alt"></i> Yeni Stok Transferi</button>
+                <button class="btn btn-success mr-2" id="girisButton"><i class="fas fa-plus-circle"></i> Sayım
+                    Fazlası</button>
+                <button class="btn btn-danger mr-2" id="cikislarButton"><i class="fas fa-minus-circle"></i> Fire / Sayım
+                    Eksigi</button>
+                <button class="btn btn-primary mr-2" id="transferButton"><i class="fas fa-exchange-alt"></i> Yeni Stok
+                    Transferi</button>
+                <button class="btn btn-info" id="malKabulButton"><i class="fas fa-check-circle"></i> Mal Kabul</button>
             </div>
             <div class="col-md-4">
                 <div class="stat-card mb-3">
@@ -187,10 +210,12 @@ $products_result = $connection->query($products_query);
                                 <?php while ($movement = $movement_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $movement['hareket_id']; ?>">
+                                            <button class="btn btn-primary btn-sm edit-btn"
+                                                data-id="<?php echo $movement['hareket_id']; ?>">
                                                 <i class="fas fa-edit"></i>
                                             </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $movement['hareket_id']; ?>">
+                                            <button class="btn btn-danger btn-sm delete-btn"
+                                                data-id="<?php echo $movement['hareket_id']; ?>">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </td>
@@ -198,12 +223,20 @@ $products_result = $connection->query($products_query);
                                         <td><?php echo date('d.m.Y H:i', strtotime($movement['tarih'])); ?></td>
                                         <td>
                                             <span class="badge 
-                                                <?php 
-                                                switch($movement['stok_turu']) {
-                                                    case 'malzeme': echo 'badge-primary'; break;
-                                                    case 'esans': echo 'badge-success'; break;
-                                                    case 'urun': echo 'badge-info'; break;
-                                                    default: echo 'badge-secondary'; break;
+                                                <?php
+                                                switch ($movement['stok_turu']) {
+                                                    case 'malzeme':
+                                                        echo 'badge-primary';
+                                                        break;
+                                                    case 'esans':
+                                                        echo 'badge-success';
+                                                        break;
+                                                    case 'urun':
+                                                        echo 'badge-info';
+                                                        break;
+                                                    default:
+                                                        echo 'badge-secondary';
+                                                        break;
                                                 }
                                                 ?>">
                                                 <?php echo htmlspecialchars($movement['stok_turu']); ?>
@@ -215,10 +248,10 @@ $products_result = $connection->query($products_query);
                                         <td class="font-weight-bold"><?php echo number_format($movement['miktar'], 2); ?></td>
                                         <td>
                                             <span class="badge 
-                                                <?php 
+                                                <?php
                                                 echo $movement['yon'] === 'giris' ? 'badge-success' : 'badge-danger';
                                                 ?>">
-                                                <?php 
+                                                <?php
                                                 echo htmlspecialchars($movement['yon'] === 'giris' ? 'Giriş' : 'Çıkış');
                                                 ?>
                                             </span>
@@ -286,7 +319,7 @@ $products_result = $connection->query($products_query);
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
@@ -321,12 +354,13 @@ $products_result = $connection->query($products_query);
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="miktar">Miktar *</label>
-                                    <input type="number" class="form-control" id="miktar" name="miktar" min="0.01" step="0.01" required>
+                                    <input type="number" class="form-control" id="miktar" name="miktar" min="0.01"
+                                        step="0.01" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
@@ -336,19 +370,21 @@ $products_result = $connection->query($products_query);
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="aciklama">Açıklama *</label>
                             <textarea class="form-control" id="aciklama" name="aciklama" rows="3" required></textarea>
                         </div>
-                        
+
                         <div id="location-fields">
                             <!-- Location fields will be shown/hidden based on stock type -->
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                class="fas fa-times"></i> İptal</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i>
+                            Kaydet</button>
                     </div>
                 </form>
             </div>
@@ -388,28 +424,32 @@ $products_result = $connection->query($products_query);
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="transfer_miktar">Transfer Miktarı *</label>
-                                    <input type="number" class="form-control" id="transfer_miktar" name="miktar" min="0.01" step="0.01" required readonly>
-                                    <small class="form-text text-muted">Otomatik olarak mevcut stok miktarı atanacaktır</small>
+                                    <input type="number" class="form-control" id="transfer_miktar" name="miktar"
+                                        min="0.01" step="0.01" required readonly>
+                                    <small class="form-text text-muted">Otomatik olarak mevcut stok miktarı
+                                        atanacaktır</small>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group">
                                     <label for="transfer_belge_no">Belge No</label>
-                                    <input type="text" class="form-control" id="transfer_belge_no" name="ilgili_belge_no">
+                                    <input type="text" class="form-control" id="transfer_belge_no"
+                                        name="ilgili_belge_no">
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="form-group">
                             <label for="transfer_aciklama">Açıklama *</label>
-                            <textarea class="form-control" id="transfer_aciklama" name="aciklama" rows="3" required>Stok transferi</textarea>
+                            <textarea class="form-control" id="transfer_aciklama" name="aciklama" rows="3"
+                                required>Stok transferi</textarea>
                         </div>
-                        
+
                         <div class="form-row">
                             <div class="col-md-6">
                                 <h5>Kaynak Konum</h5>
@@ -426,8 +466,10 @@ $products_result = $connection->query($products_query);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
-                        <button type="submit" class="btn btn-primary"><i class="fas fa-exchange-alt"></i> Transfer Et</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                class="fas fa-times"></i> İptal</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-exchange-alt"></i> Transfer
+                            Et</button>
                     </div>
                 </form>
             </div>
@@ -440,18 +482,18 @@ $products_result = $connection->query($products_query);
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        // Mobile menu toggle
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', function() {
-                // Toggle mobile menu functionality can be added here if needed
-            });
-        }
+        $(document).ready(function () {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
 
-        function showAlert(message, type) {
-            const alertHtml = `
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function () {
+                    // Toggle mobile menu functionality can be added here if needed
+                });
+            }
+
+            function showAlert(message, type) {
+                const alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show" role="alert">
                     <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
                     ${message}
@@ -460,54 +502,54 @@ $products_result = $connection->query($products_query);
                     </button>
                 </div>
             `;
-            $('#alert-placeholder').html(alertHtml);
-            
-            // Auto-hide success alerts after 5 seconds
-            if (type === 'success') {
-                setTimeout(function() {
-                    $('.alert').fadeOut();
-                }, 5000);
-            }
-        }
+                $('#alert-placeholder').html(alertHtml);
 
-        // Load stock items based on type
-        function loadStockItems(stockType) {
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=' + stockType,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var kodSelect = $('#kod');
-                        kodSelect.empty();
-                        kodSelect.append('<option value="">Kod Seçin</option>');
-
-                        response.data.forEach(function(item) {
-                            kodSelect.append(`<option value="${item.kod}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
-                        });
-                    }
-                },
-                error: function() {
-                    showAlert('Stok ürünleri yüklenirken bir hata oluştu.', 'danger');
+                // Auto-hide success alerts after 5 seconds
+                if (type === 'success') {
+                    setTimeout(function () {
+                        $('.alert').fadeOut();
+                    }, 5000);
                 }
-            });
-        }
+            }
 
-        // Update location fields based on stock type
-        function updateLocationFields(stockType) {
-            var locationDiv = $('#location-fields');
+            // Load stock items based on type
+            function loadStockItems(stockType) {
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=' + stockType,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var kodSelect = $('#kod');
+                            kodSelect.empty();
+                            kodSelect.append('<option value="">Kod Seçin</option>');
 
-            if (stockType === 'malzeme' || stockType === 'urun') {
-                locationDiv.html(`
+                            response.data.forEach(function (item) {
+                                kodSelect.append(`<option value="${item.kod}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
+                            });
+                        }
+                    },
+                    error: function () {
+                        showAlert('Stok ürünleri yüklenirken bir hata oluştu.', 'danger');
+                    }
+                });
+            }
+
+            // Update location fields based on stock type
+            function updateLocationFields(stockType) {
+                var locationDiv = $('#location-fields');
+
+                if (stockType === 'malzeme' || stockType === 'urun') {
+                    locationDiv.html(`
                     <div class="form-row">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="depo">Depo *</label>
-                                <select class="form-control" id="depo" name="depo" required>
+                                <select class="form-control" id="depo" name="depo" required readonly>
                                     <option value="">Depo Seçin</option>
                                     <?php
                                     $locations_result->data_seek(0);
-                                    while($location = $locations_result->fetch_assoc()): ?>
+                                    while ($location = $locations_result->fetch_assoc()): ?>
                                         <option value="<?php echo htmlspecialchars($location['depo_ismi']); ?>">
                                             <?php echo htmlspecialchars($location['depo_ismi']); ?>
                                         </option>
@@ -518,438 +560,438 @@ $products_result = $connection->query($products_query);
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="raf">Raf *</label>
-                                <input type="text" class="form-control" id="raf" name="raf" required>
+                                <input type="text" class="form-control" id="raf" name="raf" required readonly>
                             </div>
                         </div>
                     </div>
                 `);
-            } else {
-                locationDiv.html('');
+                } else {
+                    locationDiv.html('');
+                }
             }
-        }
 
-        // Stock type change handler
-        $('#stok_turu').on('change', function() {
-            var stockType = $(this).val();
-            if (stockType) {
-                loadStockItems(stockType);
-                updateLocationFields(stockType);
-            } else {
-                $('#kod').empty().append('<option value="">Kod Seçin</option>');
-                $('#location-fields').html('');
+            // Stock type change handler
+            $('#stok_turu').on('change', function () {
+                var stockType = $(this).val();
+                if (stockType) {
+                    loadStockItems(stockType);
+                    updateLocationFields(stockType);
+                } else {
+                    $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                    $('#location-fields').html('');
+                }
+            });
+
+            // Item code change handler for auto-filling location fields
+            $('#kod').on('change', function () {
+                var stockType = $('#stok_turu').val();
+                var itemCode = $(this).val();
+
+                if (stockType && itemCode && ($('#depo').length > 0 || $('#raf').length > 0)) {
+                    // Get current location from API
+                    $.ajax({
+                        url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                var location = response.data;
+                                $('#depo').val(location.depo || '');
+                                $('#raf').val(location.raf || '');
+                            }
+                        },
+                        error: function () {
+                            // If API fails, clear fields
+                            $('#depo').val('');
+                            $('#raf').val('');
+                        }
+                    });
+                }
+            });
+
+            // Update movement types based on direction
+            function updateMovementTypes() {
+                var direction = $('#yon').val();
+                var movementTypeSelect = $('#hareket_turu');
+
+                movementTypeSelect.empty();
+                movementTypeSelect.append('<option value="">Seçiniz</option>');
+
+                if (direction === 'giris') {
+                    movementTypeSelect.append('<option value="stok_giris">Stok Girişi</option>');
+                    movementTypeSelect.append('<option value="uretim">Üretim</option>');
+                    movementTypeSelect.append('<option value="iade_girisi">İade Girişi</option>');
+                    movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Artış)</option>');
+                    movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Artış)</option>');
+                    movementTypeSelect.append('<option value="transfer">Transfer (Giriş)</option>');
+                } else if (direction === 'cikis') {
+                    movementTypeSelect.append('<option value="stok_cikis">Stok Çıkışı</option>');
+                    movementTypeSelect.append('<option value="uretimde_kullanim">Üretimde Kullanım</option>');
+                    movementTypeSelect.append('<option value="fire">Fire</option>');
+                    movementTypeSelect.append('<option value="numune_cikisi">Numune Çıkışı</option>');
+                    movementTypeSelect.append('<option value="tedarikciye_iade">Tedarikçiye İade</option>');
+                    movementTypeSelect.append('<option value="montaj">Montaj</option>');
+                    movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Azalış)</option>');
+                    movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Azalış)</option>');
+                    movementTypeSelect.append('<option value="transfer">Transfer (Çıkış)</option>');
+                    movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
+                    movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
+                }
             }
-        });
 
-        // Item code change handler for auto-filling location fields
-        $('#kod').on('change', function() {
-            var stockType = $('#stok_turu').val();
-            var itemCode = $(this).val();
+            // Direction change handler
+            $('#yon').on('change', function () {
+                updateMovementTypes();
+            });
 
-            if (stockType && itemCode && ($('#depo').length > 0 || $('#raf').length > 0)) {
-                // Get current location from API
+            // Open modal for editing a movement
+            $('.edit-btn').on('click', function () {
+                var movementId = $(this).data('id');
+
                 $.ajax({
-                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_movement&id=' + movementId,
                     type: 'GET',
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         if (response.status === 'success') {
-                            var location = response.data;
-                            $('#depo').val(location.depo || '');
-                            $('#raf').val(location.raf || '');
+                            var movement = response.data;
+                            $('#movementForm')[0].reset();
+                            $('#modalTitle').text('Stok Hareketini Düzenle');
+                            $('#action').val('update_movement');
+                            $('#hareket_id').val(movement.hareket_id);
+                            $('#stok_turu').val(movement.stok_turu);
+                            $('#kod').val(movement.kod);
+                            $('#yon').val(movement.yon);
+                            $('#hareket_turu').val(movement.hareket_turu);
+                            $('#miktar').val(movement.miktar);
+                            $('#ilgili_belge_no').val(movement.ilgili_belge_no);
+                            $('#aciklama').val(movement.aciklama);
+
+                            // Update location fields and load stock items
+                            updateLocationFields(movement.stok_turu);
+                            loadStockItems(movement.stok_turu);
+
+                            // Set location values after a short delay to ensure fields are created
+                            setTimeout(function () {
+                                if (movement.depo) {
+                                    $('#depo').val(movement.depo);
+                                    $('#raf').val(movement.raf);
+                                }
+                                // Also update movement types for the loaded direction
+                                updateMovementTypes();
+                                // Set the correct movement type value after the options are loaded
+                                $('#hareket_turu').val(movement.hareket_turu);
+                            }, 100);
+
+                            $('#submitBtn').html('<i class="fas fa-sync-alt"></i> Güncelle').removeClass('btn-primary').addClass('btn-success');
+                            $('#movementModal').modal('show');
+                        } else {
+                            showAlert(response.message, 'danger');
                         }
                     },
-                    error: function() {
-                        // If API fails, clear fields
-                        $('#depo').val('');
-                        $('#raf').val('');
+                    error: function () {
+                        showAlert('Stok hareketi bilgileri alınırken bir hata oluştu.', 'danger');
                     }
                 });
-            }
-        });
-
-        // Update movement types based on direction
-        function updateMovementTypes() {
-            var direction = $('#yon').val();
-            var movementTypeSelect = $('#hareket_turu');
-            
-            movementTypeSelect.empty();
-            movementTypeSelect.append('<option value="">Seçiniz</option>');
-            
-            if (direction === 'giris') {
-                movementTypeSelect.append('<option value="stok_giris">Stok Girişi</option>');
-                movementTypeSelect.append('<option value="uretim">Üretim</option>');
-                movementTypeSelect.append('<option value="iade_girisi">İade Girişi</option>');
-                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Artış)</option>');
-                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Artış)</option>');
-                movementTypeSelect.append('<option value="transfer">Transfer (Giriş)</option>');
-            } else if (direction === 'cikis') {
-                movementTypeSelect.append('<option value="stok_cikis">Stok Çıkışı</option>');
-                movementTypeSelect.append('<option value="uretimde_kullanim">Üretimde Kullanım</option>');
-                movementTypeSelect.append('<option value="fire">Fire</option>');
-                movementTypeSelect.append('<option value="numune_cikisi">Numune Çıkışı</option>');
-                movementTypeSelect.append('<option value="tedarikciye_iade">Tedarikçiye İade</option>');
-                movementTypeSelect.append('<option value="montaj">Montaj</option>');
-                movementTypeSelect.append('<option value="sayim_farki">Sayım Farkı (Azalış)</option>');
-                movementTypeSelect.append('<option value="stok_duzeltme">Stok Düzeltme (Azalış)</option>');
-                movementTypeSelect.append('<option value="transfer">Transfer (Çıkış)</option>');
-                movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
-                movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
-            }
-        }
-
-        // Direction change handler
-        $('#yon').on('change', function() {
-            updateMovementTypes();
-        });
-
-        // Open modal for editing a movement
-        $('.edit-btn').on('click', function() {
-            var movementId = $(this).data('id');
-
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php?action=get_movement&id=' + movementId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var movement = response.data;
-                        $('#movementForm')[0].reset();
-                        $('#modalTitle').text('Stok Hareketini Düzenle');
-                        $('#action').val('update_movement');
-                        $('#hareket_id').val(movement.hareket_id);
-                        $('#stok_turu').val(movement.stok_turu);
-                        $('#kod').val(movement.kod);
-                        $('#yon').val(movement.yon);
-                        $('#hareket_turu').val(movement.hareket_turu);
-                        $('#miktar').val(movement.miktar);
-                        $('#ilgili_belge_no').val(movement.ilgili_belge_no);
-                        $('#aciklama').val(movement.aciklama);
-
-                        // Update location fields and load stock items
-                        updateLocationFields(movement.stok_turu);
-                        loadStockItems(movement.stok_turu);
-
-                        // Set location values after a short delay to ensure fields are created
-                        setTimeout(function() {
-                            if (movement.depo) {
-                                $('#depo').val(movement.depo);
-                                $('#raf').val(movement.raf);
-                            }
-                            // Also update movement types for the loaded direction
-                            updateMovementTypes();
-                            // Set the correct movement type value after the options are loaded
-                            $('#hareket_turu').val(movement.hareket_turu);
-                        }, 100);
-
-                        $('#submitBtn').html('<i class="fas fa-sync-alt"></i> Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#movementModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Stok hareketi bilgileri alınırken bir hata oluştu.', 'danger');
-                }
             });
-        });
 
-        // Handle form submission
-        $('#movementForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            // Get movement type and description
-            var movementType = $('#hareket_turu').val();
-            var description = $('#aciklama').val();
+            // Handle form submission
+            $('#movementForm').on('submit', function (e) {
+                e.preventDefault();
 
-            // Modify description based on movement type
-            if (movementType === 'fire_cikisi' || movementType === 'sayim_eksigi') {
-                if (movementType === 'fire_cikisi') {
-                    $('#aciklama').val('fire çıkışı: ' + description);
-                } else if (movementType === 'sayim_eksigi') {
-                    $('#aciklama').val('sayım eksigi: ' + description);
-                }
-            }
+                // Get movement type and description
+                var movementType = $('#hareket_turu').val();
+                var description = $('#aciklama').val();
 
-            // Show loading state
-            const submitBtn = $('#submitBtn');
-            const originalText = submitBtn.html();
-            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> İşleniyor...').prop('disabled', true);
-
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#movementModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showAlert(response.message, 'danger');
+                // Modify description based on movement type
+                if (movementType === 'fire_cikisi' || movementType === 'sayim_eksigi') {
+                    if (movementType === 'fire_cikisi') {
+                        $('#aciklama').val('fire çıkışı: ' + description);
+                    } else if (movementType === 'sayim_eksigi') {
+                        $('#aciklama').val('sayım eksigi: ' + description);
                     }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                },
-                complete: function() {
-                    // Restore button state
-                    submitBtn.html(originalText).prop('disabled', false);
                 }
-            });
-        });
 
-        // Handle movement deletion
-        $(document).on('click', '.delete-btn', function() {
-            var movementId = $(this).data('id');
+                // Show loading state
+                const submitBtn = $('#submitBtn');
+                const originalText = submitBtn.html();
+                submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> İşleniyor...').prop('disabled', true);
 
-            if (confirm('Bu stok hareketini silmek istediğinizden emin misiniz?')) {
-                // Show loading state on button
-                const deleteBtn = $(this);
-                const originalHtml = deleteBtn.html();
-                deleteBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop('disabled', true);
+                var formData = $(this).serialize();
 
                 $.ajax({
                     url: 'api_islemleri/stok_hareket_islemler.php',
                     type: 'POST',
-                    data: {
-                        action: 'delete_movement',
-                        hareket_id: movementId
-                    },
+                    data: formData,
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         if (response.status === 'success') {
+                            $('#movementModal').modal('hide');
                             showAlert(response.message, 'success');
-                            setTimeout(function() {
+                            // Reload page to see changes
+                            setTimeout(function () {
                                 location.reload();
                             }, 1500);
                         } else {
                             showAlert(response.message, 'danger');
                         }
                     },
-                    error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    error: function () {
+                        showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                     },
-                    complete: function() {
+                    complete: function () {
                         // Restore button state
-                        deleteBtn.html(originalHtml).prop('disabled', false);
+                        submitBtn.html(originalText).prop('disabled', false);
                     }
                 });
-            }
-        });
-        
-        // Transfer button click handler
-        $('#transferButton').on('click', function() {
-            // Reset form
-            $('#transferForm')[0].reset();
-            $('#transfer_aciklama').val('Stok transferi');
-            
-            // Load stock items based on type
-            loadTransferStockItems();
-            
-            // Update location fields based on stock type
-            updateTransferLocationFields();
-            
-            $('#transferModal').modal('show');
-        });
-        
-        // Load transfer stock items based on type
-        function loadTransferStockItems() {
-            var stockType = $('#transfer_stok_turu').val();
-            if (!stockType) return;
-            
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=' + stockType,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var kodSelect = $('#transfer_kod');
-                        kodSelect.empty();
-                        kodSelect.append('<option value="">Ürün Seçin</option>');
+            });
 
-                        response.data.forEach(function(item) {
-                            kodSelect.append(`<option value="${item.kod}" data-stok="${item.stok}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
-                        });
-                    }
-                },
-                error: function() {
-                    showAlert('Transfer ürünleri yüklenirken bir hata oluştu.', 'danger');
+            // Handle movement deletion
+            $(document).on('click', '.delete-btn', function () {
+                var movementId = $(this).data('id');
+
+                if (confirm('Bu stok hareketini silmek istediğinizden emin misiniz?')) {
+                    // Show loading state on button
+                    const deleteBtn = $(this);
+                    const originalHtml = deleteBtn.html();
+                    deleteBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>').prop('disabled', true);
+
+                    $.ajax({
+                        url: 'api_islemleri/stok_hareket_islemler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'delete_movement',
+                            hareket_id: movementId
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                showAlert(response.message, 'success');
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 1500);
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                        },
+                        error: function () {
+                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                        },
+                        complete: function () {
+                            // Restore button state
+                            deleteBtn.html(originalHtml).prop('disabled', false);
+                        }
+                    });
                 }
             });
-        }
-        
-        // Get current location for selected item
-        function getCurrentLocationForItem(stockType, itemCode) {
-            console.log('Getting location for:', stockType, itemCode);
 
-            // Check if elements exist before making AJAX call
-            console.log('Checking elements before AJAX:');
-            console.log('kaynak_tank exists:', $('#kaynak_tank').length > 0);
-            console.log('kaynak_depo exists:', $('#kaynak_depo').length > 0);
-            console.log('kaynak_raf exists:', $('#kaynak_raf').length > 0);
+            // Transfer button click handler
+            $('#transferButton').on('click', function () {
+                // Reset form
+                $('#transferForm')[0].reset();
+                $('#transfer_aciklama').val('Stok transferi');
 
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    console.log('API Response:', response);
+                // Load stock items based on type
+                loadTransferStockItems();
 
-                    if (response.status === 'success') {
-                        var location = response.data;
-                        var currentStock = location.stok_miktari;
+                // Update location fields based on stock type
+                updateTransferLocationFields();
 
-                        console.log('Location data:', location);
-
-                        // Set the transfer amount to the current stock amount
-                        $('#transfer_miktar').val(currentStock);
-
-                        // Set the source location based on stock type with existence check
-                        if (stockType === 'esans') {
-                            var tankElement = $('#kaynak_tank');
-                            if (tankElement.length === 0) {
-                                // Ensure location fields are created first
-                                updateTransferLocationFields();
-                                tankElement = $('#kaynak_tank');
-                            }
-                            if (tankElement.length > 0) {
-                                tankElement.val(location.konum || '');
-                                console.log('Set tank value:', location.konum);
-                            }
-                        } else {
-                            var depoElement = $('#kaynak_depo');
-                            var rafElement = $('#kaynak_raf');
-
-                            if (depoElement.length === 0 || rafElement.length === 0) {
-                                // Ensure location fields are created first
-                                updateTransferLocationFields();
-                                depoElement = $('#kaynak_depo');
-                                rafElement = $('#kaynak_raf');
-                            }
-
-                            if (depoElement.length > 0) {
-                                depoElement.val(location.depo || '');
-                                console.log('Set depo value:', location.depo);
-                            }
-
-                            if (rafElement.length > 0) {
-                                rafElement.val(location.raf || '');
-                                console.log('Set raf value:', location.raf);
-                            }
-                        }
-
-                        showAlert('Kaynak konum ve miktar otomatik olarak dolduruldu: ' + currentStock, 'info');
-                    } else {
-                        showAlert(response.message, 'warning');
-                        console.log('API Error:', response.message);
-                        // Clear the fields if no location found
-                        $('#transfer_miktar').val('');
-                        if (stockType === 'esans') {
-                            if ($('#kaynak_tank').length > 0) {
-                                $('#kaynak_tank').val('');
-                            }
-                        } else {
-                            if ($('#kaynak_depo').length > 0) {
-                                $('#kaynak_depo').val('');
-                            }
-                            if ($('#kaynak_raf').length > 0) {
-                                $('#kaynak_raf').val('');
-                            }
-                        }
-                    }
-                },
-                error: function(xhr, status, error) {
-                    showAlert('Kaynak konum bilgisi alınırken bir hata oluştu: ' + error, 'danger');
-                    console.log('AJAX Error:', error);
-                    console.log('Response:', xhr.responseText);
-                    console.log('Status:', status);
-                }
+                $('#transferModal').modal('show');
             });
-        }
-        
-        // Modified version of loadShelvesForDepot to set a specific shelf
-        // Modified version of loadShelvesForDepot to work with both select and input elements
-        function loadShelvesForDepot(depo, rafElementId, selectedShelf = null) {
-            if (!depo) {
-                // Clear the shelf selection/input if no depot is selected
-                var rafElement = $('#' + rafElementId);
-                // Check if it's a select element or input text element
-                if (rafElement.is('select')) {
-                    rafElement.empty().append('<option value="">Raf Seçin</option>');
-                } else {
-                    rafElement.val('');
-                }
-                return;
-            }
 
-            // Check if it's a select element or input text element
-            var rafElement = $('#' + rafElementId);
-            if (rafElement.is('select')) {
-                // Fetch all locations again to get shelves for the selected depot
+            // Load transfer stock items based on type
+            function loadTransferStockItems() {
+                var stockType = $('#transfer_stok_turu').val();
+                if (!stockType) return;
+
                 $.ajax({
-                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_locations',
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=' + stockType,
                     type: 'GET',
                     dataType: 'json',
-                    success: function(response) {
+                    success: function (response) {
                         if (response.status === 'success') {
-                            var rafSelect = $('#' + rafElementId);
-                            rafSelect.empty();
-                            rafSelect.append('<option value="">Raf Seçin</option>');
-                            
-                            var depoShelves = response.data.filter(function(location) {
-                                return location.depo_ismi === depo;
+                            var kodSelect = $('#transfer_kod');
+                            kodSelect.empty();
+                            kodSelect.append('<option value="">Ürün Seçin</option>');
+
+                            response.data.forEach(function (item) {
+                                kodSelect.append(`<option value="${item.kod}" data-stok="${item.stok}">${item.kod} - ${item.isim} (Stok: ${item.stok})</option>`);
                             });
-                            
-                            // Get unique shelves for the selected depot
-                            var uniqueShelves = [];
-                            depoShelves.forEach(function(location) {
-                                if (location.raf && uniqueShelves.indexOf(location.raf) === -1) {
-                                    uniqueShelves.push(location.raf);
-                                }
-                            });
-                            
-                            uniqueShelves.forEach(function(raf) {
-                                var option = $(`<option value="${raf}">${raf}</option>`);
-                                if (raf === selectedShelf) {
-                                    option.attr('selected', 'selected');
-                                }
-                                rafSelect.append(option);
-                            });
-                            
-                            if (uniqueShelves.length === 0) {
-                                rafSelect.append('<option value="">Bu depoda raf bulunmuyor</option>');
-                            } else if (selectedShelf && !uniqueShelves.includes(selectedShelf)) {
-                                rafSelect.append(`<option value="${selectedShelf}" selected>${selectedShelf}</option>`);
-                            }
-                        } else {
-                            showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
                         }
                     },
-                    error: function() {
-                        showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
+                    error: function () {
+                        showAlert('Transfer ürünleri yüklenirken bir hata oluştu.', 'danger');
                     }
                 });
-            } else {
-                // If it's a text input, just set the value
-                if (selectedShelf) {
-                    rafElement.val(selectedShelf);
+            }
+
+            // Get current location for selected item
+            function getCurrentLocationForItem(stockType, itemCode) {
+                console.log('Getting location for:', stockType, itemCode);
+
+                // Check if elements exist before making AJAX call
+                console.log('Checking elements before AJAX:');
+                console.log('kaynak_tank exists:', $('#kaynak_tank').length > 0);
+                console.log('kaynak_depo exists:', $('#kaynak_depo').length > 0);
+                console.log('kaynak_raf exists:', $('#kaynak_raf').length > 0);
+
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log('API Response:', response);
+
+                        if (response.status === 'success') {
+                            var location = response.data;
+                            var currentStock = location.stok_miktari;
+
+                            console.log('Location data:', location);
+
+                            // Set the transfer amount to the current stock amount
+                            $('#transfer_miktar').val(currentStock);
+
+                            // Set the source location based on stock type with existence check
+                            if (stockType === 'esans') {
+                                var tankElement = $('#kaynak_tank');
+                                if (tankElement.length === 0) {
+                                    // Ensure location fields are created first
+                                    updateTransferLocationFields();
+                                    tankElement = $('#kaynak_tank');
+                                }
+                                if (tankElement.length > 0) {
+                                    tankElement.val(location.konum || '');
+                                    console.log('Set tank value:', location.konum);
+                                }
+                            } else {
+                                var depoElement = $('#kaynak_depo');
+                                var rafElement = $('#kaynak_raf');
+
+                                if (depoElement.length === 0 || rafElement.length === 0) {
+                                    // Ensure location fields are created first
+                                    updateTransferLocationFields();
+                                    depoElement = $('#kaynak_depo');
+                                    rafElement = $('#kaynak_raf');
+                                }
+
+                                if (depoElement.length > 0) {
+                                    depoElement.val(location.depo || '');
+                                    console.log('Set depo value:', location.depo);
+                                }
+
+                                if (rafElement.length > 0) {
+                                    rafElement.val(location.raf || '');
+                                    console.log('Set raf value:', location.raf);
+                                }
+                            }
+
+                            showAlert('Kaynak konum ve miktar otomatik olarak dolduruldu: ' + currentStock, 'info');
+                        } else {
+                            showAlert(response.message, 'warning');
+                            console.log('API Error:', response.message);
+                            // Clear the fields if no location found
+                            $('#transfer_miktar').val('');
+                            if (stockType === 'esans') {
+                                if ($('#kaynak_tank').length > 0) {
+                                    $('#kaynak_tank').val('');
+                                }
+                            } else {
+                                if ($('#kaynak_depo').length > 0) {
+                                    $('#kaynak_depo').val('');
+                                }
+                                if ($('#kaynak_raf').length > 0) {
+                                    $('#kaynak_raf').val('');
+                                }
+                            }
+                        }
+                    },
+                    error: function (xhr, status, error) {
+                        showAlert('Kaynak konum bilgisi alınırken bir hata oluştu: ' + error, 'danger');
+                        console.log('AJAX Error:', error);
+                        console.log('Response:', xhr.responseText);
+                        console.log('Status:', status);
+                    }
+                });
+            }
+
+            // Modified version of loadShelvesForDepot to set a specific shelf
+            // Modified version of loadShelvesForDepot to work with both select and input elements
+            function loadShelvesForDepot(depo, rafElementId, selectedShelf = null) {
+                if (!depo) {
+                    // Clear the shelf selection/input if no depot is selected
+                    var rafElement = $('#' + rafElementId);
+                    // Check if it's a select element or input text element
+                    if (rafElement.is('select')) {
+                        rafElement.empty().append('<option value="">Raf Seçin</option>');
+                    } else {
+                        rafElement.val('');
+                    }
+                    return;
+                }
+
+                // Check if it's a select element or input text element
+                var rafElement = $('#' + rafElementId);
+                if (rafElement.is('select')) {
+                    // Fetch all locations again to get shelves for the selected depot
+                    $.ajax({
+                        url: 'api_islemleri/stok_hareket_islemler.php?action=get_locations',
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                var rafSelect = $('#' + rafElementId);
+                                rafSelect.empty();
+                                rafSelect.append('<option value="">Raf Seçin</option>');
+
+                                var depoShelves = response.data.filter(function (location) {
+                                    return location.depo_ismi === depo;
+                                });
+
+                                // Get unique shelves for the selected depot
+                                var uniqueShelves = [];
+                                depoShelves.forEach(function (location) {
+                                    if (location.raf && uniqueShelves.indexOf(location.raf) === -1) {
+                                        uniqueShelves.push(location.raf);
+                                    }
+                                });
+
+                                uniqueShelves.forEach(function (raf) {
+                                    var option = $(`<option value="${raf}">${raf}</option>`);
+                                    if (raf === selectedShelf) {
+                                        option.attr('selected', 'selected');
+                                    }
+                                    rafSelect.append(option);
+                                });
+
+                                if (uniqueShelves.length === 0) {
+                                    rafSelect.append('<option value="">Bu depoda raf bulunmuyor</option>');
+                                } else if (selectedShelf && !uniqueShelves.includes(selectedShelf)) {
+                                    rafSelect.append(`<option value="${selectedShelf}" selected>${selectedShelf}</option>`);
+                                }
+                            } else {
+                                showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
+                            }
+                        },
+                        error: function () {
+                            showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
+                        }
+                    });
+                } else {
+                    // If it's a text input, just set the value
+                    if (selectedShelf) {
+                        rafElement.val(selectedShelf);
+                    }
                 }
             }
-        }
-        
-        // Update transfer location fields based on stock type
-        function updateTransferLocationFields() {
-            var stockType = $('#transfer_stok_turu').val();
-            
-            if (stockType === 'malzeme' || stockType === 'urun') {
-                // Source location fields - Read only, will be filled by system
-                var sourceHtml = `
+
+            // Update transfer location fields based on stock type
+            function updateTransferLocationFields() {
+                var stockType = $('#transfer_stok_turu').val();
+
+                if (stockType === 'malzeme' || stockType === 'urun') {
+                    // Source location fields - Read only, will be filled by system
+                    var sourceHtml = `
                     <div class="form-group">
                         <label for="kaynak_depo">Kaynak Depo *</label>
                         <input type="text" class="form-control" id="kaynak_depo" name="kaynak_depo" required readonly>
@@ -959,16 +1001,16 @@ $products_result = $connection->query($products_query);
                         <input type="text" class="form-control" id="kaynak_raf" name="kaynak_raf" required readonly>
                     </div>
                 `;
-                
-                // Destination location fields
-                var destHtml = `
+
+                    // Destination location fields
+                    var destHtml = `
                     <div class="form-group">
                         <label for="hedef_depo">Hedef Depo *</label>
                         <select class="form-control" id="hedef_depo" name="hedef_depo" required>
                             <option value="">Depo Seçin</option>
                             <?php
                             $locations_result->data_seek(0);
-                            while($location = $locations_result->fetch_assoc()): ?>
+                            while ($location = $locations_result->fetch_assoc()): ?>
                                 <option value="<?php echo htmlspecialchars($location['depo_ismi']); ?>">
                                     <?php echo htmlspecialchars($location['depo_ismi']); ?>
                                 </option>
@@ -982,260 +1024,348 @@ $products_result = $connection->query($products_query);
                         </select>
                     </div>
                 `;
-                
-                $('#source-location-fields').html(sourceHtml);
-                $('#destination-location-fields').html(destHtml);
-                
-                // Event handlers for depot changes to load corresponding shelves for destination only
-                $('#hedef_depo').on('change', function() {
-                    loadShelvesForDepot($(this).val(), 'hedef_raf');
-                });
-            } else {
-                $('#source-location-fields').html('');
-                $('#destination-location-fields').html('');
-            }
-        }
-        
-        // Transfer stock type change handler
-        $('#transfer_stok_turu').on('change', function() {
-            var stockType = $(this).val();
-            if (stockType) {
-                loadTransferStockItems();
-                updateTransferLocationFields();
-                // Clear the item selection when stock type changes
-                $('#transfer_kod').empty().append('<option value="">Ürün Seçin</option>');
-            } else {
-                $('#transfer_kod').empty().append('<option value="">Ürün Seçin</option>');
-                $('#source-location-fields').html('');
-                $('#destination-location-fields').html('');
-                $('#transfer_miktar').val('');
-            }
-        });
-        
-        // Transfer item change handler (when user selects an item)
-        $('#transfer_kod').on('change', function() {
-            var stockType = $('#transfer_stok_turu').val();
-            var itemCode = $(this).val();
 
-            console.log('Transfer kod changed:', stockType, itemCode);
+                    $('#source-location-fields').html(sourceHtml);
+                    $('#destination-location-fields').html(destHtml);
 
-            if (stockType && itemCode) {
-                // Get the stored stock value from the option
-                var selectedOption = $('#transfer_kod option:selected');
-                var stockValue = selectedOption.data('stok');
-
-                console.log('Selected stock value:', stockValue);
-
-                // Set the transfer amount to the current stock amount
-                $('#transfer_miktar').val(stockValue);
-
-                // Ensure location fields are created before getting current location
-                updateTransferLocationFields();
-
-                // Wait a bit longer for DOM to be updated, then get current location
-                setTimeout(function() {
-                    console.log('About to call getCurrentLocationForItem');
-                    console.log('Source location fields HTML:', $('#source-location-fields').html());
-                    getCurrentLocationForItem(stockType, itemCode);
-                }, 300);
-            } else {
-                $('#transfer_miktar').val('');
-                // Clear source location fields
-                if (stockType === 'esans') {
-                    if ($('#kaynak_tank').length > 0) {
-                        $('#kaynak_tank').val('');
-                    }
+                    // Event handlers for depot changes to load corresponding shelves for destination only
+                    $('#hedef_depo').on('change', function () {
+                        loadShelvesForDepot($(this).val(), 'hedef_raf');
+                    });
                 } else {
-                    if ($('#kaynak_depo').length > 0) {
-                        $('#kaynak_depo').val('');
-                    }
-                    if ($('#kaynak_raf').length > 0) {
-                        $('#kaynak_raf').val('');
-                    }
+                    $('#source-location-fields').html('');
+                    $('#destination-location-fields').html('');
                 }
             }
-        });
-        
-        // Load shelves for selected depot
-        function loadShelvesForDepot(depo, rafSelectId) {
-            if (!depo) {
-                // Clear the shelf selection if no depot is selected
-                $('#' + rafSelectId).empty().append('<option value="">Raf Seçin</option>');
-                return;
-            }
-            
-            // Fetch all locations again to get shelves for the selected depot
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php?action=get_locations',
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var rafSelect = $('#' + rafSelectId);
-                        rafSelect.empty();
-                        rafSelect.append('<option value="">Raf Seçin</option>');
-                        
-                        var depoShelves = response.data.filter(function(location) {
-                            return location.depo_ismi === depo;
-                        });
-                        
-                        // Get unique shelves for the selected depot
-                        var uniqueShelves = [];
-                        depoShelves.forEach(function(location) {
-                            if (location.raf && uniqueShelves.indexOf(location.raf) === -1) {
-                                uniqueShelves.push(location.raf);
-                            }
-                        });
-                        
-                        uniqueShelves.forEach(function(raf) {
-                            rafSelect.append(`<option value="${raf}">${raf}</option>`);
-                        });
-                        
-                        if (uniqueShelves.length === 0) {
-                            rafSelect.append('<option value="">Bu depoda raf bulunmuyor</option>');
-                        }
-                    } else {
-                        showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
-                }
-            });
-        }
-        
-        // Handle transfer form submission
-        $('#transferForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            // Show loading state
-            const submitBtn = $('#transferForm button[type="submit"]');
-            const originalText = submitBtn.html();
-            submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Transfer Ediliyor...').prop('disabled', true);
 
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: 'api_islemleri/stok_hareket_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#transferModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1500);
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Transfer işlemi sırasında bir hata oluştu.', 'danger');
-                },
-                complete: function() {
-                    // Restore button state
-                    submitBtn.html(originalText).prop('disabled', false);
-                }
-            });
-        });
-        
-        // Exit button click handler
-        $('#cikislarButton').on('click', function() {
-            // Reset form
-            $('#movementForm')[0].reset();
-            // Set direction to 'cikis'
-            $('#yon').val('cikis');
-
-            // Set only the required movement types for exits
-            var movementTypeSelect = $('#hareket_turu');
-            movementTypeSelect.empty();
-            movementTypeSelect.append('<option value="">Hareket türü seçin</option>');
-            movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
-            movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
-
-            // Hide the direction field since it's always 'cikis' for exit operations
-            $('#yon').closest('.col-md-6').hide();
-
-            // Adjust the movement type field to span full row with better structure
-            $('#hareket_turu').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
-
-            // Additionally adjust quantity and document number fields to have proper spacing
-            $('#miktar').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
-            $('#ilgili_belge_no').closest('.col-md-6').removeClass('col-md-6').addClass('col-12').parent().removeClass('form-row').addClass('form-group-single');
-
-            // Set modal title
-            $('#modalTitle').text('Çıkış Hareketi Formu');
-            // Set action to 'add_movement'
-            $('#action').val('add_movement');
-            // Clear hidden fields
-            $('#hareket_id').val('');
-
-            // Show the modal
-            $('#movementModal').modal('show');
-
-            // Add event handlers for the exit form - stok tür ve kod için
-            $('#stok_turu').on('change', function() {
+            // Transfer stock type change handler
+            $('#transfer_stok_turu').on('change', function () {
                 var stockType = $(this).val();
                 if (stockType) {
-                    loadStockItems(stockType);
-                    updateLocationFields(stockType);
+                    loadTransferStockItems();
+                    updateTransferLocationFields();
+                    // Clear the item selection when stock type changes
+                    $('#transfer_kod').empty().append('<option value="">Ürün Seçin</option>');
                 } else {
-                    $('#kod').empty().append('<option value="">Kod Seçin</option>');
-                    $('#location-fields').html('');
+                    $('#transfer_kod').empty().append('<option value="">Ürün Seçin</option>');
+                    $('#source-location-fields').html('');
+                    $('#destination-location-fields').html('');
+                    $('#transfer_miktar').val('');
                 }
             });
 
-            // Add location field event handlers for exit form
-            updateLocationFieldsForExit();
-        });
+            // Transfer item change handler (when user selects an item)
+            $('#transfer_kod').on('change', function () {
+                var stockType = $('#transfer_stok_turu').val();
+                var itemCode = $(this).val();
 
-        // Function to update location fields for exit operations
-        function updateLocationFieldsForExit() {
-            var stockType = $('#stok_turu').val();
+                console.log('Transfer kod changed:', stockType, itemCode);
 
-            if (stockType === 'malzeme' || stockType === 'urun') {
-                updateLocationFields(stockType);
+                if (stockType && itemCode) {
+                    // Get the stored stock value from the option
+                    var selectedOption = $('#transfer_kod option:selected');
+                    var stockValue = selectedOption.data('stok');
 
-                // Add event handler to fill location fields when item is selected
-                $('#kod').on('change.exit', function() {
-                    var stockType = $('#stok_turu').val();
-                    var itemCode = $(this).val();
+                    console.log('Selected stock value:', stockValue);
 
-                    if (stockType && itemCode) {
-                        // Get current location from API
-                        $.ajax({
-                            url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
-                            type: 'GET',
-                            dataType: 'json',
-                            success: function(response) {
-                                if (response.status === 'success') {
-                                    var location = response.data;
-                                    $('#depo').val(location.depo || '');
-                                    $('#raf').val(location.raf || '');
-                                }
-                            },
-                            error: function() {
-                                // If API fails, clear fields
-                                $('#depo').val('');
-                                $('#raf').val('');
-                            }
-                        });
+                    // Set the transfer amount to the current stock amount
+                    $('#transfer_miktar').val(stockValue);
+
+                    // Ensure location fields are created before getting current location
+                    updateTransferLocationFields();
+
+                    // Wait a bit longer for DOM to be updated, then get current location
+                    setTimeout(function () {
+                        console.log('About to call getCurrentLocationForItem');
+                        console.log('Source location fields HTML:', $('#source-location-fields').html());
+                        getCurrentLocationForItem(stockType, itemCode);
+                    }, 300);
+                } else {
+                    $('#transfer_miktar').val('');
+                    // Clear source location fields
+                    if (stockType === 'esans') {
+                        if ($('#kaynak_tank').length > 0) {
+                            $('#kaynak_tank').val('');
+                        }
                     } else {
-                        $('#depo').val('');
-                        $('#raf').val('');
+                        if ($('#kaynak_depo').length > 0) {
+                            $('#kaynak_depo').val('');
+                        }
+                        if ($('#kaynak_raf').length > 0) {
+                            $('#kaynak_raf').val('');
+                        }
+                    }
+                }
+            });
+
+            // Load shelves for selected depot
+            function loadShelvesForDepot(depo, rafSelectId) {
+                if (!depo) {
+                    // Clear the shelf selection if no depot is selected
+                    $('#' + rafSelectId).empty().append('<option value="">Raf Seçin</option>');
+                    return;
+                }
+
+                // Fetch all locations again to get shelves for the selected depot
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php?action=get_locations',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var rafSelect = $('#' + rafSelectId);
+                            rafSelect.empty();
+                            rafSelect.append('<option value="">Raf Seçin</option>');
+
+                            var depoShelves = response.data.filter(function (location) {
+                                return location.depo_ismi === depo;
+                            });
+
+                            // Get unique shelves for the selected depot
+                            var uniqueShelves = [];
+                            depoShelves.forEach(function (location) {
+                                if (location.raf && uniqueShelves.indexOf(location.raf) === -1) {
+                                    uniqueShelves.push(location.raf);
+                                }
+                            });
+
+                            uniqueShelves.forEach(function (raf) {
+                                rafSelect.append(`<option value="${raf}">${raf}</option>`);
+                            });
+
+                            if (uniqueShelves.length === 0) {
+                                rafSelect.append('<option value="">Bu depoda raf bulunmuyor</option>');
+                            }
+                        } else {
+                            showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
+                        }
+                    },
+                    error: function () {
+                        showAlert('Raf bilgileri yüklenirken bir hata oluştu.', 'danger');
                     }
                 });
             }
-        }
-    });
+
+            // Handle transfer form submission
+            $('#transferForm').on('submit', function (e) {
+                e.preventDefault();
+
+                // Show loading state
+                const submitBtn = $('#transferForm button[type="submit"]');
+                const originalText = submitBtn.html();
+                submitBtn.html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Transfer Ediliyor...').prop('disabled', true);
+
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: 'api_islemleri/stok_hareket_islemler.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            $('#transferModal').modal('hide');
+                            showAlert(response.message, 'success');
+                            // Reload page to see changes
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1500);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function () {
+                        showAlert('Transfer işlemi sırasında bir hata oluştu.', 'danger');
+                    },
+                    complete: function () {
+                        // Restore button state
+                        submitBtn.html(originalText).prop('disabled', false);
+                    }
+                });
+            });
+
+            // Exit button click handler
+            $('#cikislarButton').on('click', function () {
+                // Clear dynamic fields added by other forms
+                $('.contract-fields').remove();
+                $('.dynamic-fields').remove();
+
+                // Reset form
+                $('#movementForm')[0].reset();
+                // Set direction to 'cikis'
+                $('#yon').val('cikis');
+
+                // Set only the required movement types for exits
+                var movementTypeSelect = $('#hareket_turu');
+                movementTypeSelect.empty();
+                movementTypeSelect.append('<option value="">Hareket türü seçin</option>');
+                movementTypeSelect.append('<option value="fire_cikisi">Fire Çıkışı</option>');
+                movementTypeSelect.append('<option value="sayim_eksigi">Sayım Eksigi</option>');
+
+                // Hide the direction field since it's always 'cikis' for exit operations
+                $('#yon').closest('.col-md-6').hide();
+
+                // Show the movement type field and ensure it's properly aligned
+                $('#hareket_turu').closest('.col-md-6').show().removeClass('col-12').addClass('col-md-6');
+                $('#hareket_turu').closest('.form-row').addClass('form-row');
+
+                // Ensure quantity and document number fields are properly aligned
+                $('#miktar').closest('.col-md-6').show().removeClass('col-12').addClass('col-md-6');
+                $('#ilgili_belge_no').closest('.col-md-6').show().removeClass('col-12').addClass('col-md-6');
+
+                // Set modal title
+                $('#modalTitle').text('Çıkış Hareketi Formu');
+                // Set action to 'add_movement'
+                $('#action').val('add_movement');
+                // Clear hidden fields
+                $('#hareket_id').val('');
+
+                // Show the modal
+                $('#movementModal').modal('show');
+
+                // Add event handlers for the exit form - stok tür ve kod için
+                $('#stok_turu').on('change', function () {
+                    var stockType = $(this).val();
+                    if (stockType) {
+                        loadStockItems(stockType);
+                        updateLocationFields(stockType);
+                    } else {
+                        $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                        $('#location-fields').html('');
+                    }
+                });
+
+                // Add location field event handlers for exit form
+                updateLocationFieldsForExit();
+            });
+
+            // Function to update location fields for exit operations
+            function updateLocationFieldsForExit() {
+                var stockType = $('#stok_turu').val();
+
+                if (stockType === 'malzeme' || stockType === 'urun') {
+                    updateLocationFields(stockType);
+
+                    // Add event handler to fill location fields when item is selected
+                    $('#kod').on('change.exit', function () {
+                        var stockType = $('#stok_turu').val();
+                        var itemCode = $(this).val();
+
+                        if (stockType && itemCode) {
+                            // Get current location from API
+                            $.ajax({
+                                url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function (response) {
+                                    if (response.status === 'success') {
+                                        var location = response.data;
+                                        $('#depo').val(location.depo || '');
+                                        $('#raf').val(location.raf || '');
+                                    }
+                                },
+                                error: function () {
+                                    // If API fails, clear fields
+                                    $('#depo').val('');
+                                    $('#raf').val('');
+                                }
+                            });
+                        } else {
+                            $('#depo').val('');
+                            $('#raf').val('');
+                        }
+                    });
+                }
+            }
+
+            // Mal Kabul button click handler
+            $('#malKabulButton').on('click', function () {
+                // Clear dynamic fields added by other forms
+                $('.contract-fields').remove();
+                $('.dynamic-fields').remove();
+
+                // Reset form
+                $('#movementForm')[0].reset();
+
+                // Set direction to 'giris' (always for material acceptance)
+                $('#yon').val('giris');
+
+                // Set movement type to 'mal_kabul' (material acceptance)
+                $('#hareket_turu').val('mal_kabul');
+
+                // Set stock type to 'malzeme' (always for material acceptance)
+                $('#stok_turu').val('malzeme');
+
+                // Hide the direction and movement type fields since they're fixed for material acceptance
+                $('#yon').closest('.col-md-6').hide();
+                $('#hareket_turu').closest('.col-md-6').hide();
+
+                // Show the framework contract selection field
+                var contractField = `
+                <div class="form-row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="cerceve_sozlesme_id">Çerçeve Sözleşme *</label>
+                            <select class="form-control" id="cerceve_sozlesme_id" name="cerceve_sozlesme_id" required>
+                                <option value="">Sözleşme Seçin</option>
+                                <?php
+                                $contracts_result->data_seek(0);
+                                while ($contract = $contracts_result->fetch_assoc()): ?>
+                                    <option value="<?php echo $contract['sozlesme_id']; ?>">
+                                        <?php echo htmlspecialchars($contract['sozlesme_id'] . ' - ' . $contract['tedarikci_adi'] . ' - ' . $contract['malzeme_ismi']); ?>
+                                    </option>
+                                <?php endwhile; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="fatura_no">Fatura No</label>
+                            <input type="text" class="form-control" id="fatura_no" name="fatura_no">
+                        </div>
+                    </div>
+                </div>
+            `;
+
+                // Insert the contract field before the miktar field
+                $('#miktar').closest('.form-row').before('<div class="contract-fields">' + contractField + '</div>');
+
+                // Set modal title
+                $('#modalTitle').text('Mal Kabul Formu');
+                // Set action to 'add_movement'
+                $('#action').val('add_movement');
+                // Clear hidden fields
+                $('#hareket_id').val('');
+
+                // Update location fields and load stock items for materials
+                updateLocationFields('malzeme');
+                loadStockItems('malzeme');
+
+                // Show the modal
+                $('#movementModal').modal('show');
+
+                // Add event handler for stock type (though it will be fixed as 'malzeme')
+                $('#stok_turu').off('change.malkabul').on('change.malkabul', function () {
+                    var stockType = $(this).val();
+                    if (stockType) {
+                        loadStockItems(stockType);
+                        updateLocationFields(stockType);
+                    } else {
+                        $('#kod').empty().append('<option value="">Kod Seçin</option>');
+                        $('#location-fields').html('');
+                    }
+                });
+            });
+        });
     </script>
 
     <script>
         // Giriş button click handler - Sadece sayım fazlası için
-        $('#girisButton').on('click', function() {
+        $('#girisButton').on('click', function () {
+            // Clear dynamic fields added by other forms
+            $('.contract-fields').remove();
+            $('.dynamic-fields').remove();
+
             // Reset form
             $('#movementForm')[0].reset();
 
@@ -1270,7 +1400,7 @@ $products_result = $connection->query($products_query);
             $('#movementModal').modal('show');
 
             // Add event handlers for the new dynamic elements
-            $('#stok_turu').on('change', function() {
+            $('#stok_turu').on('change', function () {
                 var stockType = $(this).val();
                 if (stockType) {
                     loadStockItems(stockType);
@@ -1293,7 +1423,7 @@ $products_result = $connection->query($products_query);
                 updateLocationFields(stockType);
 
                 // Add event handler to fill location fields when item is selected
-                $('#kod').on('change.entry', function() {
+                $('#kod').on('change.entry', function () {
                     var stockType = $('#stok_turu').val();
                     var itemCode = $(this).val();
 
@@ -1303,14 +1433,14 @@ $products_result = $connection->query($products_query);
                             url: 'api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=' + stockType + '&item_code=' + itemCode,
                             type: 'GET',
                             dataType: 'json',
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.status === 'success') {
                                     var location = response.data;
                                     $('#depo').val(location.depo || '');
                                     $('#raf').val(location.raf || '');
                                 }
                             },
-                            error: function() {
+                            error: function () {
                                 // For entry, clear location fields as they will be set by user
                                 $('#depo').val('');
                                 $('#raf').val('');
@@ -1325,7 +1455,7 @@ $products_result = $connection->query($products_query);
         }
 
         // Handle form submission for count excess (separate from regular form submission)
-        $('#movementForm').on('submit.count-excess', function(e) {
+        $('#movementForm').on('submit.count-excess', function (e) {
             e.preventDefault();
 
             // Get movement type and description for count excess
@@ -1342,4 +1472,5 @@ $products_result = $connection->query($products_query);
         });
     </script>
 </body>
+
 </html>

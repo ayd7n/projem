@@ -19,17 +19,17 @@ switch ($action) {
     case 'get_locations':
         $locations = [];
         $query = "SELECT DISTINCT depo_ismi, raf FROM lokasyonlar ORDER BY depo_ismi, raf";
-        
+
         $result = $connection->query($query);
         if ($result) {
             while ($row = $result->fetch_assoc()) {
                 $locations[] = $row;
             }
         }
-        
+
         echo json_encode(['status' => 'success', 'data' => $locations]);
         break;
-    
+
     case 'get_current_location':
         $stock_type = $_GET['stock_type'] ?? '';
         $item_code = $_GET['item_code'] ?? '';
@@ -50,7 +50,7 @@ switch ($action) {
             case 'malzeme':
                 $query = "SELECT malzeme_kodu as kod, malzeme_ismi as isim, stok_miktari, depo, raf FROM malzemeler WHERE malzeme_kodu = '$item_code'";
                 $result = $connection->query($query);
-                
+
                 if ($result && $result->num_rows > 0) {
                     $item = $result->fetch_assoc();
                     $location_data = [
@@ -63,7 +63,7 @@ switch ($action) {
             case 'esans':
                 $query = "SELECT esans_kodu as kod, esans_ismi as isim, stok_miktari FROM esanslar WHERE esans_kodu = '$item_code'";
                 $result = $connection->query($query);
-                
+
                 if ($result && $result->num_rows > 0) {
                     $item = $result->fetch_assoc();
                     // For essences, we don't have direct tank location in the main table
@@ -78,7 +78,7 @@ switch ($action) {
             case 'urun':
                 $query = "SELECT urun_kodu as kod, urun_ismi as isim, stok_miktari, depo, raf FROM urunler WHERE urun_kodu = '$item_code'";
                 $result = $connection->query($query);
-                
+
                 if ($result && $result->num_rows > 0) {
                     $item = $result->fetch_assoc();
                     $location_data = [
@@ -99,7 +99,7 @@ switch ($action) {
             echo json_encode(['status' => 'error', 'message' => 'Ürün bulunamadı.']);
         }
         break;
-    
+
     case 'get_stock_items':
         $type = $_GET['type'] ?? '';
 
@@ -168,10 +168,18 @@ switch ($action) {
         $tank_kodu = $_POST['tank_kodu'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
         $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
+        $cerceve_sozlesme_id = $_POST['cerceve_sozlesme_id'] ?? '';
+        $fatura_no = $_POST['fatura_no'] ?? '';
 
         // Validation
         if (!$stok_turu || !$kod || !$miktar || !$yon || !$hareket_turu || !$aciklama) {
             echo json_encode(['status' => 'error', 'message' => 'Lütfen tüm zorunlu alanları doldurun.']);
+            break;
+        }
+
+        // For 'mal_kabul' action, ensure we have a framework contract
+        if ($hareket_turu === 'mal_kabul' && empty($cerceve_sozlesme_id)) {
+            echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi için çerçeve sözleşme seçilmelidir.']);
             break;
         }
 
@@ -214,9 +222,9 @@ switch ($action) {
         $item_stmt->close();
 
         // Insert stock movement
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, cerceve_sozlesme_id, fatura_no, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?)";
         $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+        $movement_stmt->bind_param('ssssdsssssssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $cerceve_sozlesme_id, $fatura_no, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
 
         if ($movement_stmt->execute()) {
             $hareket_id = $movement_stmt->insert_id;
@@ -433,13 +441,13 @@ switch ($action) {
         // Check current stock at source location
         $item_name = '';
         $item_unit = '';
-        
+
         // Escape user inputs to prevent SQL injection
         $stok_turu = $connection->real_escape_string($stok_turu);
         $kod = $connection->real_escape_string($kod);
         $kaynak_depo = $connection->real_escape_string($kaynak_depo);
         $kaynak_raf = $connection->real_escape_string($kaynak_raf);
-        
+
         // First, get item details
         switch ($stok_turu) {
             case 'malzeme':
@@ -465,7 +473,7 @@ switch ($action) {
 
         // Check current stock at source location for materials and products
         $available_stock = 0;
-        
+
         // For materials and products, check stock at the specific depot/shelf
         $stock_check_query = "SELECT SUM(CASE WHEN yon = 'giris' THEN miktar ELSE -miktar END) as current_stock
                               FROM stok_hareket_kayitlari 
@@ -486,7 +494,7 @@ switch ($action) {
                     $overall_stock_query = "SELECT stok_miktari FROM urunler WHERE urun_kodu = '$kod'";
                     break;
             }
-            
+
             $overall_result = $connection->query($overall_stock_query);
             if ($overall_result && $overall_result->num_rows > 0) {
                 $overall_row = $overall_result->fetch_assoc();
@@ -509,7 +517,7 @@ switch ($action) {
             $yon_cikis = 'cikis';
             $yon_giris = 'giris';
             $hareket_turu_transfer = 'transfer';
-            
+
             // Create description strings for movements
             $source_description = $aciklama . ' - Kaynak: ' . $kaynak_depo . '/' . $kaynak_raf . ' -> Hedef: ' . $hedef_depo . '/' . $hedef_raf;
             $dest_description = $aciklama . ' - Kaynak: ' . $kaynak_depo . '/' . $kaynak_raf . ' -> Hedef: ' . $hedef_depo . '/' . $hedef_raf;
