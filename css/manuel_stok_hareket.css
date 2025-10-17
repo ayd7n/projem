@@ -1,0 +1,56 @@
+.form-group-single {
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.form-group-single>.form-group {
+    margin-bottom: 0;
+}
+
+.form-group-aligned {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+
+.form-group-aligned .field-container {
+    flex: 1;
+}
+
+.form-group-aligned .field-container label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.single-fields {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+
+.single-fields .single-field-item {
+    flex: 1;
+}
+
+.single-fields .single-field-item label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}

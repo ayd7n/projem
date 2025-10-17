@@ -157,6 +157,32 @@ switch ($action) {
         $stmt->close();
         break;
 
+    case 'get_all_movements':
+        $query = "SELECT * FROM stok_hareket_kayitlari ORDER BY tarih DESC LIMIT 100";
+        $result = $connection->query($query);
+
+        $movements = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $movements[] = $row;
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $movements]);
+        break;
+
+    case 'get_total_movements':
+        $query = "SELECT COUNT(*) as total FROM stok_hareket_kayitlari";
+        $result = $connection->query($query);
+
+        if ($result) {
+            $row = $result->fetch_assoc();
+            echo json_encode(['status' => 'success', 'data' => intval($row['total'])]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Toplam hareket sayısı alınamadı.']);
+        }
+        break;
+
     case 'add_movement':
         $stok_turu = $_POST['stok_turu'] ?? '';
         $kod = $_POST['kod'] ?? '';
@@ -222,9 +248,9 @@ switch ($action) {
         $item_stmt->close();
 
         // Insert stock movement
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, cerceve_sozlesme_id, fatura_no, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?)";
+        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $cerceve_sozlesme_id, $fatura_no, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
 
         if ($movement_stmt->execute()) {
             $hareket_id = $movement_stmt->insert_id;

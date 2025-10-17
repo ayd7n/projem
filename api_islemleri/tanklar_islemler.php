@@ -22,6 +22,9 @@ switch ($action) {
     case 'get_tank':
         getTank();
         break;
+    case 'get_total_tanks':
+        getTotalTanks();
+        break;
     case 'add_tank':
         addTank();
         break;
@@ -74,6 +77,20 @@ function getTank() {
     }
 
     $stmt->close();
+}
+
+function getTotalTanks() {
+    global $connection;
+
+    $query = "SELECT COUNT(*) as total FROM tanklar";
+    $result = $connection->query($query);
+
+    if ($result) {
+        $row = $result->fetch_assoc();
+        echo json_encode(['status' => 'success', 'data' => (int)$row['total']]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Toplam tank sayısı alınırken hata oluştu.']);
+    }
 }
 
 function addTank() {
