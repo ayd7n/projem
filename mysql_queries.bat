@@ -1,9 +1,0 @@
-@echo off
-echo Sistem Kullanicilari Tablosundan Veri Cekiyorum...
-"C:\xampp\mysql\bin\mysql.exe" -u root -e "USE parfum_erp; SELECT kullanici_adi, telefon, rol FROM sistem_kullanicilari LIMIT 5;"
-echo.
-echo Personel Tablosundan Veri Cekiyorum...
-"C:\xampp\mysql\bin\mysql.exe" -u root -e "USE parfum_erp; SELECT ad_soyad, e_posta, pozisyon FROM personeller LIMIT 5;"
-echo.
-echo Musteriler Tablosundan Veri Cekiyorum...
-"C:\xampp\mysql\bin\mysql.exe" -u root -e "USE parfum_erp; SELECT musteri_adi, e_posta, telefon FROM musteriler LIMIT 5;"

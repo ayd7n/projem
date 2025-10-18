@@ -1,1 +1,0 @@
-"C:\xampp\mysql\bin\mysql.exe" -u root -e "USE parfum_erp; SELECT * FROM urunler LIMIT 5;"

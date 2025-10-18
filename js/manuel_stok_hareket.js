@@ -37,7 +37,9 @@ new Vue({
             kaynak_depo: '',
             kaynak_raf: '',
             hedef_depo: '',
-            hedef_raf: ''
+            hedef_raf: '',
+            tank_kodu: '',
+            hedef_tank_kodu: ''
         },
         sayimFazlasiForm: {
             hareket_id: '',
@@ -52,16 +54,49 @@ new Vue({
             raf: '',
             tank_kodu: ''
         },
+        fireSayimEksigiModalVisible: false,
+        isFireSayimEksigiEdit: false,
+        fireSayimEksigiForm: {
+            hareket_id: '',
+            stok_turu: '',
+            kod: '',
+            yon: 'cikis', // Otomatik olarak çıkış
+            hareket_turu: '', // fire veya sayim_eksigi
+            miktar: '',
+            ilgili_belge_no: '',
+            aciklama: '',
+            depo: '',
+            raf: '',
+            tank_kodu: ''
+        },
+        fireSayimEksigiStockItems: [],
+        fireSayimEksigiMovementTypes: [],
+        fireSayimEksigiSubmitButtonText: 'Kaydet',
         stockItems: [],
         transferStockItems: [],
         sayimFazlasiStockItems: [],
         locations: [],
+        tanks: [], // Tanks for essence transfers
+        hedefRaflar: [], // Shelves for selected target depot
         movementTypes: [],
         submitButtonText: 'Kaydet'
     },
     computed: {
         movementFormTitle() {
+            // If this is specifically a 'mal_kabul' movement, use that title
+            if (this.movementForm.hareket_turu === 'mal_kabul') {
+                return this.isEdit ? 'Mal Kabul Hareketini Düzenle' : 'Yeni Mal Kabul';
+            }
             return this.isEdit ? 'Stok Hareketini Düzenle' : 'Yeni Stok Hareketi';
+        },
+        fireSayimEksigiFormTitle() {
+            return this.isFireSayimEksigiEdit ? 'Stok Hareketini Düzenle' : 'Fire / Sayım Eksigi';
+        },
+        uniqueDepolar() {
+            // Return unique depot names for selection
+            return this.locations.map(location => ({
+                depo_ismi: location.depo_ismi
+            }));
         }
     },
     mounted() {
@@ -72,6 +107,7 @@ new Vue({
         }
         this.loadMovements();
         this.loadLocations();
+        this.loadTanks(); // Load tanks for essence transfers
         this.updateMovementTypes();
     },
     methods: {
@@ -119,9 +155,28 @@ new Vue({
                     this.showAlert('Lokasyonlar yüklenirken bir hata oluştu', 'danger');
                 });
         },
+        loadTanks() {
+            // API call to load tanks for essence transfers
+            axios.get('api_islemleri/tanklar_islemler.php?action=get_tanks')
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.tanks = response.data.data || [];
+                    } else {
+                        this.showAlert(response.data.message || 'Tanklar yüklenirken bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('Tanklar yüklenirken bir hata oluştu', 'danger');
+                });
+        },
         loadStockItems() {
             if (!this.movementForm.stok_turu) {
                 this.stockItems = [];
+                // Clear location fields when no stock type is selected
+                this.movementForm.kod = '';
+                this.movementForm.depo = '';
+                this.movementForm.raf = '';
+                this.movementForm.tank_kodu = '';
                 return;
             }
             
@@ -130,6 +185,13 @@ new Vue({
                 .then(response => {
                     if (response.data.status === 'success') {
                         this.stockItems = response.data.data || [];
+                        // Clear the selected item if it's not in the new list
+                        if (this.movementForm.kod && !this.stockItems.some(item => item.kod === this.movementForm.kod)) {
+                            this.movementForm.kod = '';
+                            this.movementForm.depo = '';
+                            this.movementForm.raf = '';
+                            this.movementForm.tank_kodu = '';
+                        }
                     } else {
                         this.showAlert(response.data.message || 'Stok ürünleri yüklenirken bir hata oluştu', 'danger');
                     }
@@ -141,6 +203,11 @@ new Vue({
         loadTransferStockItems() {
             if (!this.transferForm.stok_turu) {
                 this.transferStockItems = [];
+                // Clear location fields when no stock type is selected
+                this.transferForm.kod = '';
+                this.transferForm.kaynak_depo = '';
+                this.transferForm.kaynak_raf = '';
+                this.transferForm.tank_kodu = '';
                 return;
             }
             
@@ -149,6 +216,13 @@ new Vue({
                 .then(response => {
                     if (response.data.status === 'success') {
                         this.transferStockItems = response.data.data || [];
+                        // Clear the selected item if it's not in the new list
+                        if (this.transferForm.kod && !this.transferStockItems.some(item => item.kod === this.transferForm.kod)) {
+                            this.transferForm.kod = '';
+                            this.transferForm.kaynak_depo = '';
+                            this.transferForm.kaynak_raf = '';
+                            this.transferForm.tank_kodu = '';
+                        }
                     } else {
                         this.showAlert(response.data.message || 'Transfer ürünleri yüklenirken bir hata oluştu', 'danger');
                     }
@@ -160,6 +234,11 @@ new Vue({
         loadSayimFazlasiStockItems() {
             if (!this.sayimFazlasiForm.stok_turu) {
                 this.sayimFazlasiStockItems = [];
+                // Clear location fields when no stock type is selected
+                this.sayimFazlasiForm.kod = '';
+                this.sayimFazlasiForm.depo = '';
+                this.sayimFazlasiForm.raf = '';
+                this.sayimFazlasiForm.tank_kodu = '';
                 return;
             }
             
@@ -168,6 +247,13 @@ new Vue({
                 .then(response => {
                     if (response.data.status === 'success') {
                         this.sayimFazlasiStockItems = response.data.data || [];
+                        // Clear the selected item if it's not in the new list
+                        if (this.sayimFazlasiForm.kod && !this.sayimFazlasiStockItems.some(item => item.kod === this.sayimFazlasiForm.kod)) {
+                            this.sayimFazlasiForm.kod = '';
+                            this.sayimFazlasiForm.depo = '';
+                            this.sayimFazlasiForm.raf = '';
+                            this.sayimFazlasiForm.tank_kodu = '';
+                        }
                     } else {
                         this.showAlert(response.data.message || 'Stok ürünleri yüklenirken bir hata oluştu', 'danger');
                     }
@@ -177,7 +263,13 @@ new Vue({
                 });
         },
         getStockLocation() {
-            if (!this.movementForm.stok_turu || !this.movementForm.kod) return;
+            if (!this.movementForm.stok_turu || !this.movementForm.kod) {
+                // Clear location fields when no item is selected
+                this.movementForm.depo = '';
+                this.movementForm.raf = '';
+                this.movementForm.tank_kodu = '';
+                return;
+            }
             
             // API call to get current location
             axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=${this.movementForm.stok_turu}&item_code=${this.movementForm.kod}`)
@@ -196,7 +288,14 @@ new Vue({
                 });
         },
         getTransferStockLocation() {
-            if (!this.transferForm.stok_turu || !this.transferForm.kod) return;
+            if (!this.transferForm.stok_turu || !this.transferForm.kod) {
+                // Clear location fields when no item is selected
+                this.transferForm.kaynak_depo = '';
+                this.transferForm.kaynak_raf = '';
+                this.transferForm.tank_kodu = '';
+                this.transferForm.miktar = '';
+                return;
+            }
             
             // API call to get current location for transfer
             this.isTransferAutoFill = true;
@@ -206,6 +305,7 @@ new Vue({
                         const location = response.data.data;
                         this.transferForm.kaynak_depo = location.depo || '';
                         this.transferForm.kaynak_raf = location.raf || '';
+                        this.transferForm.tank_kodu = location.tank_kodu || '';
                         this.transferForm.miktar = location.stok_miktari || 0;
                         this.showAlert(`Kaynak konum ve miktar otomatik olarak dolduruldu: ${location.stok_miktari}`, 'info');
                     } else {
@@ -219,7 +319,13 @@ new Vue({
                 });
         },
         getSayimFazlasiStockLocation() {
-            if (!this.sayimFazlasiForm.stok_turu || !this.sayimFazlasiForm.kod) return;
+            if (!this.sayimFazlasiForm.stok_turu || !this.sayimFazlasiForm.kod) {
+                // Clear location fields when no item is selected
+                this.sayimFazlasiForm.depo = '';
+                this.sayimFazlasiForm.raf = '';
+                this.sayimFazlasiForm.tank_kodu = '';
+                return;
+            }
             
             // API call to get current location for sayım fazlası
             axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=${this.sayimFazlasiForm.stok_turu}&item_code=${this.sayimFazlasiForm.kod}`)
@@ -305,7 +411,23 @@ new Vue({
                 this.loadSayimFazlasiStockItems();
                 
                 this.sayimFazlasiModalVisible = true;
-            } else {
+            }
+            // Check if this is a fire or sayım eksigi movement (exit movements)
+            else if ((movement.yon === 'cikis') && (movement.hareket_turu === 'fire' || movement.hareket_turu === 'sayim_eksigi')) {
+                // Set the data in the fire/sayım eksigi form
+                this.fireSayimEksigiForm = { ...movement };
+                this.isFireSayimEksigiEdit = true;
+                this.fireSayimEksigiSubmitButtonText = 'Güncelle';
+                
+                // Load stock items for the stock type
+                this.loadFireSayimEksigiStockItems();
+                
+                // Update movement types for this modal
+                this.updateFireSayimEksigiTypes();
+                
+                this.fireSayimEksigiModalVisible = true;
+            }
+            else {
                 // For other movements, use the regular form
                 this.movementForm = { ...movement };
                 this.isEdit = true;
@@ -376,6 +498,27 @@ new Vue({
         saveTransfer() {
             this.isSubmitting = true;
             
+            // Validate form
+            if (!this.transferForm.stok_turu || !this.transferForm.kod || !this.transferForm.miktar || this.transferForm.miktar <= 0) {
+                this.showAlert('Lütfen tüm zorunlu alanları doldurun.', 'danger');
+                this.isSubmitting = false;
+                return;
+            }
+            
+            // For essence transfers, validate hedef tank selection
+            if (this.transferForm.stok_turu === 'esans' && (!this.transferForm.hedef_tank_kodu)) {
+                this.showAlert('Lütfen hedef tankı seçin.', 'danger');
+                this.isSubmitting = false;
+                return;
+            }
+            
+            // For material/product transfers, validate depot/raf
+            if (this.transferForm.stok_turu !== 'esans' && (!this.transferForm.hedef_depo || !this.transferForm.hedef_raf)) {
+                this.showAlert('Lütfen hedef konumu belirtin.', 'danger');
+                this.isSubmitting = false;
+                return;
+            }
+
             const formData = new FormData();
             Object.keys(this.transferForm).forEach(key => {
                 if (this.transferForm[key] !== null) {
@@ -468,7 +611,9 @@ new Vue({
                 kaynak_depo: '',
                 kaynak_raf: '',
                 hedef_depo: '',
-                hedef_raf: ''
+                hedef_raf: '',
+                tank_kodu: '',
+                hedef_tank_kodu: ''
             };
             this.transferStockItems = [];
         },
@@ -488,6 +633,134 @@ new Vue({
             };
             this.sayimFazlasiStockItems = [];
         },
+        openFireSayimEksigiModal() {
+            this.resetFireSayimEksigiForm();
+            this.isFireSayimEksigiEdit = false;
+            this.fireSayimEksigiSubmitButtonText = 'Kaydet';
+            
+            // Update movement types for this modal
+            this.updateFireSayimEksigiTypes();
+            
+            this.fireSayimEksigiModalVisible = true;
+        },
+        closeFireSayimEksigiModal() {
+            this.fireSayimEksigiModalVisible = false;
+        },
+        resetFireSayimEksigiForm() {
+            this.fireSayimEksigiForm = {
+                hareket_id: '',
+                stok_turu: '',
+                kod: '',
+                yon: 'cikis', // Otomatik olarak çıkış
+                hareket_turu: '', // fire veya sayim_eksigi
+                miktar: '',
+                ilgili_belge_no: '',
+                aciklama: '',
+                depo: '',
+                raf: '',
+                tank_kodu: ''
+            };
+            this.fireSayimEksigiStockItems = [];
+        },
+        loadFireSayimEksigiStockItems() {
+            if (!this.fireSayimEksigiForm.stok_turu) {
+                this.fireSayimEksigiStockItems = [];
+                // Clear location fields when no stock type is selected
+                this.fireSayimEksigiForm.kod = '';
+                this.fireSayimEksigiForm.depo = '';
+                this.fireSayimEksigiForm.raf = '';
+                this.fireSayimEksigiForm.tank_kodu = '';
+                return;
+            }
+            
+            // API call to load stock items based on type for fire/sayım eksigi
+            axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=${this.fireSayimEksigiForm.stok_turu}`)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.fireSayimEksigiStockItems = response.data.data || [];
+                        // Clear the selected item if it's not in the new list
+                        if (this.fireSayimEksigiForm.kod && !this.fireSayimEksigiStockItems.some(item => item.kod === this.fireSayimEksigiForm.kod)) {
+                            this.fireSayimEksigiForm.kod = '';
+                            this.fireSayimEksigiForm.depo = '';
+                            this.fireSayimEksigiForm.raf = '';
+                            this.fireSayimEksigiForm.tank_kodu = '';
+                        }
+                    } else {
+                        this.showAlert(response.data.message || 'Stok ürünleri yüklenirken bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('Stok ürünleri yüklenirken bir hata oluştu', 'danger');
+                });
+        },
+        getFireSayimEksigiLocation() {
+            if (!this.fireSayimEksigiForm.stok_turu || !this.fireSayimEksigiForm.kod) {
+                // Clear location fields when no item is selected
+                this.fireSayimEksigiForm.depo = '';
+                this.fireSayimEksigiForm.raf = '';
+                this.fireSayimEksigiForm.tank_kodu = '';
+                return;
+            }
+            
+            // API call to get current location for fire/sayım eksigi
+            axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_current_location&stock_type=${this.fireSayimEksigiForm.stok_turu}&item_code=${this.fireSayimEksigiForm.kod}`)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        const location = response.data.data;
+                        this.fireSayimEksigiForm.depo = location.depo || '';
+                        this.fireSayimEksigiForm.raf = location.raf || '';
+                        this.fireSayimEksigiForm.tank_kodu = location.tank_kodu || '';
+                    } else {
+                        this.showAlert(response.data.message || 'Lokasyon bilgisi alınırken bir hata oluştu', 'warning');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('Lokasyon bilgisi alınırken bir hata oluştu', 'danger');
+                });
+        },
+        updateFireSayimEksigiTypes() {
+            // For the fire/sayım eksigi modal, only allow fire and sayim_eksigi
+            this.fireSayimEksigiMovementTypes = [
+                { value: 'fire', label: 'Fire' },
+                { value: 'sayim_eksigi', label: 'Sayım Eksigi' }
+            ];
+            
+            // If a movement type is not selected, default to 'fire'
+            if (!this.fireSayimEksigiForm.hareket_turu) {
+                this.fireSayimEksigiForm.hareket_turu = 'fire';
+            }
+        },
+        saveFireSayimEksigi() {
+            this.isSubmitting = true;
+            
+            // Prepare the form data
+            const formData = new FormData();
+            Object.keys(this.fireSayimEksigiForm).forEach(key => {
+                if (this.fireSayimEksigiForm[key] !== null) {
+                    formData.append(key, this.fireSayimEksigiForm[key]);
+                }
+            });
+            
+            // Determine the action based on whether we're editing
+            formData.append('action', this.isFireSayimEksigiEdit ? 'update_movement' : 'add_movement');
+            
+            axios.post('api_islemleri/stok_hareket_islemler.php', formData)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.showAlert(response.data.message, 'success');
+                        this.closeFireSayimEksigiModal();
+                        this.loadMovements(); // Reload movements
+                    } else {
+                        this.showAlert(response.data.message || 'İşlem sırasında bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('İşlem sırasında bir hata oluştu', 'danger');
+                })
+                .finally(() => {
+                    this.isSubmitting = false;
+                });
+        },
         showAlert(message, type) {
             this.alert.message = message;
             this.alert.type = type;
@@ -502,6 +775,19 @@ new Vue({
         clearAlert() {
             this.alert.message = '';
             this.alert.type = 'success';
+        },
+        updateHedefRaflar() {
+            // Update shelves based on selected target depot
+            this.hedefRaflar = [];
+            this.transferForm.hedef_raf = ''; // Clear selected shelf
+            
+            if (this.transferForm.hedef_depo) {
+                // Find the selected depot and get its shelves
+                const selectedDepo = this.locations.find(location => location.depo_ismi === this.transferForm.hedef_depo);
+                if (selectedDepo) {
+                    this.hedefRaflar = selectedDepo.raflar || [];
+                }
+            }
         },
         formatDate(dateString) {
             const date = new Date(dateString);

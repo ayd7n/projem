@@ -33,6 +33,20 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Personel bulunamadı.'];
         }
     }
+    elseif ($action == 'get_all_employees') {
+        $query = "SELECT * FROM personeller ORDER BY ad_soyad";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $employees = [];
+            while ($row = $result->fetch_assoc()) {
+                $employees[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $employees];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Personel listesi alınamadı.'];
+        }
+    }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 

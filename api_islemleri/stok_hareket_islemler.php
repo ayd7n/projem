@@ -18,12 +18,29 @@ $action = $_GET['action'] ?? $_POST['action'] ?? '';
 switch ($action) {
     case 'get_locations':
         $locations = [];
-        $query = "SELECT DISTINCT depo_ismi, raf FROM lokasyonlar ORDER BY depo_ismi, raf";
+        $query = "SELECT DISTINCT depo_ismi FROM lokasyonlar ORDER BY depo_ismi";
 
         $result = $connection->query($query);
         if ($result) {
             while ($row = $result->fetch_assoc()) {
-                $locations[] = $row;
+                // For each unique depot, get all shelves
+                $shelves_query = "SELECT DISTINCT raf FROM lokasyonlar WHERE depo_ismi = ? ORDER BY raf";
+                $shelves_stmt = $connection->prepare($shelves_query);
+                $shelves_stmt->bind_param('s', $row['depo_ismi']);
+                $shelves_stmt->execute();
+                $shelves_result = $shelves_stmt->get_result();
+                
+                $shelves = [];
+                while ($shelf = $shelves_result->fetch_assoc()) {
+                    $shelves[] = $shelf['raf'];
+                }
+                
+                $locations[] = [
+                    'depo_ismi' => $row['depo_ismi'],
+                    'raflar' => $shelves
+                ];
+                
+                $shelves_stmt->close();
             }
         }
 
@@ -61,16 +78,15 @@ switch ($action) {
                 }
                 break;
             case 'esans':
-                $query = "SELECT esans_kodu as kod, esans_ismi as isim, stok_miktari FROM esanslar WHERE esans_kodu = '$item_code'";
+                $query = "SELECT esans_kodu as kod, esans_ismi as isim, stok_miktari, tank_kodu, tank_ismi FROM esanslar WHERE esans_kodu = '$item_code'";
                 $result = $connection->query($query);
 
                 if ($result && $result->num_rows > 0) {
                     $item = $result->fetch_assoc();
-                    // For essences, we don't have direct tank location in the main table
-                    // We could look for the most recent tank in stock movements, but per your request
-                    // we'll just return the essence info without location for now
+                    // For essences, return the tank information from the esanslar table
                     $location_data = [
-                        'konum' => null, // Direct tank location not available in main table
+                        'tank_kodu' => $item['tank_kodu'] ?? null,
+                        'tank_ismi' => $item['tank_ismi'] ?? null,
                         'stok_miktari' => floatval($item['stok_miktari'])
                     ];
                 }
@@ -114,7 +130,7 @@ switch ($action) {
                 $query = "SELECT malzeme_kodu as kod, malzeme_ismi as isim, stok_miktari as stok FROM malzemeler ORDER BY malzeme_ismi";
                 break;
             case 'esans':
-                $query = "SELECT esans_kodu as kod, esans_ismi as isim, stok_miktari as stok FROM esanslar ORDER BY esans_ismi";
+                $query = "SELECT esans_kodu as kod, esans_ismi as isim, stok_miktari as stok, tank_kodu, tank_ismi FROM esanslar ORDER BY esans_ismi";
                 break;
             case 'urun':
                 $query = "SELECT urun_kodu as kod, urun_ismi as isim, stok_miktari as stok FROM urunler ORDER BY urun_ismi";
@@ -434,20 +450,24 @@ switch ($action) {
         $miktar = floatval($_POST['miktar'] ?? 0);
         $aciklama = $_POST['aciklama'] ?? 'Stok transferi';
         $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
-
-        // Validate that stock type is not essence (only materials and products allowed)
-        if ($stok_turu === 'esans') {
-            echo json_encode(['status' => 'error', 'message' => 'Essence transferi desteklenmemektedir.']);
-            break;
-        }
+        $tank_kodu = $_POST['tank_kodu'] ?? '';
+        $hedef_tank_kodu = $_POST['hedef_tank_kodu'] ?? '';
 
         // Get source and destination locations for materials and products
+        // For essences, we will use depot and raf as well but the primary storage will be tanks
         $kaynak_depo = $_POST['kaynak_depo'] ?? '';
         $kaynak_raf = $_POST['kaynak_raf'] ?? '';
         $hedef_depo = $_POST['hedef_depo'] ?? '';
         $hedef_raf = $_POST['hedef_raf'] ?? '';
 
-        if (!$kaynak_depo || !$kaynak_raf || !$hedef_depo || !$hedef_raf) {
+        // For essence transfers, we require hedef_tank_kodu
+        if ($stok_turu === 'esans' && (!$hedef_tank_kodu || !$tank_kodu)) {
+            echo json_encode(['status' => 'error', 'message' => 'Lütfen hem kaynak hem de hedef tankı belirtin.']);
+            break;
+        }
+
+        // For materials and products, we require depot and raf
+        if ($stok_turu !== 'esans' && (!$kaynak_depo || !$kaynak_raf || !$hedef_depo || !$hedef_raf)) {
             echo json_encode(['status' => 'error', 'message' => 'Lütfen hem kaynak hem de hedef konumu belirtin.']);
             break;
         }
@@ -459,7 +479,8 @@ switch ($action) {
         }
 
         // Check if source and destination are the same
-        if ($kaynak_depo === $hedef_depo && $kaynak_raf === $hedef_raf) {
+        if (($stok_turu !== 'esans' && $kaynak_depo === $hedef_depo && $kaynak_raf === $hedef_raf) ||
+            ($stok_turu === 'esans' && $tank_kodu === $hedef_tank_kodu)) {
             echo json_encode(['status' => 'error', 'message' => 'Kaynak ve hedef konum aynı olamaz.']);
             break;
         }
@@ -473,6 +494,10 @@ switch ($action) {
         $kod = $connection->real_escape_string($kod);
         $kaynak_depo = $connection->real_escape_string($kaynak_depo);
         $kaynak_raf = $connection->real_escape_string($kaynak_raf);
+        $hedef_depo = $connection->real_escape_string($hedef_depo);
+        $hedef_raf = $connection->real_escape_string($hedef_raf);
+        $tank_kodu = $connection->real_escape_string($tank_kodu);
+        $hedef_tank_kodu = $connection->real_escape_string($hedef_tank_kodu);
 
         // First, get item details
         switch ($stok_turu) {
@@ -482,36 +507,46 @@ switch ($action) {
             case 'urun':
                 $item_query = "SELECT urun_ismi, birim FROM urunler WHERE urun_kodu = '$kod'";
                 break;
+            case 'esans':
+                $item_query = "SELECT esans_ismi, birim FROM esanslar WHERE esans_kodu = '$kod'";
+                break;
             default:
-                echo json_encode(['status' => 'error', 'message' => 'Geçersiz stok türü. Sadece malzeme ve ürün transferi desteklenmektedir.']);
+                echo json_encode(['status' => 'error', 'message' => 'Geçersiz stok türü. Sadece malzeme, ürün ve essence transferi desteklenmektedir.']);
                 exit;
         }
 
         $item_result = $connection->query($item_query);
         if ($item_result->num_rows > 0) {
             $item = $item_result->fetch_assoc();
-            $item_name = $item['malzeme_ismi'] ?? $item['urun_ismi'] ?? '';
-            $item_unit = $item['birim'];
+            if ($stok_turu === 'malzeme') {
+                $item_name = $item['malzeme_ismi'] ?? '';
+                $item_unit = $item['birim'];
+            } else if ($stok_turu === 'urun') {
+                $item_name = $item['urun_ismi'] ?? '';
+                $item_unit = $item['birim'];
+            } else if ($stok_turu === 'esans') {
+                $item_name = $item['esans_ismi'] ?? '';
+                $item_unit = $item['birim'];
+            }
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Geçersiz ürün kodu.']);
             break;
         }
 
-        // Check current stock at source location for materials and products
+        // Check current stock for essence or materials/products
         $available_stock = 0;
 
-        // For materials and products, check stock at the specific depot/shelf
-        $stock_check_query = "SELECT SUM(CASE WHEN yon = 'giris' THEN miktar ELSE -miktar END) as current_stock
-                              FROM stok_hareket_kayitlari 
-                              WHERE kod = '$kod' AND stok_turu = '$stok_turu' AND depo = '$kaynak_depo' AND raf = '$kaynak_raf'
-                              GROUP BY depo, raf";
-
-        $stock_result = $connection->query($stock_check_query);
-        if ($stock_result && $stock_result->num_rows > 0) {
-            $stock_row = $stock_result->fetch_assoc();
-            $available_stock = floatval($stock_row['current_stock']) ?? 0;
+        if ($stok_turu === 'esans') {
+            // For essences, check the main table as they are stored by tank
+            $overall_stock_query = "SELECT stok_miktari FROM esanslar WHERE esans_kodu = '$kod'";
+            $overall_result = $connection->query($overall_stock_query);
+            if ($overall_result && $overall_result->num_rows > 0) {
+                $overall_row = $overall_result->fetch_assoc();
+                $available_stock = floatval($overall_row['stok_miktari']) ?? 0;
+            }
         } else {
-            // If no specific location records exist, use the overall stock from the main table
+            // For materials and products, check the overall stock from the main table
+            // since each item is stored in a single location
             switch ($stok_turu) {
                 case 'malzeme':
                     $overall_stock_query = "SELECT stok_miktari FROM malzemeler WHERE malzeme_kodu = '$kod'";
@@ -552,8 +587,12 @@ switch ($action) {
             $source_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $source_movement_stmt = $connection->prepare($source_movement_query);
 
-            // Set location values for source - only for materials and products
-            $source_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_cikis, $hareket_turu_transfer, $kaynak_depo, $kaynak_raf, $null1, $ilgili_belge_no, $source_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            // For essence transfers, we use tank_kodu in the movements, for materials/products we use depot/raf
+            if ($stok_turu === 'esans') {
+                $source_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_cikis, $hareket_turu_transfer, $kaynak_depo, $kaynak_raf, $tank_kodu, $ilgili_belge_no, $source_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            } else {
+                $source_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_cikis, $hareket_turu_transfer, $kaynak_depo, $kaynak_raf, $null1, $ilgili_belge_no, $source_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            }
 
             if (!$source_movement_stmt->execute()) {
                 throw new Exception('Kaynak hareket kaydı oluşturulamadı: ' . $connection->error);
@@ -565,8 +604,12 @@ switch ($action) {
             $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $dest_movement_stmt = $connection->prepare($dest_movement_query);
 
-            // Set location values for destination - only for materials and products
-            $dest_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_giris, $hareket_turu_transfer, $hedef_depo, $hedef_raf, $null1, $ilgili_belge_no, $dest_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            // For essence transfers, we use tank_kodu in the movements, for materials/products we use depot/raf
+            if ($stok_turu === 'esans') {
+                $dest_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_giris, $hareket_turu_transfer, $hedef_depo, $hedef_raf, $tank_kodu, $ilgili_belge_no, $dest_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            } else {
+                $dest_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_giris, $hareket_turu_transfer, $hedef_depo, $hedef_raf, $null1, $ilgili_belge_no, $dest_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+            }
 
             if (!$dest_movement_stmt->execute()) {
                 throw new Exception('Hedef hareket kaydı oluşturulamadı: ' . $connection->error);
@@ -577,7 +620,7 @@ switch ($action) {
             // Commit transaction
             $connection->commit();
 
-            // Update the location in the main item table (urunler or malzemeler) to the destination location
+            // Update the location in the main item table (urunler, malzemeler or esanslar) to the destination location
             switch ($stok_turu) {
                 case 'malzeme':
                     $update_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
@@ -592,6 +635,37 @@ switch ($action) {
                     $update_stmt->bind_param('ssi', $hedef_depo, $hedef_raf, $kod);
                     $update_stmt->execute();
                     $update_stmt->close();
+                    break;
+                case 'esans':
+                    // For essences, we update the tank information and stock amounts
+                    // First, get the target tank name
+                    $tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_kodu = ?";
+                    $tank_stmt = $connection->prepare($tank_query);
+                    $tank_stmt->bind_param('s', $hedef_tank_kodu);
+                    $tank_stmt->execute();
+                    $tank_result = $tank_stmt->get_result();
+                    
+                    if ($tank_result->num_rows === 0) {
+                        throw new Exception('Hedef tank bulunamadı.');
+                    }
+                    
+                    $tank_info = $tank_result->fetch_assoc();
+                    $hedef_tank_ismi = $tank_info['tank_ismi'];
+                    $tank_stmt->close();
+                    
+                    // First, reduce stock from source
+                    $reduce_query = "UPDATE esanslar SET stok_miktari = stok_miktari - ? WHERE esans_kodu = ?";
+                    $reduce_stmt = $connection->prepare($reduce_query);
+                    $reduce_stmt->bind_param('ds', $miktar, $kod);
+                    $reduce_stmt->execute();
+                    $reduce_stmt->close();
+
+                    // Then increase stock at destination with new tank assignment
+                    $increase_query = "UPDATE esanslar SET stok_miktari = stok_miktari + ?, tank_kodu = ?, tank_ismi = ? WHERE esans_kodu = ?";
+                    $increase_stmt = $connection->prepare($increase_query);
+                    $increase_stmt->bind_param('dsss', $miktar, $hedef_tank_kodu, $hedef_tank_ismi, $kod);
+                    $increase_stmt->execute();
+                    $increase_stmt->close();
                     break;
             }
 

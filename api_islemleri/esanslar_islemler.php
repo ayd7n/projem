@@ -3,91 +3,164 @@ include '../config.php';
 
 header('Content-Type: application/json');
 
-// Check if user is logged in and is staff
-if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
-    echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim.']);
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['status' => 'error', 'error_code' => 'ES001', 'message' => 'Yetkisiz erişim']);
     exit;
 }
 
-$response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
+// Only staff can access this page
+if ($_SESSION['taraf'] !== 'personel') {
+    echo json_encode(['status' => 'error', 'error_code' => 'ES002', 'message' => 'Yetkisiz erişim']);
+    exit;
+}
 
-if (isset($_GET['action'])) {
-    $action = $_GET['action'];
-
-    if ($action == 'get_essence' && isset($_GET['id'])) {
-        $esans_id = (int)$_GET['id'];
-        $query = "SELECT * FROM esanslar WHERE esans_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $esans_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $essence = $result->fetch_assoc();
-        $stmt->close();
-
-        if ($essence) {
-            $response = ['status' => 'success', 'data' => $essence];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Esans bulunamadı.'];
-        }
-    }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
-
-    // Extract data from POST
-    $esans_kodu = $_POST['esans_kodu'] ?? null;
-    $esans_ismi = $_POST['esans_ismi'] ?? null;
-    $not_bilgisi = $_POST['not_bilgisi'] ?? '';
-    $stok_miktari = isset($_POST['stok_miktari']) ? (float)$_POST['stok_miktari'] : 0;
-    $birim = $_POST['birim'] ?? 'lt';
-    $demlenme_suresi_gun = isset($_POST['demlenme_suresi_gun']) ? (int)$_POST['demlenme_suresi_gun'] : 0;
-
-    if ($action == 'add_essence') {
-        if (empty($esans_kodu) || empty($esans_ismi)) {
-            $response = ['status' => 'error', 'message' => 'Esans kodu ve ismi boş olamaz.'];
-        } else {
-            $query = "INSERT INTO esanslar (esans_kodu, esans_ismi, not_bilgisi, stok_miktari, birim, demlenme_suresi_gun) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssdsd', $esans_kodu, $esans_ismi, $not_bilgisi, $stok_miktari, $birim, $demlenme_suresi_gun);
-
-            if ($stmt->execute()) {
-                $response = ['status' => 'success', 'message' => 'Esans başarıyla eklendi.'];
+// Handle GET requests
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $action = $_GET['action'] ?? '';
+    
+    switch ($action) {
+        case 'get_all_essences':
+            $essences_query = "SELECT * FROM esanslar ORDER BY esans_ismi";
+            $essences_result = $connection->query($essences_query);
+            
+            if ($essences_result) {
+                $essences = [];
+                while ($row = $essences_result->fetch_assoc()) {
+                    $essences[] = $row;
+                }
+                echo json_encode(['status' => 'success', 'data' => $essences]);
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                echo json_encode(['status' => 'error', 'error_code' => 'ES003', 'message' => 'Esanslar alınırken bir hata oluştu']);
             }
-            $stmt->close();
-        }
-    } elseif ($action == 'update_essence' && isset($_POST['esans_id'])) {
-        $esans_id = (int)$_POST['esans_id'];
-        
-        if (empty($esans_kodu) || empty($esans_ismi)) {
-            $response = ['status' => 'error', 'message' => 'Esans kodu ve ismi boş olamaz.'];
-        } else {
-            $query = "UPDATE esanslar SET esans_kodu = ?, esans_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, demlenme_suresi_gun = ? WHERE esans_id = ?";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssdsdi', $esans_kodu, $esans_ismi, $not_bilgisi, $stok_miktari, $birim, $demlenme_suresi_gun, $esans_id);
-
-            if ($stmt->execute()) {
-                $response = ['status' => 'success', 'message' => 'Esans başarıyla güncellendi.'];
+            break;
+            
+        case 'get_essence':
+            $esans_id = $_GET['id'] ?? null;
+            if ($esans_id) {
+                $stmt = $connection->prepare("SELECT * FROM esanslar WHERE esans_id = ?");
+                $stmt->bind_param("i", $esans_id);
+                $stmt->execute();
+                $result = $stmt->get_result();
+                
+                if ($result->num_rows > 0) {
+                    $essence = $result->fetch_assoc();
+                    echo json_encode(['status' => 'success', 'data' => $essence]);
+                } else {
+                    echo json_encode(['status' => 'error', 'error_code' => 'ES004', 'message' => 'Esans bulunamadı']);
+                }
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                echo json_encode(['status' => 'error', 'error_code' => 'ES005', 'message' => 'Geçersiz esans ID']);
             }
-            $stmt->close();
-        }
-    } elseif ($action == 'delete_essence' && isset($_POST['esans_id'])) {
-        $esans_id = (int)$_POST['esans_id'];
-        
-        $query = "DELETE FROM esanslar WHERE esans_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $esans_id);
-        if ($stmt->execute()) {
-            $response = ['status' => 'success', 'message' => 'Esans başarıyla silindi.'];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
-        }
-        $stmt->close();
+            break;
+            
+        default:
+            echo json_encode(['status' => 'error', 'error_code' => 'ES006', 'message' => 'Geçersiz işlem']);
     }
 }
 
-$connection->close();
-echo json_encode($response);
+// Handle POST requests
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Handle both form data and JSON data
+    if (isset($_SERVER['CONTENT_TYPE']) && strpos($_SERVER['CONTENT_TYPE'], 'application/json') !== false) {
+        // JSON data
+        $input = json_decode(file_get_contents('php://input'), true);
+        $action = $input['action'] ?? '';
+    } else {
+        // Form data
+        $action = $_POST['action'] ?? '';
+        $input = $_POST;
+    }
+    
+    switch ($action) {
+        case 'add_essence':
+            $esans_kodu = $input['esans_kodu'] ?? '';
+            $esans_ismi = $input['esans_ismi'] ?? '';
+            $stok_miktari = floatval($input['stok_miktari'] ?? 0);
+            $birim = $input['birim'] ?? 'ml';
+            $demlenme_suresi_gun = intval($input['demlenme_suresi_gun'] ?? 0);
+            $not_bilgisi = $input['not_bilgisi'] ?? '';
+            $tank_kodu = $input['tank_kodu'] ?? null;
+            $tank_ismi = $input['tank_ismi'] ?? null;
+            
+            // Check if esans_kodu already exists
+            $check_query = "SELECT esans_id FROM esanslar WHERE esans_kodu = ?";
+            $check_stmt = $connection->prepare($check_query);
+            $check_stmt->bind_param("s", $esans_kodu);
+            $check_stmt->execute();
+            $check_result = $check_stmt->get_result();
+            
+            if ($check_result->num_rows > 0) {
+                echo json_encode(['status' => 'error', 'error_code' => 'ES007', 'message' => 'Bu esans kodu zaten mevcut']);
+                exit;
+            }
+            
+            $stmt = $connection->prepare("INSERT INTO esanslar (esans_kodu, esans_ismi, stok_miktari, birim, demlenme_suresi_gun, not_bilgisi, tank_kodu, tank_ismi) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->bind_param("ssdsssss", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi);
+            
+            if ($stmt->execute()) {
+                echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla eklendi']);
+            } else {
+                echo json_encode(['status' => 'error', 'error_code' => 'ES008', 'message' => 'Esans eklenirken bir hata oluştu']);
+            }
+            break;
+            
+        case 'update_essence':
+            $esans_id = $input['esans_id'] ?? null;
+            $esans_kodu = $input['esans_kodu'] ?? '';
+            $esans_ismi = $input['esans_ismi'] ?? '';
+            $stok_miktari = floatval($input['stok_miktari'] ?? 0);
+            $birim = $input['birim'] ?? 'ml';
+            $demlenme_suresi_gun = intval($input['demlenme_suresi_gun'] ?? 0);
+            $not_bilgisi = $input['not_bilgisi'] ?? '';
+            $tank_kodu = $input['tank_kodu'] ?? null;
+            $tank_ismi = $input['tank_ismi'] ?? null;
+            
+            if ($esans_id) {
+                // Check if another esans with the same code exists (excluding current esans)
+                $check_query = "SELECT esans_id FROM esanslar WHERE esans_kodu = ? AND esans_id != ?";
+                $check_stmt = $connection->prepare($check_query);
+                $check_stmt->bind_param("si", $esans_kodu, $esans_id);
+                $check_stmt->execute();
+                $check_result = $check_stmt->get_result();
+                
+                if ($check_result->num_rows > 0) {
+                    echo json_encode(['status' => 'error', 'error_code' => 'ES009', 'message' => 'Bu esans kodu başka bir esans tarafından kullanılıyor']);
+                    exit;
+                }
+                
+                $stmt = $connection->prepare("UPDATE esanslar SET esans_kodu = ?, esans_ismi = ?, stok_miktari = ?, birim = ?, demlenme_suresi_gun = ?, not_bilgisi = ?, tank_kodu = ?, tank_ismi = ? WHERE esans_id = ?");
+                $stmt->bind_param("ssdsssssi", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi, $esans_id);
+                
+                if ($stmt->execute()) {
+                    echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla güncellendi']);
+                } else {
+                    echo json_encode(['status' => 'error', 'error_code' => 'ES010', 'message' => 'Esans güncellenirken bir hata oluştu']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'error_code' => 'ES011', 'message' => 'Geçersiz esans ID']);
+            }
+            break;
+            
+        case 'delete_essence':
+            $esans_id = $input['esans_id'] ?? null;
+            
+            if ($esans_id) {
+                $stmt = $connection->prepare("DELETE FROM esanslar WHERE esans_id = ?");
+                $stmt->bind_param("i", $esans_id);
+                
+                if ($stmt->execute()) {
+                    echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla silindi']);
+                } else {
+                    echo json_encode(['status' => 'error', 'error_code' => 'ES012', 'message' => 'Esans silinirken bir hata oluştu']);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'error_code' => 'ES013', 'message' => 'Geçersiz esans ID']);
+            }
+            break;
+            
+        default:
+            echo json_encode(['status' => 'error', 'error_code' => 'ES014', 'message' => 'Geçersiz işlem']);
+    }
+}
 ?>

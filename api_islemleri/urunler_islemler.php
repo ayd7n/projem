@@ -57,6 +57,20 @@ if (isset($_GET['action'])) {
         $stmt->close();
         $response = ['status' => 'success', 'data' => $raflar];
     }
+    elseif ($action == 'get_all_products') {
+        $query = "SELECT * FROM urunler ORDER BY urun_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $products = [];
+            while ($row = $result->fetch_assoc()) {
+                $products[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $products];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Ürün listesi alınamadı.'];
+        }
+    }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 

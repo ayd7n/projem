@@ -91,20 +91,11 @@ if ($_SESSION['taraf'] !== 'personel') {
                 <div class="col-md-8">
                     <button class="btn btn-success mr-2" @click="openSayimFazlasiModal"><i class="fas fa-plus-circle"></i> Sayım
                         Fazlası</button>
-                    <button class="btn btn-danger mr-2" @click="openMovementForm('cikis', 'sayim_eksigi')"><i class="fas fa-minus-circle"></i> Fire / Sayım
+                    <button class="btn btn-danger mr-2" @click="openFireSayimEksigiModal"><i class="fas fa-minus-circle"></i> Fire / Sayım
                         Eksigi</button>
                     <button class="btn btn-primary mr-2" @click="openTransferModal"><i class="fas fa-exchange-alt"></i> Yeni Stok
                         Transferi</button>
                     <button class="btn btn-info" @click="openMovementForm('giris', 'mal_kabul')"><i class="fas fa-check-circle"></i> Mal Kabul</button>
-                </div>
-                <div class="col-md-4">
-                    <div class="stat-card mb-3">
-                        <div class="stat-icon"><i class="fas fa-exchange-alt"></i></div>
-                        <div class="stat-info">
-                            <h3>{{ total_movements }}</h3>
-                            <p>Toplam Stok Hareketi</p>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -198,6 +189,117 @@ if ($_SESSION['taraf'] !== 'personel') {
             </div>
         </div>
 
+        <!-- Fire / Sayım Eksigi Modal -->
+        <div class="modal fade" :class="{ show: fireSayimEksigiModalVisible }" 
+             :style="{ display: fireSayimEksigiModalVisible ? 'block' : 'none' }" 
+             style="z-index: 1050" 
+             @click="closeFireSayimEksigiModal">
+            <div class="modal-dialog modal-lg" @click.stop>
+                <div class="modal-content">
+                    <form @submit.prevent="saveFireSayimEksigi">
+                        <div class="modal-header">
+                            <h5 class="modal-title">Fire / Sayım Eksigi</h5>
+                            <button type="button" class="close" @click="closeFireSayimEksigiModal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> 
+                                <strong>Fire / Sayım Eksigi:</strong> Stok sayımı sırasında eksik olan ürünleri veya fireyi kaydetmek için kullanılır.
+                            </div>
+                            <input type="hidden" v-model="fireSayimEksigiForm.hareket_id">
+                            <!-- Yön alanı kaldırıldı, otomatik olarak çıkış -->
+                            <input type="hidden" v-model="fireSayimEksigiForm.yon" value="cikis">
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fire_sayim_eksigi_stok_turu">Stok Türü *</label>
+                                        <select class="form-control" v-model="fireSayimEksigiForm.stok_turu" @change="loadFireSayimEksigiStockItems" required>
+                                            <option value="">Seçiniz</option>
+                                            <option value="malzeme">Malzeme</option>
+                                            <option value="urun">Ürün</option>
+                                            <option value="esans">Esans</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fire_sayim_eksigi_kod">Kod Seçin *</label>
+                                        <select class="form-control" v-model="fireSayimEksigiForm.kod" @change="getFireSayimEksigiLocation" required>
+                                            <option value="">Kod Seçin</option>
+                                            <option v-for="item in fireSayimEksigiStockItems" :key="item.kod" :value="item.kod">
+                                                {{ item.kod }} - {{ item.isim }} (Stok: {{ item.stok }})
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fire_sayim_eksigi_hareket_turu">Hareket Türü *</label>
+                                        <select class="form-control" v-model="fireSayimEksigiForm.hareket_turu" required>
+                                            <option value="">Seçiniz</option>
+                                            <option v-for="type in fireSayimEksigiMovementTypes" :key="type.value" :value="type.value">
+                                                {{ type.label }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label for="fire_sayim_eksigi_miktar">Miktar *</label>
+                                        <input type="number" class="form-control" v-model.number="fireSayimEksigiForm.miktar" min="0.01"
+                                            step="0.01" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fire_sayim_eksigi_aciklama">Açıklama *</label>
+                                <textarea class="form-control" v-model="fireSayimEksigiForm.aciklama" rows="3" required></textarea>
+                            </div>
+
+                            <div id="fire-sayim-eksigi-location-info" v-if="(fireSayimEksigiForm.stok_turu === 'malzeme' || fireSayimEksigiForm.stok_turu === 'urun') && fireSayimEksigiForm.kod">
+                                <div class="form-row">
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Depo</label>
+                                            <div class="form-control-static">{{ fireSayimEksigiForm.depo || 'Depo bilgisi yok' }}</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group">
+                                            <label>Raf</label>
+                                            <div class="form-control-static">{{ fireSayimEksigiForm.raf || 'Raf bilgisi yok' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div id="fire-sayim-eksigi-tank-info" v-if="fireSayimEksigiForm.stok_turu === 'esans' && fireSayimEksigiForm.kod">
+                                <div class="form-group">
+                                    <label>Tank Kodu</label>
+                                    <div class="form-control-static">{{ fireSayimEksigiForm.tank_kodu || 'Tank kodu yok' }}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="closeFireSayimEksigiModal"><i
+                                    class="fas fa-times"></i> İptal</button>
+                            <button type="submit" class="btn btn-primary" :class="{ 'loading': isSubmitting }" :disabled="isSubmitting">
+                                <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <i v-else class="fas fa-save"></i>
+                                {{ fireSayimEksigiSubmitButtonText }}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
         <!-- Sayım Fazlası Modal -->
         <div class="modal fade" :class="{ show: sayimFazlasiModalVisible }" 
              :style="{ display: sayimFazlasiModalVisible ? 'block' : 'none' }" 
@@ -207,7 +309,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                 <div class="modal-content">
                     <form @submit.prevent="saveSayimFazlasi">
                         <div class="modal-header">
-                            <h5 class="modal-title">Sayım Fazlası Ekle</h5>
+                            <h5 class="modal-title">Sayım Fazlası</h5>
                             <button type="button" class="close" @click="closeSayimFazlasiModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -267,7 +369,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 <textarea class="form-control" v-model="sayimFazlasiForm.aciklama" rows="3" required></textarea>
                             </div>
 
-                            <div id="sayim-fazlasi-location-info" v-if="sayimFazlasiForm.stok_turu === 'malzeme' || sayimFazlasiForm.stok_turu === 'urun'">
+                            <div id="sayim-fazlasi-location-info" v-if="(sayimFazlasiForm.stok_turu === 'malzeme' || sayimFazlasiForm.stok_turu === 'urun') && sayimFazlasiForm.kod">
                                 <div class="form-row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -284,7 +386,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </div>
                             </div>
                             
-                            <div id="sayim-fazlasi-tank-info" v-if="sayimFazlasiForm.stok_turu === 'esans'">
+                            <div id="sayim-fazlasi-tank-info" v-if="sayimFazlasiForm.stok_turu === 'esans' && sayimFazlasiForm.kod">
                                 <div class="form-group">
                                     <label>Tank Kodu</label>
                                     <div class="form-control-static">{{ sayimFazlasiForm.tank_kodu || 'Tank kodu yok' }}</div>
@@ -391,7 +493,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 <textarea class="form-control" v-model="movementForm.aciklama" rows="3" required></textarea>
                             </div>
 
-                            <div id="location-fields" v-if="movementForm.stok_turu === 'malzeme' || movementForm.stok_turu === 'urun'">
+                            <div id="location-fields" v-if="(movementForm.stok_turu === 'malzeme' || movementForm.stok_turu === 'urun') && movementForm.kod">
                                 <div class="form-row">
                                     <div class="col-md-6">
                                         <div class="form-group">
@@ -413,7 +515,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </div>
                             </div>
                             
-                            <div id="tank-fields" v-if="movementForm.stok_turu === 'esans'">
+                            <div id="tank-fields" v-if="movementForm.stok_turu === 'esans' && movementForm.kod">
                                 <div class="form-group">
                                     <label for="tank_kodu">Tank Kodu</label>
                                     <input type="text" class="form-control" v-model="movementForm.tank_kodu">
@@ -443,7 +545,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                 <div class="modal-content">
                     <form @submit.prevent="saveTransfer">
                         <div class="modal-header">
-                            <h5 class="modal-title">Stok Transferi Formu</h5>
+                            <h5 class="modal-title">Yeni Stok Transferi</h5>
                             <button type="button" class="close" @click="closeTransferModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
@@ -457,6 +559,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                             <option value="">Seçiniz</option>
                                             <option value="malzeme">Malzeme</option>
                                             <option value="urun">Ürün</option>
+                                            <option value="esans">Esans</option>
                                         </select>
                                     </div>
                                 </div>
@@ -478,8 +581,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <div class="form-group">
                                         <label for="transfer_miktar">Transfer Miktarı *</label>
                                         <input type="number" class="form-control" v-model.number="transferForm.miktar"
-                                            min="0.01" step="0.01" :readonly="!isTransferAutoFill" required>
-                                        <small class="form-text text-muted" v-if="isTransferAutoFill">Otomatik olarak mevcut stok miktarı atanacaktır</small>
+                                            min="0.01" step="0.01" readonly required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -498,30 +600,48 @@ if ($_SESSION['taraf'] !== 'personel') {
 
                             <div class="form-row">
                                 <div class="col-md-6">
-                                    <h5>Kaynak Konum</h5>
-                                    <div class="form-group">
+                                    <h5 v-if="(transferForm.stok_turu !== 'esans' && transferForm.kod) || (transferForm.stok_turu === 'esans' && transferForm.kod)">Kaynak Konum</h5>
+                                    <div class="form-group" v-if="transferForm.stok_turu !== 'esans' && transferForm.kod">
                                         <label for="kaynak_depo">Kaynak Depo *</label>
                                         <input type="text" class="form-control" v-model="transferForm.kaynak_depo" readonly required>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" v-if="transferForm.stok_turu !== 'esans' && transferForm.kod">
                                         <label for="kaynak_raf">Kaynak Raf *</label>
                                         <input type="text" class="form-control" v-model="transferForm.kaynak_raf" readonly required>
                                     </div>
+                                    <div class="form-group" v-if="transferForm.stok_turu === 'esans' && transferForm.kod">
+                                        <label for="tank_kodu">Kaynak Tank</label>
+                                        <input type="text" class="form-control" v-model="transferForm.tank_kodu" readonly>
+                                    </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <h5>Hedef Konum</h5>
-                                    <div class="form-group">
+                                    <h5 v-if="(transferForm.stok_turu !== 'esans' && transferForm.kod) || (transferForm.stok_turu === 'esans' && transferForm.kod)">Hedef Konum</h5>
+                                    <div class="form-group" v-if="transferForm.stok_turu !== 'esans' && transferForm.kod">
                                         <label for="hedef_depo">Hedef Depo *</label>
-                                        <select class="form-control" v-model="transferForm.hedef_depo" required>
+                                        <select class="form-control" v-model="transferForm.hedef_depo" @change="updateHedefRaflar" required>
                                             <option value="">Depo Seçin</option>
                                             <option v-for="location in locations" :key="location.depo_ismi" :value="location.depo_ismi">
                                                 {{ location.depo_ismi }}
                                             </option>
                                         </select>
                                     </div>
-                                    <div class="form-group">
+                                    <div class="form-group" v-if="transferForm.stok_turu !== 'esans' && transferForm.kod">
                                         <label for="hedef_raf">Hedef Raf *</label>
-                                        <input type="text" class="form-control" v-model="transferForm.hedef_raf" required>
+                                        <select class="form-control" v-model="transferForm.hedef_raf" required>
+                                            <option value="">Raf Seçin</option>
+                                            <option v-for="raf in hedefRaflar" :key="raf" :value="raf">
+                                                {{ raf }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" v-if="transferForm.stok_turu === 'esans' && transferForm.kod">
+                                        <label for="hedef_tank_kodu">Hedef Tank *</label>
+                                        <select class="form-control" v-model="transferForm.hedef_tank_kodu" required>
+                                            <option value="">Tank Seçin</option>
+                                            <option v-for="tank in tanks" :key="tank.tank_id" :value="tank.tank_kodu">
+                                                {{ tank.tank_kodu }} - {{ tank.tank_ismi }}
+                                            </option>
+                                        </select>
                                     </div>
                                 </div>
                             </div>
@@ -540,7 +660,7 @@ if ($_SESSION['taraf'] !== 'personel') {
         </div>
 
         <!-- Modal Backdrop -->
-        <div v-if="movementModalVisible || transferModalVisible || sayimFazlasiModalVisible" class="modal-backdrop fade show" style="z-index: 1040;"></div>
+        <div v-if="movementModalVisible || transferModalVisible || sayimFazlasiModalVisible || fireSayimEksigiModalVisible" class="modal-backdrop fade show" style="z-index: 1040;"></div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->

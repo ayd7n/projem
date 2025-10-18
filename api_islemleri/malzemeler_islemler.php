@@ -30,6 +30,20 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Malzeme bulunamadı.'];
         }
     }
+    elseif ($action == 'get_all_materials') {
+        $query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $materials = [];
+            while ($row = $result->fetch_assoc()) {
+                $materials[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $materials];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Malzeme listesi alınamadı.'];
+        }
+    }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
