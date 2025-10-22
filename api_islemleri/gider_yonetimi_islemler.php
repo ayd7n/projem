@@ -22,6 +22,9 @@ switch ($action) {
     case 'get_expense':
         getExpense();
         break;
+    case 'get_total_expenses':
+        getTotalExpenses();
+        break;
     case 'add_expense':
         addExpense();
         break;
@@ -54,17 +57,14 @@ function getExpenses() {
 function getExpense() {
     global $connection;
 
-    $id = $_GET['id'] ?? '';
+    $id = (int)($_GET['id'] ?? 0);
     if (empty($id)) {
         echo json_encode(['status' => 'error', 'message' => 'Gider ID gerekli.']);
         return;
     }
 
-    $query = "SELECT * FROM gider_yonetimi WHERE gider_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $query = "SELECT * FROM gider_yonetimi WHERE gider_id = $id";
+    $result = $connection->query($query);
 
     if ($result && $result->num_rows > 0) {
         $expense = $result->fetch_assoc();
@@ -72,88 +72,87 @@ function getExpense() {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider bulunamadı.']);
     }
+}
 
-    $stmt->close();
+function getTotalExpenses() {
+    global $connection;
+
+    $query = "SELECT IFNULL(SUM(tutar), 0) AS total FROM gider_yonetimi";
+    $result = $connection->query($query);
+
+    if ($result && $row = $result->fetch_assoc()) {
+        echo json_encode(['status' => 'success', 'data' => (float)$row['total']]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Toplam giderler alınırken hata oluştu.']);
+    }
 }
 
 function addExpense() {
     global $connection;
 
-    $tarih = $_POST['tarih'] ?? '';
-    $tutar = $_POST['tutar'] ?? '';
-    $kategori = $_POST['kategori'] ?? '';
-    $aciklama = $_POST['aciklama'] ?? '';
-    $fatura_no = $_POST['fatura_no'] ?? '';
-    $odeme_tipi = $_POST['odeme_tipi'] ?? '';
+    $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
+    $tutar = floatval($_POST['tutar'] ?? 0);
+    $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
+    $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
+    $fatura_no = $connection->real_escape_string($_POST['fatura_no'] ?? '');
+    $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
     $personel_id = $_SESSION['user_id'];
-    $personel_adi = $_SESSION['kullanici_adi'];
+    $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
 
-    if (empty($tarih) || empty($tutar) || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
+    if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, açıklama ve ödeme tipi alanları zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('sdssssis', $tarih, $tutar, $kategori, $aciklama, $personel_id, $personel_adi, $fatura_no, $odeme_tipi);
+    $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi')";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla eklendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider eklenirken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 
 function updateExpense() {
     global $connection;
 
-    $gider_id = $_POST['gider_id'] ?? '';
-    $tarih = $_POST['tarih'] ?? '';
-    $tutar = $_POST['tutar'] ?? '';
-    $kategori = $_POST['kategori'] ?? '';
-    $aciklama = $_POST['aciklama'] ?? '';
-    $fatura_no = $_POST['fatura_no'] ?? '';
-    $odeme_tipi = $_POST['odeme_tipi'] ?? '';
+    $gider_id = (int)($_POST['gider_id'] ?? 0);
+    $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
+    $tutar = floatval($_POST['tutar'] ?? 0);
+    $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
+    $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
+    $fatura_no = $connection->real_escape_string($_POST['fatura_no'] ?? '');
+    $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
 
-    if (empty($gider_id) || empty($tarih) || empty($tutar) || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
+    if (empty($gider_id) || empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tüm alanlar zorunludur.']);
         return;
     }
 
-    $query = "UPDATE gider_yonetimi SET tarih = ?, tutar = ?, kategori = ?, aciklama = ?, fatura_no = ?, odeme_tipi = ? WHERE gider_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('sdssssi', $tarih, $tutar, $kategori, $aciklama, $fatura_no, $odeme_tipi, $gider_id);
+    $query = "UPDATE gider_yonetimi SET tarih = '$tarih', tutar = $tutar, kategori = '$kategori', aciklama = '$aciklama', fatura_no = '$fatura_no', odeme_tipi = '$odeme_tipi' WHERE gider_id = $gider_id";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider güncellenirken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 
 function deleteExpense() {
     global $connection;
 
-    $gider_id = $_POST['gider_id'] ?? '';
+    $gider_id = (int)($_POST['gider_id'] ?? 0);
     if (empty($gider_id)) {
         echo json_encode(['status' => 'error', 'message' => 'Gider ID gerekli.']);
         return;
     }
 
-    $query = "DELETE FROM gider_yonetimi WHERE gider_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $gider_id);
+    $query = "DELETE FROM gider_yonetimi WHERE gider_id = $gider_id";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider silinirken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 ?>

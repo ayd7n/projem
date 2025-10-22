@@ -54,6 +54,7 @@ new Vue({
             raf: '',
             tank_kodu: ''
         },
+
         fireSayimEksigiModalVisible: false,
         isFireSayimEksigiEdit: false,
         fireSayimEksigiForm: {
@@ -75,18 +76,34 @@ new Vue({
         stockItems: [],
         transferStockItems: [],
         sayimFazlasiStockItems: [],
+
         locations: [],
         tanks: [], // Tanks for essence transfers
         hedefRaflar: [], // Shelves for selected target depot
         movementTypes: [],
-        submitButtonText: 'Kaydet'
+        submitButtonText: 'Kaydet',
+        
+        // Mal Kabul specific data
+        malKabulModalVisible: false,
+        malKabulForm: {
+            hareket_id: '',
+            stok_turu: 'malzeme', // Default to 'malzeme'
+            kod: '',
+            yon: 'giris', // Otomatik olarak giriş
+            hareket_turu: 'mal_kabul', // Otomatik olarak mal kabul
+            miktar: '',
+            ilgili_belge_no: '',
+            aciklama: '',
+            depo: '',
+            raf: '',
+            tank_kodu: '',
+            tedarikci: ''
+        },
+        malKabulStockItems: [],
+        malKabulSuppliers: []
     },
     computed: {
         movementFormTitle() {
-            // If this is specifically a 'mal_kabul' movement, use that title
-            if (this.movementForm.hareket_turu === 'mal_kabul') {
-                return this.isEdit ? 'Mal Kabul Hareketini Düzenle' : 'Yeni Mal Kabul';
-            }
             return this.isEdit ? 'Stok Hareketini Düzenle' : 'Yeni Stok Hareketi';
         },
         fireSayimEksigiFormTitle() {
@@ -100,6 +117,7 @@ new Vue({
         }
     },
     mounted() {
+        console.log('Vue instance creating...', this);
         // Set user name from data attribute
         const appElement = document.getElementById('app');
         if (appElement && appElement.dataset.username) {
@@ -355,7 +373,6 @@ new Vue({
                     { value: 'sayim_farki', label: 'Sayım Farkı (Artış)' },
                     { value: 'stok_duzeltme', label: 'Stok Düzeltme (Artış)' },
                     { value: 'transfer', label: 'Transfer (Giriş)' },
-                    { value: 'mal_kabul', label: 'Mal Kabul' },
                     { value: 'numune_girisi', label: 'Numune Girişi' }
                 ];
             } else if (this.movementForm.yon === 'cikis') {
@@ -390,6 +407,7 @@ new Vue({
             this.isSayimFazlasiEdit = false;
             this.sayimFazlasiModalVisible = true;
         },
+
         openMovementForm(yon = null, hareket_turu = null) {
             this.resetMovementForm();
             this.isEdit = false;
@@ -761,6 +779,117 @@ new Vue({
                     this.isSubmitting = false;
                 });
         },
+        
+        openMalKabulModal() {
+            this.resetMalKabulForm();
+            this.malKabulModalVisible = true;
+            this.loadMalKabulStockItems(); // Load materials when modal opens
+        },
+        
+        closeMalKabulModal() {
+            this.malKabulModalVisible = false;
+        },
+        
+        resetMalKabulForm() {
+            this.malKabulForm = {
+                hareket_id: '',
+                stok_turu: 'malzeme', // Default to 'malzeme'
+                kod: '',
+                yon: 'giris', // Otomatik olarak giriş
+                hareket_turu: 'mal_kabul', // Otomatik olarak mal kabul
+                miktar: '',
+                ilgili_belge_no: '',
+                aciklama: '',
+                depo: '',
+                raf: '',
+                tank_kodu: '',
+                tedarikci: ''
+            };
+            this.malKabulStockItems = [];
+            this.malKabulSuppliers = [];
+        },
+        
+        loadMalKabulStockItems() {
+            // Since stok_turu is fixed to 'malzeme', we can call it directly.
+            axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_stock_items&type=malzeme`)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.malKabulStockItems = response.data.data || [];
+                        // Clear the selected item if it's not in the new list
+                        if (this.malKabulForm.kod && !this.malKabulStockItems.some(item => item.kod === this.malKabulForm.kod)) {
+                            this.malKabulForm.kod = '';
+                            this.malKabulForm.depo = '';
+                            this.malKabulForm.raf = '';
+                            this.malKabulForm.tank_kodu = '';
+                        }
+                    } else {
+                        this.showAlert(response.data.message || 'Stok ürünleri yüklenirken bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('Stok ürünleri yüklenirken bir hata oluştu', 'danger');
+                });
+        },
+        
+        loadMalKabulSuppliers() {
+            if (!this.malKabulForm.kod) {
+                this.malKabulSuppliers = [];
+                this.malKabulForm.tedarikci = '';
+                return;
+            }
+            
+            // Reset current selection when loading new suppliers
+            this.malKabulForm.tedarikci = '';
+
+            // API call to load suppliers based on selected material from cerceve_sozlesmeler table
+            axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_suppliers_for_material&material_code=${this.malKabulForm.kod}`)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.malKabulSuppliers = response.data.data || [];
+                        // Auto-selection logic removed to allow manual selection every time.
+                        /* if (this.malKabulSuppliers.length === 1) {
+                            this.malKabulForm.tedarikci = this.malKabulSuppliers[0].tedarikci_ismi;
+                        } */
+                    } else {
+                        this.malKabulSuppliers = []; // Clear suppliers on error
+                        this.showAlert(response.data.message || 'Tedarikçiler yüklenirken bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('Tedarikçiler yüklenirken bir hata oluştu', 'danger');
+                });
+        },
+        
+        saveMalKabul() {
+            this.isSubmitting = true;
+            
+            // Prepare the form data
+            const formData = new FormData();
+            Object.keys(this.malKabulForm).forEach(key => {
+                if (this.malKabulForm[key] !== null) {
+                    formData.append(key, this.malKabulForm[key]);
+                }
+            });
+            
+            formData.append('action', 'add_mal_kabul');
+            
+            axios.post('api_islemleri/stok_hareket_islemler.php', formData)
+                .then(response => {
+                    if (response.data.status === 'success') {
+                        this.showAlert(response.data.message, 'success');
+                        this.closeMalKabulModal();
+                        this.loadMovements(); // Reload movements
+                    } else {
+                        this.showAlert(response.data.message || 'İşlem sırasında bir hata oluştu', 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('İşlem sırasında bir hata oluştu', 'danger');
+                })
+                .finally(() => {
+                    this.isSubmitting = false;
+                });
+        },
         showAlert(message, type) {
             this.alert.message = message;
             this.alert.type = type;
@@ -776,6 +905,8 @@ new Vue({
             this.alert.message = '';
             this.alert.type = 'success';
         },
+
+
         updateHedefRaflar() {
             // Update shelves based on selected target depot
             this.hedefRaflar = [];
@@ -798,3 +929,5 @@ new Vue({
         }
     }
 });
+
+console.log('Vue instance created.');

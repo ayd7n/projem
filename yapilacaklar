@@ -1,0 +1,4 @@
+Sayım fazlasında alttaki depo , raf ve tank kodunu kullanıcı görmesin.
+Aynı şekilde Fire / Sayım Eksigi tablosunda da
+Kaynak konum ve miktar otomatik olarak dolduruldu: denen o uyarıyı kaldır htmlden. -- okey
+Stok transferi yapılacağı zaman transfer miktarını gösteren input kaldırılsın gerek yok ona.

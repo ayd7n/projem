@@ -19,137 +19,149 @@ if (isset($_GET['action'])) {
 
     if ($action == 'get_employee' && isset($_GET['id'])) {
         $personel_id = (int)$_GET['id'];
-        $query = "SELECT * FROM personeller WHERE personel_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $personel_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $employee = $result->fetch_assoc();
-        $stmt->close();
-
-        if ($employee) {
-            $response = ['status' => 'success', 'data' => $employee];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Personel bulunamadı.'];
+        try {
+            $query = "SELECT * FROM personeller WHERE personel_id = $personel_id";
+            $result = $connection->query($query);
+            
+            if ($result) {
+                $employee = $result->fetch_assoc();
+                if ($employee) {
+                    $response = ['status' => 'success', 'data' => $employee];
+                } else {
+                    $response = ['status' => 'error', 'message' => 'Personel bulunamadı.'];
+                }
+            } else {
+                $response = ['status' => 'error', 'message' => 'Sorgu hatası: ' . $connection->error];
+            }
+        } catch (mysqli_sql_exception $e) {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
     }
     elseif ($action == 'get_all_employees') {
-        $query = "SELECT * FROM personeller ORDER BY ad_soyad";
-        $result = $connection->query($query);
-        
-        if ($result) {
-            $employees = [];
-            while ($row = $result->fetch_assoc()) {
-                $employees[] = $row;
+        try {
+            $query = "SELECT * FROM personeller ORDER BY ad_soyad";
+            $result = $connection->query($query);
+            
+            if ($result) {
+                $employees = [];
+                while ($row = $result->fetch_assoc()) {
+                    $employees[] = $row;
+                }
+                $response = ['status' => 'success', 'data' => $employees];
+            } else {
+                $response = ['status' => 'error', 'message' => 'Personel listesi alınamadı.'];
             }
-            $response = ['status' => 'success', 'data' => $employees];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Personel listesi alınamadı.'];
+        } catch (mysqli_sql_exception $e) {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
-    // Extract data from POST
-    $ad_soyad = $_POST['ad_soyad'] ?? null;
-    $tc_kimlik_no = $_POST['tc_kimlik_no'] ?? '';
-    $dogum_tarihi = $_POST['dogum_tarihi'] ?? '';
-    $ise_giris_tarihi = $_POST['ise_giris_tarihi'] ?? date('Y-m-d');
-    $pozisyon = $_POST['pozisyon'] ?? '';
-    $departman = $_POST['departman'] ?? '';
-    $e_posta = $_POST['e_posta'] ?? '';
-    $telefon = $_POST['telefon'] ?? '';
-    $adres = $_POST['adres'] ?? '';
-    $notlar = $_POST['notlar'] ?? '';
-    $sifre = $_POST['sifre'] ?? '';
-
     if ($action == 'add_employee') {
+        $ad_soyad = $connection->real_escape_string($_POST['ad_soyad'] ?? '');
+        $tc_kimlik_no = $connection->real_escape_string($_POST['tc_kimlik_no'] ?? '');
+        $dogum_tarihi = $connection->real_escape_string($_POST['dogum_tarihi'] ?? '');
+        $ise_giris_tarihi = $connection->real_escape_string($_POST['ise_giris_tarihi'] ?? date('Y-m-d'));
+        $pozisyon = $connection->real_escape_string($_POST['pozisyon'] ?? '');
+        $departman = $connection->real_escape_string($_POST['departman'] ?? '');
+        $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
+        $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+        $adres = $connection->real_escape_string($_POST['adres'] ?? '');
+        $notlar = $connection->real_escape_string($_POST['notlar'] ?? '');
+        $sifre = $_POST['sifre'] ?? '';
+
         if (empty($ad_soyad)) {
             $response = ['status' => 'error', 'message' => 'Ad soyad boş olamaz.'];
         } else {
-            // Hash the password if provided, otherwise use default
-            $hashed_password = !empty($sifre) ? password_hash($sifre, PASSWORD_DEFAULT) : password_hash('12345', PASSWORD_DEFAULT);
-            
-            $query = "INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar, sistem_sifresi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssssssssss', $ad_soyad, $tc_kimlik_no, $dogum_tarihi, $ise_giris_tarihi, $pozisyon, $departman, $e_posta, $telefon, $adres, $notlar, $hashed_password);
+            try {
+                $hashed_password = !empty($sifre) ? password_hash($sifre, PASSWORD_DEFAULT) : password_hash('12345', PASSWORD_DEFAULT);
+                $escaped_hashed_password = $connection->real_escape_string($hashed_password);
 
-            if ($stmt->execute()) {
-                $response = ['status' => 'success', 'message' => 'Personel başarıyla eklendi.'];
-            } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $query = "INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar, sistem_sifresi) VALUES ('$ad_soyad', '$tc_kimlik_no', '$dogum_tarihi', '$ise_giris_tarihi', '$pozisyon', '$departman', '$e_posta', '$telefon', '$adres', '$notlar', '$escaped_hashed_password')";
+
+                if ($connection->query($query)) {
+                    $response = ['status' => 'success', 'message' => 'Personel başarıyla eklendi.'];
+                } else {
+                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+                }
+            } catch (mysqli_sql_exception $e) {
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
             }
-            $stmt->close();
         }
     } elseif ($action == 'update_employee' && isset($_POST['personel_id'])) {
         $personel_id = (int)$_POST['personel_id'];
-        
+
         // Check if this is the protected user
-        $check_stmt = $connection->prepare("SELECT ad_soyad FROM personeller WHERE personel_id = ?");
-        $check_stmt->bind_param('i', $personel_id);
-        $check_stmt->execute();
-        $result = $check_stmt->get_result();
-        if ($result->num_rows > 0) {
-            $user_to_check = $result->fetch_assoc();
+        $check_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
+        $check_result = $connection->query($check_query);
+        if ($check_result && $check_result->num_rows > 0) {
+            $user_to_check = $check_result->fetch_assoc();
             if ($user_to_check['ad_soyad'] === PROTECTED_USER_NAME) {
-                $response = ['status' => 'error', 'message' => PROTECTED_USER_NAME . ' kaydı güncellenemez.'];
-                $check_stmt->close();
-                echo json_encode($response);
+                echo json_encode(['status' => 'error', 'message' => PROTECTED_USER_NAME . ' kaydı güncellenemez.']);
                 exit;
             }
         }
-        $check_stmt->close();
-        
+
+        $ad_soyad = $connection->real_escape_string($_POST['ad_soyad'] ?? '');
+        $tc_kimlik_no = $connection->real_escape_string($_POST['tc_kimlik_no'] ?? '');
+        $dogum_tarihi = $connection->real_escape_string($_POST['dogum_tarihi'] ?? '');
+        $ise_giris_tarihi = $connection->real_escape_string($_POST['ise_giris_tarihi'] ?? date('Y-m-d'));
+        $pozisyon = $connection->real_escape_string($_POST['pozisyon'] ?? '');
+        $departman = $connection->real_escape_string($_POST['departman'] ?? '');
+        $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
+        $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+        $adres = $connection->real_escape_string($_POST['adres'] ?? '');
+        $notlar = $connection->real_escape_string($_POST['notlar'] ?? '');
+        $sifre = $_POST['sifre'] ?? '';
+
         if (empty($ad_soyad)) {
             $response = ['status' => 'error', 'message' => 'Ad soyad boş olamaz.'];
         } else {
-            // Update password if provided
-            if (!empty($sifre)) {
-                $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
-                $query = "UPDATE personeller SET ad_soyad = ?, tc_kimlik_no = ?, dogum_tarihi = ?, ise_giris_tarihi = ?, pozisyon = ?, departman = ?, e_posta = ?, telefon = ?, adres = ?, notlar = ?, sistem_sifresi = ? WHERE personel_id = ?";
-                $stmt = $connection->prepare($query);
-                $stmt->bind_param('sssssssssssi', $ad_soyad, $tc_kimlik_no, $dogum_tarihi, $ise_giris_tarihi, $pozisyon, $departman, $e_posta, $telefon, $adres, $notlar, $hashed_password, $personel_id);
-            } else {
-                $query = "UPDATE personeller SET ad_soyad = ?, tc_kimlik_no = ?, dogum_tarihi = ?, ise_giris_tarihi = ?, pozisyon = ?, departman = ?, e_posta = ?, telefon = ?, adres = ?, notlar = ? WHERE personel_id = ?";
-                $stmt = $connection->prepare($query);
-                $stmt->bind_param('ssssssssssi', $ad_soyad, $tc_kimlik_no, $dogum_tarihi, $ise_giris_tarihi, $pozisyon, $departman, $e_posta, $telefon, $adres, $notlar, $personel_id);
-            }
+            try {
+                $update_fields = "ad_soyad = '$ad_soyad', tc_kimlik_no = '$tc_kimlik_no', dogum_tarihi = '$dogum_tarihi', ise_giris_tarihi = '$ise_giris_tarihi', pozisyon = '$pozisyon', departman = '$departman', e_posta = '$e_posta', telefon = '$telefon', adres = '$adres', notlar = '$notlar'";
+                
+                if (!empty($sifre)) {
+                    $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
+                    $escaped_hashed_password = $connection->real_escape_string($hashed_password);
+                    $update_fields .= ", sistem_sifresi = '$escaped_hashed_password'";
+                }
 
-            if ($stmt->execute()) {
-                $response = ['status' => 'success', 'message' => 'Personel başarıyla güncellendi.'];
-            } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $query = "UPDATE personeller SET $update_fields WHERE personel_id = $personel_id";
+
+                if ($connection->query($query)) {
+                    $response = ['status' => 'success', 'message' => 'Personel başarıyla güncellendi.'];
+                } else {
+                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+                }
+            } catch (mysqli_sql_exception $e) {
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
             }
-            $stmt->close();
         }
     } elseif ($action == 'delete_employee' && isset($_POST['personel_id'])) {
         $personel_id = (int)$_POST['personel_id'];
-        
+
         // Check if this is the protected user
-        $check_stmt = $connection->prepare("SELECT ad_soyad FROM personeller WHERE personel_id = ?");
-        $check_stmt->bind_param('i', $personel_id);
-        $check_stmt->execute();
-        $result = $check_stmt->get_result();
-        if ($result->num_rows > 0) {
-            $user_to_check = $result->fetch_assoc();
+        $check_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
+        $check_result = $connection->query($check_query);
+        if ($check_result && $check_result->num_rows > 0) {
+            $user_to_check = $check_result->fetch_assoc();
             if ($user_to_check['ad_soyad'] === PROTECTED_USER_NAME) {
-                $response = ['status' => 'error', 'message' => PROTECTED_USER_NAME . ' kaydı silinemez.'];
-                $check_stmt->close();
-                echo json_encode($response);
+                echo json_encode(['status' => 'error', 'message' => PROTECTED_USER_NAME . ' kaydı silinemez.']);
                 exit;
             }
         }
-        $check_stmt->close();
-        
-        $query = "DELETE FROM personeller WHERE personel_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $personel_id);
-        if ($stmt->execute()) {
-            $response = ['status' => 'success', 'message' => 'Personel başarıyla silindi.'];
-        } else {
-            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+
+        try {
+            $query = "DELETE FROM personeller WHERE personel_id = $personel_id";
+            if ($connection->query($query)) {
+                $response = ['status' => 'success', 'message' => 'Personel başarıyla silindi.'];
+            } else {
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+            }
+        } catch (mysqli_sql_exception $e) {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
-        $stmt->close();
     }
 }
 

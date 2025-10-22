@@ -150,6 +150,35 @@ switch ($action) {
         echo json_encode(['status' => 'success', 'data' => $items]);
         break;
 
+    case 'get_suppliers_for_material':
+        $material_code = $_GET['material_code'] ?? '';
+
+        if (!$material_code) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu belirtilmedi.']);
+            break;
+        }
+
+        // Get distinct suppliers for the material from cerceve_sozlesmeler table
+        $query = "SELECT DISTINCT t.tedarikci_id, t.tedarikci_adi AS tedarikci_ismi 
+                  FROM cerceve_sozlesmeler cs
+                  JOIN tedarikciler t ON cs.tedarikci_adi = t.tedarikci_adi
+                  WHERE cs.malzeme_kodu = ? 
+                  ORDER BY t.tedarikci_adi";
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param('s', $material_code);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $suppliers = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $suppliers[] = $row;
+            }
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $suppliers]);
+        break;
+
     case 'get_movement':
         $id = $_GET['id'] ?? 0;
 
@@ -212,6 +241,7 @@ switch ($action) {
         $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
         $cerceve_sozlesme_id = $_POST['cerceve_sozlesme_id'] ?? '';
         $fatura_no = $_POST['fatura_no'] ?? '';
+        $tedarikci = $_POST['tedarikci'] ?? '';
 
         // Validation
         if (!$stok_turu || !$kod || !$miktar || !$yon || !$hareket_turu || !$aciklama) {
@@ -219,9 +249,9 @@ switch ($action) {
             break;
         }
 
-        // For 'mal_kabul' action, ensure we have a framework contract
-        if ($hareket_turu === 'mal_kabul' && empty($cerceve_sozlesme_id)) {
-            echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi için çerçeve sözleşme seçilmelidir.']);
+        // For 'mal_kabul' action, ensure we have a supplier
+        if ($hareket_turu === 'mal_kabul' && empty($tedarikci)) {
+            echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi için tedarikçi seçilmelidir.']);
             break;
         }
 
@@ -264,9 +294,9 @@ switch ($action) {
         $item_stmt->close();
 
         // Insert stock movement
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci);
 
         if ($movement_stmt->execute()) {
             $hareket_id = $movement_stmt->insert_id;
@@ -319,6 +349,7 @@ switch ($action) {
         $tank_kodu = $_POST['tank_kodu'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
         $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
+        $tedarikci = $_POST['tedarikci'] ?? '';
 
         // Validation
         if (!$hareket_id || !$stok_turu || !$kod || !$miktar || !$yon || !$hareket_turu || !$aciklama) {
@@ -365,9 +396,9 @@ switch ($action) {
         $item_stmt->close();
 
         // Update stock movement
-        $movement_query = "UPDATE stok_hareket_kayitlari SET stok_turu = ?, kod = ?, isim = ?, birim = ?, miktar = ?, yon = ?, hareket_turu = ?, depo = ?, raf = ?, tank_kodu = ?, ilgili_belge_no = ?, aciklama = ? WHERE hareket_id = ?";
+        $movement_query = "UPDATE stok_hareket_kayitlari SET stok_turu = ?, kod = ?, isim = ?, birim = ?, miktar = ?, yon = ?, hareket_turu = ?, depo = ?, raf = ?, tank_kodu = ?, ilgili_belge_no = ?, aciklama = ?, tedarikci_ismi = ? WHERE hareket_id = ?";
         $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssi', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $hareket_id);
+        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $tedarikci, $hareket_id);
 
         if ($movement_stmt->execute()) {
             echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
@@ -441,6 +472,102 @@ switch ($action) {
             echo json_encode(['status' => 'error', 'message' => 'Stok hareketi silinirken hata oluştu: ' . $connection->error]);
         }
         $delete_stmt->close();
+        break;
+
+    case 'add_mal_kabul':
+        $stok_turu = $_POST['stok_turu'] ?? '';
+        $kod = $_POST['kod'] ?? '';
+        $miktar = $_POST['miktar'] ?? 0;
+        $aciklama = $_POST['aciklama'] ?? '';
+        $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
+        $tedarikci_id = $_POST['tedarikci'] ?? ''; // tedarikci form alanı artık ID tutuyor
+        $depo = $_POST['depo'] ?? '';
+        $raf = $_POST['raf'] ?? '';
+
+        // Validation
+        if (!$stok_turu || !$kod || !$miktar || !$aciklama || !$tedarikci_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Lütfen tüm zorunlu alanları doldurun (stok_türü, kod, miktar, açıklama ve tedarikçi).']);
+            break;
+        }
+
+        // Ensure we're dealing with materials only
+        if ($stok_turu !== 'malzeme') {
+            echo json_encode(['status' => 'error', 'message' => 'Mal kabul sadece malzeme türü için yapılabilir.']);
+            break;
+        }
+
+        // Get item name and unit based on stock type
+        $item_name = '';
+        $item_unit = '';
+
+        $item_query = "SELECT malzeme_ismi, birim FROM malzemeler WHERE malzeme_kodu = ?";
+        $item_stmt = $connection->prepare($item_query);
+        $item_stmt->bind_param('s', $kod);
+        
+        $item_stmt->execute();
+        $item_result = $item_stmt->get_result();
+        if ($item_result->num_rows > 0) {
+            $item = $item_result->fetch_assoc();
+            $item_name = $item['malzeme_ismi'];
+            $item_unit = $item['birim'];
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz malzeme kodu.']);
+            $item_stmt->close();
+            break;
+        }
+        $item_stmt->close();
+
+        // Get supplier name from ID
+        $tedarikci_ismi = '';
+        $supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
+        $supplier_stmt = $connection->prepare($supplier_query);
+        $supplier_stmt->bind_param('i', $tedarikci_id);
+        $supplier_stmt->execute();
+        $supplier_result = $supplier_stmt->get_result();
+        if ($supplier_result->num_rows > 0) {
+            $supplier = $supplier_result->fetch_assoc();
+            $tedarikci_ismi = $supplier['tedarikci_adi'];
+        }
+        $supplier_stmt->close();
+
+        // Insert stock movement for mal kabul (incoming)
+        $yon = 'giris'; // Mal kabul is always incoming
+        $hareket_turu = 'mal_kabul'; // Specific for mal kabul
+        $tank_kodu = $_POST['tank_kodu'] ?? ''; // Although not typically used for materials
+
+        // Insert the stock movement record
+        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        $movement_stmt = $connection->prepare($movement_query);
+        $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
+
+        if ($movement_stmt->execute()) {
+            $hareket_id = $movement_stmt->insert_id;
+
+            // Update the material stock in the main materials table
+            $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
+            $stock_stmt = $connection->prepare($stock_query);
+            $stock_stmt->bind_param('ds', $miktar, $kod);
+
+            if ($stock_stmt->execute()) {
+                // Also update the location information if provided
+                if ($depo && $raf) {
+                    $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
+                    $location_stmt = $connection->prepare($location_query);
+                    $location_stmt->bind_param('sss', $depo, $raf, $kod);
+                    $location_stmt->execute();
+                    $location_stmt->close();
+                }
+                
+                echo json_encode(['status' => 'success', 'message' => 'Mal kabul işlemi başarıyla kaydedildi ve stok güncellendi.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi kaydedildi ama stok güncellenirken hata oluştu: ' . $connection->error]);
+            }
+
+            $stock_stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi kaydedilirken hata oluştu: ' . $connection->error]);
+        }
+        $movement_stmt->close();
         break;
 
     case 'transfer_stock':

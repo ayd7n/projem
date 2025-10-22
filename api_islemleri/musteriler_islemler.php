@@ -60,11 +60,9 @@ function getCustomer() {
         return;
     }
 
-    $query = "SELECT * FROM musteriler WHERE musteri_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $escaped_id = $connection->real_escape_string($id);
+    $query = "SELECT * FROM musteriler WHERE musteri_id = $escaped_id";
+    $result = $connection->query($query);
 
     if ($result && $result->num_rows > 0) {
         $customer = $result->fetch_assoc();
@@ -72,20 +70,18 @@ function getCustomer() {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri bulunamadı.']);
     }
-
-    $stmt->close();
 }
 
 function addCustomer() {
     global $connection;
 
-    $musteri_adi = $_POST['musteri_adi'] ?? '';
-    $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
-    $adres = $_POST['adres'] ?? '';
-    $telefon = $_POST['telefon'] ?? '';
-    $e_posta = $_POST['e_posta'] ?? '';
+    $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
+    $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
+    $adres = $connection->real_escape_string($_POST['adres'] ?? '');
+    $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+    $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
     $sifre = $_POST['sifre'] ?? '';
-    $aciklama_notlar = $_POST['aciklama_notlar'] ?? '';
+    $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
 
     if (empty($musteri_adi) || empty($sifre)) {
@@ -93,32 +89,34 @@ function addCustomer() {
         return;
     }
 
-    // Hash the password
-    $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
+    try {
+        // Hash the password
+        $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
+        $escaped_hashed_password = $connection->real_escape_string($hashed_password);
 
-    $query = "INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar, giris_yetkisi) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('sssssssi', $musteri_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $hashed_password, $aciklama_notlar, $giris_yetkisi);
+        $query = "INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar, giris_yetkisi) VALUES ('$musteri_adi', '$vergi_no_tc', '$adres', '$telefon', '$e_posta', '$escaped_hashed_password', '$aciklama_notlar', $giris_yetkisi)";
+        $result = $connection->query($query);
 
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla oluşturuldu.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Müşteri oluşturulurken hata oluştu: ' . $connection->error]);
+        if ($result) {
+            echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla oluşturuldu.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Müşteri oluşturulurken hata oluştu: ' . $connection->error]);
+        }
+    } catch (mysqli_sql_exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
     }
-
-    $stmt->close();
 }
 
 function updateCustomer() {
     global $connection;
 
-    $musteri_id = $_POST['musteri_id'] ?? '';
-    $musteri_adi = $_POST['musteri_adi'] ?? '';
-    $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
-    $adres = $_POST['adres'] ?? '';
-    $telefon = $_POST['telefon'] ?? '';
-    $e_posta = $_POST['e_posta'] ?? '';
-    $aciklama_notlar = $_POST['aciklama_notlar'] ?? '';
+    $musteri_id = (int)($_POST['musteri_id'] ?? '');
+    $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
+    $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
+    $adres = $connection->real_escape_string($_POST['adres'] ?? '');
+    $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+    $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
+    $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
 
     if (empty($musteri_id) || empty($musteri_adi)) {
@@ -126,46 +124,48 @@ function updateCustomer() {
         return;
     }
 
-    // Update password if provided, otherwise don't update password field
-    if (!empty($_POST['sifre'])) {
-        $hashed_password = password_hash($_POST['sifre'], PASSWORD_DEFAULT);
-        $query = "UPDATE musteriler SET musteri_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, e_posta = ?, sistem_sifresi = ?, aciklama_notlar = ?, giris_yetkisi = ? WHERE musteri_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('sssssssi', $musteri_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $hashed_password, $aciklama_notlar, $giris_yetkisi, $musteri_id);
-    } else {
-        $query = "UPDATE musteriler SET musteri_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, e_posta = ?, aciklama_notlar = ?, giris_yetkisi = ? WHERE musteri_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('ssssssi', $musteri_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $aciklama_notlar, $giris_yetkisi, $musteri_id);
-    }
+    try {
+        // Update password if provided, otherwise don't update password field
+        if (!empty($_POST['sifre'])) {
+            $hashed_password = password_hash($_POST['sifre'], PASSWORD_DEFAULT);
+            $escaped_hashed_password = $connection->real_escape_string($hashed_password);
+            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', sistem_sifresi = '$escaped_hashed_password', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
+        } else {
+            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
+        }
 
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla güncellendi.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Müşteri güncellenirken hata oluştu: ' . $connection->error]);
-    }
+        $result = $connection->query($query);
 
-    $stmt->close();
+        if ($result) {
+            echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla güncellendi.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Müşteri güncellenirken hata oluştu: ' . $connection->error]);
+        }
+    } catch (mysqli_sql_exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
+    }
 }
 
 function deleteCustomer() {
     global $connection;
 
-    $musteri_id = $_POST['musteri_id'] ?? '';
+    $musteri_id = (int)($_POST['musteri_id'] ?? '');
     if (empty($musteri_id)) {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri ID gerekli.']);
         return;
     }
 
-    $query = "DELETE FROM musteriler WHERE musteri_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $musteri_id);
+    try {
+        $query = "DELETE FROM musteriler WHERE musteri_id = $musteri_id";
+        $result = $connection->query($query);
 
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla silindi.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Müşteri silinirken hata oluştu: ' . $connection->error]);
+        if ($result) {
+            echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla silindi.']);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Müşteri silinirken hata oluştu: ' . $connection->error]);
+        }
+    } catch (mysqli_sql_exception $e) {
+        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
     }
-
-    $stmt->close();
 }
 ?>

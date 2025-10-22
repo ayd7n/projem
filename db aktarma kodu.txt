@@ -1,0 +1,10 @@
+# 1 satır
+Remove-Item -Force C:\Users\AYDIN\Downloads\parfum_erp.sql -ErrorAction SilentlyContinue ; `
+& "C:\xampp\mysql\bin\mysqldump.exe" --no-defaults --user=root --databases parfum_erp `
+  --single-transaction --quick --routines --triggers --events --hex-blob `
+  --default-character-set=utf8mb4 `
+  --ignore-table=parfum_erp.vw_urunler_master --force `
+  --result-file="C:\Users\AYDIN\Downloads\parfum_erp.sql" ; `
+scp -i "C:\Users\AYDIN\Downloads\ssh-key-2025-10-20 (1).key" "C:\Users\AYDIN\Downloads\parfum_erp.sql" ubuntu@168.138.94.18:/home/ubuntu/ ; `
+ssh -i "C:\Users\AYDIN\Downloads\ssh-key-2025-10-20 (1).key" ubuntu@168.138.94.18 `
+  "sudo mysql -e 'DROP DATABASE IF EXISTS parfum_erp; CREATE DATABASE parfum_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;' && sudo mysql --binary-mode=1 --default-character-set=utf8mb4 parfum_erp < /home/ubuntu/parfum_erp.sql"

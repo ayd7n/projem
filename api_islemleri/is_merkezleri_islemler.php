@@ -22,6 +22,9 @@ switch ($action) {
     case 'get_work_center':
         getWorkCenter();
         break;
+    case 'get_total_work_centers':
+        getTotalWorkCenters();
+        break;
     case 'add_work_center':
         addWorkCenter();
         break;
@@ -54,17 +57,14 @@ function getWorkCenters() {
 function getWorkCenter() {
     global $connection;
 
-    $id = $_GET['id'] ?? '';
+    $id = (int)($_GET['id'] ?? 0);
     if (empty($id)) {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi ID gerekli.']);
         return;
     }
 
-    $query = "SELECT * FROM is_merkezleri WHERE is_merkezi_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $id);
-    $stmt->execute();
-    $result = $stmt->get_result();
+    $query = "SELECT * FROM is_merkezleri WHERE is_merkezi_id = $id";
+    $result = $connection->query($query);
 
     if ($result && $result->num_rows > 0) {
         $work_center = $result->fetch_assoc();
@@ -72,78 +72,77 @@ function getWorkCenter() {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi bulunamadı.']);
     }
+}
 
-    $stmt->close();
+function getTotalWorkCenters() {
+    global $connection;
+
+    $query = "SELECT COUNT(*) AS total FROM is_merkezleri";
+    $result = $connection->query($query);
+
+    if ($result && $row = $result->fetch_assoc()) {
+        echo json_encode(['status' => 'success', 'data' => (int)$row['total']]);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => 'Toplam iş merkezi sayısı alınırken hata oluştu.']);
+    }
 }
 
 function addWorkCenter() {
     global $connection;
 
-    $isim = $_POST['isim'] ?? '';
-    $aciklama = $_POST['aciklama'] ?? '';
+    $isim = $connection->real_escape_string($_POST['isim'] ?? '');
+    $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
 
     if (empty($isim)) {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi adı zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO is_merkezleri (isim, aciklama) VALUES (?, ?)";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('ss', $isim, $aciklama);
+    $query = "INSERT INTO is_merkezleri (isim, aciklama) VALUES ('$isim', '$aciklama')";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla oluşturuldu.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi oluşturulurken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 
 function updateWorkCenter() {
     global $connection;
 
-    $is_merkezi_id = $_POST['is_merkezi_id'] ?? '';
-    $isim = $_POST['isim'] ?? '';
-    $aciklama = $_POST['aciklama'] ?? '';
+    $is_merkezi_id = (int)($_POST['is_merkezi_id'] ?? 0);
+    $isim = $connection->real_escape_string($_POST['isim'] ?? '');
+    $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
 
     if (empty($is_merkezi_id) || empty($isim)) {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi ID ve isim alanları zorunludur.']);
         return;
     }
 
-    $query = "UPDATE is_merkezleri SET isim = ?, aciklama = ? WHERE is_merkezi_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('ssi', $isim, $aciklama, $is_merkezi_id);
+    $query = "UPDATE is_merkezleri SET isim = '$isim', aciklama = '$aciklama' WHERE is_merkezi_id = $is_merkezi_id";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi güncellenirken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 
 function deleteWorkCenter() {
     global $connection;
 
-    $is_merkezi_id = $_POST['is_merkezi_id'] ?? '';
+    $is_merkezi_id = (int)($_POST['is_merkezi_id'] ?? 0);
     if (empty($is_merkezi_id)) {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi ID gerekli.']);
         return;
     }
 
-    $query = "DELETE FROM is_merkezleri WHERE is_merkezi_id = ?";
-    $stmt = $connection->prepare($query);
-    $stmt->bind_param('i', $is_merkezi_id);
+    $query = "DELETE FROM is_merkezleri WHERE is_merkezi_id = $is_merkezi_id";
 
-    if ($stmt->execute()) {
+    if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi silinirken hata oluştu: ' . $connection->error]);
     }
-
-    $stmt->close();
 }
 ?>

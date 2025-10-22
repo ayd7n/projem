@@ -9,3 +9,6 @@ komut satiri Uzerinden Siteye ve veritabanina Erisim Talimatlari:
 
 veritabanina erismek icin asagidaki komutu kullanabilirsiniz
 mysql -h localhost -u root parfum_erp
+
+server hataları için aşağıdaki logları kontrol et
+C:\xampp\apache\logs
