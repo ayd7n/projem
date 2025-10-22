@@ -39,654 +39,323 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Ürün Ağaçları - Parfüm ERP</title>
+    <!-- Vue2 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <!-- Axios CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
-            --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-            --transition: all 0.3s ease;
-        }
-        html {
-            font-size: 15px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-        }
-        .main-content {
-            padding: 20px;
-        }
-        .page-header {
-            margin-bottom: 25px;
-        }
-        .page-header h1 {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-        }
-        .page-header p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        .card-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .card-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        .btn {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.825rem;
-        }
-        .btn:hover {
-             transform: translateY(-2px);
-        }
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: var(--secondary);
-            box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
-        }
-        .add-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-        }
-        .btn-success {
-            background-color: var(--success);
-            color: white;
-        }
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            border-left: 5px solid;
-        }
-        .alert-danger {
-            background-color: #fff5f5;
-            color: #c53030;
-            border-color: #f56565;
-        }
-        .alert-success {
-            background-color: #f0fff4;
-            color: #2f855a;
-            border-color: #48bb78;
-        }
-        .product-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .product-item:last-child {
-            border-bottom: none;
-        }
-        .product-name {
-            font-weight: 500;
-            font-size: 1.05rem;
-            color: var(--primary);
-        }
-        .add-to-cart-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .quantity-input {
-            width: 70px;
-            padding: 0.6rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .quantity-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-        .cart-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-        .item-info h4 {
-            margin-bottom: 5px;
-        }
-        .item-quantity {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        /* Cart panel that slides from right */
-        #sepet {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 320px;
-            height: 100%;
-            z-index: 1050;
-            border-radius: 0;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        #sepet.show {
-            transform: translateX(0);
-        }
-        
-        .cart-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1040;
-            display: none;
-        }
-        
-        .cart-overlay.show {
-            display: block;
-        }
-        
-        .empty-cart {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--text-secondary);
-        }
-        .empty-cart i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            display: block;
-            color: var(--primary);
-            opacity: 0.3;
-        }
-        .cart-total {
-            padding: 20px 20px;
-            border-top: 2px solid var(--border-color);
-            font-size: 1.3rem;
-            font-weight: 700;
-            text-align: right;
-            display: none; /* Hide total since we're hiding pricing */
-        }
-        
-        .order-filters {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .order-filters .btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 20px;
-        }
-        
-        .table th {
-            border-top: none;
-            border-bottom: 2px solid var(--border-color);
-            font-weight: 700;
-            color: var(--text-primary);
-        }
-        
-        .table th i {
-            margin-right: 6px;
-        }
-        
-        .table td {
-            vertical-align: middle;
-            color: var(--text-secondary);
-        }
-        
-        .actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-        
-        .actions .btn {
-            padding: 6px 10px;
-            border-radius: 18px;
-        }
-        
-        .no-orders-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            #sepet.collapse.show {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 320px;
-                height: 100%;
-                z-index: 1050; /* Higher than navbar */
-                border-radius: 0;
-                box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            }
-            #sepet .card-body {
-                overflow-y: auto;
-                height: 100%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="assets/css/urun_agaclari.css">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
-        <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+    <div id="app">
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+            <div class="container-fluid">
+                <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav ml-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="navigation.php">Ana Sayfa</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav ml-auto align-items-center">
+                        <li class="nav-item">
+                            <a class="nav-link" href="navigation.php">Ana Sayfa</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                <i class="fas fa-user-circle"></i> {{ kullaniciAdi }}
+                            </a>
+                            <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                                <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
+            
+            <div class="page-header">
+                <div>
+                    <h1>Ürün Ağacı Yönetimi</h1>
+                    <p>Ürün ağaçlarını ekleyin, düzenleyin ve yönetin</p>
+                </div>
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h4 class="card-title"><i class="fas fa-info-circle text-primary"></i> Ürün ve Esans Ağacı Tanımı</h4>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-box-open text-success"></i> Ürün Ağacı</h5>
+                                <ul class="list-unstyled ml-3">
+                                    <li><i class="fas fa-check-circle text-success"></i> Bir üründe birden fazla bileşen bulunabilir</li>
+                                    <li><i class="fas fa-check-circle text-success"></i> Bileşenler malzeme ve/veya esans olabilir</li>
+                                    <li><i class="fas fa-check-circle text-success"></i> Ürünler kendi arasında bileşen olarak kullanılamaz</li>
+                                    <li><i class="fas fa-lightbulb text-warning"></i> <strong>Örnek:</strong> Parfüm için bir esans (gül) ve malzemeler (şişe, kapak)</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <h5><i class="fas fa-perfume text-info"></i> Esans Ağacı</h5>
+                                <ul class="list-unstyled ml-3">
+                                    <li><i class="fas fa-check-circle text-success"></i> Esanslar sadece malzemelerden oluşabilir</li>
+                                    <li><i class="fas fa-check-circle text-success"></i> Başka esans veya ürün içeremez</li>
+                                    <li><i class="fas fa-check-circle text-success"></i> Esansın kendi bileşenlerini tanımlar</li>
+                                    <li><i class="fas fa-lightbulb text-warning"></i> <strong>Örnek:</strong> Gül esansı için gül yağı ve etanol</li>
+                                </ul>
+                            </div>
                         </div>
+                        <div class="usage-instructions mt-3">
+                            <h5><i class="fas fa-clipboard-list text-primary"></i> Kullanım Talimatları:</h5>
+                            <ul class="ml-3">
+                                <li><i class="fas fa-arrow-right text-secondary"></i> Ürün tanımlamaları için "<i class="fas fa-sitemap"></i> Ürün Ağaçları" sekmesini kullanın</li>
+                                <li><i class="fas fa-arrow-right text-secondary"></i> Esans tanımlamaları için "<i class="fas fa-perfume"></i> Esans Ağaçları" sekmesini kullanın</li>
+                                <li><i class="fas fa-arrow-right text-secondary"></i> Her ürün ve esans için bileşenlerini ayrı ayrı ekleyin</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="alert-placeholder">
+                <div v-if="alertMessage" :class="['alert', 'alert-' + alertType, 'alert-dismissible', 'fade', 'show']" role="alert">
+                    <i :class="['fas', alertType === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle']"></i>
+                    {{ alertMessage }}
+                    <button type="button" class="close" @click="closeAlert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
+                    <button @click="openEssenceAddModal" class="btn btn-success mb-3 ml-2"><i class="fas fa-plus"></i> Yeni Esans Ağacı Ekle</button>
+                </div>
+            </div>
+
+            <!-- Tabs for Product Trees and Essence Trees -->
+            <div id="treeTabs">
+                <ul class="nav nav-tabs" id="myTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link active" id="product-tab" data-toggle="tab" href="#product" role="tab" @click="switchTab('product')">
+                            <i class="fas fa-sitemap"></i> Ürün Ağaçları ({{ productTrees.length }})
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link" id="essence-tab" data-toggle="tab" href="#essence" role="tab" @click="switchTab('essence')">
+                            <i class="fas fa-perfume"></i> Esans Ağaçları ({{ essenceTrees.length }})
+                        </a>
                     </li>
                 </ul>
-            </div>
-        </div>
-    </nav>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
-        <div class="page-header">
-            <div>
-                <h1>Ürün Ağacı Yönetimi</h1>
-                <p>Ürün ağaçlarını ekleyin, düzenleyin ve yönetin</p>
-            </div>
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle"></i>
-                <strong>Bilgilendirme:</strong> Her biri ürünün yapımında kullanılan bileşenleri tanımlayın.
-                Bir üründe tipik olarak bir tane esans (koku maddesi) ve birden çok malzeme bulunabilir.
-                Örnek: Bir parfüm ürünü için bir adet gül esansı ve şişe, kapak gibi malzemeler.
-                Giriş yaparken dikkat edin, her ürün için esans ve malzemeleri ayrı ayrı ekleyin.
-            </div>
-        </div>
-
-        <div id="alert-placeholder"></div>
-
-        <div class="row">
-            <div class="col-md-8">
-                <button id="addProductTreeBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-sitemap"></i>
+                <div class="tab-content" id="myTabContent">
+                    <!-- Product Trees Tab -->
+                    <div class="tab-pane fade show active" id="product" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div class="table-wrapper">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th><i class="fas fa-cogs"></i> İşlemler</th>
+                                                <th><i class="fas fa-barcode"></i> Ürün Kodu</th>
+                                                <th><i class="fas fa-tag"></i> Ürün İsmi</th>
+                                                <th><i class="fas fa-barcode"></i> Bileşen Kodu</th>
+                                                <th><i class="fas fa-tag"></i> Bileşen İsmi</th>
+                                                <th><i class="fas fa-weight-hanging"></i> Bileşen Miktarı</th>
+                                                <th><i class="fas fa-box"></i> Bileşen Türü</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="pt in productTrees" :key="pt.urun_agaci_id">
+                                                <td class="actions">
+                                                    <button @click="openEditModal(pt.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
+                                                    <button @click="deleteProductTree(pt.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                                <td>{{ pt.urun_kodu }}</td>
+                                                <td><strong>{{ pt.urun_ismi }}</strong></td>
+                                                <td>{{ pt.bilesen_kodu }}</td>
+                                                <td>{{ pt.bilesen_ismi }}</td>
+                                                <td>{{ pt.bilesen_miktari }}</td>
+                                                <td>{{ pt.bilesenin_malzeme_turu }}</td>
+                                            </tr>
+                                            <tr v-if="productTrees.length === 0">
+                                                <td colspan="7" class="text-center p-4">Henüz kayıtlı ürün ağacı bulunmuyor.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_product_trees; ?></h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Ürün Ağacı</p>
+                    </div>
+                    
+                    <!-- Essence Trees Tab -->
+                    <div class="tab-pane fade" id="essence" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <div class="table-wrapper">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th><i class="fas fa-cogs"></i> İşlemler</th>
+                                                <th><i class="fas fa-barcode"></i> Esans Kodu</th>
+                                                <th><i class="fas fa-tag"></i> Esans İsmi</th>
+                                                <th><i class="fas fa-barcode"></i> Bileşen Kodu</th>
+                                                <th><i class="fas fa-tag"></i> Bileşen İsmi</th>
+                                                <th><i class="fas fa-weight-hanging"></i> Bileşen Miktarı</th>
+                                                <th><i class="fas fa-box"></i> Bileşen Türü</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="et in essenceTrees" :key="et.urun_agaci_id">
+                                                <td class="actions">
+                                                    <button @click="openEssenceEditModal(et.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
+                                                    <button @click="deleteEssenceTree(et.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                </td>
+                                                <td>{{ et.urun_kodu }}</td>
+                                                <td><strong>{{ et.urun_ismi }}</strong></td>
+                                                <td>{{ et.bilesen_kodu }}</td>
+                                                <td>{{ et.bilesen_ismi }}</td>
+                                                <td>{{ et.bilesen_miktari }}</td>
+                                                <td>{{ et.bilesenin_malzeme_turu }}</td>
+                                            </tr>
+                                            <tr v-if="essenceTrees.length === 0">
+                                                <td colspan="7" class="text-center p-4">Henüz kayıtlı esans ağacı bulunmuyor.</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-list"></i> Ürün Ağacı Listesi</h2>
-            </div>
-            <div class="card-body">
-                <div class="table-wrapper">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-cogs"></i> İşlemler</th>
-                                <th><i class="fas fa-barcode"></i> Ürün Kodu</th>
-                                <th><i class="fas fa-tag"></i> Ürün İsmi</th>
-                                <th><i class="fas fa-barcode"></i> Bileşen Kodu</th>
-                                <th><i class="fas fa-tag"></i> Bileşen İsmi</th>
-                                <th><i class="fas fa-weight-hanging"></i> Bileşen Miktarı</th>
-                                <th><i class="fas fa-box"></i> Bileşen Türü</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php if ($product_trees_result && $product_trees_result->num_rows > 0): ?>
-                                <?php while ($pt = $product_trees_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $pt['urun_agaci_id']; ?>" title="Düzenle"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $pt['urun_agaci_id']; ?>" title="Sil"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($pt['urun_kodu']); ?></td>
-                                        <td><strong><?php echo htmlspecialchars($pt['urun_ismi']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($pt['bilesen_kodu']); ?></td>
-                                        <td><?php echo htmlspecialchars($pt['bilesen_ismi']); ?></td>
-                                        <td><?php echo $pt['bilesen_miktari']; ?></td>
-                                        <td><?php echo htmlspecialchars($pt['bilesenin_malzeme_turu']); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="7" class="text-center p-4">Henüz kayıtlı ürün ağacı bulunmuyor.</td>
-                                </tr>
-                            <?php endif; ?>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Product Tree Modal -->
-    <div class="modal fade" id="productTreeModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <form id="productTreeForm">
-                    <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                        <h5 class="modal-title" id="modalTitle"><i class="fas fa-sitemap"></i> Ürün Ağacı Formu</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="urun_agaci_id" name="urun_agaci_id">
-                        <input type="hidden" id="action" name="action">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="urun_kodu">Ürün *</label>
-                                <select class="form-control" id="urun_kodu" name="urun_kodu" required>
-                                    <option value="">Ürün Seçin</option>
-                                    <?php 
-                                    $products_result->data_seek(0);
-                                    while($product = $products_result->fetch_assoc()): ?>
-                                        <option value="<?php echo $product['urun_kodu']; ?>" data-name="<?php echo htmlspecialchars($product['urun_ismi']); ?>">
-                                            <?php echo $product['urun_kodu']; ?> - <?php echo htmlspecialchars($product['urun_ismi']); ?>
+        <!-- Product Tree Modal -->
+        <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
+            <div class="modal-dialog modal-lg" @click.stop>
+                <div class="modal-content">
+                    <form @submit.prevent="saveProductTree">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                            <h5 class="modal-title">{{ modalTitle }}</h5>
+                            <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="urun_kodu">Ürün *</label>
+                                    <select class="form-control" id="urun_kodu" v-model="selectedProductTree.urun_kodu" @change="updateProductName" required>
+                                        <option value="">Ürün Seçin</option>
+                                        <option v-for="product in products" :key="product.urun_kodu" :value="product.urun_kodu">
+                                            {{ product.urun_kodu }} - {{ product.urun_ismi }}
                                         </option>
-                                    <?php endwhile; ?>
-                                </select>
-                                <input type="hidden" id="urun_ismi" name="urun_ismi">
-                            </div>
-                            <div class="form-group">
-                                <label for="bilesen_kodu">Bileşen *</label>
-                                <select class="form-control" id="bilesen_kodu" name="bilesen_kodu" required>
-                                    <option value="">Bileşen Seçin</option>
-                                    <optgroup label="Esanslar">
-                                        <?php 
-                                        $essences_result->data_seek(0);
-                                        while($essence = $essences_result->fetch_assoc()): ?>
-                                            <option value="<?php echo $essence['esans_kodu']; ?>" data-type="esans" data-name="<?php echo htmlspecialchars($essence['esans_ismi']); ?>">
-                                                <?php echo htmlspecialchars($essence['esans_kodu']); ?> - <?php echo htmlspecialchars($essence['esans_ismi']); ?>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bilesen_kodu">Bileşen *</label>
+                                    <select class="form-control" id="bilesen_kodu" v-model="selectedProductTree.bilesen_kodu" @change="updateBilesenInfo" required>
+                                        <option value="">Bileşen Seçin</option>
+                                        <optgroup label="Esanslar">
+                                            <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
+                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
                                             </option>
-                                        <?php endwhile; ?>
-                                    </optgroup>
-                                    <optgroup label="Malzemeler">
-                                        <?php 
-                                        $materials_result->data_seek(0);
-                                        while($material = $materials_result->fetch_assoc()): ?>
-                                            <option value="<?php echo $material['malzeme_kodu']; ?>" data-type="<?php echo $material['malzeme_turu']; ?>" data-name="<?php echo htmlspecialchars($material['malzeme_ismi']); ?>">
-                                                <?php echo $material['malzeme_kodu']; ?> - <?php echo htmlspecialchars($material['malzeme_ismi']); ?>
+                                        </optgroup>
+                                        <optgroup label="Malzemeler">
+                                            <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
+                                                {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
                                             </option>
-                                        <?php endwhile; ?>
-                                    </optgroup>
-                                </select>
-                                <input type="hidden" id="bilesen_ismi" name="bilesen_ismi">
-                                <input type="hidden" id="bilesenin_malzeme_turu" name="bilesenin_malzeme_turu">
-                            </div>
-                            <div class="form-group">
-                                <label for="bilesen_miktari">Bileşen Miktarı *</label>
-                                <input type="number" step="0.01" class="form-control" id="bilesen_miktari" name="bilesen_miktari" min="0" required>
+                                        </optgroup>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="bilesen_miktari">Bileşen Miktarı *</label>
+                                    <input type="number" step="0.01" class="form-control" id="bilesen_miktari" v-model.number="selectedProductTree.bilesen_miktari" min="0" required>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedProductTree.urun_agaci_id}"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Essence Tree Modal -->
+        <div class="modal fade" :class="{show: showEssenceModal}" v-if="showEssenceModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeEssenceModal">
+            <div class="modal-dialog modal-lg" @click.stop>
+                <div class="modal-content">
+                    <form @submit.prevent="saveEssenceTree">
+                        <div class="modal-header" style="background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white;">
+                            <h5 class="modal-title">{{ modalTitle }}</h5>
+                            <button type="button" class="close text-white" @click="closeEssenceModal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="essence_urun_kodu">Esans *</label>
+                                    <select class="form-control" id="essence_urun_kodu" v-model="selectedEssenceTree.urun_kodu" @change="updateEssenceName" required>
+                                        <option value="">Esans Seçin</option>
+                                        <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
+                                            {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="essence_bilesen_kodu">Bileşen (Sadece Malzeme) *</label>
+                                    <select class="form-control" id="essence_bilesen_kodu" v-model="selectedEssenceTree.bilesen_kodu" @change="updateEssenceBilesenInfo" required>
+                                        <option value="">Malzeme Seçin</option>
+                                        <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
+                                            {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="essence_bilesen_miktari">Bileşen Miktarı *</label>
+                                    <input type="number" step="0.01" class="form-control" id="essence_bilesen_miktari" v-model.number="selectedEssenceTree.bilesen_miktari" min="0" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" @click="closeEssenceModal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedEssenceTree.urun_agaci_id}"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- jQuery and Bootstrap JS -->
+    <!-- Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    
+    <!-- Set user data from PHP -->
     <script>
-    $(document).ready(function() {
-
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>`
-            );
-        }
-
-        // Set hidden fields on dropdown change
-        $('#urun_kodu').on('change', function() {
-            var selectedOption = $(this).find('option:selected');
-            $('#urun_ismi').val(selectedOption.data('name'));
-        });
-
-        $('#bilesen_kodu').on('change', function() {
-            var selectedOption = $(this).find('option:selected');
-            $('#bilesen_ismi').val(selectedOption.data('name'));
-            $('#bilesenin_malzeme_turu').val(selectedOption.data('type'));
-        });
-
-        // Open modal for adding a new product tree
-        $('#addProductTreeBtn').on('click', function() {
-            $('#productTreeForm')[0].reset();
-            $('#modalTitle').text('Yeni Ürün Ağacı Ekle');
-            $('#action').val('add_product_tree');
-            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
-            $('#productTreeModal').modal('show');
-        });
-
-        // Open modal for editing a product tree
-        $('.edit-btn').on('click', function() {
-            var ptId = $(this).data('id');
-            $.ajax({
-                url: 'api_islemleri/urun_agaclari_islemler.php?action=get_product_tree&id=' + ptId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var pt = response.data;
-                        $('#productTreeForm')[0].reset();
-                        $('#modalTitle').text('Ürün Ağacını Düzenle');
-                        $('#action').val('update_product_tree');
-                        $('#urun_agaci_id').val(pt.urun_agaci_id);
-                        $('#urun_kodu').val(pt.urun_kodu);
-                        $('#urun_ismi').val(pt.urun_ismi);
-                        $('#bilesen_kodu').val(pt.bilesen_kodu);
-                        $('#bilesen_ismi').val(pt.bilesen_ismi);
-                        $('#bilesenin_malzeme_turu').val(pt.bilesenin_malzeme_turu);
-                        $('#bilesen_miktari').val(pt.bilesen_miktari);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#productTreeModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Ürün ağacı bilgileri alınırken bir hata oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle form submission
-        $('#productTreeForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            
-            $.ajax({
-                url: 'api_islemleri/urun_agaclari_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#productTreeModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle product tree deletion
-        $('.delete-btn').on('click', function() {
-            var ptId = $(this).data('id');
-            if (confirm('Bu ürün ağacını silmek istediğinizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/urun_agaclari_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete_product_tree',
-                        urun_agaci_id: ptId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
-                        }
-                    },
-                    error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                    }
-                });
-            }
-        });
-    });
+        // Define the user data as a global variable before Vue app loads
+        window.kullaniciBilgisi = {
+            kullaniciAdi: '<?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>'
+        };
     </script>
+    
+    <!-- Vue2 Application JS -->
+    <script src="assets/js/urun_agaclari.js"></script>
 </body>
 </html>

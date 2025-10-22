@@ -9,82 +9,251 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-$response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
+// Determine request method and action
+$request_method = $_SERVER['REQUEST_METHOD'];
+$action = null;
 
+// Check for action in GET parameters
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
+} 
+// Check for action in POST parameters
+elseif (isset($_POST['action'])) {
+    $action = $_POST['action'];
+} 
+// Check for action in JSON input
+else {
+    $input = file_get_contents('php://input');
+    $json = json_decode($input, true);
+    if ($json && isset($json['action'])) {
+        $action = $json['action'];
+    }
+}
 
-    if ($action == 'get_product_tree' && isset($_GET['id'])) {
+// Initialize response
+$response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
+
+// Handle GET requests
+if ($request_method === 'GET' && $action) {
+    if ($action === 'get_all') {
+        // Fetch all product trees
+        $query = "SELECT * FROM urun_agaci ORDER BY urun_ismi, bilesen_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $product_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $product_trees[] = $row;
+            }
+            
+            // Calculate total distinct products in product trees
+            $total_query = "SELECT COUNT(DISTINCT urun_kodu) as total FROM urun_agaci";
+            $total_result = $connection->query($total_query);
+            $total = $total_result->fetch_assoc()['total'] ?? 0;
+            
+            $response = [
+                'status' => 'success',
+                'data' => $product_trees,
+                'total' => $total
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'get_product_tree' && isset($_GET['id'])) {
         $urun_agaci_id = (int)$_GET['id'];
-        $query = "SELECT * FROM urun_agaci WHERE urun_agaci_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $urun_agaci_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
+        $query = "SELECT * FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
+        $result = $connection->query($query);
         $product_tree = $result->fetch_assoc();
-        $stmt->close();
 
         if ($product_tree) {
             $response = ['status' => 'success', 'data' => $product_tree];
         } else {
             $response = ['status' => 'error', 'message' => 'Ürün ağacı bulunamadı.'];
         }
+    } elseif ($action === 'get_products') {
+        // Fetch all products
+        $query = "SELECT urun_kodu, urun_ismi FROM urunler ORDER BY urun_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $products = [];
+            while ($row = $result->fetch_assoc()) {
+                $products[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $products
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'get_materials') {
+        // Fetch all materials
+        $query = "SELECT malzeme_kodu, malzeme_ismi, malzeme_turu FROM malzemeler ORDER BY malzeme_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $materials = [];
+            while ($row = $result->fetch_assoc()) {
+                $materials[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $materials
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'get_essences') {
+        // Fetch all essences
+        $query = "SELECT esans_id, esans_kodu, esans_ismi FROM esanslar ORDER BY esans_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $essences = [];
+            while ($row = $result->fetch_assoc()) {
+                $essences[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $essences
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
-    $action = $_POST['action'];
+} 
+// Handle POST requests
+elseif ($request_method === 'POST') {
+    // Extract action from either JSON or form data
+    $input = file_get_contents('php://input');
+    $json = json_decode($input, true);
+    
+    if ($json && isset($json['action'])) {
+        // JSON request - use the decoded values
+        $action = $json['action'];
+        $urun_kodu = $json['urun_kodu'] ?? null;
+        $urun_ismi = $json['urun_ismi'] ?? '';
+        $bilesenin_malzeme_turu = $json['bilesenin_malzeme_turu'] ?? '';
+        $bilesen_kodu = $json['bilesen_kodu'] ?? '';
+        $bilesen_ismi = $json['bilesen_ismi'] ?? '';
+        $bilesen_miktari = isset($json['bilesen_miktari']) ? (float)$json['bilesen_miktari'] : 0;
+        $urun_agaci_id = $json['urun_agaci_id'] ?? null;
+        $agac_turu = $json['agac_turu'] ?? 'urun'; // Add agac_turu from input
+    } elseif (isset($_POST['action'])) {
+        // Form data request - use $_POST values
+        $action = $_POST['action'];
+        $urun_kodu = $_POST['urun_kodu'] ?? null;
+        $urun_ismi = $_POST['urun_ismi'] ?? '';
+        $bilesenin_malzeme_turu = $_POST['bilesenin_malzeme_turu'] ?? '';
+        $bilesen_kodu = $_POST['bilesen_kodu'] ?? '';
+        $bilesen_ismi = $_POST['bilesen_ismi'] ?? '';
+        $bilesen_miktari = isset($_POST['bilesen_miktari']) ? (float)$_POST['bilesen_miktari'] : 0;
+        $urun_agaci_id = $_POST['urun_agaci_id'] ?? null;
+        $agac_turu = $_POST['agac_turu'] ?? 'urun'; // Add agac_turu from input
+    }
 
-    // Extract data from POST
-    $urun_kodu = $_POST['urun_kodu'] ?? null;
-    $urun_ismi = $_POST['urun_ismi'] ?? '';
-    $bilesenin_malzeme_turu = $_POST['bilesenin_malzeme_turu'] ?? '';
-    $bilesen_kodu = $_POST['bilesen_kodu'] ?? '';
-    $bilesen_ismi = $_POST['bilesen_ismi'] ?? '';
-    $bilesen_miktari = isset($_POST['bilesen_miktari']) ? (float)$_POST['bilesen_miktari'] : 0;
-
-    if ($action == 'add_product_tree') {
+    if ($action === 'add_product_tree') {
         if (empty($urun_kodu) || empty($bilesen_kodu)) {
             $response = ['status' => 'error', 'message' => 'Ürün ve bileşen boş olamaz.'];
         } else {
-            $query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari) VALUES (?, ?, ?, ?, ?, ?)";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('issssd', $urun_kodu, $urun_ismi, $bilesenin_malzeme_turu, $bilesen_kodu, $bilesen_ismi, $bilesen_miktari);
+            $urun_kodu = $connection->real_escape_string($urun_kodu);
+            $urun_ismi = $connection->real_escape_string($urun_ismi);
+            $bilesenin_malzeme_turu = $connection->real_escape_string($bilesenin_malzeme_turu);
+            $bilesen_kodu = $connection->real_escape_string($bilesen_kodu);
+            $bilesen_ismi = $connection->real_escape_string($bilesen_ismi);
+            $agac_turu = $connection->real_escape_string($agac_turu);
+            
+            $query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) VALUES ('$urun_kodu', '$urun_ismi', '$bilesenin_malzeme_turu', '$bilesen_kodu', '$bilesen_ismi', '$bilesen_miktari', '$agac_turu')";
 
-            if ($stmt->execute()) {
+            if ($connection->query($query)) {
                 $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla eklendi.'];
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
             }
-            $stmt->close();
         }
-    } elseif ($action == 'update_product_tree' && isset($_POST['urun_agaci_id'])) {
-        $urun_agaci_id = (int)$_POST['urun_agaci_id'];
-        
-        if (empty($urun_kodu) || empty($bilesen_kodu)) {
-            $response = ['status' => 'error', 'message' => 'Ürün ve bileşen boş olamaz.'];
+    } elseif ($action === 'update_product_tree') {
+        // Handle both form data and JSON input for urun_agaci_id
+        if (isset($_POST['urun_agaci_id'])) {
+            $urun_agaci_id = (int)$_POST['urun_agaci_id'];
+        } elseif (isset($json['urun_agaci_id'])) {
+            $urun_agaci_id = (int)$json['urun_agaci_id'];
         } else {
-            $query = "UPDATE urun_agaci SET urun_kodu = ?, urun_ismi = ?, bilesenin_malzeme_turu = ?, bilesen_kodu = ?, bilesen_ismi = ?, bilesen_miktari = ? WHERE urun_agaci_id = ?";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('issssdi', $urun_kodu, $urun_ismi, $bilesenin_malzeme_turu, $bilesen_kodu, $bilesen_ismi, $bilesen_miktari, $urun_agaci_id);
+            $urun_agaci_id = null;
+        }
+        
+        if ($urun_agaci_id && (empty($urun_kodu) || empty($bilesen_kodu))) {
+            $response = ['status' => 'error', 'message' => 'Ürün ve bileşen boş olamaz.'];
+        } elseif ($urun_agaci_id) {
+            $urun_kodu = $connection->real_escape_string($urun_kodu);
+            $urun_ismi = $connection->real_escape_string($urun_ismi);
+            $bilesenin_malzeme_turu = $connection->real_escape_string($bilesenin_malzeme_turu);
+            $bilesen_kodu = $connection->real_escape_string($bilesen_kodu);
+            $bilesen_ismi = $connection->real_escape_string($bilesen_ismi);
+            $agac_turu = $connection->real_escape_string($agac_turu);
+            
+            $query = "UPDATE urun_agaci SET urun_kodu = '$urun_kodu', urun_ismi = '$urun_ismi', bilesenin_malzeme_turu = '$bilesenin_malzeme_turu', bilesen_kodu = '$bilesen_kodu', bilesen_ismi = '$bilesen_ismi', bilesen_miktari = '$bilesen_miktari', agac_turu = '$agac_turu' WHERE urun_agaci_id = $urun_agaci_id";
 
-            if ($stmt->execute()) {
+            if ($connection->query($query)) {
                 $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla güncellendi.'];
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
             }
-            $stmt->close();
-        }
-    } elseif ($action == 'delete_product_tree' && isset($_POST['urun_agaci_id'])) {
-        $urun_agaci_id = (int)$_POST['urun_agaci_id'];
-        
-        $query = "DELETE FROM urun_agaci WHERE urun_agaci_id = ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('i', $urun_agaci_id);
-        if ($stmt->execute()) {
-            $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla silindi.'];
         } else {
-            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+            $response = ['status' => 'error', 'message' => 'Geçersiz ürün ağacı ID.'];
         }
-        $stmt->close();
+    } elseif ($action === 'delete_product_tree') {
+        // Handle both form data and JSON input for urun_agaci_id
+        if (isset($_POST['urun_agaci_id'])) {
+            $urun_agaci_id = (int)$_POST['urun_agaci_id'];
+        } elseif (isset($json['urun_agaci_id'])) {
+            $urun_agaci_id = (int)$json['urun_agaci_id'];
+        } else {
+            $urun_agaci_id = null;
+        }
+        
+        if ($urun_agaci_id) {
+            $query = "DELETE FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
+            if ($connection->query($query)) {
+                $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla silindi.'];
+            } else {
+                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+            }
+        } else {
+            $response = ['status' => 'error', 'message' => 'Geçersiz ürün ağacı ID.'];
+        }
+    }
+}
+
+
+
+// NEW: Handle GET requests for specific agac_turu (for Vue.js)
+if ($request_method === 'GET' && isset($_GET['agac_turu'])) {
+    $agac_turu = $connection->real_escape_string($_GET['agac_turu']);
+    
+    // Validate agac_turu parameter
+    if (!in_array($agac_turu, ['urun', 'esans'])) {
+        $response = ['status' => 'error', 'message' => 'Geçersiz agac_turu parametresi.'];
+    } else {
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = '$agac_turu' ORDER BY urun_ismi, bilesen_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $product_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $product_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $product_trees
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
     }
 }
 

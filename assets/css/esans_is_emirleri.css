@@ -1,0 +1,141 @@
+/* Esans İş Emirleri Page Styles */
+
+/* General Styles */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Card Styles */
+.card {
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 1.5rem;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-header {
+    background: linear-gradient(135deg, #4a0e63, #7c2a99);
+    color: white;
+    border: none;
+    padding: 1rem 1.25rem;
+    font-weight: bold;
+}
+
+/* Table Styles */
+.table th {
+    background-color: #f1f1f1;
+    font-weight: 600;
+    color: #495057;
+    border-top: none;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(124, 42, 153, 0.05);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+}
+
+/* Button Styles */
+.btn-primary {
+    background: linear-gradient(135deg, #4a0e63, #7c2a99);
+    border: none;
+    padding: 0.375rem 0.75rem;
+    transition: all 0.3s ease;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #3a0b4d, #6a2283);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #218838);
+    border: none;
+}
+
+.btn-danger {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    border: none;
+}
+
+/* Form Styles */
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    padding: 0.375rem 0.75rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #7c2a99;
+    box-shadow: 0 0 0 0.2rem rgba(124, 42, 153, 0.25);
+}
+
+/* Modal Styles */
+.modal-content {
+    border-radius: 10px;
+    border: none;
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.5);
+}
+
+/* Alert Styles */
+.alert {
+    border-radius: 8px;
+    border: none;
+    margin-bottom: 1rem;
+}
+
+/* Badge Styles */
+.badge {
+    font-size: 0.85em;
+    padding: 0.35em 0.6em;
+}
+
+/* Table Actions */
+.actions .btn {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .table-wrapper {
+        font-size: 0.875rem;
+    }
+    
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+}
+
+/* Loading Spinner */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Form Grid */
+.form-grid {
+    display: grid;
+    grid-gap: 1rem;
+}
+
+/* Table Hover Effect */
+tr:hover {
+    transition: background-color 0.2s ease;
+}
