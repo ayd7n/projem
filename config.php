@@ -15,6 +15,9 @@ if ($connection->connect_error) {
 
 // Set charset to UTF-8
 $connection->set_charset("utf8mb4");
+$connection->query("SET NAMES 'utf8mb4'");
+$connection->query("SET CHARACTER SET utf8mb4");
+$connection->query("SET COLLATION_CONNECTION = 'utf8mb4_unicode_ci'");
 
 // Session start
 session_start();

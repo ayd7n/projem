@@ -1,5 +1,6 @@
 <?php
 require_once '../config.php';
+date_default_timezone_set('Europe/Istanbul');
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -41,6 +42,18 @@ switch ($action) {
         break;
     case 'delete_work_order':
         deleteWorkOrder();
+        break;
+    case 'start_work_order':
+        startWorkOrder();
+        break;
+    case 'revert_work_order':
+        revertWorkOrder();
+        break;
+    case 'revert_completion':
+        revertCompletion();
+        break;
+    case 'complete_work_order':
+        completeWorkOrder();
         break;
     case 'calculate_components':
         calculateComponents();
@@ -472,4 +485,310 @@ function getWorkOrderComponents() {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
+
+function startWorkOrder() {
+    global $connection;
+    
+    $id = $_POST['id'] ?? null;
+    if (!$id) {
+        echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
+        return;
+    }
+
+    try {
+        $connection->begin_transaction();
+
+        // 1. Update work order status
+        $today = date('Y-m-d');
+        $update_wo_query = "UPDATE esans_is_emirleri 
+                            SET durum = 'uretimde', 
+                                gerceklesen_baslangic_tarihi = '$today'
+                            WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
+                            AND durum = 'olusturuldu'";
+        
+        if (!$connection->query($update_wo_query)) {
+            throw new Exception("İş emri durumu güncellenirken bir hata oluştu: " . $connection->error);
+        }
+
+        if ($connection->affected_rows == 0) {
+            throw new Exception('İş emri başlatılamadı. Durumu "Oluşturuldu" olmalı veya zaten başlatılmış olabilir.');
+        }
+
+        // 2. Get components for the work order
+        $components_query = "SELECT * FROM esans_is_emri_malzeme_listesi WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
+        $components_result = $connection->query($components_query);
+        
+        if ($components_result->num_rows == 0) {
+            // If there are no components, we can just commit and return success.
+            $connection->commit();
+            echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla başlatıldı. (Bileşen bulunmuyor)']);
+            return;
+        }
+
+        $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
+        $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        // 3. Deduct component stocks
+        while ($component = $components_result->fetch_assoc()) {
+            $malzeme_kodu = $component['malzeme_kodu'];
+            $miktar = floatval($component['miktar']);
+
+            // 3a. Update material stock
+            $update_material_stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($miktar) . "' WHERE malzeme_kodu = '" . $connection->real_escape_string($malzeme_kodu) . "'";
+            if (!$connection->query($update_material_stock_query)) {
+                throw new Exception("Malzeme stok miktarı güncellenemedi: " . $connection->error);
+            }
+
+            // 3b. Log stock movement
+            $stock_out_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
+                                VALUES ('Bileşen', 
+                                        '" . $connection->real_escape_string($component['malzeme_kodu']) . "', 
+                                        '" . $connection->real_escape_string($component['malzeme_ismi']) . "', 
+                                        '" . $connection->real_escape_string($component['birim']) . "', 
+                                        '" . $connection->real_escape_string($miktar) . "', 
+                                        'Çıkış', 
+                                        'Üretime Çıkış', 
+                                        '" . $connection->real_escape_string($id) . "', 
+                                        'İş emri başlatıldı', 
+                                        '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
+                                        '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
+            if (!$connection->query($stock_out_query)) {
+                throw new Exception("Bileşen stok çıkışı yapılamadı: " . $connection->error);
+            }
+        }
+
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla başlatıldı ve bileşenler stoktan düşüldü.']);
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+}
+
+function revertWorkOrder() {
+    global $connection;
+    
+    $id = $_POST['id'] ?? null;
+    if (!$id) {
+        echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
+        return;
+    }
+
+    try {
+        $connection->begin_transaction();
+
+        // 1. Update work order status
+        $update_wo_query = "UPDATE esans_is_emirleri 
+                            SET durum = 'olusturuldu', 
+                                gerceklesen_baslangic_tarihi = NULL
+                            WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
+                            AND durum = 'uretimde'";
+        
+        if (!$connection->query($update_wo_query)) {
+            throw new Exception("İş emri durumu güncellenirken bir hata oluştu: " . $connection->error);
+        }
+
+        if ($connection->affected_rows == 0) {
+            throw new Exception('İş emri geri alınamadı. Durumu "Üretimde" olmalı.');
+        }
+
+        // 2. Get components for the work order
+        $components_query = "SELECT * FROM esans_is_emri_malzeme_listesi WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
+        $components_result = $connection->query($components_query);
+        
+        if ($components_result->num_rows == 0) {
+            $connection->commit();
+            echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla "Oluşturuldu" durumuna geri alındı. (Bileşen bulunmuyor)']);
+            return;
+        }
+
+        $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
+        $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        // 3. Return component stocks
+        while ($component = $components_result->fetch_assoc()) {
+            $malzeme_kodu = $component['malzeme_kodu'];
+            $miktar = floatval($component['miktar']);
+
+            // 3a. Update material stock
+            $update_material_stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($miktar) . "' WHERE malzeme_kodu = '" . $connection->real_escape_string($malzeme_kodu) . "'";
+            if (!$connection->query($update_material_stock_query)) {
+                throw new Exception("Malzeme stok miktarı iade edilemedi: " . $connection->error);
+            }
+
+            // 3b. Log stock movement
+            $stock_in_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
+                               VALUES ('Bileşen', 
+                                       '" . $connection->real_escape_string($component['malzeme_kodu']) . "', 
+                                       '" . $connection->real_escape_string($component['malzeme_ismi']) . "', 
+                                       '" . $connection->real_escape_string($component['birim']) . "', 
+                                       '" . $connection->real_escape_string($miktar) . "', 
+                                       'Giriş', 
+                                       'Üretimden İade', 
+                                       '" . $connection->real_escape_string($id) . "', 
+                                       'Üretimdeki iş emri geri alındı', 
+                                       '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
+                                       '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
+            if (!$connection->query($stock_in_query)) {
+                throw new Exception("Bileşen stok iadesi yapılamadı: " . $connection->error);
+            }
+        }
+
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla "Oluşturuldu" durumuna geri alındı ve bileşenler stoğa iade edildi.']);
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+}
+
+function completeWorkOrder() {
+    global $connection;
+    
+    $input = json_decode(file_get_contents('php://input'), true);
+    
+    $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
+    $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
+    $aciklama = $input['aciklama'] ?? '';
+    
+    if (!$is_emri_numarasi || $tamamlanan_miktar <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Geçersiz veri. İş emri numarası ve tamamlanan miktar gereklidir.']);
+        return;
+    }
+
+    try {
+        // Begin transaction
+        $connection->begin_transaction();
+
+        // 1. Get work order details
+        $work_order_query = "SELECT * FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "' AND durum = 'uretimde' FOR UPDATE";
+        $work_order_result = $connection->query($work_order_query);
+        if (!$work_order_result || $work_order_result->num_rows == 0) {
+            throw new Exception('İş emri bulunamadı veya durumu "Üretimde" değil.');
+        }
+        $work_order = $work_order_result->fetch_assoc();
+
+        // 2. Update work order status
+        $today = date('Y-m-d');
+        $update_wo_query = "UPDATE esans_is_emirleri SET 
+                            durum = 'tamamlandi', 
+                            tamamlanan_miktar = '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
+                            gerceklesen_bitis_tarihi = '$today', 
+                            aciklama = CONCAT(aciklama, ' " . $connection->real_escape_string($aciklama) . "')
+                          WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
+        if (!$connection->query($update_wo_query)) {
+            throw new Exception('İş emri güncellenirken hata oluştu: ' . $connection->error);
+        }
+
+        // 3. Increase stock for the produced essence (LOG)
+        $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
+        $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        $stock_in_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
+                           VALUES ('Esans', 
+                                   '" . $connection->real_escape_string($work_order['esans_kodu']) . "', 
+                                   '" . $connection->real_escape_string($work_order['esans_ismi']) . "', 
+                                   '" . $connection->real_escape_string($work_order['birim']) . "', 
+                                   '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
+                                   'Giriş', 
+                                   'Üretimden Giriş', 
+                                   '" . $connection->real_escape_string($is_emri_numarasi) . "', 
+                                   'İş emri tamamlama', 
+                                   '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
+                                   '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
+        if (!$connection->query($stock_in_query)) {
+            throw new Exception('Esans stok girişi yapılamadı: ' . $connection->error);
+        }
+
+        // 4. UPDATE essence stock quantity
+        $update_essence_stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($tamamlanan_miktar) . "' WHERE esans_kodu = '" . $connection->real_escape_string($work_order['esans_kodu']) . "'";
+        if (!$connection->query($update_essence_stock_query)) {
+            throw new Exception('Esans stok miktarı güncellenemedi: ' . $connection->error);
+        }
+
+        // Commit transaction
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla tamamlandı ve üretilen esans stoğa eklendi.']);
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+}
+
+function revertCompletion() {
+    global $connection;
+
+    $is_emri_numarasi = $_POST['id'] ?? null;
+
+    if (!$is_emri_numarasi) {
+        echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
+        return;
+    }
+
+    try {
+        // Begin transaction
+        $connection->begin_transaction();
+
+        // 1. Get work order details, must be 'tamamlandi'
+        $work_order_query = "SELECT * FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "' AND durum = 'tamamlandi' FOR UPDATE";
+        $work_order_result = $connection->query($work_order_query);
+        if (!$work_order_result || $work_order_result->num_rows == 0) {
+            throw new Exception('İş emri bulunamadı veya durumu "Tamamlandı" değil.');
+        }
+        $work_order = $work_order_result->fetch_assoc();
+        $tamamlanan_miktar = floatval($work_order['tamamlanan_miktar']);
+
+        if ($tamamlanan_miktar <= 0) {
+            throw new Exception('Geri alınacak bir üretim miktarı bulunmuyor.');
+        }
+
+        $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
+        $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        // 2. Decrease stock for the produced essence
+        $update_essence_stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($tamamlanan_miktar) . "' WHERE esans_kodu = '" . $connection->real_escape_string($work_order['esans_kodu']) . "'";
+        if (!$connection->query($update_essence_stock_query)) {
+            throw new Exception('Esans stok miktarı güncellenirken hata oluştu: ' . $connection->error);
+        }
+
+        // 3. Log the stock reversal for the essence
+        $stock_out_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
+                            VALUES ('Esans', 
+                                    '" . $connection->real_escape_string($work_order['esans_kodu']) . "', 
+                                    '" . $connection->real_escape_string($work_order['esans_ismi']) . "', 
+                                    '" . $connection->real_escape_string($work_order['birim']) . "', 
+                                    '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
+                                    'Çıkış', 
+                                    'Üretim İptal', 
+                                    '" . $connection->real_escape_string($is_emri_numarasi) . "', 
+                                    'Tamamlanan iş emri geri alındı', 
+                                    '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
+                                    '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
+        if (!$connection->query($stock_out_query)) {
+            throw new Exception('Esans stok iade (çıkış) kaydı oluşturulamadı: ' . $connection->error);
+        }
+
+        // 4. Update work order status
+        $update_wo_query = "UPDATE esans_is_emirleri SET 
+                            durum = 'uretimde', 
+                            tamamlanan_miktar = 0,
+                            gerceklesen_bitis_tarihi = NULL
+                          WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
+        if (!$connection->query($update_wo_query)) {
+            throw new Exception('İş emri durumu geri alınırken hata oluştu: ' . $connection->error);
+        }
+
+        // Commit transaction
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'İş emri tamamlama durumu başarıyla geri alındı. Üretilen esans stoktan düşüldü.']);
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
+}
+
 ?>

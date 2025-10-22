@@ -169,6 +169,7 @@ $tanks_result = $connection->query($tanks_query);
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
         }
         
         .table th i {
@@ -372,14 +373,21 @@ $tanks_result = $connection->query($tanks_query);
                             <tr>
                                 <th><i class="fas fa-cogs"></i> İşlemler</th>
                                 <th><i class="fas fa-hashtag"></i> İş Emri No</th>
-                                <th><i class="fas fa-calendar"></i> Oluşturulma Tarihi</th>
-                                <th><i class="fas fa-flask"></i> Esans</th>
-                                <th><i class="fas fa-weight"></i> Planlanan Miktar</th>
-                                <th><i class="fas fa-ruler"></i> Birim</th>
-                                <th><i class="fas fa-hourglass-half"></i> Başlangıç Tarihi</th>
-                                <th><i class="fas fa-flag-checkered"></i> Bitiş Tarihi</th>
-                                <th><i class="fas fa-tint"></i> Tank</th>
                                 <th><i class="fas fa-info-circle"></i> Durum</th>
+                                <th><i class="fas fa-flask"></i> Esans</th>
+                                <th><i class="fas fa-tint"></i> Tank</th>
+                                <th><i class="fas fa-weight"></i> Planlanan Miktar</th>
+                                <th><i class="fas fa-check"></i> Tamamlanan Miktar</th>
+                                <th><i class="fas fa-exclamation-triangle"></i> Eksik Miktar</th>
+                                <th><i class="fas fa-ruler"></i> Birim</th>
+                                <th><i class="fas fa-calendar-alt"></i> Oluşturulma Tarihi</th>
+                                <th><i class="fas fa-user"></i> Oluşturan</th>
+                                <th><i class="fas fa-hourglass-start"></i> Planlanan Başlangıç</th>
+                                <th><i class="fas fa-hourglass-end"></i> Planlanan Bitiş</th>
+                                <th><i class="fas fa-play-circle"></i> Gerçekleşen Başlangıç</th>
+                                <th><i class="fas fa-check-circle"></i> Gerçekleşen Bitiş</th>
+                                <th><i class="fas fa-hourglass-half"></i> Demlenme Süresi (Gün)</th>
+                                <th><i class="fas fa-comment"></i> Açıklama</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -387,24 +395,40 @@ $tanks_result = $connection->query($tanks_query);
                                 <?php while ($work_order = $work_orders_result->fetch_assoc()): ?>
                                     <tr>
                                         <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-info btn-sm details-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>">
+                                            <?php if ($work_order['durum'] === 'olusturuldu'): ?>
+                                                <button class="btn btn-success btn-sm start-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="İş Emrini Başlat">
+                                                    <i class="fas fa-play"></i>
+                                                </button>
+                                            <?php elseif ($work_order['durum'] === 'uretimde'): ?>
+                                                <button class="btn btn-warning btn-sm revert-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Üretimi Durdur/Geri Al">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                                <button class="btn btn-success btn-sm complete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="İş Emrini Tamamla">
+                                                    <i class="fas fa-check-square"></i>
+                                                </button>
+                                            <?php elseif ($work_order['durum'] === 'tamamlandi'): ?>
+                                                <button class="btn btn-warning btn-sm revert-completion-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Tamamlamayı Geri Al">
+                                                    <i class="fas fa-history"></i>
+                                                </button>
+                                            <?php endif; ?>
+
+                                            <?php if ($work_order['durum'] !== 'tamamlandi' && $work_order['durum'] !== 'iptal'): ?>
+                                                <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Düzenle">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            <?php endif; ?>
+
+                                            <button class="btn btn-info btn-sm details-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Detaylar">
                                                 <i class="fas fa-list"></i>
                                             </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
+
+                                            <?php if ($work_order['durum'] !== 'tamamlandi'): ?>
+                                                <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Sil">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            <?php endif; ?>
                                         </td>
                                         <td><?php echo $work_order['is_emri_numarasi']; ?></td>
-                                        <td><?php echo $work_order['olusturulma_tarihi']; ?></td>
-                                        <td><strong><?php echo htmlspecialchars($work_order['esans_kodu'] . ' - ' . $work_order['esans_ismi']); ?></strong></td>
-                                        <td><?php echo number_format($work_order['planlanan_miktar'], 2); ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['birim']); ?></td>
-                                        <td><?php echo $work_order['planlanan_baslangic_tarihi']; ?></td>
-                                        <td><?php echo $work_order['planlanan_bitis_tarihi']; ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['tank_kodu'] . ' - ' . $work_order['tank_ismi']); ?></td>
                                         <td>
                                             <span class="status-badge badge-<?php echo $work_order['durum'] === 'olusturuldu' ? 'secondary' : ($work_order['durum'] === 'uretimde' ? 'warning' : ($work_order['durum'] === 'tamamlandi' ? 'success' : 'danger')); ?>">
                                                 <?php 
@@ -415,11 +439,25 @@ $tanks_result = $connection->query($tanks_query);
                                                 ?>
                                             </span>
                                         </td>
+                                        <td><strong><?php echo htmlspecialchars($work_order['esans_kodu'] . ' - ' . $work_order['esans_ismi']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($work_order['tank_kodu'] . ' - ' . $work_order['tank_ismi']); ?></td>
+                                        <td><?php echo number_format($work_order['planlanan_miktar'], 2); ?></td>
+                                        <td><?php echo number_format($work_order['tamamlanan_miktar'], 2); ?></td>
+                                        <td><?php echo number_format($work_order['eksik_miktar_toplami'], 2); ?></td>
+                                        <td><?php echo htmlspecialchars($work_order['birim']); ?></td>
+                                        <td><?php echo $work_order['olusturulma_tarihi']; ?></td>
+                                        <td><?php echo htmlspecialchars($work_order['olusturan']); ?></td>
+                                        <td><?php echo $work_order['planlanan_baslangic_tarihi']; ?></td>
+                                        <td><?php echo $work_order['planlanan_bitis_tarihi']; ?></td>
+                                        <td><?php echo $work_order['gerceklesen_baslangic_tarihi']; ?></td>
+                                        <td><?php echo $work_order['gerceklesen_bitis_tarihi']; ?></td>
+                                        <td><?php echo htmlspecialchars($work_order['demlenme_suresi_gun']); ?></td>
+                                        <td><?php echo htmlspecialchars($work_order['aciklama']); ?></td>
                                     </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="10" class="text-center p-4">Henüz kayıtlı esans iş emri bulunmuyor.</td>
+                                    <td colspan="17" class="text-center p-4">Henüz kayıtlı esans iş emri bulunmuyor.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -605,6 +643,42 @@ $tanks_result = $connection->query($tanks_query);
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Kapat</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Work Order Modal -->
+    <div class="modal fade" id="completeWorkOrderModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <form id="completeWorkOrderForm">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="fas fa-check-square"></i> İş Emrini Tamamla</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <input type="hidden" id="complete_is_emri_numarasi" name="is_emri_numarasi">
+                        <h5>İş Emri Bilgileri</h5>
+                        <p><strong>İş Emri No:</strong> <span id="complete_wo_id"></span></p>
+                        <p><strong>Esans:</strong> <span id="complete_wo_essence"></span></p>
+                        <p><strong>Planlanan Miktar:</strong> <span id="complete_wo_planned_qty"></span></p>
+                        <hr>
+                        <div class="form-group">
+                            <label for="tamamlanan_miktar"><strong>Gerçekleşen Miktar *</strong></label>
+                            <input type="number" step="0.01" class="form-control" id="tamamlanan_miktar" name="tamamlanan_miktar" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="tamamlama_aciklama">Açıklama</label>
+                            <textarea class="form-control" id="tamamlama_aciklama" name="aciklama" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Üretimi Tamamla ve Stokları Güncelle</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -899,7 +973,7 @@ $tanks_result = $connection->query($tanks_query);
         });
 
         // Handle work order deletion
-        $('.delete-btn').on('click', function() {
+        $(document).on('click', '.delete-btn', function() {
             var workOrderId = $(this).data('id');
             
             if (confirm('Bu esans iş emrini silmek istediğinizden emin misiniz?')) {
@@ -927,18 +1001,12 @@ $tanks_result = $connection->query($tanks_query);
                 });
             }
         });
-        
-        // Handle materials details button click
-        $(document).on('click', '.details-btn', function() {
+
+        // Handle start work order
+        $(document).on('click', '.start-btn', function() {
             var workOrderId = $(this).data('id');
-            
-            // Show the modal and set loading state
-            $('#materialsModalTitle').text('Malzeme Detayları - İş Emri #' + workOrderId);
-            $('#materialsDetailsTableBody').empty();
-            $('#materialsDetailsPlaceholder').text('Malzeme detayları yükleniyor...').show();
-            $('#materialsDetailsModal').modal('show');
-            
-            // Fetch materials details for this work order
+
+            // First, get the list of components to show in the confirmation dialog
             $.ajax({
                 url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
                 type: 'GET',
@@ -946,38 +1014,173 @@ $tanks_result = $connection->query($tanks_query);
                 success: function(response) {
                     if (response.status === 'success') {
                         var components = response.data;
+                        var confirmationMessage = 'Bu iş emrini başlatmak istediğinizden emin misiniz?\n\n';
+
                         if (components && components.length > 0) {
-                            var tbody = $('#materialsDetailsTableBody');
-                            tbody.empty();
-                            
+                            confirmationMessage += 'Aşağıdaki malzemeler stoktan düşülecektir:\n';
                             $.each(components, function(index, component) {
-                                var row = `
-                                    <tr>
-                                        <td>${component.malzeme_kodu}</td>
-                                        <td>${component.malzeme_ismi}</td>
-                                        <td>${component.malzeme_turu}</td>
-                                        <td>${component.miktar}</td>
-                                        <td>${component.birim}</td>
-                                    </tr>
-                                `;
-                                tbody.append(row);
+                                confirmationMessage += ` - ${component.malzeme_ismi}: ${parseFloat(component.miktar).toFixed(2)} ${component.birim}\n`;
                             });
-                            
-                            $('#materialsDetailsPlaceholder').hide();
                         } else {
-                            $('#materialsDetailsTableBody').empty();
-                            $('#materialsDetailsPlaceholder').text('Bu iş emri için tanimli malzeme bulunmamaktadır.').show();
+                            confirmationMessage += 'Bu iş emri için stoktan düşülecek malzeme bulunmuyor.';
+                        }
+
+                        if (confirm(confirmationMessage)) {
+                            // If confirmed, proceed to start the work order
+                            $.ajax({
+                                url: 'api_islemleri/esans_is_emirleri_islemler.php',
+                                type: 'POST',
+                                data: {
+                                    action: 'start_work_order',
+                                    id: workOrderId
+                                },
+                                dataType: 'json',
+                                success: function(startResponse) {
+                                    if (startResponse.status === 'success') {
+                                        showAlert(startResponse.message, 'success');
+                                        setTimeout(function() {
+                                            location.reload();
+                                        }, 1000);
+                                    } else {
+                                        showAlert(startResponse.message, 'danger');
+                                    }
+                                },
+                                error: function() {
+                                    showAlert('İş emri başlatılırken bir hata oluştu.', 'danger');
+                                }
+                            });
                         }
                     } else {
-                        $('#materialsDetailsTableBody').empty();
-                        $('#materialsDetailsPlaceholder').text('Malzeme detayları alınırken bir hata oluştu: ' + response.message).show();
+                        showAlert('Onay için bileşen listesi alınamadı: ' + response.message, 'danger');
                     }
                 },
                 error: function() {
-                    $('#materialsDetailsTableBody').empty();
-                    $('#materialsDetailsPlaceholder').text('Malzeme detayları alınırken bir hata oluştu.').show();
+                    showAlert('Onay için bileşen listesi alınırken bir sunucu hatası oluştu.', 'danger');
                 }
             });
+        });
+
+        $(document).on('click', '.revert-btn', function() {
+            var workOrderId = $(this).data('id');
+            
+            if (confirm('Bu iş emrini durdurup "Oluşturuldu" durumuna geri almak istediğinizden emin misiniz?')) {
+                $.ajax({
+                    url: 'api_islemleri/esans_is_emirleri_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'revert_work_order',
+                        id: workOrderId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    }
+                });
+            }
+        });
+
+        // Handle complete button click to open modal
+        $(document).on('click', '.complete-btn', function() {
+            var workOrderId = $(this).data('id');
+
+            $.ajax({
+                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order&id=' + workOrderId,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var workOrder = response.data;
+                        $('#complete_wo_id').text(workOrder.is_emri_numarasi);
+                        $('#complete_wo_essence').text(workOrder.esans_kodu + ' - ' + workOrder.esans_ismi);
+                        $('#complete_wo_planned_qty').text(parseFloat(workOrder.planlanan_miktar).toFixed(2) + ' ' + workOrder.birim);
+                        
+                        $('#complete_is_emri_numarasi').val(workOrder.is_emri_numarasi);
+                        $('#tamamlanan_miktar').val(parseFloat(workOrder.planlanan_miktar).toFixed(2));
+
+                        $('#completeWorkOrderModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İş emri detayları alınırken bir hata oluştu.', 'danger');
+                }
+            });
+        });
+
+        // Handle the submission of the complete work order form
+        $('#completeWorkOrderForm').on('submit', function(e) {
+            e.preventDefault();
+
+            var formData = {
+                action: 'complete_work_order',
+                is_emri_numarasi: $('#complete_is_emri_numarasi').val(),
+                tamamlanan_miktar: $('#tamamlanan_miktar').val(),
+                aciklama: $('#tamamlama_aciklama').val()
+            };
+
+            $.ajax({
+                url: 'api_islemleri/esans_is_emirleri_islemler.php',
+                type: 'POST',
+                data: JSON.stringify(formData),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        $('#completeWorkOrderModal').modal('hide');
+                        showAlert(response.message, 'success');
+                        setTimeout(function() {
+                            location.reload();
+                        }, 1000);
+                    } else {
+                        // Show error inside the modal
+                        alert('Hata: ' + response.message);
+                    }
+                },
+                error: function() {
+                    alert('İşlem sırasında sunucu taraflı bir hata oluştu.');
+                }
+            });
+        });
+
+        // Handle revert completion
+        $(document).on('click', '.revert-completion-btn', function() {
+            var workOrderId = $(this).data('id');
+            
+            if (confirm('Bu iş emrinin tamamlanma durumunu geri almak istediğinizden emin misiniz? Bu işlem ilgili stok hareketlerini tersine çevirecektir.')) {
+                $.ajax({
+                    url: 'api_islemleri/esans_is_emirleri_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'revert_completion',
+                        id: workOrderId
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            setTimeout(function() {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Geri alma işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
+            }
         });
     });
     </script>
