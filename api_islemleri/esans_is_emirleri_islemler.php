@@ -309,8 +309,13 @@ function updateWorkOrder() {
 function deleteWorkOrder() {
     global $connection;
     
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = $_POST;
+    }
+    
     try {
-        $id = $_POST['id'] ?? null;
+        $id = $input['id'] ?? null;
         
         if (!$id) {
             throw new Exception('Work order ID is required');
@@ -489,7 +494,12 @@ function getWorkOrderComponents() {
 function startWorkOrder() {
     global $connection;
     
-    $id = $_POST['id'] ?? null;
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = $_POST;
+    }
+    
+    $id = $input['id'] ?? null;
     if (!$id) {
         echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
         return;
@@ -569,7 +579,12 @@ function startWorkOrder() {
 function revertWorkOrder() {
     global $connection;
     
-    $id = $_POST['id'] ?? null;
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = $_POST;
+    }
+    
+    $id = $input['id'] ?? null;
     if (!$id) {
         echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
         return;
@@ -721,7 +736,12 @@ function completeWorkOrder() {
 function revertCompletion() {
     global $connection;
 
-    $is_emri_numarasi = $_POST['id'] ?? null;
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input) {
+        $input = $_POST;
+    }
+    
+    $is_emri_numarasi = $input['id'] ?? null;
 
     if (!$is_emri_numarasi) {
         echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);

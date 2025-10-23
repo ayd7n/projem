@@ -43,234 +43,7 @@ $tanks_result = $connection->query($tanks_query);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
-            --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-            --transition: all 0.3s ease;
-        }
-        html {
-            font-size: 15px;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-        }
-        .main-content {
-            padding: 20px;
-        }
-        .page-header {
-            margin-bottom: 25px;
-        }
-        .page-header h1 {
-            font-size: 1.7rem;
-            font-weight: 700;
-            margin-bottom: 5px;
-            color: var(--text-primary);
-        }
-        .page-header p {
-            color: var(--text-secondary);
-            font-size: 1rem;
-        }
-        .card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        .card-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .card-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        .btn {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: transform 0.2s, box-shadow 0.2s;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.825rem;
-        }
-        .btn:hover {
-             transform: translateY(-2px);
-        }
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-        .btn-primary:hover {
-            background-color: var(--secondary);
-            box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
-        }
-        .add-btn {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            padding: 0;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0;
-        }
-        .btn-success {
-            background-color: var(--success);
-            color: white;
-        }
-        .btn-danger {
-            background-color: var(--danger);
-            color: white;
-        }
-        .alert {
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            border-left: 5px solid;
-        }
-        .alert-danger {
-            background-color: #fff5f5;
-            color: #c53030;
-            border-color: #f56565;
-        }
-        .alert-success {
-            background-color: #f0fff4;
-            color: #2f855a;
-            border-color: #48bb78;
-        }
-        .table th {
-            border-top: none;
-            border-bottom: 2px solid var(--border-color);
-            font-weight: 700;
-            color: var(--text-primary);
-            white-space: nowrap;
-        }
-        
-        .table th i {
-            margin-right: 6px;
-        }
-        
-        .table td {
-            vertical-align: middle;
-            color: var(--text-secondary);
-        }
-        
-        .actions {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-        }
-        
-        .actions .btn {
-            padding: 6px 10px;
-            border-radius: 18px;
-        }
-        
-        .no-records-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .form-control:disabled {
-            background-color: #f8f9fa;
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        
-        .mobile-menu-btn {
-            display: none;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            #workOrderModal {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 320px;
-                height: 100%;
-                z-index: 1050; /* Higher than navbar */
-                border-radius: 0;
-                box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-                transform: translateX(100%);
-                transition: transform 0.3s ease;
-                overflow-y: auto;
-            }
-            #workOrderModal.show {
-                transform: translateX(0);
-            }
-        }
-        
-        .form-group {
-            margin-bottom: 1rem;
-        }
-        
-        .form-control {
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            padding: 0.6rem 1rem;
-            font-size: 0.9rem;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-
-        @media (min-width: 1200px) {
-            #workOrderModal .modal-xl {
-                max-width: 95%;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="css/esans_is_emirleri.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -304,17 +77,19 @@ $tanks_result = $connection->query($tanks_query);
         </div>
     </nav>
 
+    <div id="app">
+
     <!-- Information Modal -->
-    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" role="document">
+    <div class="modal fade" :class="{show: showInfoModal}" v-if="showInfoModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showInfoModal = false">
+        <div class="modal-dialog modal-xl" @click.stop role="document">
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white;">
                     <h5 class="modal-title"><i class="fas fa-info-circle"></i> Esans İş Emirleri Sistemi Bilgileri</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" @click="showInfoModal = false" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
+                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
                     <div class="container-fluid">
                         <!-- System Overview -->
                         <div class="section">
@@ -783,7 +558,7 @@ $tanks_result = $connection->query($tanks_query);
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Kapat</button>
+                    <button type="button" class="btn btn-secondary" @click="showInfoModal = false"><i class="fas fa-times"></i> Kapat</button>
                 </div>
             </div>
         </div>
@@ -800,12 +575,18 @@ $tanks_result = $connection->query($tanks_query);
             </div>
         </div>
 
-        <div id="alert-placeholder"></div>
+        <div v-if="alertMessage" :class="`alert alert-${alertType} alert-dismissible fade show`" role="alert">
+            <i :class="alertType === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+            {{ alertMessage }}
+            <button type="button" class="close" @click="closeAlert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
 
         <div class="row">
             <div class="col-md-12">
-                <button id="addWorkOrderBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Is Emri Olustur</button>
-                <button id="infoButton" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
+                <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Is Emri Olustur</button>
+                <button @click="showInfoModal = true" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
             </div>
         </div>
 
@@ -839,80 +620,89 @@ $tanks_result = $connection->query($tanks_query);
                                 <th><i class="fas fa-comment"></i> Aciklama</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if ($work_orders_result && $work_orders_result->num_rows > 0): ?>
-                                <?php while ($work_order = $work_orders_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="actions">
-                                            <?php if ($work_order['durum'] === 'olusturuldu'): ?>
-                                                <button class="btn btn-success btn-sm start-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Is Emrini Baslat">
-                                                    <i class="fas fa-play"></i>
-                                                </button>
-                                            <?php elseif ($work_order['durum'] === 'uretimde'): ?>
-                                                <button class="btn btn-warning btn-sm revert-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Uretimi Durdur/Geri Al">
-                                                    <i class="fas fa-undo"></i>
-                                                </button>
-                                                <button class="btn btn-success btn-sm complete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Is Emrini Tamamla">
-                                                    <i class="fas fa-check-square"></i>
-                                                </button>
-                                            <?php elseif ($work_order['durum'] === 'tamamlandi'): ?>
-                                                <button class="btn btn-warning btn-sm revert-completion-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Tamamlamayi Geri Al">
-                                                    <i class="fas fa-history"></i>
-                                                </button>
-                                            <?php endif; ?>
-
-                                            <?php if ($work_order['durum'] !== 'tamamlandi' && $work_order['durum'] !== 'iptal'): ?>
-                                                <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Duzenle">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            <?php endif; ?>
-
-                                            <button class="btn btn-info btn-sm details-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Detaylar">
-                                                <i class="fas fa-list"></i>
+                        <tbody v-if="workOrders">
+                            <tr v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
+                                <td class="actions">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-cog"></i> Islemler
+                                        </button>
+                                        <div class="dropdown-menu">
+                                            <button 
+                                                v-if="workOrder && workOrder.durum === 'olusturuldu'" 
+                                                @click="startWorkOrder(workOrder.is_emri_numarasi)" 
+                                                class="dropdown-item" 
+                                                title="Is Emrini Baslat">
+                                                <i class="fas fa-play text-success"></i> Is Emrini Baslat
                                             </button>
-
-                                            <button class="btn btn-secondary btn-sm print-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Yazdır">
-                                                <i class="fas fa-print"></i>
+                                            <button 
+                                                v-if="workOrder && workOrder.durum === 'uretimde'" 
+                                                @click="openCompleteModal(workOrder.is_emri_numarasi)" 
+                                                class="dropdown-item" 
+                                                title="Is Emrini Tamamla">
+                                                <i class="fas fa-check-square text-success"></i> Is Emrini Tamamla
                                             </button>
+                                            
+                                            <button 
+                                                @click="openEditModal(workOrder.is_emri_numarasi)" 
+                                                v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'" 
+                                                class="dropdown-item" 
+                                                title="Duzenle">
+                                                <i class="fas fa-edit text-primary"></i> Duzenle
+                                            </button>
+                                            <button 
+                                                @click="showWorkOrderDetails(workOrder.is_emri_numarasi)" 
+                                                class="dropdown-item" 
+                                                title="Detaylar">
+                                                <i class="fas fa-list text-info"></i> Detaylar
+                                            </button>
+                                            <button 
+                                                @click="printWorkOrder(workOrder.is_emri_numarasi)" 
+                                                class="dropdown-item" 
+                                                title="Yazdır">
+                                                <i class="fas fa-print text-secondary"></i> Yazdir
+                                            </button>
+                                            <button 
+                                                @click="revertWorkOrder(workOrder.is_emri_numarasi)" 
+                                                v-if="workOrder && workOrder.durum === 'uretimde'" 
+                                                class="dropdown-item" 
+                                                title="Uretimi Durdur/Geri Al">
+                                                <i class="fas fa-undo text-warning"></i> Uretimi Durdur/Geri Al
+                                            </button>
+                                            <button 
+                                                @click="deleteWorkOrder(workOrder.is_emri_numarasi)" 
+                                                v-if="workOrder && workOrder.durum !== 'tamamlandi'" 
+                                                class="dropdown-item text-danger" 
+                                                title="Sil">
+                                                <i class="fas fa-trash"></i> Sil
+                                            </button>
+                                        </div>
+                                    </div>
 
-                                            <?php if ($work_order['durum'] !== 'tamamlandi'): ?>
-                                                <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Sil">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                        </td>
-                                        <td><?php echo $work_order['is_emri_numarasi']; ?></td>
-                                        <td>
-                                            <span class="status-badge badge-<?php echo $work_order['durum'] === 'olusturuldu' ? 'secondary' : ($work_order['durum'] === 'uretimde' ? 'warning' : ($work_order['durum'] === 'tamamlandi' ? 'success' : 'danger')); ?>">
-                                                <?php 
-                                                if($work_order['durum'] === 'olusturuldu') echo 'Olusturuldu';
-                                                elseif($work_order['durum'] === 'uretimde') echo 'Uretimde';
-                                                elseif($work_order['durum'] === 'tamamlandi') echo 'Tamamlandi';
-                                                else echo 'Iptal';
-                                                ?>
-                                            </span>
-                                        </td>
-                                        <td><strong><?php echo htmlspecialchars($work_order['esans_kodu'] . ' - ' . $work_order['esans_ismi']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($work_order['tank_kodu'] . ' - ' . $work_order['tank_ismi']); ?></td>
-                                        <td><?php echo number_format($work_order['planlanan_miktar'], 2); ?></td>
-                                        <td><?php echo number_format($work_order['tamamlanan_miktar'], 2); ?></td>
-                                        <td><?php echo number_format($work_order['eksik_miktar_toplami'], 2); ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['birim']); ?></td>
-                                        <td><?php echo $work_order['olusturulma_tarihi']; ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['olusturan']); ?></td>
-                                        <td><?php echo $work_order['planlanan_baslangic_tarihi']; ?></td>
-                                        <td><?php echo $work_order['planlanan_bitis_tarihi']; ?></td>
-                                        <td><?php echo $work_order['gerceklesen_baslangic_tarihi']; ?></td>
-                                        <td><?php echo $work_order['gerceklesen_bitis_tarihi']; ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['demlenme_suresi_gun']); ?></td>
-                                        <td><?php echo htmlspecialchars($work_order['aciklama']); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="17" class="text-center p-4">Henüz kayitli esans is emri bulunmuyor.</td>
-                                </tr>
-                            <?php endif; ?>
+                                <td>{{ workOrder.is_emri_numarasi }}</td>
+                                <td>
+                                    <span :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
+                                        {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' : 'Iptal')) }}
+                                    </span>
+                                </td>
+                                <td><strong>{{ workOrder.esans_kodu }} - {{ workOrder.esans_ismi }}</strong></td>
+                                <td>{{ workOrder.tank_kodu }} - {{ workOrder.tank_ismi }}</td>
+                                <td>{{ parseFloat(workOrder.planlanan_miktar).toFixed(2) }}</td>
+                                <td>{{ parseFloat(workOrder.tamamlanan_miktar).toFixed(2) }}</td>
+                                <td>{{ parseFloat(workOrder.eksik_miktar_toplami).toFixed(2) }}</td>
+                                <td>{{ workOrder.birim }}</td>
+                                <td>{{ workOrder.olusturulma_tarihi }}</td>
+                                <td>{{ workOrder.olusturan }}</td>
+                                <td>{{ workOrder.planlanan_baslangic_tarihi }}</td>
+                                <td>{{ workOrder.planlanan_bitis_tarihi }}</td>
+                                <td>{{ workOrder.gerceklesen_baslangic_tarihi }}</td>
+                                <td>{{ workOrder.gerceklesen_bitis_tarihi }}</td>
+                                <td>{{ workOrder.demlenme_suresi_gun }}</td>
+                                <td>{{ workOrder.aciklama }}</td>
+                            </tr>
+                            <tr v-if="workOrders.length === 0">
+                                <td colspan="17" class="text-center p-4">Henüz kayitli esans is emri bulunmuyor.</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -921,1045 +711,247 @@ $tanks_result = $connection->query($tanks_query);
     </div>
 
     <!-- Work Order Modal -->
-    <div class="modal fade" id="workOrderModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" role="document">
+    <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
+        <div class="modal-dialog modal-xl" @click.stop>
             <div class="modal-content">
-                <form id="workOrderForm">
-                    <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                        <h5 class="modal-title" id="modalTitle"><i class="fas fa-bolt"></i> Esans Is Emri Formu</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row">
-                            <div class="col-lg-7">
-                                <input type="hidden" id="is_emri_numarasi" name="is_emri_numarasi">
-                                <input type="hidden" id="action" name="action">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="esans_kodu">Esans *</label>
-                                            <select class="form-control" id="esans_kodu" name="esans_kodu" required>
-                                                <option value="">Esans Secin</option>
-                                                <?php while($essence = $essences_result->fetch_assoc()): ?>
-                                                    <option value="<?php echo htmlspecialchars($essence['esans_kodu']); ?>" data-unit="<?php echo htmlspecialchars($essence['birim']); ?>" data-fermentation="<?php echo htmlspecialchars($essence['demlenme_suresi_gun']); ?>">
-                                                        <?php echo htmlspecialchars($essence['esans_kodu'] . ' - ' . $essence['esans_ismi']); ?>
-                                                    </option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="planlanan_miktar">Planlanan Miktar *</label>
-                                            <input type="number" step="0.01" class="form-control" id="planlanan_miktar" name="planlanan_miktar" required>
-                                        </div>
+                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                    <h5 class="modal-title"><i class="fas fa-bolt"></i> {{ modalTitle }}</h5>
+                    <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-7">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="esans_kodu">Esans *</label>
+                                        <select class="form-control" v-model="selectedWorkOrder.esans_kodu" @change="updateEssenceDetails" required>
+                                            <option value="">Esans Secin</option>
+                                            <option v-for="essence in essences" :value="essence.esans_kodu" :key="essence.esans_kodu">
+                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                            </option>
+                                        </select>
                                     </div>
                                 </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="birim">Birim</label>
-                                            <input type="text" class="form-control" id="birim" name="birim" readonly>
-                                        </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="planlanan_miktar">Planlanan Miktar *</label>
+                                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.planlanan_miktar" @input="calculateComponents" required>
                                     </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="tank_kodu">Tank *</label>
-                                            <select class="form-control" id="tank_kodu" name="tank_kodu" required>
-                                                <option value="">Tank Secin</option>
-                                                <?php 
-                                                // Reset the result pointer for tanks
-                                                $tanks_result->data_seek(0);
-                                                while($tank = $tanks_result->fetch_assoc()): 
-                                                ?>
-                                                    <option value="<?php echo htmlspecialchars($tank['tank_kodu']); ?>">
-                                                        <?php echo htmlspecialchars($tank['tank_kodu'] . ' - ' . $tank['tank_ismi']); ?>
-                                                    </option>
-                                                <?php endwhile; ?>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="planlanan_baslangic_tarihi">Planlanan Baslangic Tarihi *</label>
-                                            <input type="date" class="form-control" id="planlanan_baslangic_tarihi" name="planlanan_baslangic_tarihi" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="demlenme_suresi_gun">Demlenme Suresi (Gun)</label>
-                                            <input type="number" class="form-control" id="demlenme_suresi_gun" name="demlenme_suresi_gun">
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
-                                            <input type="date" class="form-control" id="planlanan_bitis_tarihi" name="planlanan_bitis_tarihi" readonly>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
-                                            <label for="durum">Durum</label>
-                                            <select class="form-control" id="durum" name="durum">
-                                                <option value="olusturuldu">Olusturuldu</option>
-                                                <option value="uretimde">Uretimde</option>
-                                                <option value="tamamlandi">Tamamlandi</option>
-                                                <option value="iptal">Iptal</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-group mb-3">
-                                    <label for="aciklama">Aciklama</label>
-                                    <textarea class="form-control" id="aciklama" name="aciklama" rows="2"></textarea>
                                 </div>
                             </div>
-                            <div class="col-lg-5">
-                                <!-- Calculated Components Section -->
-                                <div class="card h-100">
-                                    <div class="card-header">
-                                        <h5><i class="fas fa-cubes"></i> Hesaplanan Bilesenler</h5>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="birim">Birim</label>
+                                        <input type="text" class="form-control" v-model="selectedWorkOrder.birim" readonly>
                                     </div>
-                                    <div class="card-body">
-                                        <div class="table-responsive">
-                                            <table class="table table-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Malzeme Kodu</th>
-                                                        <th>Malzeme Ismi</th>
-                                                        <th>Malzeme Turu</th>
-                                                        <th>Gerekli Miktar</th>
-                                                        <th>Bilesim Orani</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody id="componentsTableBody">
-                                                    <!-- Components will be populated here via JavaScript -->
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                        <div id="componentsPlaceholder" class="text-center py-3 text-muted">
-                                            Esans ve miktar secildiginde bilesenler gosterilecektir.
-                                        </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="tank_kodu">Tank *</label>
+                                        <select class="form-control" v-model="selectedWorkOrder.tank_kodu" @change="updateTankName" required>
+                                            <option value="">Tank Secin</option>
+                                            <option v-for="tank in tanks" :value="tank.tank_kodu" :key="tank.tank_kodu">
+                                                {{ tank.tank_kodu }} - {{ tank.tank_ismi }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="planlanan_baslangic_tarihi">Planlanan Baslangic Tarihi *</label>
+                                        <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_baslangic_tarihi" @change="updateEndDate" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="demlenme_suresi_gun">Demlenme Suresi (Gun)</label>
+                                        <input type="number" class="form-control" v-model.number="selectedWorkOrder.demlenme_suresi_gun" @input="updateEndDate">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
+                                        <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label for="durum">Durum</label>
+                                        <select class="form-control" v-model="selectedWorkOrder.durum" :disabled="selectedWorkOrder.is_emri_numarasi">
+                                            <option value="olusturuldu">Olusturuldu</option>
+                                            <option value="uretimde">Uretimde</option>
+                                            <option value="tamamlandi">Tamamlandi</option>
+                                            <option value="iptal">Iptal</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label for="aciklama">Aciklama</label>
+                                <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="col-lg-5">
+                            <!-- Calculated Components Section -->
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5><i class="fas fa-cubes"></i> Hesaplanan Bilesenler</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Malzeme Kodu</th>
+                                                    <th>Malzeme Ismi</th>
+                                                    <th>Malzeme Turu</th>
+                                                    <th>Gerekli Miktar</th>
+                                                    <th>Bilesim Orani</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr v-for="(component, index) in calculatedComponents" :key="index">
+                                                    <td>{{ component.malzeme_kodu }}</td>
+                                                    <td>{{ component.malzeme_ismi }}</td>
+                                                    <td>{{ component.malzeme_turu }}</td>
+                                                    <td>{{ component.miktar }}</td>
+                                                    <td>{{ component.birim }}</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <div v-if="calculatedComponents.length === 0" class="text-center py-3 text-muted">
+                                        Esans ve miktar secildiginde bilesenler gosterilecektir.
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Iptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> Iptal</button>
+                    <button type="button" class="btn btn-primary" @click="saveWorkOrder"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Materials Details Modal -->
-    <div class="modal fade" id="materialsDetailsModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
+    <div class="modal fade" :class="{show: showDetailsModal}" v-if="showDetailsModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showDetailsModal = false">
+        <div class="modal-dialog modal-lg" @click.stop>
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title"><i class="fas fa-cubes"></i> <span id="materialsModalTitle">Malzeme Detaylari</span></h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                    <h5 class="modal-title"><i class="fas fa-cubes"></i> İş Emri No: {{ selectedWorkOrderId }} Malzeme Detaylari</h5>
+                    <button type="button" class="close text-white" @click="showDetailsModal = false" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div id="materialsDetailsContent">
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th>Malzeme Kodu</th>
-                                        <th>Malzeme Ismi</th>
-                                        <th>Malzeme Turu</th>
-                                        <th>Gerekli Miktar</th>
-                                        <th>Birim</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="materialsDetailsTableBody">
-                                    <!-- Materials will be populated here -->
-                                </tbody>
-                            </table>
-                        </div>
-                        <div id="materialsDetailsPlaceholder" class="text-center py-3 text-muted">
-                            Malzeme detaylari yukleniyor...
-                        </div>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Malzeme Kodu</th>
+                                    <th>Malzeme Ismi</th>
+                                    <th>Malzeme Turu</th>
+                                    <th>Gerekli Miktar</th>
+                                    <th>Birim</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr v-for="(component, index) in workOrderComponents" :key="index">
+                                    <td>{{ component.malzeme_kodu }}</td>
+                                    <td>{{ component.malzeme_ismi }}</td>
+                                    <td>{{ component.malzeme_turu }}</td>
+                                    <td>{{ parseFloat(component.miktar).toFixed(2) }}</td>
+                                    <td>{{ component.birim }}</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div v-if="workOrderComponents.length === 0" class="text-center py-3 text-muted">
+                        Malzeme detaylari yukleniyor...
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Kapat</button>
+                    <button type="button" class="btn btn-secondary" @click="showDetailsModal = false"><i class="fas fa-times"></i> Kapat</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Complete Work Order Modal -->
-    <div class="modal fade" id="completeWorkOrderModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog" role="document">
+    <div class="modal fade" :class="{show: showCompleteModal}" v-if="showCompleteModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showCompleteModal = false">
+        <div class="modal-dialog" @click.stop>
             <div class="modal-content">
-                <form id="completeWorkOrderForm">
-                    <div class="modal-header bg-success text-white">
-                        <h5 class="modal-title"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h5>
+                    <button type="button" class="close text-white" @click="showCompleteModal = false" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <h5>Is Emri Bilgileri</h5>
+                    <p><strong>Is Emri No:</strong> {{ selectedWorkOrder.is_emri_numarasi }}</p>
+                    <p><strong>Esans:</strong> {{ selectedWorkOrder.esans_kodu }} - {{ selectedWorkOrder.esans_ismi }}</p>
+                    <p><strong>Planlanan Miktar:</strong> {{ parseFloat(selectedWorkOrder.planlanan_miktar).toFixed(2) }} {{ selectedWorkOrder.birim }}</p>
+                    <hr>
+                    <div class="form-group">
+                        <label for="tamamlanan_miktar"><strong>Gerceklese Miktar *</strong></label>
+                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.tamamlanan_miktar" required>
                     </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="complete_is_emri_numarasi" name="is_emri_numarasi">
-                        <h5>Is Emri Bilgileri</h5>
-                        <p><strong>Is Emri No:</strong> <span id="complete_wo_id"></span></p>
-                        <p><strong>Esans:</strong> <span id="complete_wo_essence"></span></p>
-                        <p><strong>Planlanan Miktar:</strong> <span id="complete_wo_planned_qty"></span></p>
-                        <hr>
-                        <div class="form-group">
-                            <label for="tamamlanan_miktar"><strong>Gerceklese Miktar *</strong></label>
-                            <input type="number" step="0.01" class="form-control" id="tamamlanan_miktar" name="tamamlanan_miktar" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="tamamlama_aciklama">Aciklama</label>
-                            <textarea class="form-control" id="tamamlama_aciklama" name="aciklama" rows="3"></textarea>
-                        </div>
+                    <div class="form-group">
+                        <label for="aciklama">Aciklama</label>
+                        <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="3"></textarea>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Iptal</button>
-                        <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
-                    </div>
-                </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @click="showCompleteModal = false"><i class="fas fa-times"></i> Iptal</button>
+                    <button type="button" class="btn btn-success" @click="completeWorkOrder"><i class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
+                </div>
             </div>
         </div>
     </div>
+
+    </div> <!-- Close the #app div -->
 
     <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    
+    <!-- Vue.js and Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    
+    <!-- Include the Vue.js application -->
+    <script src="assets/js/esans_is_emirleri.js"></script>
+    
     <script>
-    $(document).ready(function() {
-        // Reset the essence result for JavaScript use
-        <?php $essences_result->data_seek(0); ?>
+        // Define user info for the Vue app
+        window.kullaniciBilgisi = {
+            kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
+        };
         
-        // Refresh the essence data for JavaScript
-        var essences = [
-            <?php while($essence = $essences_result->fetch_assoc()): ?>
-            {
-                code: '<?php echo $essence['esans_kodu']; ?>',
-                unit: '<?php echo $essence['birim']; ?>',
-                fermentation: <?php echo floatval($essence['demlenme_suresi_gun']); ?>
-            },
-            <?php endwhile; ?>
-        ];
-        
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>`
-            );
-        }
-
-        // Open modal for adding a new work order
-        $('#addWorkOrderBtn').on('click', function() {
-            $('#workOrderForm')[0].reset();
-            $('#modalTitle').text('Yeni Esans Is Emri Olustur');
-            $('#action').val('create_work_order');
-            $('#submitBtn').text('Olustur').removeClass('btn-success').addClass('btn-primary');
-            $('#durum').val('olusturuldu').prop('disabled', true); // Default to 'olusturuldu' and disable for creation
-            
-            // Set default date to today
-            var today = new Date().toISOString().split('T')[0];
-            $('#planlanan_baslangic_tarihi').val(today);
-            
-            // Clear components table
-            $('#componentsTableBody').empty();
-            $('#componentsPlaceholder').show();
-            
-            $('#workOrderModal').modal('show');
-        });
-
-        // Handle essence selection to update unit and fermentation time
-        $('#esans_kodu').on('change', function() {
-            var selectedCode = $(this).val();
-            var selectedOption = $(this).find('option:selected');
-            
-            if (selectedCode) {
-                // Populate unit field
-                var unit = selectedOption.data('unit');
-                $('#birim').val(unit);
-                
-                // Populate fermentation time
-                var fermentation = selectedOption.data('fermentation');
-                $('#demlenme_suresi_gun').val(fermentation);
-                
-                // Calculate end date if start date is already selected
-                var startDate = $('#planlanan_baslangic_tarihi').val();
-                if (startDate && fermentation) {
-                    var endDate = new Date(startDate);
-                    endDate.setDate(endDate.getDate() + parseInt(fermentation));
-                    var endDateStr = endDate.toISOString().split('T')[0];
-                    $('#planlanan_bitis_tarihi').val(endDateStr);
-                }
-                
-                // If quantity is entered, calculate components
-                var quantity = $('#planlanan_miktar').val();
-                if (quantity && quantity > 0) {
-                    calculateComponents(selectedCode, quantity);
-                }
-            } else {
-                $('#birim').val('');
-                $('#demlenme_suresi_gun').val('');
-                $('#planlanan_bitis_tarihi').val('');
-            }
-        });
-
-        // Handle quantity input to calculate components
-        $('#planlanan_miktar').on('input', function() {
-            var quantity = $(this).val();
-            var essenceCode = $('#esans_kodu').val();
-            
-            if (quantity && quantity > 0 && essenceCode) {
-                calculateComponents(essenceCode, quantity);
-            } else {
-                // Clear components if quantity is not valid
-                $('#componentsTableBody').empty();
-                $('#componentsPlaceholder').show();
-            }
-        });
-
-        // Handle start date change to recalculate end date
-        $('#planlanan_baslangic_tarihi').on('change', function() {
-            var startDate = $(this).val();
-            var fermentation = $('#demlenme_suresi_gun').val();
-            
-            if (startDate && fermentation) {
-                var endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + parseInt(fermentation));
-                var endDateStr = endDate.toISOString().split('T')[0];
-                $('#planlanan_bitis_tarihi').val(endDateStr);
-            }
-        });
-
-        // Handle fermentation time change to recalculate end date
-        $('#demlenme_suresi_gun').on('input', function() {
-            var fermentation = $(this).val();
-            var startDate = $('#planlanan_baslangic_tarihi').val();
-            
-            if (startDate && fermentation) {
-                var endDate = new Date(startDate);
-                endDate.setDate(endDate.getDate() + parseInt(fermentation));
-                var endDateStr = endDate.toISOString().split('T')[0];
-                $('#planlanan_bitis_tarihi').val(endDateStr);
-            }
-        });
-
-        // Calculate components based on essence and quantity
-        function calculateComponents(essenceCode, quantity) {
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=calculate_components',
-                type: 'POST',
-                data: {
-                    essence_code: essenceCode,
-                    quantity: quantity
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var components = response.data;
-                        if (components.length > 0) {
-                            var tbody = $('#componentsTableBody');
-                            tbody.empty();
-                            
-                            $.each(components, function(index, component) {
-                                // Calculate required amount: original_component_amount * user_quantity
-                                var requiredAmount = parseFloat(component.bilesen_miktari) * parseFloat(quantity);
-                                
-                                var row = `
-                                    <tr>
-                                        <td>${component.bilesen_kodu}</td>
-                                        <td>${component.bilesen_ismi}</td>
-                                        <td>${component.bilesenin_malzeme_turu}</td>
-                                        <td>${requiredAmount.toFixed(2)}</td>
-                                        <td>${component.bilesen_miktari}</td>
-                                    </tr>
-                                `;
-                                tbody.append(row);
-                            });
-                            
-                            $('#componentsPlaceholder').hide();
-                        } else {
-                            $('#componentsTableBody').empty();
-                            $('#componentsPlaceholder').html('Bu esans icin urun agacinda bilesen tanimlanmamis. <br> Lutfen <a href="urun_agaclari.php" target="_blank">Urun Agaclari</a> sayfasindan ilgili esans icin bilesenleri ekleyin.').show();
-                        }
-                    } else {
-                        $('#componentsTableBody').empty();
-                        $('#componentsPlaceholder').text('Bilesenler getirilirken bir hata olustu: ' + response.message).show();
-                    }
-                },
-                error: function() {
-                    $('#componentsTableBody').empty();
-                    $('#componentsPlaceholder').text('Bilesenler getirilirken bir hata olustu.').show();
-                }
-            });
-        }
-
-        // Open modal for editing a work order
-        $('.edit-btn').on('click', function() {
-            var workOrderId = $(this).data('id');
-            
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order&id=' + workOrderId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var workOrder = response.data;
-                        $('#workOrderForm')[0].reset();
-                        $('#modalTitle').text('Esans Is Emrini Duzenle');
-                        $('#action').val('update_work_order');
-                        $('#is_emri_numarasi').val(workOrder.is_emri_numarasi);
-                        $('#esans_kodu').val(workOrder.esans_kodu);
-                        $('#planlanan_miktar').val(workOrder.planlanan_miktar);
-                        $('#birim').val(workOrder.birim);
-                        $('#tank_kodu').val(workOrder.tank_kodu);
-                        $('#planlanan_baslangic_tarihi').val(workOrder.planlanan_baslangic_tarihi);
-                        $('#demlenme_suresi_gun').val(workOrder.demlenme_suresi_gun);
-                        $('#planlanan_bitis_tarihi').val(workOrder.planlanan_bitis_tarihi);
-                        $('#durum').val(workOrder.durum);
-                        $('#aciklama').val(workOrder.aciklama);
-                        
-                        // Calculate components for the selected essence and quantity
-                        if(workOrder.esans_kodu && workOrder.planlanan_miktar) {
-                            calculateComponents(workOrder.esans_kodu, workOrder.planlanan_miktar);
-                        }
-                        
-                        $('#durum').prop('disabled', false); // Enable status dropdown for editing
-                        $('#submitBtn').text('Guncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#workOrderModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Esans is emri bilgileri alinirken bir hata olustu.', 'danger');
-                }
-            });
-        });
-
-        // Handle form submission
-        $('#workOrderForm').on('submit', function(e) {
-            e.preventDefault();
-            
-            // Determine if creating or updating
-            var isCreating = ($('#action').val() === 'add_work_order');
-            
-            // Create form data object
-            var formData = {
-                action: $('#action').val(),
-                work_order: {
-                    is_emri_numarasi: $('#is_emri_numarasi').val(),
-                    olusturulma_tarihi: new Date().toISOString().split('T')[0], // Use current date
-                    olusturan: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>',
-                    esans_kodu: $('#esans_kodu').val(),
-                    esans_ismi: $('#esans_kodu option:selected').text().split(' - ')[1] || $('#esans_kodu option:selected').text(),
-                    tank_kodu: $('#tank_kodu').val(),
-                    tank_ismi: $('#tank_kodu option:selected').text().split(' - ')[1],
-                    planlanan_miktar: $('#planlanan_miktar').val(),
-                    birim: $('#birim').val(),
-                    planlanan_baslangic_tarihi: $('#planlanan_baslangic_tarihi').val(),
-                    demlenme_suresi_gun: $('#demlenme_suresi_gun').val(),
-                    planlanan_bitis_tarihi: $('#planlanan_bitis_tarihi').val(),
-                    aciklama: $('#aciklama').val(),
-                    durum: isCreating ? 'olusturuldu' : $('#durum').val(), // Always use 'olusturuldu' for new work orders
-                    tamamlanan_miktar: 0, // Default value
-                    eksik_miktar_toplami: 0 // Default value
-                }
-            };
-            
-            // Get the calculated components data
-            var components = [];
-            $('#componentsTableBody tr').each(function() {
-                var $row = $(this);
-                components.push({
-                    malzeme_kodu: $row.find('td:eq(0)').text(),
-                    malzeme_ismi: $row.find('td:eq(1)').text(),
-                    malzeme_turu: $row.find('td:eq(2)').text(),
-                    miktar: $row.find('td:eq(3)').text(),
-                    birim: $row.find('td:eq(4)').text()
-                });
-            });
-            
-            formData.components = components;
-
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                type: 'POST',
-                data: JSON.stringify(formData),
-                contentType: 'application/json',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#workOrderModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Islem sirasinda bir hata olustu.', 'danger');
-                }
-            });
-        });
-
-        // Handle work order deletion
-        $(document).on('click', '.delete-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            if (confirm('Bu esans is emrini silmek istediginizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete_work_order',
-                        id: workOrderId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
-                        }
-                    },
-                    error: function() {
-                        showAlert('Silme islemi sirasinda bir hata olustu.', 'danger');
-                    }
-                });
-            }
-        });
-
-        // Handle start work order
-        $(document).on('click', '.start-btn', function() {
-            var workOrderId = $(this).data('id');
-
-            // First, get the list of components to show in the confirmation dialog
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var components = response.data;
-                        var confirmationMessage = 'Bu is emrini baslatmak istediginizden emin misiniz?\n\n';
-
-                        if (components && components.length > 0) {
-                            confirmationMessage += 'Asagidaki malzemeler stoktan dusulecektir:\n';
-                            $.each(components, function(index, component) {
-                                confirmationMessage += ` - ${component.malzeme_ismi}: ${parseFloat(component.miktar).toFixed(2)} ${component.birim}\n`;
-                            });
-                        } else {
-                            confirmationMessage += 'Bu is emri icin stoktan dusulecek malzeme bulunmuyor.';
-                        }
-
-                        if (confirm(confirmationMessage)) {
-                            // If confirmed, proceed to start the work order
-                            $.ajax({
-                                url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                                type: 'POST',
-                                data: {
-                                    action: 'start_work_order',
-                                    id: workOrderId
-                                },
-                                dataType: 'json',
-                                success: function(startResponse) {
-                                    if (startResponse.status === 'success') {
-                                        showAlert(startResponse.message, 'success');
-                                        setTimeout(function() {
-                                            location.reload();
-                                        }, 1000);
-                                    } else {
-                                        showAlert(startResponse.message, 'danger');
-                                    }
-                                },
-                                error: function() {
-                                    showAlert('Is emri baslatilirken bir hata olustu.', 'danger');
-                                }
-                            });
-                        }
-                    } else {
-                        showAlert('Onay icin bilesen listesi alinamadi: ' + response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Onay icin bilesen listesi alinirken bir sunucu hatasi olustu.', 'danger');
-                }
-            });
-        });
-
-        $(document).on('click', '.revert-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            if (confirm('Bu is emrini durdurup "Olusturuldu" durumuna geri almak istediginizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'revert_work_order',
-                        id: workOrderId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
-                        }
-                    },
-                    error: function() {
-                        showAlert('Islem sirasinda bir hata olustu.', 'danger');
-                    }
-                });
-            }
-        });
-
-        // Handle complete button click to open modal
-        $(document).on('click', '.complete-btn', function() {
-            var workOrderId = $(this).data('id');
-
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order&id=' + workOrderId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var workOrder = response.data;
-                        $('#complete_wo_id').text(workOrder.is_emri_numarasi);
-                        $('#complete_wo_essence').text(workOrder.esans_kodu + ' - ' + workOrder.esans_ismi);
-                        $('#complete_wo_planned_qty').text(parseFloat(workOrder.planlanan_miktar).toFixed(2) + ' ' + workOrder.birim);
-                        
-                        $('#complete_is_emri_numarasi').val(workOrder.is_emri_numarasi);
-                        $('#tamamlanan_miktar').val(parseFloat(workOrder.planlanan_miktar).toFixed(2));
-
-                        $('#completeWorkOrderModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Is emri detaylari alinirken bir hata olustu.', 'danger');
-                }
-            });
-        });
-
-        // Handle the submission of the complete work order form
-        $('#completeWorkOrderForm').on('submit', function(e) {
-            e.preventDefault();
-
-            var formData = {
-                action: 'complete_work_order',
-                is_emri_numarasi: $('#complete_is_emri_numarasi').val(),
-                tamamlanan_miktar: $('#tamamlanan_miktar').val(),
-                aciklama: $('#tamamlama_aciklama').val()
-            };
-
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                type: 'POST',
-                data: JSON.stringify(formData),
-                contentType: 'application/json',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#completeWorkOrderModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        // Show error inside the modal
-                        alert('Hata: ' + response.message);
-                    }
-                },
-                error: function() {
-                    alert('Islem sirasinda sunucu taraflı bir hata olustu.');
-                }
-            });
-        });
-
-        // Handle revert completion
-        $(document).on('click', '.revert-completion-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            if (confirm('Bu is emrinin tamamlanma durumunu geri almak istediginizden emin misiniz? Bu islem ilgili stok hareketlerini tersine cevirecektir.')) {
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'revert_completion',
-                        id: workOrderId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
-                        }
-                    },
-                    error: function() {
-                        showAlert('Geri alma islemi sirasinda bir hata olustu.', 'danger');
-                    }
-                });
-            }
-        });
-        
-        $(document).on('click', '.details-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var components = response.data;
-                        var tableBody = $('#materialsDetailsTableBody');
-                        tableBody.empty(); // Clear previous data
-
-                        if (components.length > 0) {
-                            $.each(components, function(index, component) {
-                                var row = `<tr>
-                                    <td>${component.malzeme_kodu}</td>
-                                    <td>${component.malzeme_ismi}</td>
-                                    <td>${component.malzeme_turu}</td>
-                                    <td>${parseFloat(component.miktar).toFixed(2)}</td>
-                                    <td>${component.birim}</td>
-                                </tr>`;
-                                tableBody.append(row);
-                            });
-                            $('#materialsDetailsPlaceholder').hide();
-                        } else {
-                            tableBody.html('<tr><td colspan="5" class="text-center">Bu iş emri için bileşen bulunmuyor.</td></tr>');
-                            $('#materialsDetailsPlaceholder').show();
-                        }
-                        
-                        $('#materialsModalTitle').text('İş Emri No: ' + workOrderId + ' Malzeme Detayları');
-                        $('#materialsDetailsModal').modal('show');
-                    } else {
-                        showAlert('Malzeme detayları alınırken bir hata oluştu: ' + response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Malzeme detayları alınırken bir sunucu hatası oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle info button click
-        $('#infoButton').on('click', function() {
-            $('#infoModal').modal('show');
-        });
-
-        // Handle Print Button Click
-        $(document).on('click', '.print-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            // Show a loading indicator
-            showAlert('PDF oluşturuluyor, lütfen bekleyin...', 'info');
-
-            // Fetch both work order details and components in parallel
-            $.when(
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order&id=' + workOrderId,
-                    type: 'GET', 
-                    dataType: 'json'
-                }),
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
-                    type: 'GET',
-                    dataType: 'json'
-                })
-            ).done(function(workOrderResponse, componentsResponse) {
-                
-                var workOrderData = workOrderResponse[0];
-                var componentsData = componentsResponse[0];
-
-                if (workOrderData.status === 'success' && componentsData.status === 'success') {
-                    var workOrder = workOrderData.data;
-                    var components = componentsData.data;
-                    
-                    var printHtml = buildPrintableHtml(workOrder, components);
-                    
-                    const element = document.createElement('div');
-                    element.innerHTML = printHtml;
-
-                    const opt = {
-                        margin: 0.2,
-                        filename: `is_emri_${workOrder.is_emri_numarasi}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-                    };
-
-                    html2pdf().from(element).set(opt).save().then(function() {
-                        showAlert('PDF başarıyla oluşturuldu ve indirildi.', 'success');
-                    });
-
+        // Debug: Check if Vue app is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM loaded, checking for Vue app...');
+            setTimeout(function() {
+                if (typeof Vue !== 'undefined') {
+                    console.log('Vue is available');
                 } else {
-                    showAlert('PDF oluşturmak için veriler alınırken bir hata oluştu.', 'danger');
+                    console.log('Vue is not available');
                 }
-
-            }).fail(function() {
-                showAlert('PDF oluşturulurken bir sunucu hatası oluştu.', 'danger');
-            });
+            }, 1000);
         });
-
-                function buildPrintableHtml(wo, components) {
-
-                    // Map for user-friendly labels
-
-                    const fieldLabels = {
-
-                        'is_emri_numarasi': 'İş Emri No',
-
-                        'olusturulma_tarihi': 'Oluşturulma Tarihi',
-
-                        'olusturan': 'Oluşturan',
-
-                        'esans_kodu': 'Esans Kodu',
-
-                        'esans_ismi': 'Esans İsmi',
-
-                        'tank_kodu': 'Tank Kodu',
-
-                        'tank_ismi': 'Tank İsmi',
-
-                        'planlanan_miktar': 'Planlanan Miktar',
-
-                        'tamamlanan_miktar': 'Tamamlanan Miktar',
-
-                        'eksik_miktar_toplami': 'Eksik Miktar Toplamı',
-
-                        'birim': 'Birim',
-
-                        'planlanan_baslangic_tarihi': 'Planlanan Başlangıç',
-
-                        'planlanan_bitis_tarihi': 'Planlanan Bitiş',
-
-                        'gerceklesen_baslangic_tarihi': 'Gerçekleşen Başlangıç',
-
-                        'gerceklesen_bitis_tarihi': 'Gerçekleşen Bitiş',
-
-                        'demlenme_suresi_gun': 'Demlenme Süresi (Gün)',
-
-                        'durum': 'Durum',
-
-                        'aciklama': 'Açıklama'
-
-                    };
-
-        
-
-                    const allRows = [];
-
-                    for (const key in wo) {
-
-                        if (wo.hasOwnProperty(key) && wo[key] !== null && wo[key] !== '' && fieldLabels[key]) {
-
-                            let value = wo[key];
-
-                            if (key === 'durum') {
-
-                                const statusMap = { olusturuldu: 'Oluşturuldu', uretimde: 'Üretimde', tamamlandi: 'Tamamlandı', iptal: 'İptal' };
-
-                                value = statusMap[value] || value;
-
-                            }
-
-                            const row = `
-
-                                <tr>
-
-                                    <td style="padding: 4px; border-bottom: 1px solid #eee; background-color: #f9f9f9; width: 40%;"><strong>${fieldLabels[key]}:</strong></td>
-
-                                    <td style="padding: 4px; border-bottom: 1px solid #eee;">${value}</td>
-
-                                </tr>`;
-
-                            allRows.push(row);
-
-                        }
-
-                    }
-
-        
-
-                    const itemsPerColumn = Math.ceil(allRows.length / 3);
-
-                    const leftColumn = allRows.slice(0, itemsPerColumn).join('');
-
-                    const middleColumn = allRows.slice(itemsPerColumn, 2 * itemsPerColumn).join('');
-
-                    const rightColumn = allRows.slice(2 * itemsPerColumn).join('');
-
-        
-
-                    generalInfoHtml = `
-
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${leftColumn}</table>
-
-                            </div>
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${middleColumn}</table>
-
-                            </div>
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${rightColumn}</table>
-
-                            </div>
-
-                        </div>`;
-
-        
-
-                    let componentsHtml = '';
-
-                    if (components.length > 0) {
-
-                        components.forEach(c => {
-
-                            componentsHtml += `
-
-                                <tr>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_kodu}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_ismi}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_turu}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${parseFloat(c.miktar).toFixed(2)}</td>
-
-                                </tr>`;
-
-                        });
-
-                    } else {
-
-                        componentsHtml = '<tr><td colspan="4" style="padding: 4px; border: 1px solid #ddd; text-align: center;">Bu iş emri için bileşen bulunmuyor.</td></tr>';
-
-                    }
-
-        
-
-                    const today = new Date().toLocaleDateString('tr-TR');
-
-        
-
-                    return `
-
-                        <div style="font-family: Arial, sans-serif; padding: 10px; font-size: 10px;">
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4a0e63; padding-bottom: 5px; margin-bottom: 5px;">
-
-                                <h1 style="font-size: 22px; color: #4a0e63; margin: 0;">İş Emri Raporu</h1>
-
-                                <div style="text-align: right;">
-
-                                    <div style="font-size: 12px;"><strong>İş Emri No:</strong> ${wo.is_emri_numarasi}</div>
-
-                                    <div style="font-size: 10px; color: #666;"><strong>Rapor Tarihi:</strong> ${today}</div>
-
-                                </div>
-
-                            </div>
-
-        
-
-                            <div style="margin-top: 15px;">
-
-                                <h3 style="font-size: 14px; color: #4a0e63; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 10px;">Genel Bilgiler</h3>
-
-                                ${generalInfoHtml}
-
-                            </div>
-
-                            
-
-                            <div style="margin-top: 15px;">
-
-                                <h3 style="font-size: 14px; color: #4a0e63; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 10px;">Gerekli Bileşenler</h3>
-
-                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-
-                                    <thead style="background-color: #4a0e63; color: white;">
-
-                                        <tr>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme Kodu</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme İsmi</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme Türü</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Gerekli Miktar</th>
-
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>${componentsHtml}</tbody>
-
-                                </table>
-
-                            </div>
-
-        
-
-                            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; text-align: center; font-size: 8px; color: #aaa;">
-
-                                Bu rapor IDO Kozmetik ERP sistemi tarafından oluşturulmuştur.
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-
-    });
     </script>
 </body>
 </html>
