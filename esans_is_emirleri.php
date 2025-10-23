@@ -43,7 +43,7 @@ $tanks_result = $connection->query($tanks_query);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/esans_is_emirleri.css">
+    <link rel="stylesheet" href="css/esans_is_emirleri.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -624,8 +624,8 @@ $tanks_result = $connection->query($tanks_query);
                             <tr v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
                                 <td class="actions">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-cog"></i> Islemler
+                                        <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <i class="fas fa-cogs"></i> Islemler
                                         </button>
                                         <div class="dropdown-menu">
                                             <button 

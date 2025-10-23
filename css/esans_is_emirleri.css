@@ -224,3 +224,17 @@ html {
         max-width: 95%;
     }
 }
+
+.btn-gradient {
+    background: linear-gradient(45deg, #dc3545, #f56565);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: all 0.3s ease;
+}
+
+.btn-gradient:hover {
+    background: linear-gradient(45deg, #f56565, #dc3545);
+    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
