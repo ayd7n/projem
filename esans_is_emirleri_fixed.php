@@ -271,7 +271,6 @@ $tanks_result = $connection->query($tanks_query);
             }
         }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
     <!-- Navbar -->
@@ -304,491 +303,6 @@ $tanks_result = $connection->query($tanks_query);
         </div>
     </nav>
 
-    <!-- Information Modal -->
-    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" role="document">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title"><i class="fas fa-info-circle"></i> Esans İş Emirleri Sistemi Bilgileri</h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="container-fluid">
-                        <!-- System Overview -->
-                        <div class="section">
-                            <h4 class="section-title"><i class="fas fa-project-diagram text-primary"></i> Sistem Genel Yapısı</h4>
-                            <p>Esans iş emirleri sayfası, parfüm üretiminde kullanılan esans üretimi iş emirlerinin oluşturulduğu, takip edildiği ve yönetildiği entegre bir sistemdir. Sistem, iş emri durumlarına göre farklı işlemlere izin vererek üretim sürecinin doğru şekilde yürütülmesini sağlar.</p>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-cogs text-info"></i> İş Akışı</h5>
-                                    <ol class="ml-4">
-                                        <li><strong>İş Emri Oluşturma:</strong> "olusturuldu" durumu</li>
-                                        <li><strong>Üretime Başlama:</strong> "uretimde" durumu</li>
-                                        <li><strong>Üretim Tamamlama:</strong> "tamamlandi" durumu</li>
-                                        <li><strong>İptal veya Geri Alma:</strong> "iptal" durumu</li>
-                                    </ol>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-shield-alt text-success"></i> Güvenlik Kontrolleri</h5>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-lock text-warning"></i> Her durum sadece yetkili işlemleri kabul eder</li>
-                                        <li><i class="fas fa-lock text-warning"></i> Geçersiz durum değişiklikleri engellenir</li>
-                                        <li><i class="fas fa-lock text-warning"></i> Stok kontrolleri ile negatif stok önlenir</li>
-                                        <li><i class="fas fa-lock text-warning"></i> İşlem geçmişinin izlenebilirliği korunur</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Production Process -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-flask text-success"></i> Esans Üretim Süreci</h4>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-list-ol text-primary"></i> Üretim Adımları</h5>
-                                    <div class="process-steps">
-                                        <div class="step">
-                                            <div class="step-number">1</div>
-                                            <div class="step-content">
-                                                <h6>Esans Seçimi</h6>
-                                                <p>Üretilecek esans türünü seçin</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">2</div>
-                                            <div class="step-content">
-                                                <h6>Miktar Belirleme</h6>
-                                                <p>Üretilecek miktarı girin</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">3</div>
-                                            <div class="step-content">
-                                                <h6>Bileşen Hesaplama</h6>
-                                                <p>Gerekli malzemeler otomatik hesaplanır</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">4</div>
-                                            <div class="step-content">
-                                                <h6>Tank ve Tarih Planlama</h6>
-                                                <p>Üretim tankı ve tarihleri belirleyin</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-lightbulb text-warning"></i> Örnek Senaryo</h5>
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <h6><i class="fas fa-vial"></i> 100 Litre Gül Esansı Üretimi</h6>
-                                            <ul class="list-unstyled">
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Gerekli Bileşenler:</strong></li>
-                                                <li class="ml-4"><i class="fas fa-leaf"></i> Yasemin Çiçeği: 50 kg</li>
-                                                <li class="ml-4"><i class="fas fa-wine-bottle"></i> Alkol: 30 lt</li>
-                                                <li class="ml-4"><i class="fas fa-tint"></i> Saf Su: 20 lt</li>
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Üretim Süresi:</strong> 30 gün</li>
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Tank Kullanımı:</strong> Tank 1</li>
-                                            </ul>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Work Order Status -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-tasks text-info"></i> İş Emri Durumları ve İşlemler</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead class="thead-dark">
-                                        <tr>
-                                            <th>Durum</th>
-                                            <th>Açıklama</th>
-                                            <th>Mevcut İşlemler</th>
-                                            <th>Veritabanı Etkisi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><span class="badge badge-secondary">olusturuldu</span></td>
-                                            <td>İş emri oluşturuldu, henüz başlatılmadı</td>
-                                            <td>
-                                                <span class="badge badge-success">Başlat</span>
-                                                <span class="badge badge-primary">Düzenle</span>
-                                                <span class="badge badge-danger">Sil</span>
-                                            </td>
-                                            <td>Kayıt oluşturuldu, stok etkileşimi yok</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-warning">uretimde</span></td>
-                                            <td>İş emri başlatıldı, üretim devam ediyor</td>
-                                            <td>
-                                                <span class="badge badge-success">Tamamla</span>
-                                                <span class="badge badge-warning">Geri Al</span>
-                                                <span class="badge badge-primary">Düzenle</span>
-                                            </td>
-                                            <td>Malzeme stokları düşürüldü</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-success">tamamlandi</span></td>
-                                            <td>İş emri başarıyla tamamlandı</td>
-                                            <td>
-                                                <span class="badge badge-warning">Geri Al</span>
-                                            </td>
-                                            <td>Esans stokları artırıldı</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-danger">iptal</span></td>
-                                            <td>İş emri iptal edildi</td>
-                                            <td><span class="badge badge-secondary">İşlem Yok</span></td>
-                                            <td>Manuel iptal durumu</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Buttons and Functions -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-mouse-pointer text-primary"></i> Buton İşlevleri ve Veritabanı Etkileri</h4>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-plus"></i> Yeni Esans Is Emri Olustur</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Yeni bir essans iş emri oluşturmak için modal formu açar</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>esans_is_emirleri</code> tablosuna yeni kayıt</li>
-                                                    <li><code>esans_is_emri_malzeme_listesi</code> tablosuna bileşen kayıtları</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-play"></i> Is Emrini Baslat</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Sadece "olusturuldu" durumunda olan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>durum</code> alanı "uretimde" olarak güncellenir</li>
-                                                    <li><code>gerceklesen_baslangic_tarihi</code> alanı doldurulur</li>
-                                                    <li>Malzeme stokları düşülür</li>
-                                                    <li>"Üretime Çıkış" stok hareket kaydı oluşturulur</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-warning">
-                                        <div class="card-header bg-warning text-dark">
-                                            <h6 class="card-title m-0"><i class="fas fa-undo"></i> Uretimi Durdur/Geri Al</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Sadece "uretimde" durumunda olan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>durum</code> alanı "olusturuldu" olarak güncellenir</li>
-                                                    <li><code>gerceklesen_baslangic_tarihi</code> alanı NULL yapılır</li>
-                                                    <li>Malzeme stokları iade edilir</li>
-                                                    <li>"Üretimden İade" stok hareket kaydı oluşturulur</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Sadece "uretimde" durumunda olan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>durum</code> alanı "tamamlandi" olarak güncellenir</li>
-                                                    <li><code>tamamlanan_miktar</code> alanı doldurulur</li>
-                                                    <li><code>gerceklesen_bitis_tarihi</code> alanı doldurulur</li>
-                                                    <li>Esans stoğu artırılır</li>
-                                                    <li>"Üretimden Giriş" stok hareket kaydı oluşturulur</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-warning">
-                                        <div class="card-header bg-warning text-dark">
-                                            <h6 class="card-title m-0"><i class="fas fa-history"></i> Tamamlamayi Geri Al</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Sadece "tamamlandi" durumunda olan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>durum</code> alanı "uretimde" olarak güncellenir</li>
-                                                    <li><code>tamamlanan_miktar</code> alanı sıfırlanır</li>
-                                                    <li><code>gerceklesen_bitis_tarihi</code> alanı NULL yapılır</li>
-                                                    <li>Esans stoğu düşülür</li>
-                                                    <li>"Üretim İptal" stok hareket kaydı oluşturulur</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-primary">
-                                        <div class="card-header bg-primary text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-edit"></i> Duzenle</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">"tamamlandi" veya "iptal" durumunda olmayan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li>İş emri temel bilgileri güncellenir</li>
-                                                    <li>Bileşen listesi yeniden hesaplanır ve güncellenir</li>
-                                                    <li><code>esans_is_emri_malzeme_listesi</code> tablosu yeniden oluşturulur</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-danger">
-                                        <div class="card-header bg-danger text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-trash"></i> Sil</h6>
-                                        </div>
-                                        <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">"tamamlandi" durumunda olmayan iş emirleri için görünür</small></p>
-                                            <div class="alert alert-info p-2">
-                                                <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
-                                                <ul class="mb-0">
-                                                    <li><code>esans_is_emri_malzeme_listesi</code> tablosundan ilgili kayıtlar silinir</li>
-                                                    <li><code>esans_is_emirleri</code> tablosundan iş emri kaydı silinir</li>
-                                                    <li>İlgili stok hareket kayıtları korunur (denetim amaçlı)</li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Database Structure -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-database text-primary"></i> Veritabanı Yapısı ve Tablo İlişkileri</h4>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-table text-info"></i> Ana Tablolar</h5>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>Tablo Adı</th>
-                                                    <th>Açıklama</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><code>esans_is_emirleri</code></td>
-                                                    <td>İş emri temel bilgileri</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><code>esans_is_emri_malzeme_listesi</code></td>
-                                                    <td>İş emrinin bileşenleri</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><code>esanslar</code></td>
-                                                    <td>Esans bilgileri ve stoğu</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><code>malzemeler</code></td>
-                                                    <td>Malzeme bilgileri ve stoğu</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-table text-success"></i> Yardımcı Tablolar</h5>
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-sm">
-                                            <thead class="thead-light">
-                                                <tr>
-                                                    <th>Tablo Adı</th>
-                                                    <th>Açıklama</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td><code>urun_agaci</code></td>
-                                                    <td>Esans bileşen tanımları</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><code>tanklar</code></td>
-                                                    <td>Tank bilgileri</td>
-                                                </tr>
-                                                <tr>
-                                                    <td><code>stok_hareket_kayitlari</code></td>
-                                                    <td>Stok hareket geçmişi</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <h5 class="mt-3"><i class="fas fa-link text-warning"></i> Tablo İlişkileri</h5>
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-arrow-right"></i> <code>esans_is_emri_malzeme_listesi</code> → <code>esans_is_emirleri</code> (<code>is_emri_numarasi</code> ile)</li>
-                                <li><i class="fas fa-arrow-right"></i> Bileşen hesaplaması için <code>urun_agaci</code> tablosu kullanılır (<code>urun_kodu</code> → <code>esans_id</code>)</li>
-                                <li><i class="fas fa-arrow-right"></i> Stok hareketleri <code>esans</code> veya <code>malzeme</code> olarak <code>stok_hareket_kayitlari</code> tablosuna kayıt altına alınır</li>
-                            </ul>
-                            
-                            <h5 class="mt-3"><i class="fas fa-code text-purple"></i> API İşlemleri</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled">
-                                        <li><i class="fas fa-cog text-info"></i> <code>calculate_components</code>: Esans bileşenlerini hesaplar</li>
-                                        <li><i class="fas fa-cog text-info"></i> <code>start_work_order</code>: İş emrini başlatır, malzeme stoklarını düşer</li>
-                                        <li><i class="fas fa-cog text-info"></i> <code>complete_work_order</code>: İş emrini tamamlar, esans stoğunu artırır</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <ul class="list-unstyled">
-                                        <li><i class="fas fa-cog text-info"></i> <code>revert_work_order</code>: İş emrini geri alır, malzeme stoğunu iade eder</li>
-                                        <li><i class="fas fa-cog text-info"></i> <code>revert_completion</code>: Tamamlamayı geri alır, esans stoğunu düşer</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Stock Transactions -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-exchange-alt text-success"></i> Stok Hareketleri ve Kayıt Türleri</h4>
-                            <p>Sistemde gerçekleşen tüm işlemler detaylı şekilde kayıt altına alınır. Her stok hareketi kullanıcı bilgisi ve tarih damgasıyla birlikte saklanır:</p>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-plus-circle text-success"></i> Stok Arttıran Hareketler</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <div class="card">
-                                                <div class="card-body p-2">
-                                                    <h6 class="card-title m-0"><i class="fas fa-arrow-up text-success"></i> Üretimden Giriş</h6>
-                                                    <p class="card-text mb-1"><small>İş emri tamamlanınca üretilen esans stoğa eklenir</small></p>
-                                                    <span class="badge badge-success">Giriş</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-minus-circle text-danger"></i> Stok Azaltan Hareketler</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <div class="card">
-                                                <div class="card-body p-2">
-                                                    <h6 class="card-title m-0"><i class="fas fa-arrow-down text-danger"></i> Üretime Çıkış</h6>
-                                                    <p class="card-text mb-1"><small>İş emri başlatılınca gerekli malzemeler stoktan düşülür</small></p>
-                                                    <span class="badge badge-danger">Çıkış</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                        <li class="mb-2">
-                                            <div class="card">
-                                                <div class="card-body p-2">
-                                                    <h6 class="card-title m-0"><i class="fas fa-arrow-down text-danger"></i> Üretim İptal</h6>
-                                                    <p class="card-text mb-1"><small>Tamamlama işlemi geri alınca esans stoğu düşülür</small></p>
-                                                    <span class="badge badge-danger">Çıkış</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <div class="row mt-2">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-undo text-warning"></i> Stok Geri Yükleyen Hareketler</h5>
-                                    <ul class="list-unstyled">
-                                        <li class="mb-2">
-                                            <div class="card">
-                                                <div class="card-body p-2">
-                                                    <h6 class="card-title m-0"><i class="fas fa-sync text-warning"></i> Üretimden İade</h6>
-                                                    <p class="card-text mb-1"><small>İş emri geri alınca malzemeler stoğa iade edilir</small></p>
-                                                    <span class="badge badge-warning">Giriş</span>
-                                                </div>
-                                            </div>
-                                        </li>
-                                    </ul>
-                                </div>
-                            </div>
-                            
-                            <h5 class="mt-3"><i class="fas fa-database text-primary"></i> Veritabanı Kayıt İşlemleri</h5>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h6><i class="fas fa-plus-circle text-success"></i> Kayıt Oluşturma</h6>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>Yeni İş Emri:</strong> <code>esans_is_emirleri</code> ve <code>esans_is_emri_malzeme_listesi</code> tablolarına kayıt</li>
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri Başlatma:</strong> <code>stok_hareket_kayitlari</code> tablosuna "Üretime Çıkış" kaydı</li>
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri Tamamlama:</strong> <code>stok_hareket_kayitlari</code> tablosuna "Üretimden Giriş" kaydı</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6><i class="fas fa-sync-alt text-warning"></i> Kayıt Güncelleme</h6>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>Durum Değişikliği:</strong> <code>esans_is_emirleri</code> tablosunda <code>durum</code>, tarih alanları</li>
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>Stok Güncelleme:</strong> <code>malzemeler</code> ve <code>esanslar</code> tablolarında <code>stok_miktari</code></li>
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri Düzenleme:</strong> Mevcut kayıtların güncellenmesi</li>
-                                    </ul>
-                                </div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-md-6">
-                                    <h6><i class="fas fa-undo text-primary"></i> Kayıt Geri Alma</h6>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>Üretimi Geri Alma:</strong> <code>stok_hareket_kayitlari</code> tablosuna "Üretimden İade" kaydı</li>
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>Tamamlamayı Geri Alma:</strong> <code>stok_hareket_kayitlari</code> tablosuna "Üretim İptal" kaydı</li>
-                                    </ul>
-                                </div>
-                                <div class="col-md-6">
-                                    <h6><i class="fas fa-trash-alt text-danger"></i> Kayıt Silme</h6>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri Silme:</strong> <code>esans_is_emri_malzeme_listesi</code> ve <code>esans_is_emirleri</code> tablolarından kayıt silme</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Kapat</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Content -->
     <div class="main-content">
         <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
@@ -796,24 +310,61 @@ $tanks_result = $connection->query($tanks_query);
         <div class="page-header">
             <div>
                 <h1><i class="fas fa-flask"></i> Esans Is Emirleri</h1>
-                <p>Esans uretim is emirlerini olusturun, duzenleyin ve takip edin</p>
+                <p>Esans Ã¼retim iÅŸ emirlerini oluÅŸturun, dÃ¼zenleyin ve takip edin</p>
             </div>
         </div>
 
         <div id="alert-placeholder"></div>
 
         <div class="row">
-            <div class="col-md-12">
+            <div class="col-md-8">
                 <button id="addWorkOrderBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Is Emri Olustur</button>
-                <button id="infoButton" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
+            </div>
+            <div class="col-md-4">
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                            <i class="fas fa-tasks"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_work_orders; ?></h3>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Is Emri</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
-
+        <!-- Information Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h4 class="card-title"><i class="fas fa-info-circle text-primary"></i> Esans Is Emri Tanimi</h4>
+                <div class="row">
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-flask text-success"></i> Esans Uretimi</h5>
+                        <ul class="list-unstyled ml-3">
+                            <li><i class="fas fa-check-circle text-success"></i> Esans uretimi icin is emri olusturun</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Esans bilesenleri otomatik hesaplanir</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Planlama tarihlerini belirleyin</li>
+                            <li><i class="fas fa-lightbulb text-warning"></i> <strong>Ornek:</strong> 100 litre gul esansi icin bilesenleri otomatik hesapla</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h5><i class="fas fa-cogs text-info"></i> Islem Akisi</h5>
+                        <ul class="list-unstyled ml-3">
+                            <li><i class="fas fa-check-circle text-success"></i> Esans seÃ§imi ile baÅŸlar</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Ãœretim miktarÄ±nÄ± girin</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Gerekli malzemeler otomatik hesaplanÄ±r</li>
+                            <li><i class="fas fa-check-circle text-success"></i> Tank ve tarih planlamasÄ± yapÄ±n</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-list"></i> Esans Is Emirleri Listesi</h2>
+                <h2><i class="fas fa-list"></i> Esans Ä°ÅŸ Emirleri Listesi</h2>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -871,10 +422,6 @@ $tanks_result = $connection->query($tanks_query);
                                                 <i class="fas fa-list"></i>
                                             </button>
 
-                                            <button class="btn btn-secondary btn-sm print-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Yazdır">
-                                                <i class="fas fa-print"></i>
-                                            </button>
-
                                             <?php if ($work_order['durum'] !== 'tamamlandi'): ?>
                                                 <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $work_order['is_emri_numarasi']; ?>" title="Sil">
                                                     <i class="fas fa-trash"></i>
@@ -910,7 +457,7 @@ $tanks_result = $connection->query($tanks_query);
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="17" class="text-center p-4">Henüz kayitli esans is emri bulunmuyor.</td>
+                                    <td colspan="17" class="text-center p-4">HenÃ¼z kayitli esans is emri bulunmuyor.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
@@ -1052,7 +599,7 @@ $tanks_result = $connection->query($tanks_query);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Iptal</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Ä°ptal</button>
                         <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
                     </div>
                 </form>
@@ -1114,7 +661,7 @@ $tanks_result = $connection->query($tanks_query);
                     <div class="modal-body">
                         <input type="hidden" id="complete_is_emri_numarasi" name="is_emri_numarasi">
                         <h5>Is Emri Bilgileri</h5>
-                        <p><strong>Is Emri No:</strong> <span id="complete_wo_id"></span></p>
+                        <p><strong>Ä°ÅŸ Emri No:</strong> <span id="complete_wo_id"></span></p>
                         <p><strong>Esans:</strong> <span id="complete_wo_essence"></span></p>
                         <p><strong>Planlanan Miktar:</strong> <span id="complete_wo_planned_qty"></span></p>
                         <hr>
@@ -1128,7 +675,7 @@ $tanks_result = $connection->query($tanks_query);
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Iptal</button>
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Ä°ptal</button>
                         <button type="submit" class="btn btn-success"><i class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
                     </div>
                 </form>
@@ -1299,7 +846,7 @@ $tanks_result = $connection->query($tanks_query);
                             $('#componentsPlaceholder').hide();
                         } else {
                             $('#componentsTableBody').empty();
-                            $('#componentsPlaceholder').html('Bu esans icin urun agacinda bilesen tanimlanmamis. <br> Lutfen <a href="urun_agaclari.php" target="_blank">Urun Agaclari</a> sayfasindan ilgili esans icin bilesenleri ekleyin.').show();
+                            $('#componentsPlaceholder').html('Bu esans icin urun agacinda bilesen tanimlanmamis. <br> Lutfen <a href="urun_agaclari.php" target="_blank">Urun AgaclarÄ±</a> sayfasindan ilgili esans icin bilesenleri ekleyin.').show();
                         }
                     } else {
                         $('#componentsTableBody').empty();
@@ -1467,15 +1014,15 @@ $tanks_result = $connection->query($tanks_query);
                 success: function(response) {
                     if (response.status === 'success') {
                         var components = response.data;
-                        var confirmationMessage = 'Bu is emrini baslatmak istediginizden emin misiniz?\n\n';
+                        var confirmationMessage = 'Bu iÅŸ emrini baÅŸlatmak istediÄŸinizden emin misiniz?\n\n';
 
                         if (components && components.length > 0) {
-                            confirmationMessage += 'Asagidaki malzemeler stoktan dusulecektir:\n';
+                            confirmationMessage += 'AÅŸaÄŸÄ±daki malzemeler stoktan dÃ¼ÅŸÃ¼lecektir:\n';
                             $.each(components, function(index, component) {
                                 confirmationMessage += ` - ${component.malzeme_ismi}: ${parseFloat(component.miktar).toFixed(2)} ${component.birim}\n`;
                             });
                         } else {
-                            confirmationMessage += 'Bu is emri icin stoktan dusulecek malzeme bulunmuyor.';
+                            confirmationMessage += 'Bu iÅŸ emri iÃ§in stoktan dÃ¼ÅŸÃ¼lecek malzeme bulunmuyor.';
                         }
 
                         if (confirm(confirmationMessage)) {
@@ -1499,16 +1046,16 @@ $tanks_result = $connection->query($tanks_query);
                                     }
                                 },
                                 error: function() {
-                                    showAlert('Is emri baslatilirken bir hata olustu.', 'danger');
+                                    showAlert('Ä°ÅŸ emri baÅŸlatÄ±lÄ±rken bir hata oluÅŸtu.', 'danger');
                                 }
                             });
                         }
                     } else {
-                        showAlert('Onay icin bilesen listesi alinamadi: ' + response.message, 'danger');
+                        showAlert('Onay iÃ§in bileÅŸen listesi alÄ±namadÄ±: ' + response.message, 'danger');
                     }
                 },
                 error: function() {
-                    showAlert('Onay icin bilesen listesi alinirken bir sunucu hatasi olustu.', 'danger');
+                    showAlert('Onay iÃ§in bileÅŸen listesi alÄ±nÄ±rken bir sunucu hatasÄ± oluÅŸtu.', 'danger');
                 }
             });
         });
@@ -1516,7 +1063,7 @@ $tanks_result = $connection->query($tanks_query);
         $(document).on('click', '.revert-btn', function() {
             var workOrderId = $(this).data('id');
             
-            if (confirm('Bu is emrini durdurup "Olusturuldu" durumuna geri almak istediginizden emin misiniz?')) {
+            if (confirm('Bu iÅŸ emrini durdurup "OluÅŸturuldu" durumuna geri almak istediÄŸinizden emin misiniz?')) {
                 $.ajax({
                     url: 'api_islemleri/esans_is_emirleri_islemler.php',
                     type: 'POST',
@@ -1566,7 +1113,7 @@ $tanks_result = $connection->query($tanks_query);
                     }
                 },
                 error: function() {
-                    showAlert('Is emri detaylari alinirken bir hata olustu.', 'danger');
+                    showAlert('Ä°ÅŸ emri detaylarÄ± alÄ±nÄ±rken bir hata oluÅŸtu.', 'danger');
                 }
             });
         });
@@ -1601,7 +1148,7 @@ $tanks_result = $connection->query($tanks_query);
                     }
                 },
                 error: function() {
-                    alert('Islem sirasinda sunucu taraflı bir hata olustu.');
+                    alert('Ä°ÅŸlem sÄ±rasÄ±nda sunucu taraflÄ± bir hata oluÅŸtu.');
                 }
             });
         });
@@ -1610,7 +1157,7 @@ $tanks_result = $connection->query($tanks_query);
         $(document).on('click', '.revert-completion-btn', function() {
             var workOrderId = $(this).data('id');
             
-            if (confirm('Bu is emrinin tamamlanma durumunu geri almak istediginizden emin misiniz? Bu islem ilgili stok hareketlerini tersine cevirecektir.')) {
+            if (confirm('Bu iÅŸ emrinin tamamlanma durumunu geri almak istediÄŸinizden emin misiniz? Bu iÅŸlem ilgili stok hareketlerini tersine Ã§evirecektir.')) {
                 $.ajax({
                     url: 'api_islemleri/esans_is_emirleri_islemler.php',
                     type: 'POST',
@@ -1630,335 +1177,11 @@ $tanks_result = $connection->query($tanks_query);
                         }
                     },
                     error: function() {
-                        showAlert('Geri alma islemi sirasinda bir hata olustu.', 'danger');
+                        showAlert('Geri alma iÅŸlemi sÄ±rasÄ±nda bir hata oluÅŸtu.', 'danger');
                     }
                 });
             }
         });
-        
-        $(document).on('click', '.details-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            $.ajax({
-                url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var components = response.data;
-                        var tableBody = $('#materialsDetailsTableBody');
-                        tableBody.empty(); // Clear previous data
-
-                        if (components.length > 0) {
-                            $.each(components, function(index, component) {
-                                var row = `<tr>
-                                    <td>${component.malzeme_kodu}</td>
-                                    <td>${component.malzeme_ismi}</td>
-                                    <td>${component.malzeme_turu}</td>
-                                    <td>${parseFloat(component.miktar).toFixed(2)}</td>
-                                    <td>${component.birim}</td>
-                                </tr>`;
-                                tableBody.append(row);
-                            });
-                            $('#materialsDetailsPlaceholder').hide();
-                        } else {
-                            tableBody.html('<tr><td colspan="5" class="text-center">Bu iş emri için bileşen bulunmuyor.</td></tr>');
-                            $('#materialsDetailsPlaceholder').show();
-                        }
-                        
-                        $('#materialsModalTitle').text('İş Emri No: ' + workOrderId + ' Malzeme Detayları');
-                        $('#materialsDetailsModal').modal('show');
-                    } else {
-                        showAlert('Malzeme detayları alınırken bir hata oluştu: ' + response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Malzeme detayları alınırken bir sunucu hatası oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle info button click
-        $('#infoButton').on('click', function() {
-            $('#infoModal').modal('show');
-        });
-
-        // Handle Print Button Click
-        $(document).on('click', '.print-btn', function() {
-            var workOrderId = $(this).data('id');
-            
-            // Show a loading indicator
-            showAlert('PDF oluşturuluyor, lütfen bekleyin...', 'info');
-
-            // Fetch both work order details and components in parallel
-            $.when(
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order&id=' + workOrderId,
-                    type: 'GET', 
-                    dataType: 'json'
-                }),
-                $.ajax({
-                    url: 'api_islemleri/esans_is_emirleri_islemler.php?action=get_work_order_components&id=' + workOrderId,
-                    type: 'GET',
-                    dataType: 'json'
-                })
-            ).done(function(workOrderResponse, componentsResponse) {
-                
-                var workOrderData = workOrderResponse[0];
-                var componentsData = componentsResponse[0];
-
-                if (workOrderData.status === 'success' && componentsData.status === 'success') {
-                    var workOrder = workOrderData.data;
-                    var components = componentsData.data;
-                    
-                    var printHtml = buildPrintableHtml(workOrder, components);
-                    
-                    const element = document.createElement('div');
-                    element.innerHTML = printHtml;
-
-                    const opt = {
-                        margin: 0.2,
-                        filename: `is_emri_${workOrder.is_emri_numarasi}.pdf`,
-                        image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true },
-                        jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
-                    };
-
-                    html2pdf().from(element).set(opt).save().then(function() {
-                        showAlert('PDF başarıyla oluşturuldu ve indirildi.', 'success');
-                    });
-
-                } else {
-                    showAlert('PDF oluşturmak için veriler alınırken bir hata oluştu.', 'danger');
-                }
-
-            }).fail(function() {
-                showAlert('PDF oluşturulurken bir sunucu hatası oluştu.', 'danger');
-            });
-        });
-
-                function buildPrintableHtml(wo, components) {
-
-                    // Map for user-friendly labels
-
-                    const fieldLabels = {
-
-                        'is_emri_numarasi': 'İş Emri No',
-
-                        'olusturulma_tarihi': 'Oluşturulma Tarihi',
-
-                        'olusturan': 'Oluşturan',
-
-                        'esans_kodu': 'Esans Kodu',
-
-                        'esans_ismi': 'Esans İsmi',
-
-                        'tank_kodu': 'Tank Kodu',
-
-                        'tank_ismi': 'Tank İsmi',
-
-                        'planlanan_miktar': 'Planlanan Miktar',
-
-                        'tamamlanan_miktar': 'Tamamlanan Miktar',
-
-                        'eksik_miktar_toplami': 'Eksik Miktar Toplamı',
-
-                        'birim': 'Birim',
-
-                        'planlanan_baslangic_tarihi': 'Planlanan Başlangıç',
-
-                        'planlanan_bitis_tarihi': 'Planlanan Bitiş',
-
-                        'gerceklesen_baslangic_tarihi': 'Gerçekleşen Başlangıç',
-
-                        'gerceklesen_bitis_tarihi': 'Gerçekleşen Bitiş',
-
-                        'demlenme_suresi_gun': 'Demlenme Süresi (Gün)',
-
-                        'durum': 'Durum',
-
-                        'aciklama': 'Açıklama'
-
-                    };
-
-        
-
-                    const allRows = [];
-
-                    for (const key in wo) {
-
-                        if (wo.hasOwnProperty(key) && wo[key] !== null && wo[key] !== '' && fieldLabels[key]) {
-
-                            let value = wo[key];
-
-                            if (key === 'durum') {
-
-                                const statusMap = { olusturuldu: 'Oluşturuldu', uretimde: 'Üretimde', tamamlandi: 'Tamamlandı', iptal: 'İptal' };
-
-                                value = statusMap[value] || value;
-
-                            }
-
-                            const row = `
-
-                                <tr>
-
-                                    <td style="padding: 4px; border-bottom: 1px solid #eee; background-color: #f9f9f9; width: 40%;"><strong>${fieldLabels[key]}:</strong></td>
-
-                                    <td style="padding: 4px; border-bottom: 1px solid #eee;">${value}</td>
-
-                                </tr>`;
-
-                            allRows.push(row);
-
-                        }
-
-                    }
-
-        
-
-                    const itemsPerColumn = Math.ceil(allRows.length / 3);
-
-                    const leftColumn = allRows.slice(0, itemsPerColumn).join('');
-
-                    const middleColumn = allRows.slice(itemsPerColumn, 2 * itemsPerColumn).join('');
-
-                    const rightColumn = allRows.slice(2 * itemsPerColumn).join('');
-
-        
-
-                    generalInfoHtml = `
-
-                        <div style="display: flex; justify-content: space-between; width: 100%;">
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${leftColumn}</table>
-
-                            </div>
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${middleColumn}</table>
-
-                            </div>
-
-                            <div style="width: 32%;">
-
-                                <table style="width: 100%; border-collapse: collapse;">${rightColumn}</table>
-
-                            </div>
-
-                        </div>`;
-
-        
-
-                    let componentsHtml = '';
-
-                    if (components.length > 0) {
-
-                        components.forEach(c => {
-
-                            componentsHtml += `
-
-                                <tr>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_kodu}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_ismi}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${c.malzeme_turu}</td>
-
-                                    <td style="padding: 4px; border: 1px solid #ddd;">${parseFloat(c.miktar).toFixed(2)}</td>
-
-                                </tr>`;
-
-                        });
-
-                    } else {
-
-                        componentsHtml = '<tr><td colspan="4" style="padding: 4px; border: 1px solid #ddd; text-align: center;">Bu iş emri için bileşen bulunmuyor.</td></tr>';
-
-                    }
-
-        
-
-                    const today = new Date().toLocaleDateString('tr-TR');
-
-        
-
-                    return `
-
-                        <div style="font-family: Arial, sans-serif; padding: 10px; font-size: 10px;">
-
-                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #4a0e63; padding-bottom: 5px; margin-bottom: 5px;">
-
-                                <h1 style="font-size: 22px; color: #4a0e63; margin: 0;">İş Emri Raporu</h1>
-
-                                <div style="text-align: right;">
-
-                                    <div style="font-size: 12px;"><strong>İş Emri No:</strong> ${wo.is_emri_numarasi}</div>
-
-                                    <div style="font-size: 10px; color: #666;"><strong>Rapor Tarihi:</strong> ${today}</div>
-
-                                </div>
-
-                            </div>
-
-        
-
-                            <div style="margin-top: 15px;">
-
-                                <h3 style="font-size: 14px; color: #4a0e63; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 10px;">Genel Bilgiler</h3>
-
-                                ${generalInfoHtml}
-
-                            </div>
-
-                            
-
-                            <div style="margin-top: 15px;">
-
-                                <h3 style="font-size: 14px; color: #4a0e63; border-bottom: 1px solid #eee; padding-bottom: 3px; margin-bottom: 10px;">Gerekli Bileşenler</h3>
-
-                                <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
-
-                                    <thead style="background-color: #4a0e63; color: white;">
-
-                                        <tr>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme Kodu</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme İsmi</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Malzeme Türü</th>
-
-                                            <th style="padding: 5px; border: 1px solid #4a0e63; text-align: left;">Gerekli Miktar</th>
-
-                                        </tr>
-
-                                    </thead>
-
-                                    <tbody>${componentsHtml}</tbody>
-
-                                </table>
-
-                            </div>
-
-        
-
-                            <div style="position: absolute; bottom: 10px; left: 10px; right: 10px; text-align: center; font-size: 8px; color: #aaa;">
-
-                                Bu rapor IDO Kozmetik ERP sistemi tarafından oluşturulmuştur.
-
-                            </div>
-
-                        </div>
-
-                    `;
-
-                }
-
     });
     </script>
 </body>
