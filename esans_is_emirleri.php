@@ -679,7 +679,7 @@ $tanks_result = $connection->query($tanks_query);
                                         </div>
                                     </div>
 
-                                <td>{{ workOrder.is_emri_numarasi }}</td>
+                                <td><strong>{{ workOrder.is_emri_numarasi }}</strong></td>
                                 <td>
                                     <span :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
                                         {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' : 'Iptal')) }}
