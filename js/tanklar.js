@@ -122,40 +122,49 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
             },
             deleteTank(id) {
-                if (!confirm('Bu tankı silmek istediğinizden emin misiniz?')) {
-                    return;
-                }
-                
-                const formData = new FormData();
-                formData.append('action', 'delete_tank');
-                formData.append('tank_id', id);
-                
-                axios.post('api_islemleri/tanklar_islemler.php', formData)
-                    .then(response => {
-                        if (response.data.status === 'success') {
-                            this.showAlert(response.data.message, 'success');
-                            this.loadTanks(); // Reload tanks
-                            this.loadTotalTanks(); // Reload total count
-                        } else {
-                            this.showAlert(response.data.message || 'Tank silme işlemi sırasında bir hata oluştu. Hata Kodu: T011', 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Tank silme işlemi sırasında hata oluştu:', error);
-                        if (error.response) {
-                            if (error.response.status === 403) {
-                                this.showAlert('Bu işlemi yapma yetkiniz yok. Lütfen uygulamadan çıkış yapıp tekrar giriş yapın. Hata Kodu: T012', 'danger');
-                            } else if (error.response.status === 401) {
-                                this.showAlert('Oturumunuz sona ermiş olabilir. Lütfen sayfayı yenileyin veya tekrar giriş yapın. Hata Kodu: T013', 'danger');
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu tankı silmek istediğinizden emin misiniz?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (!result.isConfirmed) {
+                        return;
+                    }
+
+                    const formData = new FormData();
+                    formData.append('action', 'delete_tank');
+                    formData.append('tank_id', id);
+
+                    axios.post('api_islemleri/tanklar_islemler.php', formData)
+                        .then(response => {
+                            if (response.data.status === 'success') {
+                                this.showAlert(response.data.message, 'success');
+                                this.loadTanks(); // Reload tanks
+                                this.loadTotalTanks(); // Reload total count
                             } else {
-                                this.showAlert(`Tank silme işlemi sırasında bir hata oluştu. Hata: ${error.response.data?.message || error.response.statusText || 'Bilinmeyen hata'}. Hata Kodu: T014`, 'danger');
+                                this.showAlert(response.data.message || 'Tank silme işlemi sırasında bir hata oluştu. Hata Kodu: T011', 'danger');
                             }
-                        } else if (error.request) {
-                            this.showAlert('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin. Hata Kodu: T015', 'danger');
-                        } else {
-                            this.showAlert('İstek hazırlanırken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T016', 'danger');
-                        }
-                    });
+                        })
+                        .catch(error => {
+                            console.error('Tank silme işlemi sırasında hata oluştu:', error);
+                            if (error.response) {
+                                if (error.response.status === 403) {
+                                    this.showAlert('Bu işlemi yapma yetkiniz yok. Lütfen uygulamadan çıkış yapıp tekrar giriş yapın. Hata Kodu: T012', 'danger');
+                                } else if (error.response.status === 401) {
+                                    this.showAlert('Oturumunuz sona ermiş olabilir. Lütfen sayfayı yenileyin veya tekrar giriş yapın. Hata Kodu: T013', 'danger');
+                                } else {
+                                    this.showAlert(`Tank silme işlemi sırasında bir hata oluştu. Hata: ${error.response.data?.message || error.response.statusText || 'Bilinmeyen hata'}. Hata Kodu: T014`, 'danger');
+                                }
+                            } else if (error.request) {
+                                this.showAlert('Sunucuya bağlanılamadı. Lütfen internet bağlantınızı kontrol edin veya daha sonra tekrar deneyin. Hata Kodu: T015', 'danger');
+                            } else {
+                                this.showAlert('İstek hazırlanırken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T016', 'danger');
+                            }
+                        });
+                });
             },
             closeTankModal() {
                 this.tankModalVisible = false;
@@ -170,15 +179,21 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
             },
             showAlert(message, type) {
-                this.alert.message = message;
-                this.alert.type = type;
-                
-                // Auto-hide success alerts after 5 seconds
+                let icon = 'info';
                 if (type === 'success') {
-                    setTimeout(() => {
-                        this.clearAlert();
-                    }, 5000);
+                    icon = 'success';
+                } else if (type === 'danger' || type === 'error') {
+                    icon = 'error';
+                } else if (type === 'warning') {
+                    icon = 'warning';
                 }
+                
+                Swal.fire({
+                    title: icon === 'success' ? 'Başarılı!' : 'Bilgi',
+                    text: message,
+                    icon: icon,
+                    confirmButtonText: 'Tamam'
+                });
             },
             clearAlert() {
                 this.alert.message = '';

@@ -688,6 +688,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
     $(document).ready(function() {
         // Determine initial status from URL parameters
@@ -1273,33 +1275,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
                             if ($button.prop('disabled')) return; // If already processing, return
 
-                            if (confirm('Siparişi iptal etmek istediğinize emin misiniz?')) {
-                                $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                            Swal.fire({
+                                title: 'Emin misiniz?',
+                                text: 'Siparişi iptal etmek istediğinize emin misiniz?',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Evet',
+                                cancelButtonText: 'İptal'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
-                                $.ajax({
-                                    url: 'api_islemleri/musteri_siparis_islemler.php',
-                                    type: 'POST',
-                                    data: {
-                                        action: 'cancel_order',
-                                        siparis_id: orderId
-                                    },
-                                    dataType: 'json',
-                                    success: function(response) {
-                                        if (response.status === 'success') {
-                                            showAlert(response.message, 'success');
-                                            // Reload orders to reflect the change
-                                            loadOrders('all');
-                                        } else {
-                                            showAlert(response.message, 'danger');
+                                    $.ajax({
+                                        url: 'api_islemleri/musteri_siparis_islemler.php',
+                                        type: 'POST',
+                                        data: {
+                                            action: 'cancel_order',
+                                            siparis_id: orderId
+                                        },
+                                        dataType: 'json',
+                                        success: function(response) {
+                                            if (response.status === 'success') {
+                                                showAlert(response.message, 'success');
+                                                // Reload orders to reflect the change
+                                                loadOrders('all');
+                                            } else {
+                                                showAlert(response.message, 'danger');
+                                                $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
+                                            }
+                                        },
+                                        error: function() {
+                                            showAlert('Sipariş iptal edilirken bir hata oluştu.', 'danger');
                                             $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
                                         }
-                                    },
-                                    error: function() {
-                                        showAlert('Sipariş iptal edilirken bir hata oluştu.', 'danger');
-                                        $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
-                                    }
-                                });
-                            }
+                                    });
+                                }
+                            });
                         });
                     } else {
                         $('#ordersTableBody').html(`

@@ -182,42 +182,60 @@ new Vue({
             }
         },
         async deleteProductTree(id) {
-            if (confirm('Bu ürün ağacını silmek istediğinizden emin misiniz?')) {
-                try {
-                    const response = await axios.post('api_islemleri/urun_agaclari_islemler.php', {
-                        action: 'delete_product_tree',
-                        urun_agaci_id: id
-                    });
-                    
-                    if (response.data.status === 'success') {
-                        this.showAlert(response.data.message, 'success');
-                        await this.fetchProductTrees();
-                    } else {
-                        this.showAlert(response.data.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu ürün ağacını silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await axios.post('api_islemleri/urun_agaclari_islemler.php', {
+                            action: 'delete_product_tree',
+                            urun_agaci_id: id
+                        });
+
+                        if (response.data.status === 'success') {
+                            this.showAlert(response.data.message, 'success');
+                            await this.fetchProductTrees();
+                        } else {
+                            this.showAlert(response.data.message, 'danger');
+                        }
+                    } catch (error) {
+                        this.showAlert('Silme işlemi sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
                     }
-                } catch (error) {
-                    this.showAlert('Silme işlemi sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
                 }
-            }
+            });
         },
         async deleteEssenceTree(id) {
-            if (confirm('Bu esans ağacını silmek istediğinizden emin misiniz?')) {
-                try {
-                    const response = await axios.post('api_islemleri/urun_agaclari_islemler.php', {
-                        action: 'delete_product_tree',
-                        urun_agaci_id: id
-                    });
-                    
-                    if (response.data.status === 'success') {
-                        this.showAlert(response.data.message, 'success');
-                        await this.fetchEssenceTrees();
-                    } else {
-                        this.showAlert(response.data.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu esans ağacını silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await axios.post('api_islemleri/urun_agaclari_islemler.php', {
+                            action: 'delete_product_tree',
+                            urun_agaci_id: id
+                        });
+
+                        if (response.data.status === 'success') {
+                            this.showAlert(response.data.message, 'success');
+                            await this.fetchEssenceTrees();
+                        } else {
+                            this.showAlert(response.data.message, 'danger');
+                        }
+                    } catch (error) {
+                        this.showAlert('Silme işlemi sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
                     }
-                } catch (error) {
-                    this.showAlert('Silme işlemi sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
                 }
-            }
+            });
         },
         openAddModal() {
             this.modalTitle = 'Yeni Ürün Ağacı Ekle';

@@ -130,25 +130,34 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             
             silEsans(esansId) {
-                if(confirm('Bu esansı silmek istediğinizden emin misiniz?')) {
-                    const self = this;
-                    axios.post('api_islemleri/esanslar_islemler.php', {
-                        action: 'delete_essence',
-                        esans_id: esansId
-                    })
-                    .then(function(response) {
-                        if(response.data.status === 'success') {
-                            self.gosterUyari(response.data.message, 'success');
-                            self.esanslariYukle(); // Listeyi yeniden yükle
-                        } else {
-                            self.gosterUyari(response.data.message, 'danger');
-                        }
-                    })
-                    .catch(function(error) {
-                        console.error('Esans silinirken hata oluştu:', error);
-                        self.gosterUyari('Esans silinirken bir hata oluştu.', 'danger');
-                    });
-                }
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu esansı silmek istediğinizden emin misiniz?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const self = this;
+                        axios.post('api_islemleri/esanslar_islemler.php', {
+                            action: 'delete_essence',
+                            esans_id: esansId
+                        })
+                        .then(function(response) {
+                            if(response.data.status === 'success') {
+                                self.gosterUyari(response.data.message, 'success');
+                                self.esanslariYukle(); // Listeyi yeniden yükle
+                            } else {
+                                self.gosterUyari(response.data.message, 'danger');
+                            }
+                        })
+                        .catch(function(error) {
+                            console.error('Esans silinirken hata oluştu:', error);
+                            self.gosterUyari('Esans silinirken bir hata oluştu.', 'danger');
+                        });
+                    }
+                });
             },
             
             kapatModal() {

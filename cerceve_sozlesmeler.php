@@ -334,6 +334,8 @@ function display_date($date_string) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
     $(document).ready(function() {
@@ -431,31 +433,40 @@ function display_date($date_string) {
         // Handle contract deletion
         $('.delete-btn').on('click', function() {
             var contractId = $(this).data('id');
-            
-            if (confirm('Bu sözleşmeyi silmek istediğinizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete_contract',
-                        sozlesme_id: contractId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
+
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu sözleşmeyi silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'delete_contract',
+                            sozlesme_id: contractId
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                showAlert(response.message, 'success');
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                        },
+                        error: function() {
+                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         }
-                    },
-                    error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
     </script>

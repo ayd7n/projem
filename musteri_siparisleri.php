@@ -800,34 +800,34 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                 </a>
 
                                                 <?php if ($order['durum'] === 'beklemede'): ?>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi onaylamak istediğinizden emin misiniz?');">
+                                                    <form method="POST" class="d-inline">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
-                                                        <button type="submit" name="update" class="btn btn-success btn-sm">
+                                                        <button type="submit" name="update" class="btn btn-success btn-sm" onclick="confirmOnayla(event, this.form)">
                                                             <i class="fas fa-check"></i> Onayla
                                                         </button>
                                                     </form>
 
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi iptal etmek istediğinizden emin misiniz?');">
+                                                    <form method="POST" class="d-inline">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="iptal_edildi">
-                                                        <button type="submit" name="update" class="btn btn-danger btn-sm">
+                                                        <button type="submit" name="update" class="btn btn-danger btn-sm" onclick="confirmIptal(event, this.form)">
                                                             <i class="fas fa-times"></i> İptal
                                                         </button>
                                                     </form>
                                                 <?php elseif ($order['durum'] === 'onaylandi'): ?>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu siparişi tamamlamak istediğinizden emin misiniz? Stok hareketi oluşturulacaktır.');">
+                                                    <form method="POST" class="d-inline">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="tamamlandi">
-                                                        <button type="submit" name="update" class="btn btn-info btn-sm">
+                                                        <button type="submit" name="update" class="btn btn-info btn-sm" onclick="confirmTamamla(event, this.form)">
                                                             <i class="fas fa-check-double"></i> Tamamla
                                                         </button>
                                                     </form>
                                                 <?php elseif ($order['durum'] === 'tamamlandi'): ?>
-                                                    <form method="POST" class="d-inline" onsubmit="return confirm('Bu tamamlanmış siparişi geri almak istediğinizden emin misiniz? Stok hareketleri geri alınacaktır.');">
+                                                    <form method="POST" class="d-inline">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
-                                                        <button type="submit" name="update" class="btn btn-warning btn-sm">
+                                                        <button type="submit" name="update" class="btn btn-warning btn-sm" onclick="confirmGeriAl(event, this.form)">
                                                             <i class="fas fa-undo"></i> Geri Al
                                                         </button>
                                                     </form>
@@ -854,6 +854,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
     $(document).ready(function() {
         // Mobile menu toggle
@@ -869,7 +870,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
         // Highlight active nav link
         const currentPage = window.location.pathname.split('/').pop();
         const navLinks = document.querySelectorAll('.nav-links a');
-        
+
         navLinks.forEach(link => {
             const linkPage = link.getAttribute('href').split('/').pop();
             if (currentPage === linkPage || (currentPage === '' && linkPage === 'index.php') || (currentPage === 'navigation.php' && linkPage === 'navigation.php')) {
@@ -877,6 +878,70 @@ if ($orders_result && $orders_result->num_rows > 0) {
             }
         });
     });
+
+    function confirmOnayla(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Emin misiniz?',
+            text: 'Bu siparişi onaylamak istediğinizden emin misiniz?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+
+    function confirmIptal(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Emin misiniz?',
+            text: 'Bu siparişi iptal etmek istediğinizden emin misiniz?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+
+    function confirmTamamla(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Emin misiniz?',
+            text: 'Bu siparişi tamamlamak istediğinizden emin misiniz? Stok hareketi oluşturulacaktır.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
+
+    function confirmGeriAl(event, form) {
+        event.preventDefault();
+        Swal.fire({
+            title: 'Emin misiniz?',
+            text: 'Bu tamamlanmış siparişi geri almak istediğinizden emin misiniz? Stok hareketleri geri alınacaktır.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                form.submit();
+            }
+        });
+    }
     </script>
 </body>
 </html>

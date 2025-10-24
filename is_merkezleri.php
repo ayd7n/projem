@@ -506,6 +506,7 @@ $work_centers_result = $connection->query($work_centers_query);
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
     $(document).ready(function() {
@@ -590,31 +591,39 @@ $work_centers_result = $connection->query($work_centers_query);
         // Handle work center deletion
         $('.delete-btn').on('click', function() {
             var workCenterId = $(this).data('id');
-            
-            if (confirm('Bu iş merkezini silmek istediğinizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/is_merkezleri_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete_work_center',
-                        is_merkezi_id: workCenterId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            setTimeout(function() {
-                                location.reload();
-                            }, 1000);
-                        } else {
-                            showAlert(response.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu iş merkezini silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'api_islemleri/is_merkezleri_islemler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'delete_work_center',
+                            is_merkezi_id: workCenterId
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                showAlert(response.message, 'success');
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 1000);
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                        },
+                        error: function() {
+                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         }
-                    },
-                    error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
     </script>

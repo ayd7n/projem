@@ -1011,7 +1011,32 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
+    <!-- Vue.js and Axios -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
+    <!-- Include the Vue.js application -->
+    <script src="assets/js/montaj_is_emirleri.js"></script>
+    
+    <script>
+        // Define user info for the Vue app
+        window.kullaniciBilgisi = {
+            kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
+        };
+    </script>
+    </div> <!-- Close the v-else div -->
+    </div> <!-- Close the #app div -->
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
     <!-- Vue.js and Axios -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -1032,11 +1057,10 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                 if (typeof Vue !== 'undefined') {
                     console.log('Vue is available');
                 } else {
-                    console.log('Vue is not available');
+                    console.log('Vue is available');
                 }
             }, 1000);
         });
     </script>
-    </div> <!-- Close the v-else div -->
 </body>
 </html>

@@ -1005,13 +1005,16 @@ $tanks_result = $connection->query($tanks_query);
         </div>
     </div>
 
+    </div> <!-- Close the v-else div -->
     </div> <!-- Close the #app div -->
 
     <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+
     <!-- Vue.js and Axios -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
@@ -1024,19 +1027,6 @@ $tanks_result = $connection->query($tanks_query);
         window.kullaniciBilgisi = {
             kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
         };
-        
-        // Debug: Check if Vue app is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, checking for Vue app...');
-            setTimeout(function() {
-                if (typeof Vue !== 'undefined') {
-                    console.log('Vue is available');
-                } else {
-                    console.log('Vue is not available');
-                }
-            }, 1000);
-        });
     </script>
-    </div> <!-- Close the v-else div -->
 </body>
 </html>

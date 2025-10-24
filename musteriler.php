@@ -31,6 +31,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <style>
         :root {
             --primary: #4a0e63; /* Deep Purple */
@@ -536,6 +537,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
     $(document).ready(function() {
@@ -675,28 +677,37 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         // Handle customer deletion
         $(document).on('click', '.delete-btn', function() {
             var customerId = $(this).data('id');
-            if (confirm('Bu müşteriyi silmek istediğinizden emin misiniz?')) {
-                $.ajax({
-                    url: 'api_islemleri/musteriler_islemler.php',
-                    type: 'POST',
-                    data: {
-                        action: 'delete_customer',
-                        musteri_id: customerId
-                    },
-                    dataType: 'json',
-                    success: function(response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            loadCustomers();
-                        } else {
-                            showAlert(response.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu müşteriyi silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.ajax({
+                        url: 'api_islemleri/musteriler_islemler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'delete_customer',
+                            musteri_id: customerId
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                showAlert(response.message, 'success');
+                                loadCustomers();
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                        },
+                        error: function() {
+                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         }
-                    },
-                    error: function() {
-                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                    }
-                });
-            }
+                    });
+                }
+            });
         });
     });
     </script>

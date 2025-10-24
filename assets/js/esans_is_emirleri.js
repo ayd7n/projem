@@ -81,11 +81,21 @@ app = new Vue({
                     }
                 } else {
                     this.workOrders = []; // Ensure an empty array on error
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
                 this.workOrders = []; // Ensure an empty array on error
-                this.showAlert('Esans iş emirleri alınırken bir hata oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Esans iş emirleri alınırken bir hata oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 console.error('Error fetching work orders:', error);
             } finally {
                 this.loading = false; // Hide loading state
@@ -102,10 +112,20 @@ app = new Vue({
                 if (response.data.status === 'success') {
                     this.essences = response.data.data || [];
                 } else {
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('Essanslar alınırken bir hata oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Essanslar alınırken bir hata oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
 
@@ -115,10 +135,20 @@ app = new Vue({
                 if (response.data.status === 'success') {
                     this.tanks = response.data.data || [];
                 } else {
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('Tanklar alınırken bir hata oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Tanklar alınırken bir hata oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
         async updateEssenceDetails() {
@@ -169,11 +199,21 @@ app = new Vue({
 
                     this.calculatedComponents = calculated;
                 } else {
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                     this.calculatedComponents = [];
                 }
             } catch (error) {
-                this.showAlert('Bileşenler hesaplanırken bir hata oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Bileşenler hesaplanırken bir hata oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 console.error('Error calculating components:', error);
                 this.calculatedComponents = [];
             }
@@ -254,57 +294,104 @@ app = new Vue({
                 });
 
                 if (response.data.status === 'success') {
-                    this.showAlert(response.data.message, 'success');
+                    Swal.fire({
+                        title: 'Başarılı!',
+                        text: response.data.message,
+                        icon: 'success',
+                        confirmButtonText: 'Tamam'
+                    });
                     this.closeModal();
                     await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                 } else {
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('İş emri kaydedilirken bir hata oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'İş emri kaydedilirken bir hata oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 console.error('Error saving work order:', error);
             }
         },
         async deleteWorkOrder(id) {
-            if (!confirm('Bu iş emrini silmek istediğinizden emin misiniz?')) {
-                return;
-            }
-
-            try {
-                const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
-                    action: 'delete_work_order',
-                    id: id
-                });
-
-                if (response.data.status === 'success') {
-                    this.showAlert(response.data.message, 'success');
-                    // After deletion, check if we need to adjust the page
-                    if (this.workOrders.length === 1 && this.pagination.current_page > 1) {
-                        // If we're on a page with only one item and it's not the first page,
-                        // we should go to the previous page
-                        await this.goToPreviousPage();
-                    } else {
-                        // Otherwise, refresh the current page
-                        await this.fetchWorkOrders(this.pagination.current_page);
-                    }
-                } else {
-                    this.showAlert(response.data.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu iş emrini silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then(async (result) => {
+                if (!result.isConfirmed) {
+                    return;
                 }
-            } catch (error) {
-                this.showAlert('İş emri silinirken bir hata oluştu.', 'danger');
-            }
+
+                try {
+                    const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
+                        action: 'delete_work_order',
+                        id: id
+                    });
+
+                    if (response.data.status === 'success') {
+                        Swal.fire({
+                            title: 'Başarılı!',
+                            text: response.data.message,
+                            icon: 'success',
+                            confirmButtonText: 'Tamam'
+                        });
+                        // After deletion, check if we need to adjust the page
+                        if (this.workOrders.length === 1 && this.pagination.current_page > 1) {
+                            // If we're on a page with only one item and it's not the first page,
+                            // we should go to the previous page
+                            await this.goToPreviousPage();
+                        } else {
+                            // Otherwise, refresh the current page
+                            await this.fetchWorkOrders(this.pagination.current_page);
+                        }
+                    } else {
+                        Swal.fire({
+                            title: 'Hata!',
+                            text: response.data.message,
+                            icon: 'error',
+                            confirmButtonText: 'Tamam'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'İş emri silinirken bir hata oluştu.',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                }
+            });
         },
         closeModal() {
             this.showModal = false;
         },
         showAlert(message, type) {
-            this.alertMessage = message;
-            this.alertType = type;
-
-            // Auto-hide the alert after 5 seconds
-            setTimeout(() => {
-                this.closeAlert();
-            }, 5000);
+            let icon = 'info';
+            if (type === 'success') {
+                icon = 'success';
+            } else if (type === 'danger' || type === 'error') {
+                icon = 'error';
+            } else if (type === 'warning') {
+                icon = 'warning';
+            }
+            
+            Swal.fire({
+                title: icon === 'success' ? 'Başarılı!' : 'Bilgi',
+                text: message,
+                icon: icon,
+                confirmButtonText: 'Tamam'
+            });
         },
         closeAlert() {
             this.alertMessage = '';
@@ -336,48 +423,101 @@ app = new Vue({
                         confirmationMessage += 'Bu is emri icin stoktan dusulecek malzeme bulunmuyor.';
                     }
 
-                    if (confirm(confirmationMessage)) {
-                        // If confirmed, proceed to start the work order
-                        const startResponse = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
-                            action: 'start_work_order',
-                            id: id
-                        });
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: confirmationMessage,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonText: 'Evet',
+                        cancelButtonText: 'İptal'
+                    }).then(async (result) => {
+                        if (result.isConfirmed) {
+                            // If confirmed, proceed to start the work order
+                            const startResponse = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
+                                action: 'start_work_order',
+                                id: id
+                            });
 
-                        if (startResponse.data.status === 'success') {
-                            this.showAlert(startResponse.data.message, 'success');
-                            await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
-                        } else {
-                            this.showAlert(startResponse.data.message, 'danger');
+                            if (startResponse.data.status === 'success') {
+                                Swal.fire({
+                                    title: 'Başarılı!',
+                                    text: startResponse.data.message,
+                                    icon: 'success',
+                                    confirmButtonText: 'Tamam'
+                                });
+                                await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
+                            } else {
+                                Swal.fire({
+                                    title: 'Hata!',
+                                    text: startResponse.data.message,
+                                    icon: 'error',
+                                    confirmButtonText: 'Tamam'
+                                });
+                            }
                         }
-                    }
+                    });
                 } else {
-                    this.showAlert('Onay icin bilesen listesi alinamadi: ' + response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Onay icin bilesen listesi alinamadi: ' + response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('Onay icin bilesen listesi alinirken bir sunucu hatasi olustu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Onay icin bilesen listesi alinirken bir sunucu hatasi olustu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 console.error('Error getting components:', error);
             }
         },
         async revertWorkOrder(id) {
-            if (!confirm('Bu is emrini durdurup "Olusturuldu" durumuna geri almak istediginizden emin misiniz?')) {
-                return;
-            }
-
-            try {
-                const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
-                    action: 'revert_work_order',
-                    id: id
-                });
-
-                if (response.data.status === 'success') {
-                    this.showAlert(response.data.message, 'success');
-                    await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
-                } else {
-                    this.showAlert(response.data.message, 'danger');
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu is emrini durdurup "Olusturuldu" durumuna geri almak istediginizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then(async (result) => {
+                if (!result.isConfirmed) {
+                    return;
                 }
-            } catch (error) {
-                this.showAlert('Islem sirasinda bir hata olustu.', 'danger');
-            }
+
+                try {
+                    const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
+                        action: 'revert_work_order',
+                        id: id
+                    });
+
+                    if (response.data.status === 'success') {
+                        Swal.fire({
+                            title: 'Başarılı!',
+                            text: response.data.message,
+                            icon: 'success',
+                            confirmButtonText: 'Tamam'
+                        });
+                        await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
+                    } else {
+                        Swal.fire({
+                            title: 'Hata!',
+                            text: response.data.message,
+                            icon: 'error',
+                            confirmButtonText: 'Tamam'
+                        });
+                    }
+                } catch (error) {
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Islem sirasinda bir hata olustu.',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                }
+            });
         },
         async openCompleteModal(id) {
             try {
@@ -392,10 +532,20 @@ app = new Vue({
                     
                     this.showCompleteModal = true;
                 } else {
-                    this.showAlert(response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('Is emri detaylari alinirken bir hata olustu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Is emri detaylari alinirken bir hata olustu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
         async completeWorkOrder() {
@@ -416,10 +566,20 @@ app = new Vue({
                     this.showCompleteModal = false;
                     await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                 } else {
-                    alert('Hata: ' + response.data.message);
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Hata: ' + response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                alert('Islem sirasinda sunucu taraflı bir hata olustu.');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Islem sirasinda sunucu taraflı bir hata olustu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
         async revertCompletion(id) {
@@ -432,34 +592,68 @@ app = new Vue({
             console.log('Found work order:', workOrder);
 
             if (!id) {
-                this.showAlert('İş emri numarası gerekli.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'İş emri numarası gerekli.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 return;
             }
 
             // Check if ID is valid
             if (typeof id === 'undefined' || id === null || id === '') {
-                this.showAlert('Geçersiz iş emri numarası.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Geçersiz iş emri numarası.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
                 return;
             }
 
-            if (confirm('Bu is emrinin tamamlanma durumunu geri almak istediginizden emin misiniz? Bu islem ilgili stok hareketlerini tersine cevirecektir.')) {
-                try {
-                    const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
-                        action: 'revert_completion',
-                        id: id
-                    });
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu is emrinin tamamlanma durumunu geri almak istediginizden emin misiniz? Bu islem ilgili stok hareketlerini tersine cevirecektir.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
+                            action: 'revert_completion',
+                            id: id
+                        });
 
-                    if (response.data.status === 'success') {
-                        this.showAlert(response.data.message, 'success');
-                        await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
-                    } else {
-                        this.showAlert(response.data.message, 'danger');
+                        if (response.data.status === 'success') {
+                            Swal.fire({
+                                title: 'Başarılı!',
+                                text: response.data.message,
+                                icon: 'success',
+                                confirmButtonText: 'Tamam'
+                            });
+                            await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
+                        } else {
+                            Swal.fire({
+                                title: 'Hata!',
+                                text: response.data.message,
+                                icon: 'error',
+                                confirmButtonText: 'Tamam'
+                            });
+                        }
+                    } catch (error) {
+                        Swal.fire({
+                            title: 'Hata!',
+                            text: 'Geri alma islemi sirasinda bir hata olustu.',
+                            icon: 'error',
+                            confirmButtonText: 'Tamam'
+                        });
+                        console.error('Revert completion error:', error);
                     }
-                } catch (error) {
-                    this.showAlert('Geri alma islemi sirasinda bir hata olustu.', 'danger');
-                    console.error('Revert completion error:', error);
                 }
-            }
+            });
         },
         async showWorkOrderDetails(id) {
             try {
@@ -470,14 +664,31 @@ app = new Vue({
                     this.selectedWorkOrderId = id;
                     this.showDetailsModal = true;
                 } else {
-                    this.showAlert('Malzeme detayları alınırken bir hata oluştu: ' + response.data.message, 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Malzeme detayları alınırken bir hata oluştu: ' + response.data.message,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('Malzeme detayları alınırken bir sunucu hatası oluştu.', 'danger');
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'Malzeme detayları alınırken bir sunucu hatası oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
         async printWorkOrder(id) {
-            this.showAlert('PDF oluşturuluyor, lütfen bekleyin...', 'info');
+            Swal.fire({
+                title: 'Lütfen bekleyin...',
+                text: 'PDF oluşturuluyor, lütfen bekleyin...',
+                icon: 'info',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false
+            });
 
             try {
                 // Fetch both work order details and components in parallel
@@ -504,13 +715,31 @@ app = new Vue({
                     };
 
                     html2pdf().from(element).set(opt).save().then(() => {
-                        this.showAlert('PDF başarıyla oluşturuldu ve indirildi.', 'success');
+                        Swal.close(); // Close the loading alert
+                        Swal.fire({
+                            title: 'Başarılı!',
+                            text: 'PDF başarıyla oluşturuldu ve indirildi.',
+                            icon: 'success',
+                            confirmButtonText: 'Tamam'
+                        });
                     });
                 } else {
-                    this.showAlert('PDF oluşturmak için veriler alınırken bir hata oluştu.', 'danger');
+                    Swal.close(); // Close the loading alert
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'PDF oluşturmak için veriler alınırken bir hata oluştu.',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             } catch (error) {
-                this.showAlert('PDF oluşturulurken bir sunucu hatası oluştu.', 'danger');
+                Swal.close(); // Close the loading alert
+                Swal.fire({
+                    title: 'Hata!',
+                    text: 'PDF oluşturulurken bir sunucu hatası oluştu.',
+                    icon: 'error',
+                    confirmButtonText: 'Tamam'
+                });
             }
         },
         buildPrintableHtml(wo, components) {
@@ -713,4 +942,3 @@ app = new Vue({
         }, 2000);
     }
 });
-

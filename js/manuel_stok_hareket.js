@@ -487,26 +487,35 @@ new Vue({
                 });
         },
         deleteMovement(id) {
-            if (!confirm('Bu stok hareketini silmek istediğinizden emin misiniz?')) {
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('action', 'delete_movement');
-            formData.append('hareket_id', id);
-            
-            axios.post('api_islemleri/stok_hareket_islemler.php', formData)
-                .then(response => {
-                    if (response.data.status === 'success') {
-                        this.showAlert(response.data.message, 'success');
-                        this.loadMovements(); // Reload movements
-                    } else {
-                        this.showAlert(response.data.message || 'Silme sırasında bir hata oluştu', 'danger');
-                    }
-                })
-                .catch(error => {
-                    this.showAlert('Silme sırasında bir hata oluştu', 'danger');
-                });
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu stok hareketini silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (!result.isConfirmed) {
+                    return;
+                }
+
+                const formData = new FormData();
+                formData.append('action', 'delete_movement');
+                formData.append('hareket_id', id);
+
+                axios.post('api_islemleri/stok_hareket_islemler.php', formData)
+                    .then(response => {
+                        if (response.data.status === 'success') {
+                            this.showAlert(response.data.message, 'success');
+                            this.loadMovements(); // Reload movements
+                        } else {
+                            this.showAlert(response.data.message || 'Silme sırasında bir hata oluştu', 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        this.showAlert('Silme sırasında bir hata oluştu', 'danger');
+                    });
+            });
         },
         openTransferModal() {
             this.resetTransferForm();
@@ -891,15 +900,21 @@ new Vue({
                 });
         },
         showAlert(message, type) {
-            this.alert.message = message;
-            this.alert.type = type;
-            
-            // Auto-hide success alerts after 5 seconds
+            let icon = 'info';
             if (type === 'success') {
-                setTimeout(() => {
-                    this.clearAlert();
-                }, 5000);
+                icon = 'success';
+            } else if (type === 'danger' || type === 'error') {
+                icon = 'error';
+            } else if (type === 'warning') {
+                icon = 'warning';
             }
+            
+            Swal.fire({
+                title: icon === 'success' ? 'Başarılı!' : 'Bilgi',
+                text: message,
+                icon: icon,
+                confirmButtonText: 'Tamam'
+            });
         },
         clearAlert() {
             this.alert.message = '';

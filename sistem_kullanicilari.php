@@ -377,9 +377,9 @@ $total_users = $total_result->fetch_assoc()['total'] ?? 0;
                                             <td class="actions">
                                                 <a href="sistem_kullanicilari.php?edit=<?php echo $user['kullanici_id']; ?>" class="btn btn-primary"><i class="fas fa-edit"></i></a>
                                                 <?php if ($user['kullanici_id'] != $_SESSION['user_id']): ?>
-                                                    <form method="POST" onsubmit="return confirm('Bu kullanıcıyı silmek istediğinizden emin misiniz?');">
+                                                    <form method="POST" id="deleteForm<?php echo $user['kullanici_id']; ?>" onsubmit="return false;">
                                                         <input type="hidden" name="kullanici_id" value="<?php echo $user['kullanici_id']; ?>">
-                                                        <button type="submit" name="delete" class="btn btn-danger"><i class="fas fa-trash"></i></button>
+                                                        <button type="submit" name="delete" class="btn btn-danger" onclick="confirmDelete('<?php echo $user['kullanici_id']; ?>', event)"><i class="fas fa-trash"></i></button>
                                                     </form>
                                                 <?php endif; ?>
                                             </td>
@@ -422,28 +422,45 @@ $total_users = $total_result->fetch_assoc()['total'] ?? 0;
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
+        function confirmDelete(kullanici_id, event) {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: 'Bu kullanıcıyı silmek istediğinizden emin misiniz?',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet',
+                cancelButtonText: 'İptal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('deleteForm' + kullanici_id).submit();
+                }
+            });
+        }
+
         // Update the ID dropdown based on the selected taraf
         document.getElementById('taraf').addEventListener('change', function() {
             const taraf = this.value;
             const idSelect = document.getElementById('id');
             idSelect.innerHTML = '<option value="">Seçin</option>';
-            
-            <?php 
+
+            <?php
             // Fetch and store employee and customer data for JavaScript
             $employees_result->data_seek(0);
             $employees = [];
             while($employee = $employees_result->fetch_assoc()) {
                 $employees[] = array('id' => $employee['personel_id'], 'name' => $employee['ad_soyad']);
             }
-            
+
             $customers_result->data_seek(0);
             $customers = [];
             while($customer = $customers_result->fetch_assoc()) {
                 $customers[] = array('id' => $customer['musteri_id'], 'name' => $customer['musteri_adi']);
             }
             ?>
-            
+
             if (taraf === 'personel') {
                 <?php foreach ($employees as $employee): ?>
                     const option = document.createElement('option');
@@ -457,8 +474,7 @@ $total_users = $total_result->fetch_assoc()['total'] ?? 0;
             } else if (taraf === 'musteri') {
                 <?php foreach ($customers as $customer): ?>
                     const option = document.createElement('option');
-                    option.value = <?php echo $customer['id']; ?>;
-                    option.textContent = '<?php echo $customer['id']; ?> - <?php echo addslashes($customer['name']); ?>';
+                    option.value = <?php echo $customer['id']; ?> - <?php echo addslashes($customer['name']); ?>;
                     <?php if ($id == $customer['id'] && $taraf == 'musteri'): ?>
                         option.selected = true;
                     <?php endif; ?>
