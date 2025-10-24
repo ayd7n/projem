@@ -73,7 +73,29 @@ function getWorkOrders() {
     global $connection;
     
     try {
-        $query = "SELECT * FROM esans_is_emirleri ORDER BY olusturulma_tarihi DESC";
+        // Get pagination parameters
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+        $offset = ($page - 1) * $limit;
+        
+        // Count total records for the last 1000 by creation date
+        $count_query = "SELECT COUNT(*) as total FROM (
+            SELECT is_emri_numarasi FROM esans_is_emirleri 
+            ORDER BY olusturulma_tarihi DESC 
+            LIMIT 1000
+        ) AS subquery";
+        $count_result = $connection->query($count_query);
+        $total_records = $count_result->fetch_assoc()['total'];
+        
+        // Fetch last 1000 records by creation date with pagination
+        $query = "SELECT * FROM (
+            SELECT * FROM esans_is_emirleri 
+            ORDER BY olusturulma_tarihi DESC 
+            LIMIT 1000
+        ) AS subquery 
+        ORDER BY olusturulma_tarihi DESC 
+        LIMIT $limit OFFSET $offset";
+        
         $result = $connection->query($query);
         
         $workOrders = [];
@@ -83,7 +105,16 @@ function getWorkOrders() {
             }
         }
         
-        echo json_encode(['status' => 'success', 'data' => $workOrders]);
+        echo json_encode([
+            'status' => 'success', 
+            'data' => $workOrders,
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $limit,
+                'total' => $total_records,
+                'total_pages' => ceil($total_records / $limit)
+            ]
+        ]);
     } catch (Exception $e) {
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }

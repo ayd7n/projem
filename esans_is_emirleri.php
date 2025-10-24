@@ -78,6 +78,23 @@ $tanks_result = $connection->query($tanks_query);
     </nav>
 
     <div id="app">
+        <div v-if="loading" class="d-flex justify-content-center align-items-center" style="height: 50vh;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="sr-only">Yükleniyor...</span>
+                </div>
+                <p class="mt-3 h5">Veriler yükleniyor...</p>
+            </div>
+        </div>
+        <div v-else-if="!showContent && !loading" class="d-flex justify-content-center align-items-center" style="height: 50vh;">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="sr-only">Hazırlanıyor...</span>
+                </div>
+                <p class="mt-3 h5">Sayfa hazırlanıyor...</p>
+            </div>
+        </div>
+        <div v-else>
 
     <!-- Information Modal -->
     <div class="modal fade" :class="{show: showInfoModal}" v-if="showInfoModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showInfoModal = false">
@@ -620,8 +637,18 @@ $tanks_result = $connection->query($tanks_query);
                                 <th><i class="fas fa-comment"></i> Aciklama</th>
                             </tr>
                         </thead>
-                        <tbody v-if="workOrders">
-                            <tr v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
+                        <tbody>
+                            <tr v-if="loading">
+                                <td colspan="17" class="text-center p-4">
+                                    <div class="d-flex justify-content-center align-items-center">
+                                        <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                                            <span class="sr-only">Yükleniyor...</span>
+                                        </div>
+                                        <span class="ml-2">Veriler yükleniyor...</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-else v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
                                 <td class="actions">
                                     <div class="dropdown">
                                         <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
@@ -700,11 +727,63 @@ $tanks_result = $connection->query($tanks_query);
                                 <td>{{ workOrder.demlenme_suresi_gun }}</td>
                                 <td>{{ workOrder.aciklama }}</td>
                             </tr>
-                            <tr v-if="workOrders.length === 0">
+                            <tr v-if="!loading && workOrders.length === 0">
                                 <td colspan="17" class="text-center p-4">Henüz kayitli esans is emri bulunmuyor.</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                
+                <!-- Pagination Controls -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+                    <div class="pagination-info mb-2 mb-md-0">
+                        <small>
+                            Sayfa {{ pagination.current_page }} / {{ pagination.total_pages }} 
+                            (Toplam {{ pagination.total }} kayıt)
+                        </small>
+                    </div>
+                    <div class="d-flex align-items-center mb-2 mb-md-0">
+                        <label for="per-page-select" class="mr-2 mb-0" style="white-space: nowrap;">Sayfa başına:</label>
+                        <select id="per-page-select" class="form-control" 
+                                v-model="pagination.per_page" @change="changePerPage">
+                            <option :value="1">1</option>
+                            <option :value="2">2</option>
+                            <option :value="5">5</option>
+                            <option :value="10">10</option>
+                            <option :value="25">25</option>
+                            <option :value="50">50</option>
+                            <option :value="100">100</option>
+                        </select>
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
+                                <button class="page-link" @click="goToFirstPage()" :disabled="pagination.current_page <= 1">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </button>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
+                                <button class="page-link" @click="goToPreviousPage()" :disabled="pagination.current_page <= 1">
+                                    <i class="fas fa-angle-left"></i>
+                                </button>
+                            </li>
+                            <li class="page-item active">
+                                <span class="page-link">
+                                    {{ pagination.current_page }}
+                                </span>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
+                                <button class="page-link" @click="goToNextPage()" :disabled="pagination.current_page >= pagination.total_pages">
+                                    <i class="fas fa-angle-right"></i>
+                                </button>
+                            </li>
+                            <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
+                                <button class="page-link" @click="goToLastPage()" :disabled="pagination.current_page >= pagination.total_pages">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -906,7 +985,12 @@ $tanks_result = $connection->query($tanks_query);
                     <hr>
                     <div class="form-group">
                         <label for="tamamlanan_miktar"><strong>Gerceklese Miktar *</strong></label>
-                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.tamamlanan_miktar" required>
+                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.tamamlanan_miktar" @input="calculateMissingAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eksik_miktar"><strong>Kalan (Eksik) Miktar</strong></label>
+                        <input type="number" step="0.01" class="form-control" :value="selectedWorkOrder.eksik_miktar_toplami.toFixed(2)" readonly>
+                        <small class="form-text text-muted">Planlanan miktardan gerçekleşen miktar çıkarılarak hesaplanmıştır</small>
                     </div>
                     <div class="form-group">
                         <label for="aciklama">Aciklama</label>
@@ -953,5 +1037,6 @@ $tanks_result = $connection->query($tanks_query);
             }, 1000);
         });
     </script>
+    </div> <!-- Close the v-else div -->
 </body>
 </html>

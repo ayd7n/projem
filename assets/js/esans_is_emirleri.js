@@ -34,12 +34,25 @@ app = new Vue({
         workOrderComponents: [],
         alertMessage: '',
         alertType: 'success',
-        kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı'
+        kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı',
+        // Pagination properties
+        pagination: {
+            current_page: 1,
+            per_page: 25,
+            total: 0,
+            total_pages: 1
+        },
+        // Loading state
+        loading: true,
+        showContent: false
     },
     methods: {
-        async fetchWorkOrders() {
+        async fetchWorkOrders(page = 1) {
+            this.loading = true; // Show loading state
+            this.showContent = false; // Hide content initially
+            
             try {
-                const response = await axios.get('api_islemleri/esans_is_emirleri_islemler.php?action=get_work_orders');
+                const response = await axios.get(`api_islemleri/esans_is_emirleri_islemler.php?action=get_work_orders&page=${page}&limit=${this.pagination.per_page}`);
                 if (response.data.status === 'success') {
                     // Ensure we have valid data before assigning
                     const fetchedData = response.data.data || [];
@@ -56,6 +69,16 @@ app = new Vue({
                         console.log(`  is_emri_numarasi:`, wo.is_emri_numarasi);
                         console.log(`  durum:`, wo.durum);
                     });
+                    
+                    // Update pagination data
+                    if (response.data.pagination) {
+                        this.pagination = {
+                            current_page: response.data.pagination.current_page,
+                            per_page: response.data.pagination.per_page,
+                            total: response.data.pagination.total,
+                            total_pages: response.data.pagination.total_pages
+                        };
+                    }
                 } else {
                     this.workOrders = []; // Ensure an empty array on error
                     this.showAlert(response.data.message, 'danger');
@@ -64,6 +87,13 @@ app = new Vue({
                 this.workOrders = []; // Ensure an empty array on error
                 this.showAlert('Esans iş emirleri alınırken bir hata oluştu.', 'danger');
                 console.error('Error fetching work orders:', error);
+            } finally {
+                this.loading = false; // Hide loading state
+                
+                // Wait 1.5 seconds before showing content
+                setTimeout(() => {
+                    this.showContent = true; // Show content after delay
+                }, 1500);
             }
         },
         async fetchEssences() {
@@ -226,7 +256,7 @@ app = new Vue({
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
                     this.closeModal();
-                    await this.fetchWorkOrders(); // Refresh the list
+                    await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                 } else {
                     this.showAlert(response.data.message, 'danger');
                 }
@@ -248,7 +278,15 @@ app = new Vue({
 
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
-                    await this.fetchWorkOrders(); // Refresh the list
+                    // After deletion, check if we need to adjust the page
+                    if (this.workOrders.length === 1 && this.pagination.current_page > 1) {
+                        // If we're on a page with only one item and it's not the first page,
+                        // we should go to the previous page
+                        await this.goToPreviousPage();
+                    } else {
+                        // Otherwise, refresh the current page
+                        await this.fetchWorkOrders(this.pagination.current_page);
+                    }
                 } else {
                     this.showAlert(response.data.message, 'danger');
                 }
@@ -307,7 +345,7 @@ app = new Vue({
 
                         if (startResponse.data.status === 'success') {
                             this.showAlert(startResponse.data.message, 'success');
-                            await this.fetchWorkOrders(); // Refresh the list
+                            await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                         } else {
                             this.showAlert(startResponse.data.message, 'danger');
                         }
@@ -333,7 +371,7 @@ app = new Vue({
 
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
-                    await this.fetchWorkOrders(); // Refresh the list
+                    await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                 } else {
                     this.showAlert(response.data.message, 'danger');
                 }
@@ -348,6 +386,10 @@ app = new Vue({
                 if (response.data.status === 'success') {
                     const workOrder = response.data.data;
                     this.selectedWorkOrder = { ...workOrder };
+                    
+                    // Calculate missing amount when modal opens
+                    this.calculateMissingAmount();
+                    
                     this.showCompleteModal = true;
                 } else {
                     this.showAlert(response.data.message, 'danger');
@@ -358,17 +400,21 @@ app = new Vue({
         },
         async completeWorkOrder() {
             try {
+                // Ensure missing amount is calculated before sending
+                this.calculateMissingAmount();
+                
                 const response = await axios.post('api_islemleri/esans_is_emirleri_islemler.php', {
                     action: 'complete_work_order',
                     is_emri_numarasi: this.selectedWorkOrder.is_emri_numarasi,
                     tamamlanan_miktar: this.selectedWorkOrder.tamamlanan_miktar,
+                    eksik_miktar_toplami: this.selectedWorkOrder.eksik_miktar_toplami,
                     aciklama: this.selectedWorkOrder.aciklama
                 });
 
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
                     this.showCompleteModal = false;
-                    await this.fetchWorkOrders(); // Refresh the list
+                    await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                 } else {
                     alert('Hata: ' + response.data.message);
                 }
@@ -405,7 +451,7 @@ app = new Vue({
 
                     if (response.data.status === 'success') {
                         this.showAlert(response.data.message, 'success');
-                        await this.fetchWorkOrders(); // Refresh the list
+                        await this.fetchWorkOrders(this.pagination.current_page); // Refresh the current page
                     } else {
                         this.showAlert(response.data.message, 'danger');
                     }
@@ -580,6 +626,55 @@ app = new Vue({
                 </div>
             </div>
         `;
+        },
+        
+        async goToPage(page) {
+            if (page < 1 || page > this.pagination.total_pages) {
+                return; // Invalid page number
+            }
+            await this.fetchWorkOrders(page);
+        },
+        
+        async goToPreviousPage() {
+            if (this.pagination.current_page > 1) {
+                await this.goToPage(this.pagination.current_page - 1);
+            }
+        },
+        
+        async goToNextPage() {
+            if (this.pagination.current_page < this.pagination.total_pages) {
+                await this.goToPage(this.pagination.current_page + 1);
+            }
+        },
+        
+        async goToFirstPage() {
+            await this.goToPage(1);
+        },
+        
+        async goToLastPage() {
+            await this.goToPage(this.pagination.total_pages);
+        },
+        
+        async changePerPage() {
+            // Reset to first page when changing items per page
+            await this.fetchWorkOrders(1);
+        },
+        
+        calculateMissingAmount() {
+            // Calculate missing amount as planned amount minus completed amount
+            // Ensure it doesn't go below 0
+            if (this.selectedWorkOrder && 
+                this.selectedWorkOrder.planlanan_miktar !== undefined && 
+                this.selectedWorkOrder.tamamlanan_miktar !== undefined) {
+                
+                const planned = parseFloat(this.selectedWorkOrder.planlanan_miktar) || 0;
+                const completed = parseFloat(this.selectedWorkOrder.tamamlanan_miktar) || 0;
+                
+                // Calculate missing amount: planned - completed, but minimum 0
+                const missing = Math.max(0, planned - completed);
+                
+                this.selectedWorkOrder.eksik_miktar_toplami = missing;
+            }
         }
     },
     watch: {
@@ -603,7 +698,7 @@ app = new Vue({
     },
     async mounted() {
         // Fetch initial data when component is mounted
-        await this.fetchWorkOrders();
+        await this.fetchWorkOrders(1); // Fetch first page
         await this.fetchEssences();
         await this.fetchTanks();
         console.log('Vue app initialized');
@@ -611,9 +706,11 @@ app = new Vue({
         // Debug: Check if work orders are correctly loaded
         setTimeout(() => {
             console.log('Mounted - Work orders count:', this.workOrders.length);
+            console.log('Pagination info:', this.pagination);
             if (this.workOrders.length > 0) {
                 console.log('First work order sample:', this.workOrders[0]);
             }
         }, 2000);
     }
 });
+
