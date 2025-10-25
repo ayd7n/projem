@@ -129,31 +129,44 @@ $employees = [
 ];
 
 // Prepare the insert statement
-$stmt = $connection->prepare("INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+$insert_stmt = $connection->prepare("INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
 
-if ($stmt) {
+// Prepare the check statement
+$check_stmt = $connection->prepare("SELECT ad_soyad FROM personeller WHERE ad_soyad = ? OR tc_kimlik_no = ?");
+
+if ($insert_stmt && $check_stmt) {
     foreach ($employees as $emp) {
-        $stmt->bind_param('ssssssssss', 
-            $emp['ad_soyad'], 
-            $emp['tc_kimlik_no'], 
-            $emp['dogum_tarihi'], 
-            $emp['ise_giris_tarihi'], 
-            $emp['pozisyon'], 
-            $emp['departman'], 
-            $emp['e_posta'], 
-            $emp['telefon'], 
-            $emp['adres'], 
-            $emp['notlar']
-        );
+        // Check if employee already exists
+        $check_stmt->bind_param('ss', $emp['ad_soyad'], $emp['tc_kimlik_no']);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
         
-        if ($stmt->execute()) {
-            echo "Successfully added: " . $emp['ad_soyad'] . "<br>";
+        if ($result->num_rows > 0) {
+            echo "Employee already exists: " . $emp['ad_soyad'] . "<br>";
         } else {
-            echo "Error adding " . $emp['ad_soyad'] . ": " . $stmt->error . "<br>";
+            $insert_stmt->bind_param('ssssssssss', 
+                $emp['ad_soyad'], 
+                $emp['tc_kimlik_no'], 
+                $emp['dogum_tarihi'], 
+                $emp['ise_giris_tarihi'], 
+                $emp['pozisyon'], 
+                $emp['departman'], 
+                $emp['e_posta'], 
+                $emp['telefon'], 
+                $emp['adres'], 
+                $emp['notlar']
+            );
+            
+            if ($insert_stmt->execute()) {
+                echo "Successfully added: " . $emp['ad_soyad'] . "<br>";
+            } else {
+                echo "Error adding " . $emp['ad_soyad'] . ": " . $insert_stmt->error . "<br>";
+            }
         }
     }
-    $stmt->close();
-    echo "<br>All employee records have been successfully added with proper Turkish characters!";
+    $insert_stmt->close();
+    $check_stmt->close();
+    echo "<br>Employee records processing completed!";
 } else {
     echo "Error preparing statement: " . $connection->error;
 }

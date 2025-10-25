@@ -14,7 +14,7 @@ if ($_SESSION['taraf'] !== 'musteri') {
 }
 
 // Check if customer still has login access
-$musteri_id = $_SESSION['id'];
+$musteri_id = $_SESSION['user_id'];
 $access_check_query = "SELECT giris_yetkisi FROM musteriler WHERE musteri_id = ?";
 $access_check_stmt = $connection->prepare($access_check_query);
 $access_check_stmt->bind_param('i', $musteri_id);

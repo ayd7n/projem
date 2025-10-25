@@ -92,28 +92,41 @@ $customers = [
 ];
 
 // Prepare the insert statement
-$stmt = $connection->prepare("INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?)");
+$insert_stmt = $connection->prepare("INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?)");
 
-if ($stmt) {
+// Prepare the check statement
+$check_stmt = $connection->prepare("SELECT musteri_adi FROM musteriler WHERE musteri_adi = ? OR vergi_no_tc = ?");
+
+if ($insert_stmt && $check_stmt) {
     foreach ($customers as $customer) {
-        $stmt->bind_param('sssssss', 
-            $customer['musteri_adi'], 
-            $customer['vergi_no_tc'], 
-            $customer['adres'], 
-            $customer['telefon'], 
-            $customer['e_posta'], 
-            $hashed_password, 
-            $customer['aciklama_notlar']
-        );
+        // Check if customer already exists
+        $check_stmt->bind_param('ss', $customer['musteri_adi'], $customer['vergi_no_tc']);
+        $check_stmt->execute();
+        $result = $check_stmt->get_result();
         
-        if ($stmt->execute()) {
-            echo "Successfully added: " . $customer['musteri_adi'] . "<br>";
+        if ($result->num_rows > 0) {
+            echo "Customer already exists: " . $customer['musteri_adi'] . "<br>";
         } else {
-            echo "Error adding " . $customer['musteri_adi'] . ": " . $stmt->error . "<br>";
+            $insert_stmt->bind_param('sssssss', 
+                $customer['musteri_adi'], 
+                $customer['vergi_no_tc'], 
+                $customer['adres'], 
+                $customer['telefon'], 
+                $customer['e_posta'], 
+                $hashed_password, 
+                $customer['aciklama_notlar']
+            );
+            
+            if ($insert_stmt->execute()) {
+                echo "Successfully added: " . $customer['musteri_adi'] . "<br>";
+            } else {
+                echo "Error adding " . $customer['musteri_adi'] . ": " . $insert_stmt->error . "<br>";
+            }
         }
     }
-    $stmt->close();
-    echo "<br>All customer records have been successfully added with password '12345'!";
+    $insert_stmt->close();
+    $check_stmt->close();
+    echo "<br>Customer records processing completed!";
 } else {
     echo "Error preparing statement: " . $connection->error;
 }
