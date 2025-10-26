@@ -230,6 +230,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 <div class="icon-wrapper"><i class="fas fa-clipboard-list"></i></div>
                 <p class="card-title">Esans İş Emirleri</p>
             </a>
+            <a href="montaj_is_emirleri.php" class="nav-card">
+                <div class="icon-wrapper"><i class="fas fa-clipboard-list"></i></div>
+                <p class="card-title">Montaj İş Emirleri</p>
+            </a>
             <a href="giris_kalite_kontrolu.php" class="nav-card">
                 <div class="icon-wrapper"><i class="fas fa-clipboard-check"></i></div>
                 <p class="card-title">Kalite Kontrolü</p>

@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        console.error('Tank listesi yüklenirken hata oluştu:', error);
                         this.showAlert('Tanklar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T002', 'danger');
                     });
             },
@@ -56,7 +55,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        console.error('Toplam tank sayısı alınırken hata oluştu:', error);
                         this.showAlert('Toplam tank sayısı alınırken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T004', 'danger');
                     });
             },
@@ -98,7 +96,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(error => {
-                        console.error('Tank işlemi sırasında hata oluştu:', error);
                         // Hata detaylarını kontrol et
                         if (error.response) {
                             // Sunucudan hata yanıtı geldi
@@ -149,7 +146,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         })
                         .catch(error => {
-                            console.error('Tank silme işlemi sırasında hata oluştu:', error);
                             if (error.response) {
                                 if (error.response.status === 403) {
                                     this.showAlert('Bu işlemi yapma yetkiniz yok. Lütfen uygulamadan çıkış yapıp tekrar giriş yapın. Hata Kodu: T012', 'danger');

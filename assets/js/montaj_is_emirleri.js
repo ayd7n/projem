@@ -60,13 +60,7 @@ app = new Vue({
                         durum: wo.durum || 'olusturuldu', // Default to 'olusturuldu' if not defined
                         is_emri_numarasi: wo.is_emri_numarasi || null
                     }));
-                    console.log('Work orders fetched:', this.workOrders);
-                    // Log each work order to check if is_emri_numarasi exists
-                    this.workOrders.forEach((wo, index) => {
-                        console.log(`Work order ${index}:`, wo);
-                        console.log(`  is_emri_numarasi:`, wo.is_emri_numarasi);
-                        console.log(`  durum:`, wo.durum);
-                    });
+
                     
                     // Update pagination data
                     if (response.data.pagination) {
@@ -94,7 +88,7 @@ app = new Vue({
                     icon: 'error',
                     confirmButtonText: 'Tamam'
                 });
-                console.error('Error fetching work orders:', error);
+
             } finally {
                 this.loading = false; // Hide loading state
                 
@@ -210,7 +204,7 @@ app = new Vue({
                     icon: 'error',
                     confirmButtonText: 'Tamam'
                 });
-                console.error('Error calculating components:', error);
+
                 this.calculatedComponents = [];
             }
         },
@@ -256,7 +250,7 @@ app = new Vue({
                     this.calculatedComponents = response.data.data || [];
                 }
             } catch (error) {
-                console.error('Error loading components for edit:', error);
+
             }
 
             this.modalTitle = 'Montaj İş Emri Düzenle';
@@ -304,7 +298,7 @@ app = new Vue({
                     icon: 'error',
                     confirmButtonText: 'Tamam'
                 });
-                console.error('Error saving work order:', error);
+
             }
         },
         async deleteWorkOrder(id) {
@@ -447,7 +441,7 @@ app = new Vue({
                     icon: 'error',
                     confirmButtonText: 'Tamam'
                 });
-                console.error('Error getting components:', error);
+
             }
         },
         async revertWorkOrder(id) {
@@ -559,13 +553,8 @@ app = new Vue({
             }
         },
         async revertCompletion(id) {
-            console.log('Revert completion called with ID:', id);
-            console.log('Type of ID:', typeof id);
-            console.log('Work orders:', this.workOrders);
-
             // Find the work order in our list to verify it exists
             const workOrder = this.workOrders.find(wo => wo.is_emri_numarasi == id);
-            console.log('Found work order:', workOrder);
 
             if (!id) {
                 Swal.fire({
@@ -626,7 +615,7 @@ app = new Vue({
                             icon: 'error',
                             confirmButtonText: 'Tamam'
                         });
-                        console.error('Revert completion error:', error);
+
                     }
                 }
             });
@@ -898,15 +887,6 @@ app = new Vue({
         await this.fetchWorkOrders(1); // Fetch first page
         await this.fetchProducts();
         await this.fetchMontajAlanlari();
-        console.log('Vue app initialized');
 
-        // Debug: Check if work orders are correctly loaded
-        setTimeout(() => {
-            console.log('Mounted - Work orders count:', this.workOrders.length);
-            console.log('Pagination info:', this.pagination);
-            if (this.workOrders.length > 0) {
-                console.log('First work order sample:', this.workOrders[0]);
-            }
-        }, 2000);
     }
 });

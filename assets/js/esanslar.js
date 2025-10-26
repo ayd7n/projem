@@ -48,7 +48,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(function(error) {
-                        console.error('Tanklar yüklenirken hata oluştu:', error);
                         self.gosterUyari('Tanklar yüklenirken bir hata oluştu.', 'danger');
                     });
             },
@@ -64,7 +63,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(function(error) {
-                        console.error('Esanslar yüklenirken hata oluştu:', error);
                         self.gosterUyari('Esanslar yüklenirken bir hata oluştu.', 'danger');
                     });
             },
@@ -124,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         }
                     })
                     .catch(function(error) {
-                        console.error('Esans kaydedilirken hata oluştu:', error);
                         self.gosterUyari('Esans kaydedilirken bir hata oluştu.', 'danger');
                     });
             },
@@ -153,7 +150,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             }
                         })
                         .catch(function(error) {
-                            console.error('Esans silinirken hata oluştu:', error);
                             self.gosterUyari('Esans silinirken bir hata oluştu.', 'danger');
                         });
                     }

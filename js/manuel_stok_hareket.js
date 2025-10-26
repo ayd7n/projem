@@ -117,7 +117,6 @@ new Vue({
         }
     },
     mounted() {
-        console.log('Vue instance creating...', this);
         // Set user name from data attribute
         const appElement = document.getElementById('app');
         if (appElement && appElement.dataset.username) {
@@ -945,4 +944,4 @@ new Vue({
     }
 });
 
-console.log('Vue instance created.');
+

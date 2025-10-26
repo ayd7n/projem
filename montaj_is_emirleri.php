@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once 'config.php';
 
 // Check if user is logged in
@@ -48,32 +48,20 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
 </head>
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
-        <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav ml-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="navigation.php">Ana Sayfa</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="change_password.php">Parolami Degistir</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanici'); ?>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Cikis Yap</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+        <a class="navbar-brand" href="customer_panel.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <span class="navbar-text mr-3"><i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi']); ?></span>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                </li>
+            </ul>
         </div>
     </nav>
 
@@ -96,178 +84,119 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
         </div>
         <div v-else>
 
-    <!-- Information Modal -->
-    <div class="modal fade" :class="{show: showInfoModal}" v-if="showInfoModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showInfoModal = false">
-        <div class="modal-dialog modal-xl" @click.stop role="document">
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title"><i class="fas fa-info-circle"></i> Montaj İş Emirleri Sistemi Bilgileri</h5>
-                    <button type="button" class="close text-white" @click="showInfoModal = false" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
-                    <div class="container-fluid">
-                        <!-- System Overview -->
+        <!-- Information Modal -->
+        <div class="modal fade" :class="{show: showInfoModal}" v-if="showInfoModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showInfoModal = false">
+            <div class="modal-dialog modal-xl" @click.stop role="document">
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(45deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-info-circle"></i> Montaj İş Emirleri Sistemi Bilgileri</h5>
+                        <button type="button" class="close text-white" @click="showInfoModal = false" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Main Content -->
                         <div class="section">
-                            <h4 class="section-title"><i class="fas fa-project-diagram text-primary"></i> Sistem Genel Yapısı</h4>
-                            <p>Montaj iş emirleri sayfası, parfüm üretiminde kullanılan ürün montajı iş emirlerinin oluşturulduğu, takip edildiği ve yönetildiği entegre bir sistemdir. Sistem, iş emri durumlarına göre farklı işlemlere izin vererek üretim sürecinin doğru şekilde yürütülmesini sağlar.</p>
+                            <h4 class="section-title"><i class="fas fa-info-circle text-primary"></i> Sistem Genel Bakış</h4>
+                            <p>Bu sistem, montaj ve üretim süreçlerinde kullanılan <strong>montaj iş emirlerini</strong> oluşturmak, takip etmek ve yönetmek için tasarlanmıştır.</p>
                             
                             <div class="row">
                                 <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-cogs text-info"></i> İş Akışı</h5>
-                                    <ol class="ml-4">
-                                        <li><strong>İş Emri Oluşturma:</strong> "olusturuldu" durumu</li>
-                                        <li><strong>Üretime Başlama:</strong> "uretimde" durumu</li>
-                                        <li><strong>Üretim Tamamlama:</strong> "tamamlandi" durumu</li>
-                                        <li><strong>İptal veya Geri Alma:</strong> "iptal" durumu</li>
-                                    </ol>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-shield-alt text-success"></i> Güvenlik Kontrolleri</h5>
-                                    <ul class="list-unstyled ml-3">
-                                        <li><i class="fas fa-lock text-warning"></i> Her durum sadece yetkili işlemleri kabul eder</li>
-                                        <li><i class="fas fa-lock text-warning"></i> Geçersiz durum değişiklikleri engellenir</li>
-                                        <li><i class="fas fa-lock text-warning"></i> Stok kontrolleri ile negatif stok önlenir</li>
-                                        <li><i class="fas fa-lock text-warning"></i> İşlem geçmişinin izlenebilirliği korunur</li>
-                                    </ul>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Production Process -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-cogs text-success"></i> Ürün Montaj Süreci</h4>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-list-ol text-primary"></i> Montaj Adımları</h5>
-                                    <div class="process-steps">
-                                        <div class="step">
-                                            <div class="step-number">1</div>
-                                            <div class="step-content">
-                                                <h6>Ürün Seçimi</h6>
-                                                <p>Montaj yapılacak ürün türünü seçin</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">2</div>
-                                            <div class="step-content">
-                                                <h6>Miktar Belirleme</h6>
-                                                <p>Montaj yapılacak miktarı girin</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">3</div>
-                                            <div class="step-content">
-                                                <h6>Bileşen Hesaplama</h6>
-                                                <p>Gerekli malzemeler otomatik hesaplanır</p>
-                                            </div>
-                                        </div>
-                                        <div class="step">
-                                            <div class="step-number">4</div>
-                                            <div class="step-content">
-                                                <h6>Tarih Planlama</h6>
-                                                <p>Montaj tarihlerini belirleyin</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <h5 class="mt-3"><i class="fas fa-lightbulb text-warning"></i> Örnek Senaryo</h5>
-                                    <div class="card bg-light">
+                                    <div class="card">
                                         <div class="card-body">
-                                            <h6><i class="fas fa-vial"></i> 100 Adet Parfüm Şişesi Montajı</h6>
-                                            <ul class="list-unstyled">
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Gerekli Bileşenler:</strong></li>
-                                                <li class="ml-4"><i class="fas fa-flask"></i> Parfüm Esansı: 50 ml</li>
-                                                <li class="ml-4"><i class="fas fa-wine-bottle"></i> Alkol: 30 ml</li>
-                                                <li class="ml-4"><i class="fas fa-tint"></i> Saf Su: 20 ml</li>
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Montaj Süresi:</strong> 5 dakika</li>
-                                                <li><i class="fas fa-arrow-right"></i> <strong>Montaj Alanı:</strong> Montaj Hattı 1</li>
+                                            <h5 class="card-title"><i class="fas fa-cogs text-primary"></i> Temel İşlevler</h5>
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-plus-circle text-success mr-2"></i> Yeni İş Emri Oluşturma</span>
+                                                    <span class="badge badge-success">Temel</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-play-circle text-warning mr-2"></i> İş Emri Başlatma</span>
+                                                    <span class="badge badge-warning">Orta</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-check-circle text-success mr-2"></i> İş Emri Tamamlama</span>
+                                                    <span class="badge badge-success">Temel</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-undo text-danger mr-2"></i> İş Emri Geri Alma</span>
+                                                    <span class="badge badge-danger">Gelişmiş</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-edit text-info mr-2"></i> İş Emri Düzenleme</span>
+                                                    <span class="badge badge-info">Orta</span>
+                                                </li>
+                                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                                    <span><i class="fas fa-trash text-danger mr-2"></i> İş Emri Silme</span>
+                                                    <span class="badge badge-danger">Tehlikeli</span>
+                                                </li>
                                             </ul>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-body">
+                                            <h5 class="card-title"><i class="fas fa-chart-line text-success"></i> İş Emri Durumları</h5>
+                                            <div class="table-responsive">
+                                                <table class="table table-sm">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>Durum</th>
+                                                            <th>Açıklama</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr>
+                                                            <td><span class="status-badge badge-secondary">Oluşturuldu</span></td>
+                                                            <td>İş emri yeni oluşturuldu, henüz üretime alınmadı</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span class="status-badge badge-warning">Üretimde</span></td>
+                                                            <td>İş emri başlatıldı, üretim sürecinde</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span class="status-badge badge-success">Tamamlandı</span></td>
+                                                            <td>İş emri başarıyla tamamlandı</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><span class="status-badge badge-danger">İptal</span></td>
+                                                            <td>İş emri iptal edildi</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
-                        <!-- Work Order Status -->
+                        <!-- Detailed Operation Info -->
                         <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-tasks text-info"></i> İş Emri Durumları ve İşlemler</h4>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped">
-                                    <thead class="thead-dark">
-                                        <tr>
-                                            <th>Durum</th>
-                                            <th>Açıklama</th>
-                                            <th>Mevcut İşlemler</th>
-                                            <th>Veritabanı Etkisi</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr>
-                                            <td><span class="badge badge-secondary">olusturuldu</span></td>
-                                            <td>İş emri oluşturuldu, henüz başlatılmadı</td>
-                                            <td>
-                                                <span class="badge badge-success">Başlat</span>
-                                                <span class="badge badge-primary">Düzenle</span>
-                                                <span class="badge badge-danger">Sil</span>
-                                            </td>
-                                            <td>Kayıt oluşturuldu, stok etkileşimi yok</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-warning">uretimde</span></td>
-                                            <td>İş emri başlatıldı, üretim devam ediyor</td>
-                                            <td>
-                                                <span class="badge badge-success">Tamamla</span>
-                                                <span class="badge badge-warning">Geri Al</span>
-                                                <span class="badge badge-primary">Düzenle</span>
-                                            </td>
-                                            <td>Malzeme stokları düşürüldü</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-success">tamamlandi</span></td>
-                                            <td>İş emri başarıyla tamamlandı</td>
-                                            <td>
-                                                <span class="badge badge-warning">Geri Al</span>
-                                            </td>
-                                            <td>Ürün stokları artırıldı</td>
-                                        </tr>
-                                        <tr>
-                                            <td><span class="badge badge-danger">iptal</span></td>
-                                            <td>İş emri iptal edildi</td>
-                                            <td><span class="badge badge-secondary">İşlem Yok</span></td>
-                                            <td>Manuel iptal durumu</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Buttons and Functions -->
-                        <div class="section mt-4">
-                            <h4 class="section-title"><i class="fas fa-mouse-pointer text-primary"></i> Buton İşlevleri ve Veritabanı Etkileri</h4>
+                            <h4 class="section-title"><i class="fas fa-wrench text-warning"></i> Ayrıntılı İşlem Bilgileri</h4>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-header bg-success text-white">
-                                            <h6 class="card-title m-0"><i class="fas fa-plus"></i> Yeni Montaj Is Emri Olustur</h6>
+                                    <div class="card h-100 border-primary">
+                                        <div class="card-header bg-primary text-white">
+                                            <h6 class="card-title m-0"><i class="fas fa-plus"></i> Yeni Ekle</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">Yeni bir montaj iş emri oluşturmak için modal formu açar</small></p>
+                                            <p class="card-text"><small class="text-muted">Tüm kullanıcılar için görünür</small></p>
                                             <div class="alert alert-info p-2">
                                                 <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
                                                 <ul class="mb-0">
                                                     <li><code>montaj_is_emirleri</code> tablosuna yeni kayıt</li>
-                                                    <li><code>montaj_is_emri_malzeme_listesi</code> tablosuna bileşen kayıtları</li>
+                                                    <li><code>montaj_is_emri_malzeme_listesi</code> tablosuna gerekli bileşenler</li>
+                                                    <li><code>durum</code> alanı "olusturuldu" olarak ayarlanır</li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-success">
-                                        <div class="card-header bg-success text-white">
+                                    <div class="card h-100 border-warning">
+                                        <div class="card-header bg-warning text-dark">
                                             <h6 class="card-title m-0"><i class="fas fa-play"></i> Is Emrini Baslat</h6>
                                         </div>
                                         <div class="card-body">
@@ -277,7 +206,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                 <ul class="mb-0">
                                                     <li><code>durum</code> alanı "uretimde" olarak güncellenir</li>
                                                     <li><code>gerceklesen_baslangic_tarihi</code> alanı doldurulur</li>
-                                                    <li>Malzeme stokları düşülür</li>
+                                                    <li>Gerekli malzeme stoğu düşülür</li>
                                                     <li>"Üretime Çıkış" stok hareket kaydı oluşturulur</li>
                                                 </ul>
                                             </div>
@@ -285,8 +214,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     </div>
                                 </div>
                                 <div class="col-md-4 mb-3">
-                                    <div class="card h-100 border-warning">
-                                        <div class="card-header bg-warning text-dark">
+                                    <div class="card h-100 border-secondary">
+                                        <div class="card-header bg-secondary text-white">
                                             <h6 class="card-title m-0"><i class="fas fa-undo"></i> Uretimi Durdur/Geri Al</h6>
                                         </div>
                                         <div class="card-body">
@@ -351,7 +280,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                             <h6 class="card-title m-0"><i class="fas fa-edit"></i> Duzenle</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">"tamamlandi" veya "iptal" durumunda olmayan iş emirleri için görünür</small></p>
+                                            <p class="card-text"><small class="text-muted">\"tamamlandi\" veya \"iptal\" durumunda olmayan iş emirleri için görünür</small></p>
                                             <div class="alert alert-info p-2">
                                                 <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
                                                 <ul class="mb-0">
@@ -371,7 +300,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                             <h6 class="card-title m-0"><i class="fas fa-trash"></i> Sil</h6>
                                         </div>
                                         <div class="card-body">
-                                            <p class="card-text"><small class="text-muted">"tamamlandi" durumunda olmayan iş emirleri için görünür</small></p>
+                                            <p class="card-text"><small class="text-muted">\"tamamlandi\" durumunda olmayan iş emirleri için görünür</small></p>
                                             <div class="alert alert-info p-2">
                                                 <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı Etkisi:</h6>
                                                 <ul class="mb-0">
@@ -449,14 +378,14 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <h5 class="mt-3"><i class="fas fa-link text-warning"></i> Tablo İlişkileri</h5>
                             <ul class="list-unstyled">
                                 <li><i class="fas fa-arrow-right"></i> <code>montaj_is_emri_malzeme_listesi</code> → <code>montaj_is_emirleri</code> (<code>is_emri_numarasi</code> ile)</li>
                                 <li><i class="fas fa-arrow-right"></i> Bileşen hesaplaması için <code>urun_agaci</code> tablosu kullanılır (<code>urun_kodu</code> → <code>urun_kodu</code>)</li>
                                 <li><i class="fas fa-arrow-right"></i> Stok hareketleri <code>urun</code> veya <code>malzeme</code> olarak <code>stok_hareket_kayitlari</code> tablosuna kayıt altına alınır</li>
                             </ul>
-                            
+
                             <h5 class="mt-3"><i class="fas fa-code text-purple"></i> API İşlemleri</h5>
                             <div class="row">
                                 <div class="col-md-6">
@@ -479,7 +408,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                         <div class="section mt-4">
                             <h4 class="section-title"><i class="fas fa-exchange-alt text-success"></i> Stok Hareketleri ve Kayıt Türleri</h4>
                             <p>Sistemde gerçekleşen tüm işlemler detaylı şekilde kayıt altına alınır. Her stok hareketi kullanıcı bilgisi ve tarih damgasıyla birlikte saklanır:</p>
-                            
+
                             <div class="row">
                                 <div class="col-md-6">
                                     <h5 class="mt-3"><i class="fas fa-plus-circle text-success"></i> Stok Arttıran Hareketler</h5>
@@ -519,7 +448,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     </ul>
                                 </div>
                             </div>
-                            
+
                             <div class="row mt-2">
                                 <div class="col-md-6">
                                     <h5 class="mt-3"><i class="fas fa-undo text-warning"></i> Stok Geri Yükleyen Hareketler</h5>
@@ -536,7 +465,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     </ul>
                                 </div>
                             </div>
-                            
+
                             <h5 class="mt-3"><i class="fas fa-database text-primary"></i> Veritabanı Kayıt İşlemleri</h5>
                             <div class="row">
                                 <div class="col-md-6">
@@ -573,494 +502,461 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="showInfoModal = false"><i class="fas fa-times"></i> Kapat</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
-        <div class="page-header">
-            <div>
-                <h1><i class="fas fa-cogs"></i> Montaj Is Emirleri</h1>
-                <p>Ürün montaj is emirlerini olusturun, duzenleyin ve takip edin</p>
-            </div>
-        </div>
-
-        <div v-if="alertMessage" :class="`alert alert-${alertType} alert-dismissible fade show`" role="alert">
-            <i :class="alertType === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
-            {{ alertMessage }}
-            <button type="button" class="close" @click="closeAlert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-
-        <div class="row">
-            <div class="col-md-12">
-                <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Montaj Is Emri Olustur</button>
-                <button @click="showInfoModal = true" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
-            </div>
-        </div>
-
-
-
-        <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-list"></i> Montaj Is Emirleri Listesi</h2>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-cogs"></i> Islemler</th>
-                                <th><i class="fas fa-hashtag"></i> Is Emri No</th>
-                                <th><i class="fas fa-info-circle"></i> Durum</th>
-                                <th><i class="fas fa-box"></i> Ürün</th>
-                                <th><i class="fas fa-industry"></i> Montaj Alanı</th>
-                                <th><i class="fas fa-weight"></i> Planlanan Miktar</th>
-                                <th><i class="fas fa-check"></i> Tamamlanan Miktar</th>
-                                <th><i class="fas fa-exclamation-triangle"></i> Eksik Miktar</th>
-                                <th><i class="fas fa-ruler"></i> Birim</th>
-                                <th><i class="fas fa-calendar-alt"></i> Olusturulma Tarihi</th>
-                                <th><i class="fas fa-user"></i> Olusturan</th>
-                                <th><i class="fas fa-hourglass-start"></i> Planlanan Baslangic</th>
-                                <th><i class="fas fa-hourglass-end"></i> Planlanan Bitis</th>
-                                <th><i class="fas fa-play-circle"></i> Gerceklese Baslangic</th>
-                                <th><i class="fas fa-check-circle"></i> Gerceklese Bitis</th>
-                                
-                                <th><i class="fas fa-comment"></i> Aciklama</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr v-if="loading">
-                                <td colspan="16" class="text-center p-4">
-                                    <div class="d-flex justify-content-center align-items-center">
-                                        <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
-                                            <span class="sr-only">Yükleniyor...</span>
-                                        </div>
-                                        <span class="ml-2">Veriler yükleniyor...</span>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr v-else v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
-                                <td class="actions">
-                                    <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                            <i class="fas fa-cogs"></i> Islemler
-                                        </button>
-                                        <div class="dropdown-menu">
-                                            <button 
-                                                v-if="workOrder && workOrder.durum === 'olusturuldu'" 
-                                                @click="startWorkOrder(workOrder.is_emri_numarasi)" 
-                                                class="dropdown-item" 
-                                                title="Is Emrini Baslat">
-                                                <i class="fas fa-play text-success"></i> Is Emrini Baslat
-                                            </button>
-                                            <button 
-                                                v-if="workOrder && workOrder.durum === 'uretimde'" 
-                                                @click="openCompleteModal(workOrder.is_emri_numarasi)" 
-                                                class="dropdown-item" 
-                                                title="Is Emrini Tamamla">
-                                                <i class="fas fa-check-square text-success"></i> Is Emrini Tamamla
-                                            </button>
-                                            
-                                            <button 
-                                                @click="openEditModal(workOrder.is_emri_numarasi)" 
-                                                v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'" 
-                                                class="dropdown-item" 
-                                                title="Duzenle">
-                                                <i class="fas fa-edit text-primary"></i> Duzenle
-                                            </button>
-                                            <button 
-                                                @click="showWorkOrderDetails(workOrder.is_emri_numarasi)" 
-                                                class="dropdown-item" 
-                                                title="Detaylar">
-                                                <i class="fas fa-list text-info"></i> Detaylar
-                                            </button>
-                                            <button 
-                                                @click="printWorkOrder(workOrder.is_emri_numarasi)" 
-                                                class="dropdown-item" 
-                                                title="Yazdır">
-                                                <i class="fas fa-print text-secondary"></i> Yazdir
-                                            </button>
-                                            <button 
-                                                @click="revertWorkOrder(workOrder.is_emri_numarasi)" 
-                                                v-if="workOrder && workOrder.durum === 'uretimde'" 
-                                                class="dropdown-item" 
-                                                title="Uretimi Durdur/Geri Al">
-                                                <i class="fas fa-undo text-warning"></i> Uretimi Durdur/Geri Al
-                                            </button>
-                                            <button 
-                                                @click="deleteWorkOrder(workOrder.is_emri_numarasi)" 
-                                                v-if="workOrder && workOrder.durum !== 'tamamlandi'" 
-                                                class="dropdown-item text-danger" 
-                                                title="Sil">
-                                                <i class="fas fa-trash"></i> Sil
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                <td><strong>{{ workOrder.is_emri_numarasi }}</strong></td>
-                                <td>
-                                    <span :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
-                                        {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' : 'Iptal')) }}
-                                    </span>
-                                </td>
-                                <td><strong>{{ workOrder.urun_kodu }} - {{ workOrder.urun_ismi }}</strong></td>
-                                <td>{{ workOrder.is_merkezi_id }} - {{ workOrder.montaj_alani_ismi }}</td>
-                                <td>{{ parseFloat(workOrder.planlanan_miktar).toFixed(2) }}</td>
-                                <td>{{ parseFloat(workOrder.tamamlanan_miktar).toFixed(2) }}</td>
-                                <td>{{ parseFloat(workOrder.eksik_miktar_toplami).toFixed(2) }}</td>
-                                <td>{{ workOrder.birim }}</td>
-                                <td>{{ workOrder.olusturulma_tarihi }}</td>
-                                <td>{{ workOrder.olusturan }}</td>
-                                <td>{{ workOrder.planlanan_baslangic_tarihi }}</td>
-                                <td>{{ workOrder.planlanan_bitis_tarihi }}</td>
-                                <td>{{ workOrder.gerceklesen_baslangic_tarihi }}</td>
-                                <td>{{ workOrder.gerceklesen_bitis_tarihi }}</td>
-                                
-                                <td>{{ workOrder.aciklama }}</td>
-                            </tr>
-                            <tr v-if="!loading && workOrders.length === 0">
-                                <td colspan="16" class="text-center p-4">Henüz kayitli montaj is emri bulunmuyor.</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                
-                <!-- Pagination Controls -->
-                <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
-                    <div class="pagination-info mb-2 mb-md-0">
-                        <small>
-                            Sayfa {{ pagination.current_page }} / {{ pagination.total_pages }} 
-                            (Toplam {{ pagination.total }} kayıt)
-                        </small>
-                    </div>
-                    <div class="d-flex align-items-center mb-2 mb-md-0">
-                        <label for="per-page-select" class="mr-2 mb-0" style="white-space: nowrap;">Sayfa başına:</label>
-                        <select id="per-page-select" class="form-control" 
-                                v-model="pagination.per_page" @change="changePerPage">
-                            <option :value="1">1</option>
-                            <option :value="2">2</option>
-                            <option :value="5">5</option>
-                            <option :value="10">10</option>
-                            <option :value="25">25</option>
-                            <option :value="50">50</option>
-                            <option :value="100">100</option>
-                        </select>
-                    </div>
-                    <nav>
-                        <ul class="pagination pagination-sm mb-0">
-                            <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
-                                <button class="page-link" @click="goToFirstPage()" :disabled="pagination.current_page <= 1">
-                                    <i class="fas fa-angle-double-left"></i>
-                                </button>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
-                                <button class="page-link" @click="goToPreviousPage()" :disabled="pagination.current_page <= 1">
-                                    <i class="fas fa-angle-left"></i>
-                                </button>
-                            </li>
-                            <li class="page-item active">
-                                <span class="page-link">
-                                    {{ pagination.current_page }}
-                                </span>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
-                                <button class="page-link" @click="goToNextPage()" :disabled="pagination.current_page >= pagination.total_pages">
-                                    <i class="fas fa-angle-right"></i>
-                                </button>
-                            </li>
-                            <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
-                                <button class="page-link" @click="goToLastPage()" :disabled="pagination.current_page >= pagination.total_pages">
-                                    <i class="fas fa-angle-double-right"></i>
-                                </button>
-                            </li>
-                        </ul>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Work Order Modal -->
-    <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
-        <div class="modal-dialog modal-xl" @click.stop>
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title"><i class="fas fa-bolt"></i> {{ modalTitle }}</h5>
-                    <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="row">
-                        <div class="col-lg-7">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="urun_kodu">Ürün *</label>
-                                        <select class="form-control" v-model="selectedWorkOrder.urun_kodu" @change="updateProductDetails" required>
-                                            <option value="">Ürün Secin</option>
-                                            <option v-for="product in products" :value="product.urun_kodu" :key="product.urun_kodu">
-                                                {{ product.urun_kodu }} - {{ product.urun_ismi }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="planlanan_miktar">Planlanan Miktar *</label>
-                                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.planlanan_miktar" @input="calculateComponents" required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="birim">Birim</label>
-                                        <input type="text" class="form-control" v-model="selectedWorkOrder.birim" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="montaj_alani_kodu">Montaj Alanı *</label>
-                                        <select class="form-control" v-model="selectedWorkOrder.montaj_alani_kodu" @change="updateMontajAlaniName" required>
-                                            <option value="">Montaj Alanı Secin</option>
-                                            <option v-for="montaj_alani in montajAlanlari" :value="montaj_alani.montaj_alani_kodu" :key="montaj_alani.montaj_alani_kodu">
-                                                {{ montaj_alani.montaj_alani_kodu }} - {{ montaj_alani.montaj_alani_ismi }}
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="planlanan_baslangic_tarihi">Planlanan Baslangic Tarihi *</label>
-                                        <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_baslangic_tarihi" @change="updateEndDate" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
-                                        <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
-                                        <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label for="durum">Durum</label>
-                                        <select class="form-control" v-model="selectedWorkOrder.durum" :disabled="selectedWorkOrder.is_emri_numarasi">
-                                            <option value="olusturuldu">Olusturuldu</option>
-                                            <option value="uretimde">Uretimde</option>
-                                            <option value="tamamlandi">Tamamlandi</option>
-                                            <option value="iptal">Iptal</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label for="aciklama">Aciklama</label>
-                                <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="2"></textarea>
-                            </div>
-                        </div>
-                        <div class="col-lg-5">
-                            <!-- Calculated Components Section -->
-                            <div class="card h-100">
-                                <div class="card-header">
-                                    <h5><i class="fas fa-cubes"></i> Hesaplanan Bilesenler</h5>
-                                </div>
-                                <div class="card-body">
-                                    <div class="table-responsive">
-                                        <table class="table table-sm">
-                                            <thead>
-                                                <tr>
-                                                    <th>Malzeme Kodu</th>
-                                                    <th>Malzeme Ismi</th>
-                                                    <th>Malzeme Turu</th>
-                                                    <th>Gerekli Miktar</th>
-                                                    <th>Bilesim Orani</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr v-for="(component, index) in calculatedComponents" :key="index">
-                                                    <td>{{ component.malzeme_kodu }}</td>
-                                                    <td>{{ component.malzeme_ismi }}</td>
-                                                    <td>{{ component.malzeme_turu }}</td>
-                                                    <td>{{ component.miktar }}</td>
-                                                    <td>{{ component.birim }}</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <div v-if="calculatedComponents.length === 0" class="text-center py-3 text-muted">
-                                        Ürün ve miktar secildiginde bilesenler gosterilecektir.
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="showInfoModal = false"><i class="fas fa-times"></i> Kapat</button>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> Iptal</button>
-                    <button type="button" class="btn btn-primary" @click="saveWorkOrder"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
-                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Materials Details Modal -->
-    <div class="modal fade" :class="{show: showDetailsModal}" v-if="showDetailsModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showDetailsModal = false">
-        <div class="modal-dialog modal-lg" @click.stop>
-            <div class="modal-content">
-                <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title"><i class="fas fa-cubes"></i> İş Emri No: {{ selectedWorkOrderId }} Malzeme Detaylari</h5>
-                    <button type="button" class="close text-white" @click="showDetailsModal = false" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
+        <!-- Main Content -->
+        <div class="main-content">
+            <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>    
+
+            <div class="page-header">
+                <div>
+                    <h1><i class="fas fa-cogs"></i> Montaj Is Emirleri</h1>
+                    <p>Ürün montaj is emirlerini olusturun, duzenleyin ve takip edin</p>
                 </div>
-                <div class="modal-body">
+            </div>
+
+            <div v-if="alertMessage" :class="`alert alert-${alertType} alert-dismissible fade show`" role="alert">
+                <i :class="alertType === 'success' ? 'fas fa-check-circle' : 'fas fa-exclamation-circle'"></i>
+                {{ alertMessage }}
+                <button type="button" class="close" @click="closeAlert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+
+            <div class="row">
+                <div class="col-md-12">
+                    <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Montaj Is Emri Olustur</button>
+                    <button @click="showInfoModal = true" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
+                </div>
+            </div>
+
+
+
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h2><i class="fas fa-list"></i> Montaj Is Emirleri Listesi</h2> 
+                </div>
+                <div class="card-body">
                     <div class="table-responsive">
-                        <table class="table table-sm">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Malzeme Kodu</th>
-                                    <th>Malzeme Ismi</th>
-                                    <th>Malzeme Turu</th>
-                                    <th>Gerekli Miktar</th>
-                                    <th>Birim</th>
+                                    <th><i class="fas fa-cogs"></i> Islemler</th>   
+                                    <th><i class="fas fa-hashtag"></i> Is Emri No</th>
+                                    <th><i class="fas fa-info-circle"></i> Durum</th>
+                                    <th><i class="fas fa-box"></i> Ürün</th>        
+                                    <th><i class="fas fa-industry"></i> Montaj Alanı</th>
+                                    <th><i class="fas fa-weight"></i> Planlanan Miktar</th>
+                                    <th><i class="fas fa-check"></i> Tamamlanan Miktar</th>
+                                    <th><i class="fas fa-exclamation-triangle"></i> Eksik Miktar</th>
+                                    <th><i class="fas fa-ruler"></i> Birim</th>     
+                                    <th><i class="fas fa-calendar-alt"></i> Olusturulma Tarihi</th>
+                                    <th><i class="fas fa-user"></i> Olusturan</th>  
+                                    <th><i class="fas fa-hourglass-start"></i> Planlanan Baslangic</th>
+                                    <th><i class="fas fa-hourglass-end"></i> Planlanan Bitis</th>
+                                    <th><i class="fas fa-play-circle"></i> Gerceklesen Baslangic</th>
+                                    <th><i class="fas fa-check-circle"></i> Gerceklesen Bitis</th>
+
+                                    <th><i class="fas fa-comment"></i> Aciklama</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="(component, index) in workOrderComponents" :key="index">
-                                    <td>{{ component.malzeme_kodu }}</td>
-                                    <td>{{ component.malzeme_ismi }}</td>
-                                    <td>{{ component.malzeme_turu }}</td>
-                                    <td>{{ parseFloat(component.miktar).toFixed(2) }}</td>
-                                    <td>{{ component.birim }}</td>
+                                <tr v-if="loading">
+                                    <td colspan="16" class="text-center p-4">       
+                                        <div class="d-flex justify-content-center align-items-center">
+                                            <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                                                <span class="sr-only">Yükleniyor...</span>
+                                            </div>
+                                            <span class="ml-2">Veriler yükleniyor...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr v-else v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
+                                    <td class="actions">
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                <i class="fas fa-cogs"></i> Islemler
+                                            </button>
+                                            <div class="dropdown-menu">
+                                                <button
+                                                    v-if="workOrder && workOrder.durum === 'olusturuldu'"
+                                                    @click="startWorkOrder(workOrder.is_emri_numarasi)"
+                                                    class="dropdown-item"
+                                                    title="Is Emrini Baslat">       
+                                                    <i class="fas fa-play text-success"></i> Is Emrini Baslat
+                                                </button>
+                                                <button
+                                                    v-if="workOrder && workOrder.durum === 'uretimde'"
+                                                    @click="openCompleteModal(workOrder.is_emri_numarasi)"
+                                                    class="dropdown-item"
+                                                    title="Is Emrini Tamamla">      
+                                                    <i class="fas fa-check-square text-success"></i> Is Emrini Tamamla
+                                                </button>
+
+                                                <button
+                                                    @click="openEditModal(workOrder.is_emri_numarasi)"
+                                                    v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'"
+                                                    class="dropdown-item"
+                                                    title="Duzenle">
+                                                    <i class="fas fa-edit text-primary"></i> Duzenle
+                                                </button>
+                                                <button
+                                                    @click="showWorkOrderDetails(workOrder.is_emri_numarasi)"
+                                                    class="dropdown-item"
+                                                    title="Detaylar">
+                                                    <i class="fas fa-list text-info"></i> Detaylar
+                                                </button>
+                                                <button
+                                                    @click="printWorkOrder(workOrder.is_emri_numarasi)"
+                                                    class="dropdown-item"
+                                                    title="Yazdır">
+                                                    <i class="fas fa-print text-secondary"></i> Yazdir
+                                                </button>
+                                                <button
+                                                    @click="revertWorkOrder(workOrder.is_emri_numarasi)"
+                                                    v-if="workOrder && workOrder.durum === 'uretimde'"
+                                                    class="dropdown-item"
+                                                    title="Uretimi Durdur/Geri Al"> 
+                                                    <i class="fas fa-undo text-warning"></i> Uretimi Durdur/Geri Al
+                                                </button>
+                                                <button
+                                                    @click="deleteWorkOrder(workOrder.is_emri_numarasi)"
+                                                    v-if="workOrder && workOrder.durum !== 'tamamlandi'"
+                                                    class="dropdown-item text-danger"
+                                                    title="Sil">
+                                                    <i class="fas fa-trash"></i> Sil
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    <td><strong>{{ workOrder.is_emri_numarasi }}</strong></td>
+                                    <td>
+                                        <span :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
+                                            {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' : 'Iptal')) }}
+                                        </span>
+                                    </td>
+                                    <td><strong>{{ workOrder.urun_kodu }} - {{ workOrder.urun_ismi }}</strong></td>
+                                    <td>{{ workOrder.is_merkezi_id }} - {{ workOrder.montaj_alani_ismi }}</td>
+                                    <td>{{ parseFloat(workOrder.planlanan_miktar).toFixed(2) }}</td>
+                                    <td>{{ parseFloat(workOrder.tamamlanan_miktar).toFixed(2) }}</td>
+                                    <td>{{ parseFloat(workOrder.eksik_miktar_toplami).toFixed(2) }}</td>
+                                    <td>{{ workOrder.birim }}</td>
+                                    <td>{{ workOrder.olusturulma_tarihi }}</td>     
+                                    <td>{{ workOrder.olusturan }}</td>
+                                    <td>{{ workOrder.planlanan_baslangic_tarihi }}</td>
+                                    <td>{{ workOrder.planlanan_bitis_tarihi }}</td> 
+                                    <td>{{ workOrder.gerceklesen_baslangic_tarihi }}</td>
+                                    <td>{{ workOrder.gerceklesen_bitis_tarihi }}</td>
+
+                                    <td>{{ workOrder.aciklama }}</td>
+                                </tr>
+                                <tr v-if="!loading && workOrders.length === 0">     
+                                    <td colspan="16" class="text-center p-4">Henüz kayitli montaj is emri bulunmuyor.</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
-                    <div v-if="workOrderComponents.length === 0" class="text-center py-3 text-muted">
-                        Malzeme detaylari yukleniyor...
+
+                    <!-- Pagination Controls -->
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mt-3">
+                        <div class="pagination-info mb-2 mb-md-0">
+                            <small>
+                                Sayfa {{ pagination.current_page }} / {{ pagination.total_pages }}
+                                (Toplam {{ pagination.total }} kayıt)
+                            </small>
+                        </div>
+                        <div class="d-flex align-items-center mb-2 mb-md-0">        
+                            <label for="per-page-select" class="mr-2 mb-0" style="white-space: nowrap;">Sayfa başına:</label>
+                            <select id="per-page-select" class="form-control"       
+                                    v-model="pagination.per_page" @change="changePerPage">
+                                <option :value="1">1</option>
+                                <option :value="2">2</option>
+                                <option :value="5">5</option>
+                                <option :value="10">10</option>
+                                <option :value="25">25</option>
+                                <option :value="50">50</option>
+                                <option :value="100">100</option>
+                            </select>
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
+                                    <button class="page-link" @click="goToFirstPage()" :disabled="pagination.current_page <= 1">
+                                        <i class="fas fa-angle-double-left"></i>    
+                                    </button>
+                                </li>
+                                <li class="page-item" :class="{disabled: pagination.current_page <= 1}">
+                                    <button class="page-link" @click="goToPreviousPage()" :disabled="pagination.current_page <= 1">
+                                        <i class="fas fa-angle-left"></i>
+                                    </button>
+                                </li>
+                                <li class="page-item active">
+                                    <span class="page-link">
+                                        {{ pagination.current_page }}
+                                    </span>
+                                </li>
+                                <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
+                                    <button class="page-link" @click="goToNextPage()" :disabled="pagination.current_page >= pagination.total_pages">
+                                        <i class="fas fa-angle-right"></i>
+                                    </button>
+                                </li>
+                                <li class="page-item" :class="{disabled: pagination.current_page >= pagination.total_pages}">
+                                    <button class="page-link" @click="goToLastPage()" :disabled="pagination.current_page >= pagination.total_pages">
+                                        <i class="fas fa-angle-double-right"></i>   
+                                    </button>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="showDetailsModal = false"><i class="fas fa-times"></i> Kapat</button>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Complete Work Order Modal -->
-    <div class="modal fade" :class="{show: showCompleteModal}" v-if="showCompleteModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showCompleteModal = false">
-        <div class="modal-dialog" @click.stop>
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h5>
-                    <button type="button" class="close text-white" @click="showCompleteModal = false" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <h5>Is Emri Bilgileri</h5>
-                    <p><strong>Is Emri No:</strong> {{ selectedWorkOrder.is_emri_numarasi }}</p>
-                    <p><strong>Ürün:</strong> {{ selectedWorkOrder.urun_kodu }} - {{ selectedWorkOrder.urun_ismi }}</p>
-                    <p><strong>Planlanan Miktar:</strong> {{ parseFloat(selectedWorkOrder.planlanan_miktar).toFixed(2) }} {{ selectedWorkOrder.birim }}</p>
-                    <hr>
-                    <div class="form-group">
-                        <label for="tamamlanan_miktar"><strong>Gerceklese Miktar *</strong></label>
-                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.tamamlanan_miktar" @input="calculateMissingAmount" required>
+        <!-- Work Order Modal -->
+        <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
+            <div class="modal-dialog modal-xl" @click.stop>
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-bolt"></i> {{ modalTitle }}</h5>
+                        <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label for="eksik_miktar"><strong>Kalan (Eksik) Miktar</strong></label>
-                        <input type="number" step="0.01" class="form-control" :value="selectedWorkOrder.eksik_miktar_toplami.toFixed(2)" readonly>
-                        <small class="form-text text-muted">Planlanan miktardan gerçekleşen miktar çıkarılarak hesaplanmıştır</small>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-lg-7">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="urun_kodu">Ürün *</label>   
+                                            <select class="form-control" v-model="selectedWorkOrder.urun_kodu" @change="updateProductDetails" required>
+                                                <option value="">Ürün Secin</option>
+                                                <option v-for="product in products" :value="product.urun_kodu" :key="product.urun_kodu">
+                                                    {{ product.urun_kodu }} - {{ product.urun_ismi }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="planlanan_miktar">Planlanan Miktar *</label>
+                                            <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.planlanan_miktar" @input="calculateComponents" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="birim">Birim</label>        
+                                            <input type="text" class="form-control" v-model="selectedWorkOrder.birim" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="montaj_alani_kodu">Montaj Alanı *</label>
+                                            <select class="form-control" v-model="selectedWorkOrder.montaj_alani_kodu" @change="updateMontajAlaniName" required>    
+                                                <option value="">Montaj Alanı Secin</option>
+                                                <option v-for="montaj_alani in montajAlanlari" :value="montaj_alani.montaj_alani_kodu" :key="montaj_alani.montaj_alani_kodu">
+                                                    {{ montaj_alani.montaj_alani_kodu }} - {{ montaj_alani.montaj_alani_ismi }}
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="planlanan_baslangic_tarihi">Planlanan Baslangic Tarihi *</label>
+                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_baslangic_tarihi" @change="updateEndDate" required>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
+                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
+                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="form-group mb-3">
+                                            <label for="durum">Durum</label>        
+                                            <select class="form-control" v-model="selectedWorkOrder.durum" :disabled="selectedWorkOrder.is_emri_numarasi">
+                                                <option value="olusturuldu">Olusturuldu</option>
+                                                <option value="uretimde">Uretimde</option>
+                                                <option value="tamamlandi">Tamamlandi</option>
+                                                <option value="iptal">Iptal</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group mb-3">
+                                    <label for="aciklama">Aciklama</label>
+                                    <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="2"></textarea>
+                                </div>
+                            </div>
+                            <div class="col-lg-5">
+                                <!-- Calculated Components Section -->
+                                <div class="card h-100">
+                                    <div class="card-header">
+                                        <h5><i class="fas fa-cubes"></i> Hesaplanan Bilesenler</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>Malzeme Kodu</th>       
+                                                        <th>Malzeme Ismi</th>       
+                                                        <th>Malzeme Turu</th>       
+                                                        <th>Gerekli Miktar</th>     
+                                                        <th>Bilesim Orani</th>      
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr v-for="(component, index) in calculatedComponents" :key="index">
+                                                        <td>{{ component.malzeme_kodu }}</td>
+                                                        <td>{{ component.malzeme_ismi }}</td>
+                                                        <td>{{ component.malzeme_turu }}</td>
+                                                        <td>{{ component.miktar }}</td>
+                                                        <td>{{ component.birim }}</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div v-if="calculatedComponents.length === 0" class="text-center py-3 text-muted">
+                                            Ürün ve miktar secildiginde bilesenler gosterilecektir.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div class="form-group">
-                        <label for="aciklama">Aciklama</label>
-                        <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="3"></textarea>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> Iptal</button>
+                        <button type="button" class="btn btn-primary" @click="saveWorkOrder"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" @click="showCompleteModal = false"><i class="fas fa-times"></i> Iptal</button>
-                    <button type="button" class="btn btn-success" @click="completeWorkOrder"><i class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
                 </div>
             </div>
         </div>
-    </div>
 
-    </div> <!-- Close the #app div -->
+        <!-- Materials Details Modal -->
+        <div class="modal fade" :class="{show: showDetailsModal}" v-if="showDetailsModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showDetailsModal = false">
+            <div class="modal-dialog modal-lg" @click.stop>
+                <div class="modal-content">
+                    <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-cubes"></i> İş Emri No: {{ selectedWorkOrderId }} Malzeme Detaylari</h5>
+                        <button type="button" class="close text-white" @click="showDetailsModal = false" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Malzeme Kodu</th>
+                                        <th>Malzeme Ismi</th>
+                                        <th>Malzeme Turu</th>
+                                        <th>Gerekli Miktar</th>
+                                        <th>Birim</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(component, index) in workOrderComponents" :key="index">
+                                        <td>{{ component.malzeme_kodu }}</td>       
+                                        <td>{{ component.malzeme_ismi }}</td>       
+                                        <td>{{ component.malzeme_turu }}</td>       
+                                        <td>{{ parseFloat(component.miktar).toFixed(2) }}</td>
+                                        <td>{{ component.birim }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div v-if="workOrderComponents.length === 0" class="text-center py-3 text-muted">
+                            Malzeme detaylari yukleniyor...
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="showDetailsModal = false"><i class="fas fa-times"></i> Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-    <!-- jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Complete Work Order Modal -->
+        <div class="modal fade" :class="{show: showCompleteModal}" v-if="showCompleteModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="showCompleteModal = false">
+            <div class="modal-dialog" @click.stop>
+                <div class="modal-content">
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h5>
+                        <button type="button" class="close text-white" @click="showCompleteModal = false" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <h5>Is Emri Bilgileri</h5>
+                        <p><strong>Is Emri No:</strong> {{ selectedWorkOrder.is_emri_numarasi }}</p>
+                        <p><strong>Ürün:</strong> {{ selectedWorkOrder.urun_kodu }} - {{ selectedWorkOrder.urun_ismi }}</p>
+                        <p><strong>Planlanan Miktar:</strong> {{ parseFloat(selectedWorkOrder.planlanan_miktar).toFixed(2) }} {{ selectedWorkOrder.birim }}</p>     
+                        <hr>
+                        <div class="form-group">
+                            <label for="tamamlanan_miktar"><strong>Gerceklesen Miktar *</strong></label>
+                            <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.tamamlanan_miktar" @input="calculateMissingAmount" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="eksik_miktar"><strong>Kalan (Eksik) Miktar</strong></label>
+                            <input type="number" step="0.01" class="form-control" :value="selectedWorkOrder.eksik_miktar_toplami.toFixed(2)" readonly>
+                            <small class="form-text text-muted">Planlanan miktardan gerçeklesen miktar çıkarılarak hesaplanmıştır</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="aciklama">Aciklama</label>
+                            <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="3"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" @click="showCompleteModal = false"><i class="fas fa-times"></i> Iptal</button>
+                        <button type="button" class="btn btn-success" @click="completeWorkOrder"><i class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div> <!-- Close the Complete Work Order Modal div -->
 
-    <!-- Vue.js and Axios -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
-    <!-- Include the Vue.js application -->
-    <script src="assets/js/montaj_is_emirleri.js"></script>
-    
-    <script>
-        // Define user info for the Vue app
-        window.kullaniciBilgisi = {
-            kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
-        };
-    </script>
-    </div> <!-- Close the v-else div -->
-    </div> <!-- Close the #app div -->
+        </div> <!-- Close the v-else div -->
+    </div> <!-- Close the main-content div -->
+</div> <!-- Close the #app div -->
 
-    <!-- jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+<!-- jQuery and Bootstrap JS -->
+<script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<!-- SweetAlert2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
-    <!-- Vue.js and Axios -->
-    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
-    <!-- Include the Vue.js application -->
-    <script src="assets/js/montaj_is_emirleri.js"></script>
-    
-    <script>
-        // Define user info for the Vue app
-        window.kullaniciBilgisi = {
-            kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
-        };
-        
-        // Debug: Check if Vue app is loaded
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM loaded, checking for Vue app...');
-            setTimeout(function() {
-                if (typeof Vue !== 'undefined') {
-                    console.log('Vue is available');
-                } else {
-                    console.log('Vue is available');
-                }
-            }, 1000);
-        });
-    </script>
+<!-- Vue.js and Axios -->
+<script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script> 
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
+<!-- Include the Vue.js application -->
+<script src="assets/js/montaj_is_emirleri.js"></script>
+
+<script>
+    // Define user info for the Vue app
+    window.kullaniciBilgisi = {
+        kullaniciAdi: '<?php echo $_SESSION["kullanici_adi"] ?? "Sistem"; ?>'
+    };
+</script>
 </body>
 </html>
