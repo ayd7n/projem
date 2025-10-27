@@ -19,6 +19,9 @@ switch ($action) {
     case 'get_work_centers':
         getWorkCenters();
         break;
+    case 'get_work_centers_paginated':
+        getWorkCentersPaginated();
+        break;
     case 'get_work_center':
         getWorkCenter();
         break;
@@ -144,5 +147,58 @@ function deleteWorkCenter() {
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi silinirken hata oluştu: ' . $connection->error]);
     }
+}
+
+function getWorkCentersPaginated() {
+    global $connection;
+    
+    $page = (int)($_GET['page'] ?? 1);
+    $limit = (int)($_GET['limit'] ?? 10);
+    $search = $_GET['search'] ?? '';
+    
+    // Validate inputs
+    if ($page < 1) $page = 1;
+    if ($limit < 1) $limit = 10;
+    if ($limit > 100) $limit = 100;
+    
+    $offset = ($page - 1) * $limit;
+    
+    $whereClause = '';
+    $search = $connection->real_escape_string($search);
+    if (!empty($search)) {
+        $whereClause = "WHERE isim LIKE '%$search%' OR aciklama LIKE '%$search%'";
+    }
+    
+    // Get total count
+    $totalQuery = "SELECT COUNT(*) AS total FROM is_merkezleri $whereClause";
+    $totalResult = $connection->query($totalQuery);
+    $total = 0;
+    if ($totalResult && $totalRow = $totalResult->fetch_assoc()) {
+        $total = (int)$totalRow['total'];
+    }
+    
+    // Get paginated results
+    $query = "SELECT * FROM is_merkezleri $whereClause ORDER BY isim LIMIT $limit OFFSET $offset";
+    $result = $connection->query($query);
+    
+    $work_centers = [];
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $work_centers[] = $row;
+        }
+    }
+    
+    $totalPages = ceil($total / $limit);
+    
+    echo json_encode([
+        'status' => 'success', 
+        'data' => $work_centers,
+        'pagination' => [
+            'current_page' => $page,
+            'per_page' => $limit,
+            'total' => $total,
+            'total_pages' => $totalPages
+        ]
+    ]);
 }
 ?>

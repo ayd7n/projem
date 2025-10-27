@@ -65,7 +65,8 @@ if ($request_method === 'GET' && $action) {
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
         $total_result = $connection->query($total_query);
-        $total = $total_result->fetch_assoc()['total'];
+        $total_row = $total_result->fetch_assoc();
+        $total = $total_row ? $total_row['total'] : 0;
         
         if ($result) {
             $product_trees = [];
@@ -98,7 +99,8 @@ if ($request_method === 'GET' && $action) {
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
         $total_result = $connection->query($total_query);
-        $total = $total_result->fetch_assoc()['total'];
+        $total_row = $total_result->fetch_assoc();
+        $total = $total_row ? $total_row['total'] : 0;
         
         if ($result) {
             $essence_trees = [];
@@ -133,7 +135,8 @@ if ($request_method === 'GET' && $action) {
             // Calculate total distinct products in product trees
             $total_query = "SELECT COUNT(DISTINCT urun_kodu) as total FROM urun_agaci";
             $total_result = $connection->query($total_query);
-            $total = $total_result->fetch_assoc()['total'] ?? 0;
+            $total_row = $total_result->fetch_assoc();
+            $total = $total_row ? $total_row['total'] : 0;
             
             $response = [
                 'status' => 'success',
@@ -238,7 +241,8 @@ if ($request_method === 'GET' && $action) {
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun'";
         $total_result = $connection->query($total_query);
-        $total = $total_result->fetch_assoc()['total'];
+        $total_row = $total_result->fetch_assoc();
+        $total = $total_row ? $total_row['total'] : 0;
         
         if ($result) {
             $product_trees = [];
@@ -271,7 +275,8 @@ if ($request_method === 'GET' && $action) {
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans'";
         $total_result = $connection->query($total_query);
-        $total = $total_result->fetch_assoc()['total'];
+        $total_row = $total_result->fetch_assoc();
+        $total = $total_row ? $total_row['total'] : 0;
         
         if ($result) {
             $essence_trees = [];

@@ -427,6 +427,14 @@ $work_centers_result = $connection->query($work_centers_query);
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-list"></i> İş Merkezi Listesi</h2>
+                <div class="search-container">
+                    <div class="input-group" style="width: 300px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" id="searchInput" placeholder="İş merkezi ara...">
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -438,29 +446,39 @@ $work_centers_result = $connection->query($work_centers_query);
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if ($work_centers_result && $work_centers_result->num_rows > 0): ?>
-                                <?php while ($work_center = $work_centers_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $work_center['is_merkezi_id']; ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $work_center['is_merkezi_id']; ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                        <td><strong><?php echo htmlspecialchars($work_center['isim']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($work_center['aciklama']); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="3" class="text-center p-4">Henüz kayıtlı iş merkezi bulunmuyor.</td>
-                                </tr>
-                            <?php endif; ?>
+                        <tbody id="workCentersTableBody">
+                            <!-- Data will be loaded via AJAX -->
+                            <tr>
+                                <td colspan="3" class="text-center p-4">Yükleniyor...</td>
+                            </tr>
                         </tbody>
                     </table>
+                </div>
+                <!-- Pagination controls -->
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div class="records-per-page mb-2 mb-md-0">
+                        <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                        <select id="recordsPerPage" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="5">5</option>
+                            <option value="10" selected>10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="pagination-info mr-3">
+                            <small class="text-muted" id="paginationInfo">Yükleniyor...</small>
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0" id="paginationList">
+                                <!-- Pagination links will be loaded via AJAX -->
+                            </ul>
+                        </nav>
+                    </div>
                 </div>
             </div>
         </div>
@@ -511,6 +529,12 @@ $work_centers_result = $connection->query($work_centers_query);
     <script>
     $(document).ready(function() {
         
+        let currentPage = 1;
+        let totalRecords = 0;
+        let totalPages = 0;
+        let currentSearch = '';
+        let currentLimit = 10;
+        
         function showAlert(message, type) {
             $('#alert-placeholder').html(
                 `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -522,7 +546,183 @@ $work_centers_result = $connection->query($work_centers_query);
                 </div>`
             );
         }
-
+        
+        function loadWorkCenters(page = 1) {
+            currentPage = page;
+            const url = `api_islemleri/is_merkezleri_islemler.php?action=get_work_centers_paginated&page=${page}&limit=${currentLimit}&search=${encodeURIComponent(currentSearch)}`;
+            
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        // Populate table with data
+                        const tbody = $('#workCentersTableBody');
+                        tbody.empty();
+                        
+                        if (response.data.length > 0) {
+                            $.each(response.data, function(index, workCenter) {
+                                const row = `
+                                    <tr>
+                                        <td class="actions">
+                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${workCenter.is_merkezi_id}">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${workCenter.is_merkezi_id}">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                        <td><strong>${workCenter.isim}</strong></td>
+                                        <td>${workCenter.aciklama || ''}</td>
+                                    </tr>
+                                `;
+                                tbody.append(row);
+                            });
+                            
+                            // Update pagination info
+                            totalRecords = response.pagination.total;
+                            totalPages = response.pagination.total_pages;
+                            const startRecord = (page - 1) * currentLimit + 1;
+                            const endRecord = Math.min(page * currentLimit, totalRecords);
+                            
+                            $('#paginationInfo').text(`${startRecord}-${endRecord} arası gösteriliyor, toplam ${totalRecords} kayıttan`);
+                        } else {
+                            tbody.append('<tr><td colspan="3" class="text-center p-4">Kayıt bulunamadı.</td></tr>');
+                            totalRecords = 0;
+                            totalPages = 0;
+                            $('#paginationInfo').text('Gösterilecek kayıt yok');
+                        }
+                        
+                        // Update pagination controls
+                        updatePaginationControls();
+                        
+                        // Rebind event handlers for dynamically added elements
+                        $('.edit-btn').off('click').on('click', function() {
+                            var workCenterId = $(this).data('id');
+                            $.ajax({
+                                url: 'api_islemleri/is_merkezleri_islemler.php?action=get_work_center&id=' + workCenterId,
+                                type: 'GET',
+                                dataType: 'json',
+                                success: function(response) {
+                                    if (response.status === 'success') {
+                                        var workCenter = response.data;
+                                        $('#workCenterForm')[0].reset();
+                                        $('#modalTitle').text('İş Merkezini Düzenle');
+                                        $('#action').val('update_work_center');
+                                        $('#is_merkezi_id').val(workCenter.is_merkezi_id);
+                                        $('#isim').val(workCenter.isim);
+                                        $('#aciklama').val(workCenter.aciklama);
+                                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                                        $('#workCenterModal').modal('show');
+                                    } else {
+                                        showAlert(response.message, 'danger');
+                                    }
+                                },
+                                error: function() {
+                                    showAlert('İş merkezi bilgileri alınırken bir hata oluştu.', 'danger');
+                                }
+                            });
+                        });
+                        
+                        $('.delete-btn').off('click').on('click', function() {
+                            var workCenterId = $(this).data('id');
+                            Swal.fire({
+                                title: 'Emin misiniz?',
+                                text: 'Bu iş merkezini silmek istediğinizden emin misiniz?',
+                                icon: 'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Evet',
+                                cancelButtonText: 'İptal'
+                            }).then((result) => {
+                                if (result.isConfirmed) {
+                                    $.ajax({
+                                        url: 'api_islemleri/is_merkezleri_islemler.php',
+                                        type: 'POST',
+                                        data: {
+                                            action: 'delete_work_center',
+                                            is_merkezi_id: workCenterId
+                                        },
+                                        dataType: 'json',
+                                        success: function(response) {
+                                            if (response.status === 'success') {
+                                                showAlert(response.message, 'success');
+                                                // Refresh current page after delete
+                                                loadWorkCenters(currentPage);
+                                            } else {
+                                                showAlert(response.message, 'danger');
+                                            }
+                                        },
+                                        error: function() {
+                                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                        }
+                                    });
+                                }
+                            });
+                        });
+                    } else {
+                        showAlert(response.message || 'İş merkezleri yüklenirken bir hata oluştu.', 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('İş merkezleri yüklenirken bir hata oluştu.', 'danger');
+                }
+            });
+        }
+        
+        function updatePaginationControls() {
+            const paginationList = $('#paginationList');
+            paginationList.empty();
+            
+            if (totalPages <= 1) {
+                paginationList.append('<li class="page-item disabled"><a class="page-link" href="#">Sayfa yok</a></li>');
+                return;
+            }
+            
+            // Previous button
+            const prevDisabled = currentPage === 1 ? 'disabled' : '';
+            const prevLink = currentPage === 1 ? '#' : 'javascript:loadWorkCenters(' + (currentPage - 1) + ')';
+            paginationList.append(`<li class="page-item ${prevDisabled}"><a class="page-link" href="${prevLink}" onclick="if(${!prevDisabled})loadWorkCenters(${currentPage - 1})"><i class="fas fa-chevron-left"></i> Önceki</a></li>`);
+            
+            // First page and ellipsis if needed
+            if (currentPage > 3) {
+                paginationList.append(`<li class="page-item"><a class="page-link" href="javascript:loadWorkCenters(1)">1</a></li>`);
+                if (currentPage > 4) {
+                    paginationList.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                }
+            }
+            
+            // Page numbers around current page
+            for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
+                const activeClass = i === currentPage ? 'active' : '';
+                paginationList.append(`<li class="page-item ${activeClass}"><a class="page-link" href="javascript:loadWorkCenters(${i})">${i}</a></li>`);
+            }
+            
+            // Last page and ellipsis if needed
+            if (currentPage < totalPages - 2) {
+                if (currentPage < totalPages - 3) {
+                    paginationList.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                }
+                paginationList.append(`<li class="page-item"><a class="page-link" href="javascript:loadWorkCenters(${totalPages})">${totalPages}</a></li>`);
+            }
+            
+            // Next button
+            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
+            paginationList.append(`<li class="page-item ${nextDisabled}"><a class="page-link" href="javascript:loadWorkCenters(${currentPage + 1})">Sonraki <i class="fas fa-chevron-right"></i></a></li>`);
+        }
+        
+        // Bind event for records per page change
+        $('#recordsPerPage').on('change', function() {
+            currentLimit = parseInt($(this).val());
+            loadWorkCenters(1);  // Load first page with new limit
+        });
+        
+        // Bind event for search input
+        $('#searchInput').on('input', function() {
+            currentSearch = $(this).val();
+            loadWorkCenters(1);  // Load first page with new search
+        });
+        
         // Open modal for adding a new work center
         $('#addWorkCenterBtn').on('click', function() {
             $('#workCenterForm')[0].reset();
@@ -530,34 +730,6 @@ $work_centers_result = $connection->query($work_centers_query);
             $('#action').val('add_work_center');
             $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
             $('#workCenterModal').modal('show');
-        });
-
-        // Open modal for editing a work center
-        $('.edit-btn').on('click', function() {
-            var workCenterId = $(this).data('id');
-            $.ajax({
-                url: 'api_islemleri/is_merkezleri_islemler.php?action=get_work_center&id=' + workCenterId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var workCenter = response.data;
-                        $('#workCenterForm')[0].reset();
-                        $('#modalTitle').text('İş Merkezini Düzenle');
-                        $('#action').val('update_work_center');
-                        $('#is_merkezi_id').val(workCenter.is_merkezi_id);
-                        $('#isim').val(workCenter.isim);
-                        $('#aciklama').val(workCenter.aciklama);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#workCenterModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('İş merkezi bilgileri alınırken bir hata oluştu.', 'danger');
-                }
-            });
         });
 
         // Handle form submission
@@ -574,10 +746,8 @@ $work_centers_result = $connection->query($work_centers_query);
                     if (response.status === 'success') {
                         $('#workCenterModal').modal('hide');
                         showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        // Refresh current page after save
+                        loadWorkCenters(currentPage);
                     } else {
                         showAlert(response.message, 'danger');
                     }
@@ -587,44 +757,9 @@ $work_centers_result = $connection->query($work_centers_query);
                 }
             });
         });
-
-        // Handle work center deletion
-        $('.delete-btn').on('click', function() {
-            var workCenterId = $(this).data('id');
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: 'Bu iş merkezini silmek istediğinizden emin misiniz?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Evet',
-                cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/is_merkezleri_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_work_center',
-                            is_merkezi_id: workCenterId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                showAlert(response.message, 'danger');
-                            }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                        }
-                    });
-                }
-            });
-        });
+        
+        // Initial load
+        loadWorkCenters(1);
     });
     </script>
 </body>

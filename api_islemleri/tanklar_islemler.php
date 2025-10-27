@@ -19,6 +19,9 @@ switch ($action) {
     case 'get_tanks':
         getTanks();
         break;
+    case 'get_tanks_paginated':
+        getTanksPaginated();
+        break;
     case 'get_total_tanks':
         getTotalTanks();
         break;
@@ -140,5 +143,58 @@ function deleteTank() {
     } catch (mysqli_sql_exception $e) {
         echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
     }
+}
+
+function getTanksPaginated() {
+    global $connection;
+    
+    $page = (int)($_GET['page'] ?? 1);
+    $limit = (int)($_GET['limit'] ?? 10);
+    $search = $_GET['search'] ?? '';
+    
+    // Validate inputs
+    if ($page < 1) $page = 1;
+    if ($limit < 1) $limit = 10;
+    if ($limit > 100) $limit = 100;
+    
+    $offset = ($page - 1) * $limit;
+    
+    $whereClause = '';
+    $search = $connection->real_escape_string($search);
+    if (!empty($search)) {
+        $whereClause = "WHERE tank_kodu LIKE '%$search%' OR tank_ismi LIKE '%$search%' OR not_bilgisi LIKE '%$search%'";
+    }
+    
+    // Get total count
+    $totalQuery = "SELECT COUNT(*) AS total FROM tanklar $whereClause";
+    $totalResult = $connection->query($totalQuery);
+    $total = 0;
+    if ($totalResult && $totalRow = $totalResult->fetch_assoc()) {
+        $total = (int)$totalRow['total'];
+    }
+    
+    // Get paginated results
+    $query = "SELECT tank_id, tank_kodu, tank_ismi, kapasite, not_bilgisi FROM tanklar $whereClause ORDER BY tank_ismi LIMIT $limit OFFSET $offset";
+    $result = $connection->query($query);
+    
+    $tanks = [];
+    if ($result && $result->num_rows > 0) {
+        while ($row = $result->fetch_assoc()) {
+            $tanks[] = $row;
+        }
+    }
+    
+    $totalPages = ceil($total / $limit);
+    
+    echo json_encode([
+        'status' => 'success', 
+        'data' => $tanks,
+        'pagination' => [
+            'current_page' => $page,
+            'per_page' => $limit,
+            'total' => $total,
+            'total_pages' => $totalPages
+        ]
+    ]);
 }
 ?>

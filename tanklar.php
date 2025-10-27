@@ -105,6 +105,30 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                 </div>
             </div>
 
+            <div class="row align-items-center mb-3">
+                <div class="col-lg-6 col-md-12 mb-2 mb-lg-0">
+                    <div class="form-group mb-0">
+                        <label class="sr-only" for="tank-search">Tank Ara</label>
+                        <div class="input-group">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input id="tank-search" type="text" class="form-control" placeholder="Tank ara..." v-model="search" @input="handleSearchInput">
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-md-6 ml-auto">
+                    <div class="form-group mb-0">
+                        <label class="sr-only" for="tank-page-size">Sayfa basina kayit</label>
+                        <select id="tank-page-size" class="form-control" v-model.number="limit" @change="handleLimitChange">
+                            <option :value="10">10 kayit</option>
+                            <option :value="25">25 kayit</option>
+                            <option :value="50">50 kayit</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h2><i class="fas fa-list"></i> Tank Listesi</h2>
@@ -122,10 +146,13 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-if="tanks.length === 0">
-                                    <td colspan="5" class="text-center p-4">Yükleniyor...</td>
+                                <tr v-if="isLoading">
+                                    <td colspan="5" class="text-center p-4">Yukleniyor...</td>
                                 </tr>
-                                <tr v-else v-for="tank in tanks" :key="tank.tank_id">
+                                <tr v-else-if="filtered_tanks.length === 0">
+                                    <td colspan="5" class="text-center p-4">Kayit bulunamadi.</td>
+                                </tr>
+                                <tr v-else v-for="tank in paginatedTanks" :key="tank.tank_id">
                                     <td class="actions">
                                         <button class="btn btn-primary btn-sm" @click="editTank(tank)">
                                             <i class="fas fa-edit"></i>
@@ -141,6 +168,22 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div v-if="filtered_tanks.length > 0" class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between mt-3">
+                        <small class="text-muted mb-2 mb-md-0">{{ paginationInfo }}</small>
+                        <nav aria-label="Tanklar sayfalama">
+                            <ul class="pagination pagination-sm mb-0 justify-content-md-end">
+                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Onceki</a>
+                                </li>
+                                <li class="page-item" v-for="page in pageNumbers" :key="'page-' + page" :class="{ active: page === currentPage }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
+                                </li>
+                                <li class="page-item" :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
+                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Sonraki</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
             </div>
