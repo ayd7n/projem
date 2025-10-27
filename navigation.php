@@ -1,7 +1,6 @@
 <?php
 include 'config.php';
 
-// Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -15,278 +14,232 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDO KOZMETIK - Ana Panel</title>
+    <title>Yönetim Paneli - IDO KOZMETIK</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        :root {
+            --primary: #4a0e63; /* Deep Purple */
+            --secondary: #7c2a99; /* Lighter Purple */
+            --accent: #d4af37; /* Gold */
+            --bg-main: #fdf8f5; /* Soft Cream */
+            --bg-card: #ffffff;
+            --border-color: #e9ecef;
+            --text-primary: #111827; /* Dark Gray/Black */
+            --text-muted: #6b7280; /* Medium Gray */
+            --shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 10px 25px rgba(74, 14, 99, 0.15);
+        }
+
         body {
             font-family: 'Ubuntu', sans-serif;
-            background-color: #fdf8f5; /* Soft cream background */
+            background-color: var(--bg-main);
+            color: var(--text-primary);
             margin: 0;
-            color: #5a5a5a;
+            padding: 2rem;
         }
-        .header {
-            background: linear-gradient(45deg, #4a0e63, #7c2a99);
-            color: #ffffff;
-            padding: 0.5rem 1rem;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .header-title h1 {
-            font-family: 'Ubuntu', sans-serif;
-            font-weight: 700;
-            font-size: 1.5rem;
-            margin: 0;
-            color: #ffffff;
-        }
-        .header-user {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .header-user span {
-            font-weight: 700;
-        }
-        .logout-btn {
-            background-color: rgba(255, 255, 255, 0.1);
-            color: #ffffff;
-            padding: 0.4rem 0.8rem;
-            border-radius: 4px;
-            text-decoration: none;
-            transition: background-color 0.3s;
-        }
-        .logout-btn:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-        .main-content {
-            padding: 0.25rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        .page-header {
-            text-align: center;
-            margin-bottom: 0.25rem;
-        }
-        .page-header h2 {
-            font-family: 'Ubuntu', sans-serif;
-            font-weight: 700;
-            font-size: 2rem;
-            color: #4a0e63;
-        }
-        .page-header p {
-            font-size: 0.9rem;
-            color: #6b7280;
-            max-width: 600px;
-            margin: 0.25rem auto 0;
-        }
-        .category-divider {
-            margin: 0.25rem 0 0.25rem 0;
-            text-align: center;
-        }
-        .category-divider h3 {
-            font-family: 'Ubuntu', sans-serif;
-            font-weight: 700;
-            font-size: 1.4rem;
-            color: #4a0e63;
-            display: inline-block;
-            position: relative;
-        }
-        .category-divider h3::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 40px;
-            height: 2px;
-            background-color: #d4af37; /* Gold */
-        }
-        .nav-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 0.1rem;
-        }
-        .nav-card {
-            background-color: #ffffff;
-            border-radius: 6px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05);
-            text-decoration: none;
-            color: #4a0e63;
-            padding: 0.25rem 0.2rem;
-            text-align: center;
-            transition: transform 0.3s, box-shadow 0.3s;
-            border: 1px solid #f0e9e4;
-        }
-        .nav-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
-        }
-        .nav-card .icon-wrapper {
-            font-size: 1.3rem;
-            margin-bottom: 0.1rem;
-            color: #d4af37; /* Gold */
-        }
-        .nav-card .card-title {
-            font-weight: 700;
-            font-size: 0.8rem;
-        }
-        footer {
-            text-align: center;
-            padding: 0.25rem;
-            margin-top: 0.25rem;
-            color: #9ca3af;
-        }
-        footer strong {
-            color: #4a0e63;
+            margin-bottom: 2rem;
         }
 
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                gap: 0.25rem;
-            }
-            .main-content {
-                padding: 0.5rem;
-            }
-            .page-header h2 {
-                font-size: 1.5rem;
-            }
-            .nav-grid {
-                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-                gap: 0.1rem;
-            }
+        .logo h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
         }
+        .logo .fa-spa {
+            color: var(--primary);
+            margin-right: 0.5rem;
+        }
+
+        .user-controls {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .user-controls a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 1.1rem;
+            transition: color 0.3s ease;
+        }
+
+        .user-controls a:hover {
+            color: var(--primary);
+        }
+        
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header p {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .module-grid-container {
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+        }
+
+        .module-category h3 {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .module-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .module-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+        }
+
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
+        }
+
+        .module-card .icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            transition: color 0.3s ease;
+        }
+        
+        .module-card:hover .icon {
+            color: var(--accent);
+        }
+
+        .module-card .title {
+            font-size: 1.1rem;
+            font-weight: 700;
+        }
+        
+        .module-card .description {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
+            line-height: 1.4;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 4rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
     </style>
 </head>
 <body>
-    <header class="header">
-        <div class="header-title">
-            <h1><i class="fas fa-spa"></i> IDO KOZMETIK</h1>
-        </div>
-        <div class="header-user">
-            <span><i class="fas fa-user-circle"></i> <?php echo $kullanici_adi; ?></span>
-            <a href="logout.php" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
-        </div>
-    </header>
 
-    <main class="main-content">
-        <div class="page-header">
-            <h2>Yönetim Paneli</h2>
-            <p>Sistem modüllerine hızlı erişim için aşağıdaki kartları kullanın.</p>
-        </div>
+    <div class="container">
+        <header class="top-bar">
+            <div class="logo">
+                <h1><i class="fas fa-spa"></i>IDO KOZMETIK</h1>
+            </div>
+            <div class="user-controls">
+                <span class="user-info">Hoş geldin, <strong><?php echo $kullanici_adi; ?></strong></span>
+                <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key"></i></a>
+                <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i></a>
+            </div>
+        </header>
 
-        <div class="category-divider">
-            <h3>İnsan Kaynakları ve İlişkiler</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="musteriler.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-users"></i></div>
-                <p class="card-title">Müşteriler</p>
-            </a>
-            <a href="personeller.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-id-card"></i></div>
-                <p class="card-title">Personeller</p>
-            </a>
-            <a href="tedarikciler.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-truck"></i></div>
-                <p class="card-title">Tedarikçiler</p>
-            </a>
-        </div>
+        <main>
+            <div class="page-header">
+                <h1>Yönetim Paneli</h1>
+                <p>Sistem modüllerine erişmek için aşağıdaki bilgilendirici kartları kullanabilirsiniz.</p>
+            </div>
 
-        <div class="category-divider">
-            <h3>Ürün ve Malzeme Yönetimi</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="urunler.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-box"></i></div>
-                <p class="card-title">Ürünler</p>
-            </a>
-            <a href="esanslar.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-vial"></i></div>
-                <p class="card-title">Esanslar</p>
-            </a>
-            <a href="malzemeler.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-cubes"></i></div>
-                <p class="card-title">Malzemeler</p>
-            </a>
-            <a href="urun_agaclari.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-sitemap"></i></div>
-                <p class="card-title">Ürün Ağaçları</p>
-            </a>
-        </div>
+            <div class="module-grid-container">
+                <div class="module-category">
+                    <h3><i class="fas fa-users-cog"></i> İlişkiler</h3>
+                    <div class="module-grid">
+                        <a href="musteriler.php" class="module-card"><div class="icon"><i class="fas fa-users"></i></div><span class="title">Müşteriler</span><p class="description">Müşteri kayıtlarını ve bilgilerini yönetin.</p></a>
+                        <a href="personeller.php" class="module-card"><div class="icon"><i class="fas fa-id-card"></i></div><span class="title">Personeller</span><p class="description">Şirket personellerini görüntüleyin ve yönetin.</p></a>
+                        <a href="tedarikciler.php" class="module-card"><div class="icon"><i class="fas fa-truck"></i></div><span class="title">Tedarikçiler</span><p class="description">Tedarikçi firmaları ve işlemlerini yönetin.</p></a>
+                    </div>
+                </div>
 
-        <div class="category-divider">
-            <h3>Operasyonel İşlemler</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="musteri_siparisleri.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-shopping-cart"></i></div>
-                <p class="card-title">Müşteri Siparişleri</p>
-            </a>
-            <a href="esans_is_emirleri.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-clipboard-list"></i></div>
-                <p class="card-title">Esans İş Emirleri</p>
-            </a>
-            <a href="montaj_is_emirleri.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-clipboard-list"></i></div>
-                <p class="card-title">Montaj İş Emirleri</p>
-            </a>
+                <div class="module-category">
+                    <h3><i class="fas fa-boxes-stacked"></i> Ürün Yönetimi</h3>
+                    <div class="module-grid">
+                        <a href="urunler.php" class="module-card"><div class="icon"><i class="fas fa-box"></i></div><span class="title">Ürünler</span><p class="description">Ürün kataloğunu ve stok durumunu yönetin.</p></a>
+                        <a href="esanslar.php" class="module-card"><div class="icon"><i class="fas fa-vial"></i></div><span class="title">Esanslar</span><p class="description">Esans reçetelerini ve üretimini yönetin.</p></a>
+                        <a href="malzemeler.php" class="module-card"><div class="icon"><i class="fas fa-cubes"></i></div><span class="title">Malzemeler</span><p class="description">Üretim ve diğer malzemeleri takip edin.</p></a>
+                        <a href="urun_agaclari.php" class="module-card"><div class="icon"><i class="fas fa-sitemap"></i></div><span class="title">Ürün Ağaçları</span><p class="description">Ürün reçetelerini ve bileşenlerini oluşturun.</p></a>
+                    </div>
+                </div>
 
-            <a href="manuel_stok_hareket.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-exchange-alt"></i></div>
-                <p class="card-title">Stok Hareketleri</p>
-            </a>
-        </div>
+                <div class="module-category">
+                    <h3><i class="fas fa-cogs"></i> Operasyonlar</h3>
+                    <div class="module-grid">
+                        <a href="musteri_siparisleri.php" class="module-card"><div class="icon"><i class="fas fa-shopping-cart"></i></div><span class="title">Müşteri Siparişleri</span><p class="description">Yeni siparişleri görüntüleyin ve yönetin.</p></a>
+                        <a href="esans_is_emirleri.php" class="module-card"><div class="icon"><i class="fas fa-flask"></i></div><span class="title">Esans İş Emirleri</span><p class="description">Üretimdeki esans iş emirlerini takip edin.</p></a>
+                        <a href="montaj_is_emirleri.php" class="module-card"><div class="icon"><i class="fas fa-industry"></i></div><span class="title">Montaj İş Emirleri</span><p class="description">Montaj ve dolum iş emirlerini yönetin.</p></a>
+                        <a href="manuel_stok_hareket.php" class="module-card"><div class="icon"><i class="fas fa-exchange-alt"></i></div><span class="title">Stok Hareketleri</span><p class="description">Manuel stok giriş/çıkış işlemleri yapın.</p></a>
+                    </div>
+                </div>
+                 <div class="module-category">
+                    <h3><i class="fas fa-building"></i> Altyapı & Finans</h3>
+                    <div class="module-grid">
+                        <a href="lokasyonlar.php" class="module-card"><div class="icon"><i class="fas fa-map-marker-alt"></i></div><span class="title">Lokasyonlar</span><p class="description">Depo ve üretim lokasyonlarını tanımlayın.</p></a>
+                        <a href="tanklar.php" class="module-card"><div class="icon"><i class="fas fa-database"></i></div><span class="title">Tanklar</span><p class="description">Üretim tanklarını ve kapasitelerini yönetin.</p></a>
+                        <a href="is_merkezleri.php" class="module-card"><div class="icon"><i class="fas fa-warehouse"></i></div><span class="title">İş Merkezleri</span><p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p></a>
+                        <a href="gider_yonetimi.php" class="module-card"><div class="icon"><i class="fas fa-money-bill-wave"></i></div><span class="title">Gider Yönetimi</span><p class="description">Şirket giderlerini takip edin ve raporlayın.</p></a>
+                        <a href="cerceve_sozlesmeler.php" class="module-card"><div class="icon"><i class="fas fa-file-contract"></i></div><span class="title">Sözleşmeler</span><p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p></a>
+                    </div>
+                </div>
+            </div>
+        </main>
 
-        <div class="category-divider">
-            <h3>Sistem Altyapısı</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="lokasyonlar.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-map-marker-alt"></i></div>
-                <p class="card-title">Lokasyonlar</p>
-            </a>
-            <a href="tanklar.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-database"></i></div>
-                <p class="card-title">Tanklar</p>
-            </a>
-            <a href="is_merkezleri.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-industry"></i></div>
-                <p class="card-title">İş Merkezleri</p>
-            </a>
-        </div>
+        <footer>
+            IDO KOZMETIK © <?php echo date('Y'); ?> - Yönetim Paneli
+        </footer>
+    </div>
 
-        <div class="category-divider">
-            <h3>Finans ve Raporlama</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="gider_yonetimi.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-money-bill-wave"></i></div>
-                <p class="card-title">Gider Yönetimi</p>
-            </a>
-            <a href="cerceve_sozlesmeler.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-file-contract"></i></div>
-                <p class="card-title">Sözleşmeler</p>
-            </a>
-        </div>
-
-        <div class="category-divider">
-            <h3>Sistem Ayarları</h3>
-        </div>
-        <div class="nav-grid">
-            <a href="change_password.php" class="nav-card">
-                <div class="icon-wrapper"><i class="fas fa-key"></i></div>
-                <p class="card-title">Şifre Değiştir</p>
-            </a>
-        </div>
-
-    </main>
-
-    <footer>
-        <p><strong style="font-family: 'Ubuntu', sans-serif;">IDO KOZMETIK</strong> © <?php echo date('Y'); ?></p>
-    </footer>
 </body>
 </html>
