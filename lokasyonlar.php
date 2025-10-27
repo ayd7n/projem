@@ -60,31 +60,32 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             color: var(--text-primary);
         }
         .main-content {
-            padding: 20px;
+            padding: 10px;
         }
         .page-header {
-            margin-bottom: 25px;
+            margin-bottom: 15px;
         }
         .page-header h1 {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
             color: var(--text-primary);
         }
         .page-header p {
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 0.9rem;
+            margin-bottom: 0;
         }
         .card {
             background: var(--card-bg);
-            border-radius: 10px;
+            border-radius: 8px;
             box-shadow: var(--shadow);
             border: 1px solid var(--border-color);
-            margin-bottom: 25px;
+            margin-bottom: 15px;
             overflow: hidden;
         }
         .card-header {
-            padding: 18px 20px;
+            padding: 12px 15px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -96,17 +97,17 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             margin: 0;
         }
         .btn {
-            padding: 8px 14px;
+            padding: 6px 12px;
             border: none;
-            border-radius: 6px;
+            border-radius: 5px;
             cursor: pointer;
             font-weight: 700;
             transition: transform 0.2s, box-shadow 0.2s;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            font-size: 0.825rem;
+            gap: 6px;
+            font-size: 0.8rem;
         }
         .btn:hover {
              transform: translateY(-2px);
@@ -138,11 +139,11 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             color: white;
         }
         .alert {
-            padding: 1rem;
-            margin-bottom: 1.5rem;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            border-left: 5px solid;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            border-left: 4px solid;
         }
         .alert-danger {
             background-color: #fff5f5;
@@ -159,6 +160,7 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            text-align: left;
         }
         .table th i {
             margin-right: 6px;
@@ -166,11 +168,12 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
+            text-align: left;
         }
         .actions {
             display: flex;
             gap: 8px;
-            justify-content: center;
+            justify-content: flex-start;
         }
         .actions .btn {
             padding: 6px 10px;
@@ -219,37 +222,22 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
     <!-- Main Content -->
     <div id="app" class="main-content">
         <div class="page-header">
-            <div>
+            <div class="d-flex flex-column align-items-start">
                 <h1>Lokasyonlar Yönetimi</h1>
                 <p>Depo ve raf tanımlamaları</p>
             </div>
         </div>
 
-        <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert">
+        <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert" style="text-align: left;">
             {{ alert.message }}
         </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-map-marker-alt"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_locations; ?></h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Lokasyon</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+        <div class="d-flex flex-column flex-md-row justify-content-start align-items-start mb-3">
+            <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
         </div>
 
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <h2><i class="fas fa-list"></i> Lokasyon Listesi</h2>
                 <div class="search-container">
                     <div class="input-group" style="width: 300px;">
@@ -351,13 +339,13 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
                             <input type="hidden" v-model="modal.data.lokasyon_id">
                             <div class="row">
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2">
                                         <label>Depo İsmi *</label>
                                         <input type="text" class="form-control" v-model="modal.data.depo_ismi" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2">
                                         <label>Raf *</label>
                                         <input type="text" class="form-control" v-model="modal.data.raf" required>
                                     </div>
@@ -437,7 +425,15 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
                         .then(response => response.json())
                         .then(response => {
                             if (response.status === 'success') {
-                                this.locations = response.data;
+                                this.locations = response.data.sort((a, b) => {
+                                    // First sort by depo_ismi
+                                    if (a.depo_ismi < b.depo_ismi) return -1;
+                                    if (a.depo_ismi > b.depo_ismi) return 1;
+                                    // If depo_ismi is the same, then sort by raf
+                                    if (a.raf < b.raf) return -1;
+                                    if (a.raf > b.raf) return 1;
+                                    return 0;
+                                });
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalLocations = response.pagination.total_locations;
                             } else {

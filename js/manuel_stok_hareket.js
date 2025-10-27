@@ -1,9 +1,12 @@
-new Vue({
+const app = new Vue({
     el: '#app',
     data: {
         user_name: '', // Will be set from PHP via data attribute
         movements: [],
         total_movements: 0,
+        currentPage: 1,
+        itemsPerPage: 10,
+        itemsPerPageOptions: [10, 25, 50, 100],
         alert: {
             message: '',
             type: 'success' // 'success', 'danger', 'warning', 'info'
@@ -114,6 +117,70 @@ new Vue({
             return this.locations.map(location => ({
                 depo_ismi: location.depo_ismi
             }));
+        },
+        totalPages() {
+            const totalRecords = Number.isFinite(this.total_movements) ? this.total_movements : 0;
+            if (!this.itemsPerPage || this.itemsPerPage <= 0) {
+                return 1;
+            }
+            return Math.max(1, Math.ceil(totalRecords / this.itemsPerPage));
+        },
+        paginatedMovements() {
+            if (!Array.isArray(this.movements) || this.movements.length === 0) {
+                return [];
+            }
+            return this.movements;
+        },
+        paginationPages() {
+            const pages = [];
+            const total = this.totalPages;
+            const current = this.currentPage;
+
+            if (total <= 7) {
+                for (let i = 1; i <= total; i += 1) {
+                    pages.push(i);
+                }
+                return pages;
+            }
+
+            pages.push(1);
+
+            if (current > 4) {
+                pages.push('...');
+            }
+
+            const start = Math.max(2, current - 1);
+            const end = Math.min(total - 1, current + 1);
+
+            for (let i = start; i <= end; i += 1) {
+                pages.push(i);
+            }
+
+            if (current < total - 3) {
+                pages.push('...');
+            }
+
+            pages.push(total);
+            return pages;
+        },
+        pageRangeStart() {
+            if (!this.total_movements) {
+                return 0;
+            }
+            return (this.currentPage - 1) * this.itemsPerPage + 1;
+        },
+        pageRangeEnd() {
+            if (!this.total_movements) {
+                return 0;
+            }
+            const theoreticalEnd = this.currentPage * this.itemsPerPage;
+            return Math.min(theoreticalEnd, this.total_movements);
+        }
+    },
+    watch: {
+        itemsPerPage() {
+            this.currentPage = 1;
+            this.loadMovements();
         }
     },
     mounted() {
@@ -128,34 +195,65 @@ new Vue({
         this.updateMovementTypes();
     },
     methods: {
+        goToPage(page) {
+            if (page === '...') {
+                return;
+            }
+            const target = Number(page);
+            if (Number.isNaN(target)) {
+                return;
+            }
+            const maxPage = this.totalPages;
+            const clamped = Math.min(Math.max(1, target), maxPage);
+            if (clamped === this.currentPage) {
+                return;
+            }
+            this.currentPage = clamped;
+            this.loadMovements();
+        },
+        changePage(offset) {
+            this.goToPage(this.currentPage + offset);
+        },
         loadMovements() {
-            // API call to load movements - using the correct action
-            axios.get('api_islemleri/stok_hareket_islemler.php?action=get_all_movements')
+            const perPage = this.itemsPerPage && this.itemsPerPage > 0 ? this.itemsPerPage : 10;
+            const page = this.currentPage && this.currentPage > 0 ? this.currentPage : 1;
+
+            axios.get('api_islemleri/stok_hareket_islemler.php', {
+                params: {
+                    action: 'get_all_movements',
+                    page,
+                    per_page: perPage
+                }
+            })
                 .then(response => {
                     if (response.data.status === 'success') {
-                        this.movements = response.data.data || [];
-                        // Also load total count
-                        this.loadTotalMovements();
+                        const total = Number(response.data.total);
+                        this.total_movements = Number.isFinite(total) ? total : 0;
+
+                        const data = Array.isArray(response.data.data) ? response.data.data : [];
+                        this.movements = data;
+
+                        const responsePage = Number(response.data.page);
+                        const maxPage = this.totalPages;
+                        const clampedPage = Number.isFinite(responsePage)
+                            ? Math.min(Math.max(1, responsePage), maxPage)
+                            : Math.min(Math.max(1, page), maxPage);
+
+                        if (clampedPage !== this.currentPage) {
+                            this.currentPage = clampedPage;
+                        }
                     } else {
+                        this.movements = [];
+                        this.total_movements = 0;
+                        this.currentPage = 1;
                         this.showAlert(response.data.message || 'Hareketler yüklenirken bir hata oluştu', 'danger');
                     }
                 })
-                .catch(error => {
+                .catch(() => {
+                    this.movements = [];
+                    this.total_movements = 0;
+                    this.currentPage = 1;
                     this.showAlert('Hareketler yüklenirken bir hata oluştu', 'danger');
-                });
-        },
-        loadTotalMovements() {
-            // API call to get total movements count
-            axios.get('api_islemleri/stok_hareket_islemler.php?action=get_total_movements')
-                .then(response => {
-                    if (response.data.status === 'success') {
-                        this.total_movements = response.data.data || 0;
-                    } else {
-                        this.showAlert(response.data.message || 'Toplam hareket sayısı alınırken bir hata oluştu', 'danger');
-                    }
-                })
-                .catch(error => {
-                    this.showAlert('Toplam hareket sayısı alınırken bir hata oluştu', 'danger');
                 });
         },
         loadLocations() {
@@ -943,5 +1041,7 @@ new Vue({
         }
     }
 });
+
+window.app = app;
 
 

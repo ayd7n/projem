@@ -75,6 +75,8 @@ if (isset($_GET['action'])) {
 
         if (empty($ad_soyad)) {
             $response = ['status' => 'error', 'message' => 'Ad soyad boş olamaz.'];
+        } elseif (empty($dogum_tarihi)) {
+            $response = ['status' => 'error', 'message' => 'Doğum tarihi zorunludur.'];
         } else {
             try {
                 $hashed_password = !empty($sifre) ? password_hash($sifre, PASSWORD_DEFAULT) : password_hash('12345', PASSWORD_DEFAULT);
@@ -119,6 +121,8 @@ if (isset($_GET['action'])) {
 
         if (empty($ad_soyad)) {
             $response = ['status' => 'error', 'message' => 'Ad soyad boş olamaz.'];
+        } elseif (empty($dogum_tarihi)) {
+            $response = ['status' => 'error', 'message' => 'Doğum tarihi zorunludur.'];
         } else {
             try {
                 $update_fields = "ad_soyad = '$ad_soyad', tc_kimlik_no = '$tc_kimlik_no', dogum_tarihi = '$dogum_tarihi', ise_giris_tarihi = '$ise_giris_tarihi', pozisyon = '$pozisyon', departman = '$departman', e_posta = '$e_posta', telefon = '$telefon', adres = '$adres', notlar = '$notlar'";

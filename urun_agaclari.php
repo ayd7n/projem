@@ -13,8 +13,8 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-// Fetch all product trees
-$product_trees_query = "SELECT * FROM urun_agaci ORDER BY urun_ismi, bilesen_ismi";
+// Fetch all product and essence trees
+$product_trees_query = "SELECT * FROM urun_agaci ORDER BY agac_turu, urun_kodu, bilesen_kodu";
 $product_trees_result = $connection->query($product_trees_query);
 
 // Fetch all products, materials, and essences for dropdowns
@@ -91,39 +91,6 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                 <div>
                     <h1>Ürün Ağacı Yönetimi</h1>
                     <p>Ürün ağaçlarını ekleyin, düzenleyin ve yönetin</p>
-                </div>
-                <div class="card mb-4">
-                    <div class="card-body">
-                        <h4 class="card-title"><i class="fas fa-info-circle text-primary"></i> Ürün ve Esans Ağacı Tanımı</h4>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <h5><i class="fas fa-box-open text-success"></i> Ürün Ağacı</h5>
-                                <ul class="list-unstyled ml-3">
-                                    <li><i class="fas fa-check-circle text-success"></i> Bir üründe birden fazla bileşen bulunabilir</li>
-                                    <li><i class="fas fa-check-circle text-success"></i> Bileşenler malzeme ve/veya esans olabilir</li>
-                                    <li><i class="fas fa-check-circle text-success"></i> Ürünler kendi arasında bileşen olarak kullanılamaz</li>
-                                    <li><i class="fas fa-lightbulb text-warning"></i> <strong>Örnek:</strong> Parfüm için bir esans (gül) ve malzemeler (şişe, kapak)</li>
-                                </ul>
-                            </div>
-                            <div class="col-md-6">
-                                <h5><i class="fas fa-perfume text-info"></i> Esans Ağacı</h5>
-                                <ul class="list-unstyled ml-3">
-                                    <li><i class="fas fa-check-circle text-success"></i> Esanslar sadece malzemelerden oluşabilir</li>
-                                    <li><i class="fas fa-check-circle text-success"></i> Başka esans veya ürün içeremez</li>
-                                    <li><i class="fas fa-check-circle text-success"></i> Esansın kendi bileşenlerini tanımlar</li>
-                                    <li><i class="fas fa-lightbulb text-warning"></i> <strong>Örnek:</strong> Gül esansı için gül yağı ve etanol</li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="usage-instructions mt-3">
-                            <h5><i class="fas fa-clipboard-list text-primary"></i> Kullanım Talimatları:</h5>
-                            <ul class="ml-3">
-                                <li><i class="fas fa-arrow-right text-secondary"></i> Ürün tanımlamaları için "<i class="fas fa-sitemap"></i> Ürün Ağaçları" sekmesini kullanın</li>
-                                <li><i class="fas fa-arrow-right text-secondary"></i> Esans tanımlamaları için "<i class="fas fa-perfume"></i> Esans Ağaçları" sekmesini kullanın</li>
-                                <li><i class="fas fa-arrow-right text-secondary"></i> Her ürün ve esans için bileşenlerini ayrı ayrı ekleyin</li>
-                            </ul>
-                        </div>
-                    </div>
                 </div>
             </div>
 

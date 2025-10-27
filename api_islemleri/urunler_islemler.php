@@ -128,6 +128,10 @@ if (isset($_GET['action'])) {
     if ($action == 'add_product') {
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
+        } elseif (empty($depo)) {
+            $response = ['status' => 'error', 'message' => 'Depo seçimi zorunludur.'];
+        } elseif (empty($raf)) {
+            $response = ['status' => 'error', 'message' => 'Raf seçimi zorunludur.'];
         } else {
             $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
@@ -144,6 +148,10 @@ if (isset($_GET['action'])) {
         $urun_kodu = (int)$_POST['urun_kodu'];
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
+        } elseif (empty($depo)) {
+            $response = ['status' => 'error', 'message' => 'Depo seçimi zorunludur.'];
+        } elseif (empty($raf)) {
+            $response = ['status' => 'error', 'message' => 'Raf seçimi zorunludur.'];
         } else {
             $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ? WHERE urun_kodu = ?";
             $stmt = $connection->prepare($query);

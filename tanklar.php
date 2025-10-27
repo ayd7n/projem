@@ -105,29 +105,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                 </div>
             </div>
 
-            <div class="row align-items-center mb-3">
-                <div class="col-lg-6 col-md-12 mb-2 mb-lg-0">
-                    <div class="form-group mb-0">
-                        <label class="sr-only" for="tank-search">Tank Ara</label>
-                        <div class="input-group">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"><i class="fas fa-search"></i></span>
-                            </div>
-                            <input id="tank-search" type="text" class="form-control" placeholder="Tank ara..." v-model="search" @input="handleSearchInput">
-                        </div>
-                    </div>
-                </div>
-                <div class="col-lg-3 col-md-6 ml-auto">
-                    <div class="form-group mb-0">
-                        <label class="sr-only" for="tank-page-size">Sayfa basina kayit</label>
-                        <select id="tank-page-size" class="form-control" v-model.number="limit" @change="handleLimitChange">
-                            <option :value="10">10 kayit</option>
-                            <option :value="25">25 kayit</option>
-                            <option :value="50">50 kayit</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
+
 
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
@@ -169,8 +147,18 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                             </tbody>
                         </table>
                     </div>
-                    <div v-if="filtered_tanks.length > 0" class="d-flex flex-column flex-md-row align-items-md-center justify-content-md-between mt-3">
-                        <small class="text-muted mb-2 mb-md-0">{{ paginationInfo }}</small>
+                    <div v-if="filtered_tanks.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                        <div class="d-flex align-items-center">
+                            <div class="records-per-page mr-3">
+                                <label for="tank-page-size"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                                <select id="tank-page-size" class="form-control d-inline-block ml-2" style="width: auto;" v-model.number="limit" @change="handleLimitChange">
+                                    <option :value="10">10</option>
+                                    <option :value="25">25</option>
+                                    <option :value="50">50</option>
+                                </select>
+                            </div>
+                            <small class="text-muted ml-3">{{ paginationInfo }}</small>
+                        </div>
                         <nav aria-label="Tanklar sayfalama">
                             <ul class="pagination pagination-sm mb-0 justify-content-md-end">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">

@@ -403,8 +403,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Doğum Tarihi</label>
-                                        <input type="date" class="form-control" v-model="modal.data.dogum_tarihi">
+                                        <label>Doğum Tarihi *</label>
+                                        <input type="date" class="form-control" v-model="modal.data.dogum_tarihi" required>
                                     </div>
                                 </div>
                             </div>

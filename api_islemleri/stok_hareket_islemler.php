@@ -203,8 +203,44 @@ switch ($action) {
         break;
 
     case 'get_all_movements':
-        $query = "SELECT * FROM stok_hareket_kayitlari ORDER BY tarih DESC LIMIT 100";
-        $result = $connection->query($query);
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $per_page = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 25;
+
+        if ($per_page < 1) {
+            $per_page = 10;
+        }
+        $per_page = min($per_page, 200);
+
+        if ($page < 1) {
+            $page = 1;
+        }
+
+        $total = 0;
+        $count_query = "SELECT COUNT(*) AS total FROM stok_hareket_kayitlari";
+        $count_result = $connection->query($count_query);
+        if ($count_result) {
+            $count_row = $count_result->fetch_assoc();
+            $total = isset($count_row['total']) ? (int) $count_row['total'] : 0;
+        }
+
+        $max_page = $total > 0 ? (int) ceil($total / $per_page) : 1;
+        if ($page > $max_page) {
+            $page = $max_page;
+        }
+
+        $offset = ($page - 1) * $per_page;
+
+        $query = "SELECT * FROM stok_hareket_kayitlari ORDER BY tarih DESC LIMIT ? OFFSET ?";
+        $stmt = $connection->prepare($query);
+
+        if (!$stmt) {
+            echo json_encode(['status' => 'error', 'message' => 'Hareketler al��namad��: ' . $connection->error]);
+            break;
+        }
+
+        $stmt->bind_param('ii', $per_page, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
 
         $movements = [];
         if ($result) {
@@ -212,8 +248,15 @@ switch ($action) {
                 $movements[] = $row;
             }
         }
+        $stmt->close();
 
-        echo json_encode(['status' => 'success', 'data' => $movements]);
+        echo json_encode([
+            'status' => 'success',
+            'data' => $movements,
+            'total' => $total,
+            'page' => $page,
+            'per_page' => $per_page
+        ]);
         break;
 
     case 'get_total_movements':

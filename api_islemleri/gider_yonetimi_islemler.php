@@ -41,17 +41,102 @@ switch ($action) {
 function getExpenses() {
     global $connection;
 
-    $query = "SELECT * FROM gider_yonetimi ORDER BY tarih DESC, gider_id DESC";
-    $result = $connection->query($query);
+    $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+    $per_page = isset($_GET['per_page']) ? (int) $_GET['per_page'] : 10;
+    $search = trim($_GET['search'] ?? '');
 
-    $expenses = [];
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $expenses[] = $row;
-        }
+    if ($page < 1) {
+        $page = 1;
     }
 
-    echo json_encode(['status' => 'success', 'data' => $expenses]);
+    if ($per_page < 1) {
+        $per_page = 10;
+    }
+    $per_page = min($per_page, 200);
+
+    $offset = ($page - 1) * $per_page;
+
+    $searchLike = '';
+    $whereClause = '';
+    if ($search !== '') {
+        $searchLike = "'" . $connection->real_escape_string('%' . $search . '%') . "'";
+        $whereClause = " WHERE (
+            kategori LIKE {$searchLike}
+            OR aciklama LIKE {$searchLike}
+            OR odeme_tipi LIKE {$searchLike}
+            OR fatura_no LIKE {$searchLike}
+            OR kaydeden_personel_ismi LIKE {$searchLike}
+            OR CAST(kaydeden_personel_id AS CHAR) LIKE {$searchLike}
+            OR DATE_FORMAT(tarih, '%d.%m.%Y') LIKE {$searchLike}
+            OR DATE_FORMAT(tarih, '%Y-%m-%d') LIKE {$searchLike}
+            OR CAST(tutar AS CHAR) LIKE {$searchLike}
+        )";
+    }
+
+    $countQuery = "SELECT COUNT(*) AS total FROM gider_yonetimi" . $whereClause;
+    $countResult = $connection->query($countQuery);
+    if (!$countResult) {
+        echo json_encode(['status' => 'error', 'message' => 'Toplam kayıt sayısı alınamadı: ' . $connection->error]);
+        return;
+    }
+
+    $totalRow = $countResult->fetch_assoc();
+    $total = isset($totalRow['total']) ? (int) $totalRow['total'] : 0;
+    $countResult->free();
+
+    $sumQuery = "SELECT IFNULL(SUM(tutar), 0) AS total_sum FROM gider_yonetimi" . $whereClause;
+    $sumResult = $connection->query($sumQuery);
+    if (!$sumResult) {
+        echo json_encode(['status' => 'error', 'message' => 'Toplam tutar alınamadı: ' . $connection->error]);
+        return;
+    }
+
+    $sumRow = $sumResult->fetch_assoc();
+    $filteredSum = isset($sumRow['total_sum']) ? (float) $sumRow['total_sum'] : 0.0;
+    $sumResult->free();
+
+    $maxPage = $total > 0 ? (int) ceil($total / $per_page) : 1;
+    if ($total > 0 && $page > $maxPage) {
+        $page = $maxPage;
+        $offset = ($page - 1) * $per_page;
+    }
+
+    if ($total === 0) {
+        $page = 1;
+        $offset = 0;
+    }
+
+    $perPageSql = (int) $per_page;
+    $offsetSql = (int) $offset;
+
+    $dataQuery = "SELECT * FROM gider_yonetimi" . $whereClause . " ORDER BY tarih DESC, gider_id DESC LIMIT {$perPageSql} OFFSET {$offsetSql}";
+    $dataResult = $connection->query($dataQuery);
+    if (!$dataResult) {
+        echo json_encode(['status' => 'error', 'message' => 'Giderler alınamadı: ' . $connection->error]);
+        return;
+    }
+
+    $expenses = [];
+    while ($row = $dataResult->fetch_assoc()) {
+        $expenses[] = $row;
+    }
+    $dataResult->free();
+
+    $overallSum = 0.0;
+    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gider_yonetimi");
+    if ($overallResult && $overallRow = $overallResult->fetch_assoc()) {
+        $overallSum = (float) $overallRow['overall_sum'];
+    }
+
+    echo json_encode([
+        'status' => 'success',
+        'data' => $expenses,
+        'total' => $total,
+        'page' => $page,
+        'per_page' => $per_page,
+        'total_sum' => $filteredSum,
+        'overall_sum' => $overallSum
+    ]);
 }
 
 function getExpense() {

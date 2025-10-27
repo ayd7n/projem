@@ -681,12 +681,11 @@ $work_centers_result = $connection->query($work_centers_query);
             
             // Previous button
             const prevDisabled = currentPage === 1 ? 'disabled' : '';
-            const prevLink = currentPage === 1 ? '#' : 'javascript:loadWorkCenters(' + (currentPage - 1) + ')';
-            paginationList.append(`<li class="page-item ${prevDisabled}"><a class="page-link" href="${prevLink}" onclick="if(${!prevDisabled})loadWorkCenters(${currentPage - 1})"><i class="fas fa-chevron-left"></i> Önceki</a></li>`);
+            paginationList.append(`<li class="page-item ${prevDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage - 1}"><i class="fas fa-chevron-left"></i> Önceki</a></li>`);
             
             // First page and ellipsis if needed
             if (currentPage > 3) {
-                paginationList.append(`<li class="page-item"><a class="page-link" href="javascript:loadWorkCenters(1)">1</a></li>`);
+                paginationList.append(`<li class="page-item"><a class="page-link page-num-link" href="#" data-page="1">1</a></li>`);
                 if (currentPage > 4) {
                     paginationList.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
                 }
@@ -695,7 +694,7 @@ $work_centers_result = $connection->query($work_centers_query);
             // Page numbers around current page
             for (let i = Math.max(1, currentPage - 2); i <= Math.min(totalPages, currentPage + 2); i++) {
                 const activeClass = i === currentPage ? 'active' : '';
-                paginationList.append(`<li class="page-item ${activeClass}"><a class="page-link" href="javascript:loadWorkCenters(${i})">${i}</a></li>`);
+                paginationList.append(`<li class="page-item ${activeClass}"><a class="page-link page-num-link" href="#" data-page="${i}">${i}</a></li>`);
             }
             
             // Last page and ellipsis if needed
@@ -703,12 +702,12 @@ $work_centers_result = $connection->query($work_centers_query);
                 if (currentPage < totalPages - 3) {
                     paginationList.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
                 }
-                paginationList.append(`<li class="page-item"><a class="page-link" href="javascript:loadWorkCenters(${totalPages})">${totalPages}</a></li>`);
+                paginationList.append(`<li class="page-item"><a class="page-link page-num-link" href="#" data-page="${totalPages}">${totalPages}</a></li>`);
             }
             
             // Next button
             const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            paginationList.append(`<li class="page-item ${nextDisabled}"><a class="page-link" href="javascript:loadWorkCenters(${currentPage + 1})">Sonraki <i class="fas fa-chevron-right"></i></a></li>`);
+            paginationList.append(`<li class="page-item ${nextDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage + 1}">Sonraki <i class="fas fa-chevron-right"></i></a></li>`);
         }
         
         // Bind event for records per page change
@@ -756,6 +755,15 @@ $work_centers_result = $connection->query($work_centers_query);
                     showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                 }
             });
+        });
+        
+        // Handle pagination clicks using event delegation
+        $(document).on('click', '.page-num-link, .page-nav-link', function(e) {
+            e.preventDefault();
+            const page = $(this).data('page');
+            if (page && !isNaN(page)) {
+                loadWorkCenters(parseInt(page));
+            }
         });
         
         // Initial load

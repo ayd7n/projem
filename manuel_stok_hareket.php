@@ -96,11 +96,48 @@ if ($_SESSION['taraf'] !== 'personel') {
                     <h2><i class="fas fa-table"></i> Stok Hareketleri Listesi</h2>
                 </div>
                 <div class="card-body">
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3">
+                        <div class="d-flex align-items-center mb-2 mb-lg-0">
+                            <span class="text-muted small mr-2" style="white-space: nowrap;">Sayfa başına</span>
+                            <select class="custom-select custom-select-sm" style="min-width: 90px;" v-model.number="itemsPerPage">
+                                <option v-for="option in itemsPerPageOptions" :key="'per-page-' + option" :value="option">
+                                    {{ option }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <small class="text-muted mr-3">
+                                <span v-if="total_movements === 0">Toplam 0 kayıt</span>
+                                <span v-else>{{ pageRangeStart }}-{{ pageRangeEnd }} / {{ total_movements }} kayıt</span>
+                            </small>
+                            <nav v-if="totalPages > 1" aria-label="Stok hareketleri sayfalama">
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                        <a class="page-link" href="#" @click.prevent="changePage(-1)" aria-label="Önceki">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item"
+                                        v-for="(page, index) in paginationPages"
+                                        :key="'page-' + index"
+                                        :class="{ active: currentPage === page, disabled: page === '...' }">
+                                        <a v-if="page !== '...'" class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
+                                        <span v-else class="page-link">...</span>
+                                    </li>
+                                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                        <a class="page-link" href="#" @click.prevent="changePage(1)" aria-label="Sonraki">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
                     <div class="table-wrapper" style="max-height: 60vh; overflow-y: auto;">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-align-top">
                             <thead style="position: sticky; top: 0; background-color: white; z-index: 10;">
                                 <tr>
-                                    <th><i class="fas fa-cogs"></i> İşlemler</th>
+                                    <th class="actions"><i class="fas fa-cogs"></i> İşlemler</th>
                                     <th><i class="fas fa-hashtag"></i> ID</th>
                                     <th><i class="fas fa-calendar"></i> Tarih</th>
                                     <th><i class="fas fa-tag"></i> Stok Türü</th>
@@ -117,7 +154,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <th><i class="fas fa-industry"></i> İş Emri No</th>
                                     <th><i class="fas fa-user"></i> Müşteri ID</th>
                                     <th><i class="fas fa-user"></i> Müşteri Adı</th>
-                                    <th><i class="fas fa-comment"></i> Açıklama</th>
+                                    <th class="long-text" data-column="aciklama"><i class="fas fa-comment"></i> Açıklama</th>
                                     <th><i class="fas fa-user"></i> Kaydeden ID</th>
                                     <th><i class="fas fa-user"></i> Kaydeden Adı</th>
                                     <th><i class="fas fa-truck"></i> Tedarikçi</th>
@@ -131,7 +168,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                         <p class="text-muted">Henüz hiç stok hareketi kaydedilmemiş.</p>
                                     </td>
                                 </tr>
-                                <tr v-else v-for="movement in movements" :key="movement.hareket_id">
+                                <tr v-else v-for="movement in paginatedMovements" :key="movement.hareket_id">
                                     <td class="actions">
                                         <button class="btn btn-danger btn-sm" @click="deleteMovement(movement.hareket_id)">
                                             <i class="fas fa-trash"></i>
@@ -168,7 +205,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <td>{{ movement.is_emri_numarasi || '-' }}</td>
                                     <td>{{ movement.musteri_id || '-' }}</td>
                                     <td>{{ movement.musteri_adi || '-' }}</td>
-                                    <td>{{ movement.aciklama }}</td>
+                                    <td class="long-text" data-column="aciklama">{{ movement.aciklama }}</td>
                                     <td>{{ movement.kaydeden_personel_id || '-' }}</td>
                                     <td>{{ movement.kaydeden_personel_adi || '-' }}</td>
                                     <td>{{ movement.tedarikci_ismi || '-' }}</td>

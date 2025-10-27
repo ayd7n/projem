@@ -350,7 +350,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" v-model="modal.data.giris_yetkisi">
+                                            <input type="checkbox" class="form-check-input" v-model="modal.data.giris_yetkisi" @change="validateForm">
                                             <label class="form-check-label">Sisteme Giriş Yetkisi</label>
                                         </div>
                                         <small class="form-text text-muted">Müşterinin sistemde oturum açmasına izin ver</small>
@@ -358,8 +358,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Şifre (değiştirmek istemiyorsanız boş bırakın)</label>
-                                        <input type="password" class="form-control" v-model="modal.data.sifre">
+                                        <label>Şifre <span v-if="modal.data.giris_yetkisi">*</span></label>
+                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi">
                                     </div>
                                 </div>
                             </div>
@@ -464,6 +464,12 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                     $('#customerModal').modal('show');
                 },
                 saveCustomer() {
+                    // Check if giris_yetkisi is enabled but no password is provided
+                    if (this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
+                        this.showAlert('Sisteme giriş yetkisi verildiğinde şifre zorunludur.', 'danger');
+                        return;
+                    }
+                    
                     let action = this.modal.data.musteri_id ? 'update_customer' : 'add_customer';
                     let formData = new FormData();
                     for (let key in this.modal.data) {
@@ -488,6 +494,11 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                     .catch(error => {
                         this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                     });
+                },
+                validateForm() {
+                    if (this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
+                        this.showAlert('Sisteme giriş yetkisi verildiğinde şifre zorunludur.', 'warning');
+                    }
                 },
                 deleteCustomer(id) {
                     Swal.fire({

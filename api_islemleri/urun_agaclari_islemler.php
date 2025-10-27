@@ -37,7 +37,7 @@ $response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
 if ($request_method === 'GET' && $action) {
     if ($action === 'search_product_trees' && isset($_GET['searchTerm'])) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
         
         if ($result) {
@@ -59,7 +59,7 @@ if ($request_method === 'GET' && $action) {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
         
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
         
         // Get total count for pagination
@@ -93,7 +93,7 @@ if ($request_method === 'GET' && $action) {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
         
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
         
         // Get total count for pagination
@@ -123,7 +123,7 @@ if ($request_method === 'GET' && $action) {
         }
     } elseif ($action === 'get_all') {
         // Fetch all product trees
-        $query = "SELECT * FROM urun_agaci ORDER BY urun_ismi, bilesen_ismi";
+        $query = "SELECT * FROM urun_agaci ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
         
         if ($result) {
@@ -213,7 +213,7 @@ if ($request_method === 'GET' && $action) {
         }
     } elseif ($action === 'search_essence_trees' && isset($_GET['searchTerm'])) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
         
         if ($result) {
@@ -235,7 +235,7 @@ if ($request_method === 'GET' && $action) {
         $offset = ($page - 1) * $limit;
         
         // Fetch paginated product trees
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
         
         // Get total count for pagination
@@ -269,7 +269,7 @@ if ($request_method === 'GET' && $action) {
         $offset = ($page - 1) * $limit;
         
         // Fetch paginated essence trees
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
         
         // Get total count for pagination
@@ -411,7 +411,7 @@ if ($request_method === 'GET' && isset($_GET['agac_turu'])) {
     if (!in_array($agac_turu, ['urun', 'esans'])) {
         $response = ['status' => 'error', 'message' => 'Geçersiz agac_turu parametresi.'];
     } else {
-        $query = "SELECT * FROM urun_agaci WHERE agac_turu = '$agac_turu' ORDER BY urun_ismi, bilesen_ismi";
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = '$agac_turu' ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
         
         if ($result) {

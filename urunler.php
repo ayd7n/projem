@@ -263,7 +263,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
                                 <th><i class="fas fa-cube"></i> Raf</th>
-                                <th><i class="fas fa-info-circle"></i> Durum</th>
+                                
                             </tr>
                         </thead>
                         <tbody>
@@ -289,9 +289,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ formatCurrency(product.satis_fiyati) }}</td>
                                 <td>{{ product.depo }}</td>
                                 <td>{{ product.raf }}</td>
-                                <td>
-                                    <span v-html="stockStatus(product)"></span>
-                                </td>
+
                             </tr>
                         </tbody>
                     </table>
@@ -397,8 +395,8 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Depo</label>
-                                        <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)">
+                                        <label>Depo *</label>
+                                        <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)" required>
                                             <option value="">Depo Secin</option>
                                             <option v-for="depo in depoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}</option>
                                         </select>
@@ -408,8 +406,8 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Raf</label>
-                                        <select class="form-control" v-model="modal.data.raf">
+                                        <label>Raf *</label>
+                                        <select class="form-control" v-model="modal.data.raf" required>
                                             <option value="">Once Depo Secin</option>
                                             <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}</option>
                                         </select>

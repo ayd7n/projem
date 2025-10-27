@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 tank_kodu: '',
                 tank_ismi: '',
                 stok_miktari: 0,
-                birim: 'ml',
+                birim: 'lt',
                 demlenme_suresi_gun: 0,
                 not_bilgisi: ''
             },
@@ -60,8 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
         mounted() {
             this.tanklariYukle();
             this.esanslariYukle();
-            // Initialize debounced search function
-            this.debounceSearch = this.debounce(this.performSearch, 500);
         },
         methods: {
             tanklariYukle() {
@@ -114,6 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
             acYeniEsansModal() {
                 this.modalModu = 'ekle';
                 this.sifirlaSeciliEsans();
+                this.seciliEsans.birim = 'lt';  // Yeni esans için özellikle litre yap
                 this.modalAcik = true;
             },
             
@@ -128,8 +127,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     esans_id: null,
                     esans_kodu: '',
                     esans_ismi: '',
+                    tank_kodu: '',
+                    tank_ismi: '',
                     stok_miktari: 0,
-                    birim: 'ml',
+                    birim: 'lt',
                     demlenme_suresi_gun: 0,
                     not_bilgisi: ''
                 };
@@ -215,24 +216,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.alertMessage = '';
             },
             
-            // Debounce function to limit API calls
-            debounce(func, wait) {
-                let timeout;
-                return function executedFunction(...args) {
-                    const later = () => {
-                        clearTimeout(timeout);
-                        func(...args);
-                    };
-                    clearTimeout(timeout);
-                    timeout = setTimeout(later, wait);
-                };
-            },
-            
             performSearch() {
-                this.esanslariYukle(1); // Reset to first page when searching
-            },
-            
-            debounceSearch: null // Will be initialized in mounted hook
+                // Reset to first page when searching
+                // Using setTimeout to debounce the search
+                if(this.searchTimeout) {
+                    clearTimeout(this.searchTimeout);
+                }
+                this.searchTimeout = setTimeout(() => {
+                    this.esanslariYukle(1);
+                }, 500);
+            }
         }
     });
 });

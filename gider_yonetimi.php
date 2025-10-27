@@ -17,9 +17,6 @@ if ($_SESSION['taraf'] !== 'personel') {
 $total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi");
 $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
-// Fetch all expenses
-$expenses_query = "SELECT * FROM gider_yonetimi ORDER BY tarih DESC, gider_id DESC";
-$expenses_result = $connection->query($expenses_query);
 ?>
 
 <!DOCTYPE html>
@@ -416,7 +413,7 @@ $expenses_result = $connection->query($expenses_query);
                             <i class="fas fa-wallet"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo number_format($total_expenses, 2, ',', '.'); ?> TL</h3>
+                            <h3 id="overallTotal" style="font-size: 1.5rem; margin: 0;"><?php echo number_format($total_expenses, 2, ',', '.'); ?> TL</h3>
                             <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Gider</p>
                         </div>
                     </div>
@@ -429,10 +426,27 @@ $expenses_result = $connection->query($expenses_query);
                 <h2><i class="fas fa-list"></i> Gider Listesi</h2>
             </div>
             <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="flex-grow-1">
+                        <div class="input-group input-group-sm">
+                            <input type="text" class="form-control" id="searchInput" placeholder="Kategori, açıklama, fatura no veya kaydeden ara">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Temizle">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-muted small text-lg-right ml-3">
+                        <div id="listingInfo">Toplam 0 kayıt</div>
+                        <div id="listingSum" class="mt-1">Filtre toplamı: 0,00 TL</div>
+                    </div>
+                </div>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
+                                <th><i class="fas fa-cogs"></i> İşlemler</th>
                                 <th><i class="fas fa-calendar"></i> Tarih</th>
                                 <th><i class="fas fa-tag"></i> Kategori</th>
                                 <th><i class="fas fa-money-bill"></i> Tutar</th>
@@ -440,37 +454,34 @@ $expenses_result = $connection->query($expenses_query);
                                 <th><i class="fas fa-file-invoice"></i> Fatura No</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
                                 <th><i class="fas fa-user"></i> Kaydeden</th>
-                                <th><i class="fas fa-cogs"></i> İşlemler</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            <?php if ($expenses_result && $expenses_result->num_rows > 0): ?>
-                                <?php while ($expense = $expenses_result->fetch_assoc()): ?>
-                                    <tr>
-                                        <td><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['kategori']); ?></td>
-                                        <td><strong><?php echo number_format($expense['tutar'], 2, ',', '.'); ?> TL</strong></td>
-                                        <td><?php echo htmlspecialchars($expense['odeme_tipi']); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['fatura_no'] ?: '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['aciklama']); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['kaydeden_personel_ismi'] ?: $expense['kaydeden_personel_id']); ?></td>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $expense['gider_id']; ?>">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $expense['gider_id']; ?>">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="8" class="text-center p-4">Henüz kayıtlı gider bulunmuyor.</td>
-                                </tr>
-                            <?php endif; ?>
+                        <tbody id="expensesTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center p-4">Veriler yükleniyor...</td>
+                            </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <div class="records-per-page mr-3">
+                            <label for="perPageSelect"><i class="fas fa-list"></i> Sayfa başına: </label>
+                            <select class="custom-select custom-select-sm ml-2" id="perPageSelect" style="width: auto;">
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="text-muted small ml-3">
+                            <div id="listingInfo">Toplam 0 kayıt</div>
+                            <div id="listingSum" class="mt-1">Filtre toplamı: 0,00 TL</div>
+                        </div>
+                    </div>
+                    <nav aria-label="Gider sayfalama">
+                        <ul class="pagination pagination-sm justify-content-md-end mb-0 mt-2 mt-md-0" id="expensesPagination"></ul>
+                    </nav>
                 </div>
             </div>
         </div>
@@ -558,7 +569,24 @@ $expenses_result = $connection->query($expenses_query);
 
     <script>
     $(document).ready(function() {
-        
+        const $tableBody = $('#expensesTableBody');
+        const $pagination = $('#expensesPagination');
+        const $listingInfo = $('#listingInfo');
+        const $listingSum = $('#listingSum');
+        const $perPageSelect = $('#perPageSelect');
+        const $searchInput = $('#searchInput');
+        const $clearSearchBtn = $('#clearSearchBtn');
+        const $overallTotal = $('#overallTotal');
+
+        let perPage = parseInt($perPageSelect.val(), 10) || 10;
+        let currentPage = 1;
+        let totalRecords = 0;
+        let currentSearch = '';
+        let currentFilteredSum = 0;
+        let lastFetchCount = 0;
+        let currentRequest = null;
+        let searchDebounce = null;
+
         function showAlert(message, type) {
             $('#alert-placeholder').html(
                 `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
@@ -571,26 +599,324 @@ $expenses_result = $connection->query($expenses_query);
             );
         }
 
-        // Open modal for adding a new expense
+        function escapeHtml(value) {
+            if (value === null || value === undefined) {
+                return '';
+            }
+            return String(value).replace(/[&<>"']/g, function(match) {
+                switch (match) {
+                    case '&':
+                        return '&amp;';
+                    case '<':
+                        return '&lt;';
+                    case '>':
+                        return '&gt;';
+                    case '"':
+                        return '&quot;';
+                    case '\'':
+                        return '&#39;';
+                    default:
+                        return match;
+                }
+            });
+        }
+
+        function formatDate(value) {
+            if (!value) {
+                return '-';
+            }
+            const datePart = String(value).split(' ')[0];
+            const segments = datePart.split('-');
+            if (segments.length === 3) {
+                return `${segments[2]}.${segments[1]}.${segments[0]}`;
+            }
+            return escapeHtml(value);
+        }
+
+        function formatCurrency(value) {
+            const number = Number(value);
+            if (!Number.isFinite(number)) {
+                return '0,00';
+            }
+            return number.toLocaleString('tr-TR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function setTableLoading() {
+            $tableBody.html('<tr><td colspan="8" class="text-center p-4">Yükleniyor...</td></tr>');
+        }
+
+        function setTableEmpty(message) {
+            $tableBody.html(`<tr><td colspan="8" class="text-center p-4">${escapeHtml(message)}</td></tr>`);
+        }
+
+        function computePages(totalPages) {
+            const pages = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i += 1) {
+                    pages.push(i);
+                }
+                return pages;
+            }
+
+            pages.push(1);
+            if (currentPage > 4) {
+                pages.push('...');
+            }
+
+            const start = Math.max(2, currentPage - 1);
+            const end = Math.min(totalPages - 1, currentPage + 1);
+
+            for (let i = start; i <= end; i += 1) {
+                pages.push(i);
+            }
+
+            if (currentPage < totalPages - 3) {
+                pages.push('...');
+            }
+
+            pages.push(totalPages);
+            return pages;
+        }
+
+        function buildPagination(totalPages) {
+            $pagination.empty();
+
+            if (totalPages <= 1 || totalRecords === 0) {
+                return;
+            }
+
+            const prevDisabled = currentPage === 1 ? ' disabled' : '';
+            $pagination.append(`<li class="page-item${prevDisabled}"><a class="page-link" href="#" aria-label="Önceki" data-shift="-1">&laquo;</a></li>`);
+
+            const pages = computePages(totalPages);
+            pages.forEach(function(page) {
+                if (page === '...') {
+                    $pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
+                } else {
+                    const activeClass = page === currentPage ? ' active' : '';
+                    $pagination.append(`<li class="page-item${activeClass}"><a class="page-link" href="#" data-page="${page}">${page}</a></li>`);
+                }
+            });
+
+            const nextDisabled = currentPage === totalPages ? ' disabled' : '';
+            $pagination.append(`<li class="page-item${nextDisabled}"><a class="page-link" href="#" aria-label="Sonraki" data-shift="1">&raquo;</a></li>`);
+        }
+
+        function updateListingSummary() {
+            if (totalRecords === 0) {
+                $listingInfo.text('Toplam 0 kayıt');
+                $listingSum.text('Filtre toplamı: 0,00 TL');
+                return;
+            }
+
+            const start = (currentPage - 1) * perPage + 1;
+            const end = start + Math.max(lastFetchCount - 1, 0);
+
+            $listingInfo.text(`${start}-${end} / ${totalRecords} kayıt`);
+            $listingSum.text(`Filtre toplamı: ${formatCurrency(currentFilteredSum)} TL`);
+        }
+
+        function fetchExpenses() {
+            if (currentRequest) {
+                currentRequest.abort();
+            }
+
+            setTableLoading();
+
+            currentRequest = $.ajax({
+                url: 'api_islemleri/gider_yonetimi_islemler.php',
+                method: 'GET',
+                dataType: 'json',
+                data: {
+                    action: 'get_expenses',
+                    page: currentPage,
+                    per_page: perPage,
+                    search: currentSearch
+                }
+            });
+
+            currentRequest.done(function(response) {
+                if (response.status !== 'success') {
+                    setTableEmpty(response.message || 'Veriler alınırken bir hata oluştu.');
+                    totalRecords = 0;
+                    currentFilteredSum = 0;
+                    lastFetchCount = 0;
+                    buildPagination(0);
+                    updateListingSummary();
+                    return;
+                }
+
+                const expenses = Array.isArray(response.data) ? response.data : [];
+                totalRecords = Number.isFinite(Number(response.total)) ? Number(response.total) : 0;
+                currentFilteredSum = Number.isFinite(Number(response.total_sum)) ? Number(response.total_sum) : 0;
+                lastFetchCount = expenses.length;
+
+                const responsePerPage = Number(response.per_page);
+                if (Number.isFinite(responsePerPage) && responsePerPage > 0 && responsePerPage !== perPage) {
+                    perPage = responsePerPage;
+                    $perPageSelect.val(String(perPage));
+                }
+
+                const responsePage = Number(response.page);
+                if (Number.isFinite(responsePage) && responsePage > 0) {
+                    currentPage = responsePage;
+                }
+
+                const overallSum = Number(response.overall_sum);
+                if (Number.isFinite(overallSum)) {
+                    $overallTotal.text(`${formatCurrency(overallSum)} TL`);
+                }
+
+                const totalPages = totalRecords > 0 ? Math.ceil(totalRecords / perPage) : 0;
+
+                if (expenses.length === 0) {
+                    setTableEmpty('Kriterlerinize uygun gider bulunamadı.');
+                } else {
+                    const rows = expenses.map(function(expense) {
+                        const tarih = formatDate(expense.tarih);
+                        const kategori = escapeHtml(expense.kategori);
+                        const tutar = `${formatCurrency(expense.tutar)} TL`;
+                        const odemeTipi = escapeHtml(expense.odeme_tipi);
+                        const faturaNo = expense.fatura_no ? escapeHtml(expense.fatura_no) : '-';
+                        const aciklama = escapeHtml(expense.aciklama);
+                        const kaydeden = expense.kaydeden_personel_ismi
+                            ? escapeHtml(expense.kaydeden_personel_ismi)
+                            : (expense.kaydeden_personel_id ? escapeHtml(expense.kaydeden_personel_id) : '-');
+
+                        return `<tr>
+                            <td class="actions">
+                                <button class="btn btn-primary btn-sm edit-btn" data-id="${expense.gider_id}">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm delete-btn" data-id="${expense.gider_id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                            <td>${tarih}</td>
+                            <td>${kategori}</td>
+                            <td><strong>${tutar}</strong></td>
+                            <td>${odemeTipi}</td>
+                            <td>${faturaNo}</td>
+                            <td>${aciklama}</td>
+                            <td>${kaydeden}</td>
+                        </tr>`;
+                    }).join('');
+
+                    $tableBody.html(rows);
+                }
+
+                buildPagination(totalPages);
+                updateListingSummary();
+            }).fail(function(jqXHR, textStatus) {
+                if (textStatus === 'abort') {
+                    return;
+                }
+                setTableEmpty('Veriler alınırken bir hata oluştu.');
+                showAlert('Giderler alınırken bir hata oluştu.', 'danger');
+                totalRecords = 0;
+                currentFilteredSum = 0;
+                lastFetchCount = 0;
+                buildPagination(0);
+                updateListingSummary();
+            }).always(function() {
+                currentRequest = null;
+            });
+        }
+
+        $perPageSelect.on('change', function() {
+            const value = parseInt($(this).val(), 10);
+            if (Number.isFinite(value) && value > 0) {
+                perPage = value;
+                currentPage = 1;
+                fetchExpenses();
+            }
+        });
+
+        $searchInput.on('input', function() {
+            const value = $(this).val().trim();
+            clearTimeout(searchDebounce);
+            searchDebounce = setTimeout(function() {
+                currentSearch = value;
+                currentPage = 1;
+                fetchExpenses();
+            }, 400);
+        });
+
+        $clearSearchBtn.on('click', function() {
+            if ($searchInput.val() === '') {
+                return;
+            }
+            $searchInput.val('');
+            currentSearch = '';
+            currentPage = 1;
+            fetchExpenses();
+            $searchInput.trigger('focus');
+        });
+
+        $(document).on('click', '#expensesPagination .page-link', function(e) {
+            e.preventDefault();
+            const $link = $(this);
+            if ($link.parent().hasClass('disabled') || $link.parent().hasClass('active')) {
+                return;
+            }
+
+            const page = $link.data('page');
+            const shift = $link.data('shift');
+
+            if (typeof page !== 'undefined') {
+                const targetPage = parseInt(page, 10);
+                if (!Number.isFinite(targetPage) || targetPage === currentPage) {
+                    return;
+                }
+                currentPage = targetPage;
+                fetchExpenses();
+                return;
+            }
+
+            if (typeof shift !== 'undefined') {
+                const offset = parseInt(shift, 10);
+                if (!Number.isFinite(offset) || offset === 0) {
+                    return;
+                }
+                const target = currentPage + offset;
+                if (target < 1) {
+                    return;
+                }
+                currentPage = target;
+                fetchExpenses();
+            }
+        });
+
         $('#addExpenseBtn').on('click', function() {
             $('#expenseForm')[0].reset();
             $('#modalTitle').text('Yeni Gider Ekle');
             $('#action').val('add_expense');
+            $('#gider_id').val('');
             $('#tarih').val(new Date().toISOString().split('T')[0]);
             $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
             $('#expenseModal').modal('show');
         });
 
-        // Open modal for editing an expense
-        $('.edit-btn').on('click', function() {
-            var expenseId = $(this).data('id');
+        $(document).on('click', '.edit-btn', function() {
+            const expenseId = $(this).data('id');
+            if (!expenseId) {
+                return;
+            }
+
             $.ajax({
-                url: 'api_islemleri/gider_yonetimi_islemler.php?action=get_expense&id=' + expenseId,
-                type: 'GET',
+                url: 'api_islemleri/gider_yonetimi_islemler.php',
+                method: 'GET',
                 dataType: 'json',
+                data: {
+                    action: 'get_expense',
+                    id: expenseId
+                },
                 success: function(response) {
                     if (response.status === 'success') {
-                        var expense = response.data;
+                        const expense = response.data;
                         $('#expenseForm')[0].reset();
                         $('#modalTitle').text('Gideri Düzenle');
                         $('#action').val('update_expense');
@@ -604,7 +930,7 @@ $expenses_result = $connection->query($expenses_query);
                         $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
                         $('#expenseModal').modal('show');
                     } else {
-                        showAlert(response.message, 'danger');
+                        showAlert(response.message || 'Gider bilgileri alınamadı.', 'danger');
                     }
                 },
                 error: function() {
@@ -613,37 +939,41 @@ $expenses_result = $connection->query($expenses_query);
             });
         });
 
-        // Handle form submission
         $('#expenseForm').on('submit', function(e) {
             e.preventDefault();
-            var formData = $(this).serialize();
-            
+            const formData = $(this).serialize();
+            const $submitBtn = $('#submitBtn');
+            $submitBtn.prop('disabled', true);
+
             $.ajax({
                 url: 'api_islemleri/gider_yonetimi_islemler.php',
-                type: 'POST',
-                data: formData,
+                method: 'POST',
                 dataType: 'json',
+                data: formData,
                 success: function(response) {
                     if (response.status === 'success') {
                         $('#expenseModal').modal('hide');
                         showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
+                        currentPage = 1;
+                        fetchExpenses();
                     } else {
-                        showAlert(response.message, 'danger');
+                        showAlert(response.message || 'İşlem sırasında bir hata oluştu.', 'danger');
                     }
                 },
                 error: function() {
                     showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                },
+                complete: function() {
+                    $submitBtn.prop('disabled', false);
                 }
             });
         });
 
-        // Handle expense deletion
-        $('.delete-btn').on('click', function() {
-            var expenseId = $(this).data('id');
+        $(document).on('click', '.delete-btn', function() {
+            const expenseId = $(this).data('id');
+            if (!expenseId) {
+                return;
+            }
 
             Swal.fire({
                 title: 'Emin misiniz?',
@@ -652,33 +982,35 @@ $expenses_result = $connection->query($expenses_query);
                 showCancelButton: true,
                 confirmButtonText: 'Evet',
                 cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/gider_yonetimi_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_expense',
-                            gider_id: expenseId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                showAlert(response.message, 'danger');
-                            }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                        }
-                    });
+            }).then(function(result) {
+                if (!result.isConfirmed) {
+                    return;
                 }
+
+                $.ajax({
+                    url: 'api_islemleri/gider_yonetimi_islemler.php',
+                    method: 'POST',
+                    dataType: 'json',
+                    data: {
+                        action: 'delete_expense',
+                        gider_id: expenseId
+                    },
+                    success: function(response) {
+                        if (response.status === 'success') {
+                            showAlert(response.message, 'success');
+                            fetchExpenses();
+                        } else {
+                            showAlert(response.message || 'Silme işlemi sırasında bir hata oluştu.', 'danger');
+                        }
+                    },
+                    error: function() {
+                        showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                    }
+                });
             });
         });
+
+        fetchExpenses();
     });
     </script>
 </body>

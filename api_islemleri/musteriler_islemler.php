@@ -111,15 +111,25 @@ function addCustomer() {
     $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
 
-    if (empty($musteri_adi) || empty($sifre)) {
-        echo json_encode(['status' => 'error', 'message' => 'Müşteri adı ve şifre alanları zorunludur.']);
+    if (empty($musteri_adi)) {
+        echo json_encode(['status' => 'error', 'message' => 'Müşteri adı alanı zorunludur.']);
+        return;
+    }
+
+    // If giris_yetkisi is enabled, password is required
+    if ($giris_yetkisi == 1 && empty($sifre)) {
+        echo json_encode(['status' => 'error', 'message' => 'Sisteme giriş yetkisi verildiğinde şifre zorunludur.']);
         return;
     }
 
     try {
-        // Hash the password
-        $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
-        $escaped_hashed_password = $connection->real_escape_string($hashed_password);
+        // Hash the password if provided, otherwise store as empty string
+        if (!empty($sifre)) {
+            $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
+            $escaped_hashed_password = $connection->real_escape_string($hashed_password);
+        } else {
+            $escaped_hashed_password = '';
+        }
 
         $query = "INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar, giris_yetkisi) VALUES ('$musteri_adi', '$vergi_no_tc', '$adres', '$telefon', '$e_posta', '$escaped_hashed_password', '$aciklama_notlar', $giris_yetkisi)";
         $result = $connection->query($query);
@@ -143,6 +153,7 @@ function updateCustomer() {
     $adres = $connection->real_escape_string($_POST['adres'] ?? '');
     $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
     $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
+    $sifre = $_POST['sifre'] ?? '';
     $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
 
@@ -151,10 +162,16 @@ function updateCustomer() {
         return;
     }
 
+    // If giris_yetkisi is enabled, password is required
+    if ($giris_yetkisi == 1 && empty($sifre)) {
+        echo json_encode(['status' => 'error', 'message' => 'Sisteme giriş yetkisi verildiğinde şifre zorunludur.']);
+        return;
+    }
+
     try {
-        // Update password if provided, otherwise don't update password field
-        if (!empty($_POST['sifre'])) {
-            $hashed_password = password_hash($_POST['sifre'], PASSWORD_DEFAULT);
+        // Update password if provided and giris_yetkisi is enabled, otherwise don't update password field
+        if (!empty($sifre) && $giris_yetkisi == 1) {
+            $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
             $escaped_hashed_password = $connection->real_escape_string($hashed_password);
             $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', sistem_sifresi = '$escaped_hashed_password', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
         } else {

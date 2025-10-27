@@ -364,8 +364,9 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label>Malzeme Türü</label>
-                                    <select class="form-control" v-model="modal.data.malzeme_turu">
+                                    <label>Malzeme Türü *</label>
+                                    <select class="form-control" v-model="modal.data.malzeme_turu" required>
+                                        <option value="">Tür Seçin</option>
                                         <option value="sise">Şişe</option>
                                         <option value="kutu">Kutu</option>
                                         <option value="etiket">Etiket</option>
@@ -388,8 +389,9 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label>Birim</label>
-                                    <select class="form-control" v-model="modal.data.birim">
+                                    <label>Birim *</label>
+                                    <select class="form-control" v-model="modal.data.birim" required>
+                                        <option value="">Birim Seçin</option>
                                         <option value="adet">Adet</option>
                                         <option value="kg">Kg</option>
                                         <option value="gr">Gr</option>
@@ -410,8 +412,8 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label>Depo</label>
-                                    <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)">
+                                    <label>Depo *</label>
+                                    <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)" required>
                                         <option value="">Depo Seçin</option>
                                         <option v-for="depo in depoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}</option>
                                     </select>
@@ -421,9 +423,9 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label>Raf</label>
-                                    <select class="form-control" v-model="modal.data.raf">
-                                        <option value="">Önce Depo Seçin</option>
+                                    <label>Raf *</label>
+                                    <select class="form-control" v-model="modal.data.raf" required>
+                                        <option value="">Raf Seçin</option>
                                         <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}</option>
                                     </select>
                                 </div>
@@ -502,7 +504,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
             loadMaterials(page = 1) {
                 this.loading = true;
                 this.currentPage = page;
-                let url = `api_islemleri/malzemeler_islemler.php?action=get_materials&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                let url = `api_islemleri/malzemeler_islemler.php?action=get_materials&page=${this.currentPage}&limit=${this.limit}&search=${this.search}&order_by=malzeme_kodu&order_dir=desc`;
                 fetch(url)
                     .then(response => response.json())
                     .then(response => {
@@ -530,7 +532,12 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                     }
                 } else {
                     this.modal.title = 'Yeni Malzeme Ekle';
-                    this.modal.data = { birim: 'adet' };
+                    this.modal.data = { 
+                        birim: 'adet',
+                        malzeme_turu: 'diger',
+                        depo: '',
+                        raf: ''
+                    };
                 }
                 this.$nextTick(() => {
                     $('#materialModal').modal('show');

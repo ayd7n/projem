@@ -54,3 +54,29 @@
     align-items: center;
     justify-content: center;
 }
+
+.table-align-top th,
+.table-align-top td {
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.table-align-top th.actions,
+.table-align-top td.actions {
+    min-width: 80px;
+}
+
+.table-align-top th.long-text,
+.table-align-top td.long-text {
+    white-space: normal;
+}
+
+.table-align-top th:not(.long-text):not(.actions),
+.table-align-top td:not(.long-text):not(.actions) {
+    min-width: 110px;
+}
+
+.table-align-top th[data-column="aciklama"],
+.table-align-top td[data-column="aciklama"] {
+    min-width: 330px;
+}
