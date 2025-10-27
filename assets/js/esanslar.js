@@ -19,22 +19,49 @@ document.addEventListener('DOMContentLoaded', function() {
             modalModu: 'ekle', // 'ekle' veya 'duzenle'
             alertMessage: '',
             alertType: 'success', // 'success' veya 'danger'
-            kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı'
+            kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı',
+            // Pagination and search properties
+            search: '',
+            currentPage: 1,
+            totalPages: 1,
+            totalEssences: 0,
+            limit: 10,
+            loading: false
         },
         computed: {
             toplamEsans() {
-                return this.esansListesi.length;
+                return this.totalEssences;
             },
             modalBaslik() {
                 return this.modalModu === 'ekle' ? 'Yeni Esans Ekle' : 'Esansı Düzenle';
             },
             submitButonMetni() {
                 return this.modalModu === 'ekle' ? 'Ekle' : 'Güncelle';
+            },
+            paginationInfo() {
+                if (this.totalPages <= 0 || this.totalEssences <= 0) {
+                    return 'Gösterilecek kayıt yok';
+                }
+                const startRecord = (this.currentPage - 1) * this.limit + 1;
+                const endRecord = Math.min(this.currentPage * this.limit, this.totalEssences);
+                return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalEssences} kayıttan`;
+            },
+            pageNumbers() {
+                const pages = [];
+                const startPage = Math.max(1, this.currentPage - 2);
+                const endPage = Math.min(this.totalPages, this.currentPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                }
+                return pages;
             }
         },
         mounted() {
             this.tanklariYukle();
             this.esanslariYukle();
+            // Initialize debounced search function
+            this.debounceSearch = this.debounce(this.performSearch, 500);
         },
         methods: {
             tanklariYukle() {
@@ -52,18 +79,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
             },
             
-            esanslariYukle() {
+            esanslariYukle(page = 1) {
                 const self = this;
-                axios.get('api_islemleri/esanslar_islemler.php?action=get_all_essences')
+                self.loading = true;
+                this.currentPage = page;
+                const url = `api_islemleri/get_essences_ajax.php?page=${this.currentPage}&limit=${this.limit}&search=${encodeURIComponent(this.search)}`;
+                
+                axios.get(url)
                     .then(function(response) {
                         if(response.data.status === 'success') {
                             self.esansListesi = response.data.data || [];
+                            self.totalPages = response.data.pagination.total_pages;
+                            self.totalEssences = response.data.pagination.total_essences;
                         } else {
                             self.gosterUyari(response.data.message, 'danger');
                         }
+                        self.loading = false;
                     })
                     .catch(function(error) {
                         self.gosterUyari('Esanslar yüklenirken bir hata oluştu.', 'danger');
+                        self.loading = false;
                     });
             },
             
@@ -116,7 +151,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if(response.data.status === 'success') {
                             self.gosterUyari(response.data.message, 'success');
                             self.kapatModal();
-                            self.esanslariYukle(); // Listeyi yeniden yükle
+                            self.esanslariYukle(self.currentPage); // Listeyi yeniden yükle, aynı sayfada kal
                         } else {
                             self.gosterUyari(response.data.message, 'danger');
                         }
@@ -144,7 +179,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         .then(function(response) {
                             if(response.data.status === 'success') {
                                 self.gosterUyari(response.data.message, 'success');
-                                self.esanslariYukle(); // Listeyi yeniden yükle
+                                // After deletion, check if current page has no records and adjust page if needed
+                                if(self.esansListesi.length === 1 && self.currentPage > 1) {
+                                    self.esanslariYukle(self.currentPage - 1);
+                                } else {
+                                    self.esanslariYukle(self.currentPage); // Reload current page
+                                }
                             } else {
                                 self.gosterUyari(response.data.message, 'danger');
                             }
@@ -173,7 +213,26 @@ document.addEventListener('DOMContentLoaded', function() {
             
             closeAlert() {
                 this.alertMessage = '';
-            }
+            },
+            
+            // Debounce function to limit API calls
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            },
+            
+            performSearch() {
+                this.esanslariYukle(1); // Reset to first page when searching
+            },
+            
+            debounceSearch: null // Will be initialized in mounted hook
         }
     });
 });

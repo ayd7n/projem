@@ -31,6 +31,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
             --primary: #4a0e63; /* Deep Purple */
@@ -152,208 +153,27 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             color: #2f855a;
             border-color: #48bb78;
         }
-        .product-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .product-item:last-child {
-            border-bottom: none;
-        }
-        .product-name {
-            font-weight: 500;
-            font-size: 1.05rem;
-            color: var(--primary);
-        }
-        .add-to-cart-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .quantity-input {
-            width: 70px;
-            padding: 0.6rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .quantity-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-        .cart-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-        .item-info h4 {
-            margin-bottom: 5px;
-        }
-        .item-quantity {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        /* Cart panel that slides from right */
-        #sepet {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 320px;
-            height: 100%;
-            z-index: 1050;
-            border-radius: 0;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        #sepet.show {
-            transform: translateX(0);
-        }
-        
-        .cart-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1040;
-            display: none;
-        }
-        
-        .cart-overlay.show {
-            display: block;
-        }
-        
-        .empty-cart {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--text-secondary);
-        }
-        .empty-cart i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            display: block;
-            color: var(--primary);
-            opacity: 0.3;
-        }
-        .cart-total {
-            padding: 20px 20px;
-            border-top: 2px solid var(--border-color);
-            font-size: 1.3rem;
-            font-weight: 700;
-            text-align: right;
-            display: none; /* Hide total since we're hiding pricing */
-        }
-        
-        .order-filters {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .order-filters .btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 20px;
-        }
-        
         .table th {
             border-top: none;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
         }
-        
         .table th i {
             margin-right: 6px;
         }
-        
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
         }
-        
         .actions {
             display: flex;
             gap: 8px;
             justify-content: center;
         }
-        
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
-        }
-        
-        .no-orders-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            #sepet.collapse.show {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 320px;
-                height: 100%;
-                z-index: 1050; /* Higher than navbar */
-                border-radius: 0;
-                box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            }
-            #sepet .card-body {
-                overflow-y: auto;
-                height: 100%;
-            }
         }
     </style>
 </head>
@@ -362,11 +182,9 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
             <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav ml-auto align-items-center">
                     <li class="nav-item">
@@ -389,9 +207,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
     </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
-        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
+    <div id="app" class="main-content">
         <div class="page-header">
             <div>
                 <h1>Tedarikçiler Yönetimi</h1>
@@ -399,11 +215,13 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
 
-        <div id="alert-placeholder"></div>
+        <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert">
+            {{ alert.message }}
+        </div>
 
         <div class="row">
             <div class="col-md-8">
-                <button id="addSupplierBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi Ekle</button>
+                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi Ekle</button>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -423,6 +241,14 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-list"></i> Tedarikçi Listesi</h2>
+                <div class="search-container">
+                    <div class="input-group" style="width: 300px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" v-model="search" @input="loadSuppliers(1)" placeholder="Tedarikçi ara...">
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -438,250 +264,288 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
                             </tr>
                         </thead>
-                        <tbody id="suppliersTableBody">
-                            <tr>
-                                <td colspan="7" class="text-center p-4">Yükleniyor...</td>
+                        <tbody>
+                            <tr v-if="loading">
+                                <td colspan="7" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                            </tr>
+                            <tr v-else-if="suppliers.length === 0">
+                                <td colspan="7" class="text-center p-4">Henüz kayıtlı tedarikçi bulunmuyor.</td>
+                            </tr>
+                            <tr v-for="supplier in suppliers" :key="supplier.tedarikci_id">
+                                <td class="actions">
+                                    <button @click="openModal(supplier)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                    <button @click="deleteSupplier(supplier.tedarikci_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </td>
+                                <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
+                                <td>{{ supplier.vergi_no_tc || '-' }}</td>
+                                <td>{{ supplier.telefon || '-' }}</td>
+                                <td>{{ supplier.e_posta || '-' }}</td>
+                                <td>{{ supplier.yetkili_kisi || '-' }}</td>
+                                <td>{{ supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ? supplier.aciklama_notlar.substring(0, 20) + '...' : supplier.aciklama_notlar) : '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div class="records-per-page mb-2 mb-md-0">
+                        <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                        <select v-model="limit" @change="loadSuppliers(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="pagination-info mr-3">
+                            <small class="text-muted">{{ paginationInfo }}</small>
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage - 1)"><i class="fas fa-chevron-left"></i> Önceki</a>
+                                </li>
+                                <li v-if="currentPage > 3" class="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(1)">1</a>
+                                </li>
+                                <li v-if="currentPage > 4" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(page)">{{ page }}</a>
+                                </li>
+                                <li v-if="currentPage < totalPages - 3" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-if="currentPage < totalPages - 2" class_="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(totalPages)">{{ totalPages }}</a>
+                                </li>
+                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage + 1)">Sonraki <i class="fas fa-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supplier Modal -->
+        <div class="modal fade" id="supplierModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <form @submit.prevent="saveSupplier">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                            <h5 class="modal-title">{{ modal.title }}</h5>
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" v-model="modal.data.tedarikci_id">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Tedarikçi Adı *</label>
+                                        <input type="text" class="form-control" v-model="modal.data.tedarikci_adi" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Vergi No / TC</label>
+                                        <input type="text" class="form-control" v-model="modal.data.vergi_no_tc">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Telefon</label>
+                                        <input type="text" class="form-control" v-model="modal.data.telefon">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>E-posta</label>
+                                        <input type="email" class="form-control" v-model="modal.data.e_posta">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Yetkili Kişi</label>
+                                <input type="text" class="form-control" v-model="modal.data.yetkili_kisi">
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Adres</label>
+                                <textarea class="form-control" v-model="modal.data.adres" rows="2"></textarea>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Açıklama / Notlar</label>
+                                <textarea class="form-control" v-model="modal.data.aciklama_notlar" rows="2"></textarea>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Supplier Modal -->
-    <div class="modal fade" id="supplierModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <form id="supplierForm">
-                    <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                        <h5 class="modal-title" id="modalTitle"><i class="fas fa-user-edit"></i> Tedarikçi Formu</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="tedarikci_id" name="tedarikci_id">
-                        <input type="hidden" id="action" name="action">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="tedarikci_adi">Tedarikçi Adı *</label>
-                                    <input type="text" class="form-control" id="tedarikci_adi" name="tedarikci_adi" required>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="vergi_no_tc">Vergi No / TC</label>
-                                    <input type="text" class="form-control" id="vergi_no_tc" name="vergi_no_tc">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="telefon">Telefon</label>
-                                    <input type="text" class="form-control" id="telefon" name="telefon">
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-group mb-3">
-                                    <label for="e_posta">E-posta</label>
-                                    <input type="email" class="form-control" id="e_posta" name="e_posta">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="yetkili_kisi">Yetkili Kişi</label>
-                            <input type="text" class="form-control" id="yetkili_kisi" name="yetkili_kisi">
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="adres">Adres</label>
-                            <textarea class="form-control" id="adres" name="adres" rows="2"></textarea>
-                        </div>
-                        <div class="form-group mb-3">
-                            <label for="aciklama_notlar">Açıklama / Notlar</label>
-                            <textarea class="form-control" id="aciklama_notlar" name="aciklama_notlar" rows="2"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>`
-            );
-        }
-
-        // Load suppliers on page load
-        loadSuppliers();
-
-        // Function to load suppliers
-        function loadSuppliers() {
-            $.ajax({
-                url: 'api_islemleri/tedarikciler_islemler.php?action=get_suppliers',
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var tbody = $('#suppliersTableBody');
-                        tbody.empty();
-
-                        if (response.data.length > 0) {
-                            $.each(response.data, function(index, supplier) {
-                                tbody.append(`
-                                    <tr>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${supplier.tedarikci_id}"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${supplier.tedarikci_id}"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                        <td><strong>${supplier.tedarikci_adi}</strong></td>
-                                        <td>${supplier.vergi_no_tc || '-'}</td>
-                                        <td>${supplier.telefon || '-'}</td>
-                                        <td>${supplier.e_posta || '-'}</td>
-                                        <td>${supplier.yetkili_kisi || '-'}</td>
-                                        <td>${supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ? supplier.aciklama_notlar.substring(0, 20) + '...' : supplier.aciklama_notlar) : '-'}</td>
-                                    </tr>
-                                `);
-                            });
-                        } else {
-                            tbody.append('<tr><td colspan="7" class="text-center p-4">Henüz kayıtlı tedarikçi bulunmuyor.</td></tr>');
-                        }
-                    } else {
-                        $('#suppliersTableBody').html('<tr><td colspan="7" class="text-center p-4 text-danger">Tedarikçiler yüklenirken hata oluştu.</td></tr>');
+        const app = Vue.createApp({
+            data() {
+                return {
+                    suppliers: [],
+                    loading: false,
+                    alert: {
+                        message: '',
+                        type: ''
+                    },
+                    search: '',
+                    currentPage: 1,
+                    totalPages: 1,
+                    totalSuppliers: 0,
+                    limit: 10,
+                    modal: {
+                        title: '',
+                        data: {}
                     }
-                },
-                error: function() {
-                    $('#suppliersTableBody').html('<tr><td colspan="7" class="text-center p-4 text-danger">Tedarikçiler yüklenirken bir hata oluştu.</td></tr>');
                 }
-            });
-        }
-
-        // Open modal for adding a new supplier
-        $('#addSupplierBtn').on('click', function() {
-            $('#supplierForm')[0].reset();
-            $('#modalTitle').text('Yeni Tedarikçi Ekle');
-            $('#action').val('add_supplier');
-            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
-            $('#supplierModal').modal('show');
-        });
-
-        // Open modal for editing a supplier
-        $(document).on('click', '.edit-btn', function() {
-            var supplierId = $(this).data('id');
-            $.ajax({
-                url: 'api_islemleri/tedarikciler_islemler.php?action=get_supplier&id=' + supplierId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var supplier = response.data;
-                        $('#supplierForm')[0].reset();
-                        $('#modalTitle').text('Tedarikçiyi Düzenle');
-                        $('#action').val('update_supplier');
-                        $('#tedarikci_id').val(supplier.tedarikci_id);
-                        $('#tedarikci_adi').val(supplier.tedarikci_adi);
-                        $('#vergi_no_tc').val(supplier.vergi_no_tc);
-                        $('#telefon').val(supplier.telefon);
-                        $('#e_posta').val(supplier.e_posta);
-                        $('#yetkili_kisi').val(supplier.yetkili_kisi);
-                        $('#adres').val(supplier.adres);
-                        $('#aciklama_notlar').val(supplier.aciklama_notlar);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#supplierModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
+            },
+            computed: {
+                paginationInfo() {
+                    if (this.totalPages <= 0 || this.totalSuppliers <= 0) {
+                        return 'Gösterilecek kayıt yok';
                     }
+                    const startRecord = (this.currentPage - 1) * this.limit + 1;
+                    const endRecord = Math.min(this.currentPage * this.limit, this.totalSuppliers);
+                    return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalSuppliers} kayıttan`;
                 },
-                error: function() {
-                    showAlert('Tedarikçi bilgileri alınırken bir hata oluştu.', 'danger');
-                }
-            });
-        });
+                pageNumbers() {
+                    const pages = [];
+                    const startPage = Math.max(1, this.currentPage - 2);
+                    const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
-        // Handle form submission
-        $('#supplierForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: 'api_islemleri/tedarikciler_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#supplierModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload suppliers to see changes
-                        loadSuppliers();
-                    } else {
-                        showAlert(response.message, 'danger');
+                    for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i);
                     }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    return pages;
                 }
-            });
-        });
-
-        // Handle supplier deletion
-        $(document).on('click', '.delete-btn', function() {
-            var supplierId = $(this).data('id');
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: 'Bu tedarikçiyi silmek istediğinizden emin misiniz?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Evet',
-                cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/tedarikciler_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_supplier',
-                            tedarikci_id: supplierId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
+            },
+            methods: {
+                showAlert(message, type) {
+                    this.alert.message = message;
+                    this.alert.type = type;
+                    setTimeout(() => {
+                        this.alert.message = '';
+                    }, 3000);
+                },
+                loadSuppliers(page = 1) {
+                    this.loading = true;
+                    this.currentPage = page;
+                    let url = `api_islemleri/tedarikciler_islemler.php?action=get_suppliers&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(response => {
                             if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                loadSuppliers();
+                                this.suppliers = response.data;
+                                this.totalPages = response.pagination.total_pages;
+                                this.totalSuppliers = response.pagination.total_suppliers;
                             } else {
-                                showAlert(response.message, 'danger');
+                                this.showAlert('Tedarikçiler yüklenirken hata oluştu.', 'danger');
                             }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                            this.loading = false;
+                        })
+                        .catch(error => {
+                            this.showAlert('Tedarikçiler yüklenirken bir hata oluştu.', 'danger');
+                            this.loading = false;
+                        });
+                },
+                openModal(supplier) {
+                    if (supplier) {
+                        this.modal.title = 'Tedarikçiyi Düzenle';
+                        this.modal.data = { ...supplier };
+                    } else {
+                        this.modal.title = 'Yeni Tedarikçi Ekle';
+                        this.modal.data = {};
+                    }
+                    $('#supplierModal').modal('show');
+                },
+                saveSupplier() {
+                    let action = this.modal.data.tedarikci_id ? 'update_supplier' : 'add_supplier';
+                    let formData = new FormData();
+                    for (let key in this.modal.data) {
+                        formData.append(key, this.modal.data[key]);
+                    }
+                    formData.append('action', action);
+
+                    fetch('api_islemleri/tedarikciler_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.showAlert(response.message, 'success');
+                            $('#supplierModal').modal('hide');
+                            this.loadSuppliers(this.currentPage);
+                        } else {
+                            this.showAlert(response.message, 'danger');
                         }
+                    })
+                    .catch(error => {
+                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                     });
+                },
+                deleteSupplier(id) {
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: "Bu tedarikçiyi silmek istediğinizden emin misiniz?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Evet, sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let formData = new FormData();
+                            formData.append('action', 'delete_supplier');
+                            formData.append('tedarikci_id', id);
+
+                            fetch('api_islemleri/tedarikciler_islemler.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.showAlert(response.message, 'success');
+                                    this.loadSuppliers(this.currentPage);
+                                } else {
+                                    this.showAlert(response.message, 'danger');
+                                }
+                            })
+                            .catch(error => {
+                                this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                            });
+                        }
+                    })
                 }
-            });
+            },
+            mounted() {
+                this.loadSuppliers();
+            }
         });
-    });
+        app.mount('#app');
     </script>
 </body>
 </html>

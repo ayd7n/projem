@@ -14,7 +14,48 @@ $response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
-    if ($action == 'get_material' && isset($_GET['id'])) {
+    if ($action == 'get_materials') {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $search = isset($_GET['search']) ? $_GET['search'] : '';
+        $offset = ($page - 1) * $limit;
+
+        $search_term = '%' . $search . '%';
+
+        // Get total count for pagination
+        $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?";
+        $stmt = $connection->prepare($count_query);
+        $stmt->bind_param('ss', $search_term, $search_term);
+        $stmt->execute();
+        $count_result = $stmt->get_result()->fetch_assoc();
+        $total_materials = $count_result['total'];
+        $total_pages = ceil($total_materials / $limit);
+        $stmt->close();
+
+        // Get paginated data
+        $query = "SELECT * FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ? ORDER BY malzeme_ismi LIMIT ? OFFSET ?";
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $materials = [];
+        while ($row = $result->fetch_assoc()) {
+            $materials[] = $row;
+        }
+        $stmt->close();
+
+        $response = [
+            'status' => 'success',
+            'data' => $materials,
+            'pagination' => [
+                'total_pages' => $total_pages,
+                'total_materials' => $total_materials,
+                'current_page' => $page
+            ]
+        ];
+    }
+    elseif ($action == 'get_material' && isset($_GET['id'])) {
         $malzeme_kodu = (int)$_GET['id'];
         $query = "SELECT * FROM malzemeler WHERE malzeme_kodu = ?";
         $stmt = $connection->prepare($query);
@@ -33,7 +74,7 @@ if (isset($_GET['action'])) {
     elseif ($action == 'get_all_materials') {
         $query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $materials = [];
             while ($row = $result->fetch_assoc()) {

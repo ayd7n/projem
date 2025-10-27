@@ -38,7 +38,32 @@ switch ($action) {
 function getLocations() {
     global $connection;
 
-    $query = "SELECT * FROM lokasyonlar ORDER BY depo_ismi, raf";
+    // Get parameters
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10; // Default 10 items per page, max 100
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+    // Calculate offset
+    $offset = ($page - 1) * $limit;
+
+    // Prepare query with search functionality
+    $where_clause = "";
+    if (!empty($search)) {
+        $search_escaped = $connection->real_escape_string($search);
+        $search_param = '%' . $search_escaped . '%';
+        $where_clause = "WHERE depo_ismi LIKE '$search_param' OR raf LIKE '$search_param'";
+    }
+
+    // Get total count
+    $count_query = "SELECT COUNT(*) as total FROM lokasyonlar " . $where_clause;
+    $result = $connection->query($count_query);
+    $total_locations = $result->fetch_assoc()['total'];
+
+    // Calculate total pages
+    $total_pages = $limit > 0 ? ceil($total_locations / $limit) : 0;
+
+    // Get locations for current page
+    $query = "SELECT * FROM lokasyonlar " . $where_clause . " ORDER BY depo_ismi, raf LIMIT $limit OFFSET $offset";
     $result = $connection->query($query);
 
     $locations = [];
@@ -48,7 +73,19 @@ function getLocations() {
         }
     }
 
-    echo json_encode(['status' => 'success', 'data' => $locations]);
+    $response = [
+        'status' => 'success',
+        'data' => $locations,
+        'pagination' => [
+            'current_page' => $page,
+            'total_pages' => $total_pages,
+            'total_locations' => $total_locations,
+            'limit' => $limit
+        ]
+    ];
+
+    header('Content-Type: application/json');
+    echo json_encode($response);
 }
 
 function getLocation() {

@@ -24,341 +24,511 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Lokasyonlar - Parfüm ERP</title>
+    <title>Lokasyonlar Yönetimi - Parfüm ERP</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <!-- Vue.js 3 CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
-            --primary: #4361ee;
-            --secondary: #3f37c9;
-            --success: #1abc9c;
-            --danger: #e74c3c;
-            --warning: #f1c40f;
-            --info: #3498db;
-            --light: #f8f9fa;
-            --dark: #2c3e50;
-            --bg-color: #f5f7fb;
+            --primary: #4a0e63; /* Deep Purple */
+            --secondary: #7c2a99; /* Lighter Purple */
+            --accent: #d4af37; /* Gold */
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --bg-color: #fdf8f5; /* Soft Cream */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #2c3e50;
-            --text-secondary: #8492a6;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.05);
+            --text-primary: #111827; /* Dark Gray/Black */
+            --text-secondary: #6b7280; /* Medium Gray */
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
-
+        html {
+            font-size: 15px;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
         }
-
-        .erp-container { min-height: 100vh; }
-
-        /* Main Content */
-        .main-content { padding: 30px; }
-        
-        @media (max-width: 768px) {
-            .main-content { padding: 0; }
+        .main-content {
+            padding: 20px;
         }
-        .page-header { margin-bottom: 30px; }
-        .page-header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 5px; }
-        .page-header p { color: var(--text-secondary); font-size: 1rem; }
+        .page-header {
+            margin-bottom: 25px;
+        }
+        .page-header h1 {
+            font-size: 1.7rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            color: var(--text-primary);
+        }
+        .page-header p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 25px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .card-header h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0;
+        }
+        .btn {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.825rem;
+        }
+        .btn:hover {
+             transform: translateY(-2px);
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover {
+            background-color: var(--secondary);
+            box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
+        }
+        .add-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+        }
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+        }
+        .alert {
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            border-left: 5px solid;
+        }
+        .alert-danger {
+            background-color: #fff5f5;
+            color: #c53030;
+            border-color: #f56565;
+        }
+        .alert-success {
+            background-color: #f0fff4;
+            color: #2f855a;
+            border-color: #48bb78;
+        }
+        .table th {
+            border-top: none;
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .table th i {
+            margin-right: 6px;
+        }
+        .table td {
+            vertical-align: middle;
+            color: var(--text-secondary);
+        }
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+        .actions .btn {
+            padding: 6px 10px;
+            border-radius: 18px;
+        }
 
-        .card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); margin-bottom: 30px; overflow: hidden; }
-        .card-header { padding: 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
-        .card-header h2 { font-size: 1.2rem; font-weight: 600; }
-        .card-body { padding: 20px; }
-
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
-        .form-group { display: flex; flex-direction: column; }
-        .form-group label { font-weight: 500; margin-bottom: 8px; font-size: 0.9rem; }
-        .form-group input { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; transition: var(--transition); font-family: 'Inter', sans-serif; font-size: 0.95rem; }
-        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1); }
-        .form-group input:disabled { background-color: #f1f3f5; cursor: not-allowed; }
-        .form-actions { display: flex; gap: 10px; margin-top: 20px; grid-column: 1 / -1; }
-
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: var(--transition); text-decoration: none; display: inline-flex; align-items: center; gap: 8px; font-size: 0.9rem; }
-        .btn:disabled { background-color: #bdc3c7; cursor: not-allowed; transform: none; box-shadow: none; }
-        .btn.disabled { background-color: #bdc3c7; cursor: not-allowed; pointer-events: none; }
-
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--secondary); }
-        .btn-secondary { background-color: var(--text-secondary); color: white; }
-        .btn-secondary:hover { background-color: var(--dark); }
-        .btn-success { background-color: var(--success); color: white; }
-        .btn-success:hover { background-color: #16a085; }
-        .btn-danger { background-color: var(--danger); color: white; }
-        .btn-danger:hover { background-color: #c0392b; }
-
-        .table-wrapper { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 15px; border-bottom: 1px solid var(--border-color); vertical-align: middle; white-space: nowrap; }
-        th { font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-secondary); }
-        tbody tr:hover { background-color: #f5f7fb; }
-        .actions { display: flex; gap: 10px; }
-        .actions a, .actions button { padding: 8px 12px; }
-
-        .stat-card { background: var(--card-bg); border-radius: 12px; box-shadow: var(--shadow); border: 1px solid var(--border-color); padding: 25px; display: flex; align-items: center; }
-        .stat-icon { font-size: 2rem; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 20px; color: white; }
-        .stat-info h3 { font-size: 1.8rem; font-weight: 700; }
-        .stat-info p { color: var(--text-secondary); }
-
-        .alert { padding: 15px; margin-bottom: 20px; border-radius: 8px; border: 1px solid transparent; }
-        .alert-success { background-color: #d4edda; color: #155724; border-color: #c3e6cb; }
-        .alert-danger { background-color: #f8d7da; color: #721c24; border-color: #f5c6cb; }
-        .alert-info { background-color: #d1ecf1; color: #0c5460; border-color: #bee5eb; }
-
+        /* Remove old styles that are no longer needed */
+        .form-grid,
+        .form-group,
+        .form-actions,
+        .table-wrapper,
+        .stat-card {
+            /* These are replaced by Bootstrap classes and Vue.js templates */
+        }
     </style>
 </head>
 <body>
-    <div class="main-content">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+        <div class="container-fluid">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item">
+                        <a class="nav-link" href="navigation.php">Ana Sayfa</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                            <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div id="app" class="main-content">
         <div class="page-header">
-            <h1>Lokasyonlar Yönetimi</h1>
-            <p>Depo ve raf tanımlamaları</p>
+            <div>
+                <h1>Lokasyonlar Yönetimi</h1>
+                <p>Depo ve raf tanımlamaları</p>
+            </div>
         </div>
 
-        <div id="alert-placeholder"></div>
+        <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert">
+            {{ alert.message }}
+        </div>
 
         <div class="row">
             <div class="col-md-8">
-                <button id="addLocationBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
+                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
             </div>
             <div class="col-md-4">
-                <div class="stat-card mb-3">
-                    <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-map-marker-alt"></i></div>
-                    <div class="stat-info">
-                        <h3><?php echo $total_locations; ?></h3>
-                        <p>Toplam Lokasyon</p>
+                <div class="card mb-3">
+                    <div class="card-body d-flex align-items-center">
+                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                            <i class="fas fa-map-marker-alt"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_locations; ?></h3>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Lokasyon</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <div class="card-header">
-                <h2>Lokasyon Listesi</h2>
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-list"></i> Lokasyon Listesi</h2>
+                <div class="search-container">
+                    <div class="input-group" style="width: 300px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" v-model="search" @input="loadLocations(1)" placeholder="Lokasyon ara...">
+                    </div>
+                </div>
             </div>
             <div class="card-body">
-                <div class="table-wrapper">
+                <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
                             <tr>
-                                <th>İşlemler</th>
-                                <th>Depo İsmi</th>
-                                <th>Raf</th>
+                                <th><i class="fas fa-cogs"></i> İşlemler</th>
+                                <th><i class="fas fa-warehouse"></i> Depo İsmi</th>
+                                <th><i class="fas fa-boxes"></i> Raf</th>
                             </tr>
                         </thead>
-                        <tbody id="locationsTableBody">
-                            <tr>
-                                <td colspan="3" class="text-center p-4">Yükleniyor...</td>
+                        <tbody>
+                            <tr v-if="loading">
+                                <td colspan="3" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                            </tr>
+                            <tr v-else-if="locations.length === 0">
+                                <td colspan="3" class="text-center p-4">Henüz kayıtlı lokasyon bulunmuyor.</td>
+                            </tr>
+                            <tr v-for="location in locations" :key="location.lokasyon_id">
+                                <td class="actions">
+                                    <button @click="openModal(location)" class="btn btn-primary btn-sm">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button @click="deleteLocation(location.lokasyon_id)" class="btn btn-danger btn-sm">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </td>
+                                <td><strong>{{ location.depo_ismi }}</strong></td>
+                                <td>{{ location.raf }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div class="records-per-page mb-2 mb-md-0">
+                        <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                        <select v-model="limit" @change="loadLocations(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="pagination-info mr-3">
+                            <small class="text-muted">{{ paginationInfo }}</small>
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage - 1)"><i class="fas fa-chevron-left"></i> Önceki</a>
+                                </li>
+                                <li v-if="currentPage > 3" class="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(1)">1</a>
+                                </li>
+                                <li v-if="currentPage > 4" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(page)">{{ page }}</a>
+                                </li>
+                                <li v-if="currentPage < totalPages - 3" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-if="currentPage < totalPages - 2" class="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(totalPages)">{{ totalPages }}</a>
+                                </li>
+                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage + 1)">Sonraki <i class="fas fa-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Location Modal -->
-    <div class="modal fade" id="locationModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <form id="locationForm">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="modalTitle">Lokasyon Formu</h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <input type="hidden" id="lokasyon_id" name="lokasyon_id">
-                        <input type="hidden" id="action" name="action">
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="depo_ismi">Depo İsmi *</label>
-                                <input type="text" class="form-control" id="depo_ismi" name="depo_ismi" required>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="raf">Raf *</label>
-                                <input type="text" class="form-control" id="raf" name="raf" required>
+        <!-- Location Modal -->
+        <div class="modal fade" id="locationModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <form @submit.prevent="saveLocation">
+                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                            <h5 class="modal-title">{{ modal.title }}</h5>
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <input type="hidden" v-model="modal.data.lokasyon_id">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Depo İsmi *</label>
+                                        <input type="text" class="form-control" v-model="modal.data.depo_ismi" required>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Raf *</label>
+                                        <input type="text" class="form-control" v-model="modal.data.raf" required>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn">Kaydet</button>
-                    </div>
-                </form>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
+
     </div>
 
-    <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>`
-            );
-        }
-
-        // Load locations on page load
-        loadLocations();
-
-        // Function to load locations
-        function loadLocations() {
-            $.ajax({
-                url: 'api_islemleri/lokasyonlar_islemler.php?action=get_locations',
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var tbody = $('#locationsTableBody');
-                        tbody.empty();
-
-                        if (response.data.length > 0) {
-                            $.each(response.data, function(index, location) {
-                                tbody.append(`
-                                    <tr>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${location.lokasyon_id}"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${location.lokasyon_id}"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                        <td><strong>${location.depo_ismi}</strong></td>
-                                        <td>${location.raf}</td>
-                                    </tr>
-                                `);
-                            });
-                        } else {
-                            tbody.append('<tr><td colspan="3" class="text-center p-4">Henüz kayıtlı lokasyon bulunmuyor.</td></tr>');
-                        }
-                    } else {
-                        $('#locationsTableBody').html('<tr><td colspan="3" class="text-center p-4 text-danger">Lokasyonlar yüklenirken hata oluştu.</td></tr>');
+        const app = Vue.createApp({
+            data() {
+                return {
+                    locations: [],
+                    loading: false,
+                    alert: {
+                        message: '',
+                        type: ''
+                    },
+                    search: '',
+                    currentPage: 1,
+                    totalPages: 1,
+                    totalLocations: 0,
+                    limit: 10,
+                    modal: {
+                        title: '',
+                        data: {}
                     }
-                },
-                error: function() {
-                    $('#locationsTableBody').html('<tr><td colspan="3" class="text-center p-4 text-danger">Lokasyonlar yüklenirken bir hata oluştu.</td></tr>');
                 }
-            });
-        }
-
-        // Open modal for adding a new location
-        $('#addLocationBtn').on('click', function() {
-            $('#locationForm')[0].reset();
-            $('#modalTitle').text('Yeni Lokasyon Ekle');
-            $('#action').val('add_location');
-            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
-            $('#locationModal').modal('show');
-        });
-
-        // Open modal for editing a location
-        $(document).on('click', '.edit-btn', function() {
-            var locationId = $(this).data('id');
-            $.ajax({
-                url: 'api_islemleri/lokasyonlar_islemler.php?action=get_location&id=' + locationId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var location = response.data;
-                        $('#locationForm')[0].reset();
-                        $('#modalTitle').text('Lokasyonu Düzenle');
-                        $('#action').val('update_location');
-                        $('#lokasyon_id').val(location.lokasyon_id);
-                        $('#depo_ismi').val(location.depo_ismi);
-                        $('#raf').val(location.raf);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#locationModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
+            },
+            computed: {
+                paginationInfo() {
+                    if (this.totalPages <= 0 || this.totalLocations <= 0) {
+                        return 'Gösterilecek kayıt yok';
                     }
+                    const startRecord = (this.currentPage - 1) * this.limit + 1;
+                    const endRecord = Math.min(this.currentPage * this.limit, this.totalLocations);
+                    return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalLocations} kayıttan`;
                 },
-                error: function() {
-                    showAlert('Lokasyon bilgileri alınırken bir hata oluştu.', 'danger');
-                }
-            });
-        });
+                pageNumbers() {
+                    const pages = [];
+                    const startPage = Math.max(1, this.currentPage - 2);
+                    const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
-        // Handle form submission
-        $('#locationForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-
-            $.ajax({
-                url: 'api_islemleri/lokasyonlar_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#locationModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload locations to see changes
-                        loadLocations();
-                    } else {
-                        showAlert(response.message, 'danger');
+                    for (let i = startPage; i <= endPage; i++) {
+                        pages.push(i);
                     }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    return pages;
                 }
-            });
-        });
-
-        // Handle location deletion
-        $(document).on('click', '.delete-btn', function() {
-            var locationId = $(this).data('id');
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: 'Bu lokasyonu silmek istediğinizden emin misiniz?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Evet',
-                cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/lokasyonlar_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_location',
-                            lokasyon_id: locationId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
+            },
+            methods: {
+                showAlert(message, type) {
+                    this.alert.message = message;
+                    this.alert.type = type;
+                    setTimeout(() => {
+                        this.alert.message = '';
+                    }, 3000);
+                },
+                loadLocations(page = 1) {
+                    this.loading = true;
+                    this.currentPage = page;
+                    let url = `api_islemleri/lokasyonlar_islemler.php?action=get_locations&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(response => {
                             if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                loadLocations();
+                                this.locations = response.data;
+                                this.totalPages = response.pagination.total_pages;
+                                this.totalLocations = response.pagination.total_locations;
                             } else {
-                                showAlert(response.message, 'danger');
+                                this.showAlert('Lokasyonlar yüklenirken hata oluştu.', 'danger');
                             }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                            this.loading = false;
+                        })
+                        .catch(error => {
+                            this.showAlert('Lokasyonlar yüklenirken bir hata oluştu.', 'danger');
+                            this.loading = false;
+                        });
+                },
+                openModal(location) {
+                    if (location) {
+                        this.modal.title = 'Lokasyonu Düzenle';
+                        this.modal.data = { ...location };
+                    } else {
+                        this.modal.title = 'Yeni Lokasyon Ekle';
+                        this.modal.data = {};
+                    }
+                    $('#locationModal').modal('show');
+                },
+                saveLocation() {
+                    let action = this.modal.data.lokasyon_id ? 'update_location' : 'add_location';
+                    let formData = new FormData();
+                    for (let key in this.modal.data) {
+                        if (this.modal.data[key] !== undefined && this.modal.data[key] !== null) {
+                            formData.append(key, this.modal.data[key]);
                         }
+                    }
+                    formData.append('action', action);
+
+                    fetch('api_islemleri/lokasyonlar_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.showAlert(response.message, 'success');
+                            $('#locationModal').modal('hide');
+                            this.loadLocations(this.currentPage);
+                        } else {
+                            this.showAlert(response.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                     });
+                },
+                deleteLocation(id) {
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: "Bu lokasyonu silmek istediğinizden emin misiniz?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Evet, sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            let formData = new FormData();
+                            formData.append('action', 'delete_location');
+                            formData.append('lokasyon_id', id);
+
+                            fetch('api_islemleri/lokasyonlar_islemler.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.showAlert(response.message, 'success');
+                                    this.loadLocations(this.currentPage);
+                                } else {
+                                    this.showAlert(response.message, 'danger');
+                                }
+                            })
+                            .catch(error => {
+                                this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                            });
+                        }
+                    })
                 }
-            });
+            },
+            mounted() {
+                this.loadLocations();
+            }
         });
-    });
+        app.mount('#app');
     </script>
 </body>
 </html>

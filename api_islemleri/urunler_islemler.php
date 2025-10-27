@@ -14,7 +14,48 @@ $response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
-    if ($action == 'get_product' && isset($_GET['id'])) {
+    if ($action == 'get_products') {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $search = isset($_GET['search']) ? $_GET['search'] : '';
+        $offset = ($page - 1) * $limit;
+
+        $search_term = '%' . $search . '%';
+        
+        // Get total count for pagination
+        $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
+        $stmt = $connection->prepare($count_query);
+        $stmt->bind_param('ss', $search_term, $search_term);
+        $stmt->execute();
+        $count_result = $stmt->get_result()->fetch_assoc();
+        $total_products = $count_result['total'];
+        $total_pages = ceil($total_products / $limit);
+        $stmt->close();
+
+        // Get paginated data
+        $query = "SELECT * FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ? ORDER BY urun_ismi LIMIT ? OFFSET ?";
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        $products = [];
+        while ($row = $result->fetch_assoc()) {
+            $products[] = $row;
+        }
+        $stmt->close();
+
+        $response = [
+            'status' => 'success',
+            'data' => $products,
+            'pagination' => [
+                'total_pages' => $total_pages,
+                'total_products' => $total_products,
+                'current_page' => $page
+            ]
+        ];
+    }
+    else if ($action == 'get_product' && isset($_GET['id'])) {
         $urun_kodu = (int)$_GET['id'];
         $query = "SELECT * FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);

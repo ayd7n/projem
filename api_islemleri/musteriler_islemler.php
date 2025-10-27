@@ -38,17 +38,44 @@ switch ($action) {
 function getCustomers() {
     global $connection;
 
-    $query = "SELECT * FROM musteriler ORDER BY musteri_adi";
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $offset = ($page - 1) * $limit;
+
+    $where_clause = "";
+    if (!empty($search)) {
+        $search_escaped = $connection->real_escape_string($search);
+        $search_param = '%' . $search_escaped . '%';
+        $where_clause = "WHERE musteri_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR telefon LIKE '$search_param'";
+    }
+
+    $count_query = "SELECT COUNT(*) as total FROM musteriler " . $where_clause;
+    $result = $connection->query($count_query);
+    $total_customers = $result->fetch_assoc()['total'];
+
+    $total_pages = $limit > 0 ? ceil($total_customers / $limit) : 0;
+
+    $query = "SELECT * FROM musteriler " . $where_clause . " ORDER BY musteri_adi LIMIT $limit OFFSET $offset";
     $result = $connection->query($query);
 
     $customers = [];
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $customers[] = $row;
-        }
+    while ($row = $result->fetch_assoc()) {
+        $customers[] = $row;
     }
 
-    echo json_encode(['status' => 'success', 'data' => $customers]);
+    $response = [
+        'status' => 'success',
+        'data' => $customers,
+        'pagination' => [
+            'current_page' => $page,
+            'total_pages' => $total_pages,
+            'total_customers' => $total_customers,
+            'limit' => $limit
+        ]
+    ];
+
+    echo json_encode($response);
 }
 
 function getCustomer() {

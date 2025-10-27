@@ -130,6 +130,14 @@ if ($_SESSION['taraf'] !== 'personel') {
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h2><i class="fas fa-list"></i> Esans Listesi</h2>
+                    <div class="search-container">
+                        <div class="input-group" style="width: 300px;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            </div>
+                            <input type="text" class="form-control" v-model="search" @input="debounceSearch" placeholder="Esans ara...">
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -148,6 +156,12 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </tr>
                             </thead>
                             <tbody>
+                                <tr v-if="loading">
+                                    <td colspan="9" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                </tr>
+                                <tr v-else-if="esansListesi.length === 0">
+                                    <td colspan="9" class="text-center p-4">Aramanızla eşleşen esans bulunamadı.</td>
+                                </tr>
                                 <tr v-for="esans in esansListesi" :key="esans.esans_id">
                                     <td class="actions">
                                         <button @click="acDuzenleModal(esans)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
@@ -162,11 +176,79 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <td>{{ esans.demlenme_suresi_gun }}</td>
                                     <td>{{ esans.not_bilgisi }}</td>
                                 </tr>
-                                <tr v-if="esansListesi.length === 0">
-                                    <td colspan="9" class="text-center p-4">Henüz kayıtlı esans bulunmuyor.</td>
-                                </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <!-- Loading indicator -->
+                    <div v-if="loading" class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x"></i>
+                        <p class="mt-2">Yükleniyor...</p>
+                    </div>
+                    
+                    <!-- No results message -->
+                    <div v-if="!loading && esansListesi.length === 0" class="text-center py-4">
+                        <i class="fas fa-exclamation-triangle fa-2x text-warning"></i>
+                        <p class="mt-2">Aramanızla eşleşen esans bulunamadı.</p>
+                    </div>
+                    
+                    <!-- Pagination and records per page controls -->
+                    <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                        <div class="records-per-page mb-2 mb-md-0">
+                            <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                            <select v-model="limit" class="form-control d-inline-block" style="width: auto; margin-left: 8px;" @change="esanslariYukle(1)">
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        
+                        <div class="d-flex align-items-center">
+                            <div class="pagination-info mr-3">
+                                <small class="text-muted">{{ paginationInfo }}</small>
+                            </div>
+                            
+                            <nav aria-label="Esans sayfalandırma">
+                                <ul class="pagination mb-0">
+                                    <!-- Previous button -->
+                                    <li class="page-item" :class="{ disabled: currentPage <= 1 }">
+                                        <a class="page-link" href="#" @click.prevent="esanslariYukle(Math.max(1, currentPage - 1))">
+                                            <i class="fas fa-chevron-left"></i> Önceki
+                                        </a>
+                                    </li>
+                                    
+                                    <!-- First page -->
+                                    <li v-if="currentPage > 3" class="page-item">
+                                        <a class="page-link" href="#" @click.prevent="esanslariYukle(1)">1</a>
+                                    </li>
+                                    <li v-if="currentPage > 4" class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    
+                                    <!-- Pages around current -->
+                                    <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                        <a class="page-link" href="#" @click.prevent="esanslariYukle(page)">{{ page }}</a>
+                                    </li>
+                                    
+                                    <!-- Last page -->
+                                    <li v-if="currentPage < totalPages - 2" class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    <li v-if="currentPage < totalPages - 2" class="page-item">
+                                        <a class="page-link" href="#" @click.prevent="esanslariYukle(totalPages)">{{ totalPages }}</a>
+                                    </li>
+                                    
+                                    <!-- Next button -->
+                                    <li class="page-item" :class="{ disabled: currentPage >= totalPages }">
+                                        <a class="page-link" href="#" @click.prevent="esanslariYukle(Math.min(totalPages, currentPage + 1))">
+                                            Sonraki <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </div>

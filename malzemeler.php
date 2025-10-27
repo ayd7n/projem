@@ -13,10 +13,6 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-// Fetch all materials from the actual table (not the view)
-$materials_query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
-$materials_result = $connection->query($materials_query);
-
 // Calculate total materials
 $total_result = $connection->query("SELECT COUNT(*) as total FROM malzemeler");
 $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
@@ -35,6 +31,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
             --primary: #4a0e63; /* Deep Purple */
@@ -156,208 +153,27 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
             color: #2f855a;
             border-color: #48bb78;
         }
-        .product-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .product-item:last-child {
-            border-bottom: none;
-        }
-        .product-name {
-            font-weight: 500;
-            font-size: 1.05rem;
-            color: var(--primary);
-        }
-        .add-to-cart-form {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .quantity-input {
-            width: 70px;
-            padding: 0.6rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
-            font-size: 0.9rem;
-            text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
-        }
-        .quantity-input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-        }
-        .cart-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-        .item-info h4 {
-            margin-bottom: 5px;
-        }
-        .item-quantity {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        /* Cart panel that slides from right */
-        #sepet {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 320px;
-            height: 100%;
-            z-index: 1050;
-            border-radius: 0;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-            overflow-y: auto;
-        }
-        
-        #sepet.show {
-            transform: translateX(0);
-        }
-        
-        .cart-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-            z-index: 1040;
-            display: none;
-        }
-        
-        .cart-overlay.show {
-            display: block;
-        }
-        
-        .empty-cart {
-            text-align: center;
-            padding: 30px 0;
-            color: var(--text-secondary);
-        }
-        .empty-cart i {
-            font-size: 3rem;
-            margin-bottom: 15px;
-            display: block;
-            color: var(--primary);
-            opacity: 0.3;
-        }
-        .cart-total {
-            padding: 20px 20px;
-            border-top: 2px solid var(--border-color);
-            font-size: 1.3rem;
-            font-weight: 700;
-            text-align: right;
-            display: none; /* Hide total since we're hiding pricing */
-        }
-        
-        .order-filters {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        
-        .order-filters .btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 20px;
-        }
-        
         .table th {
             border-top: none;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
         }
-        
         .table th i {
             margin-right: 6px;
         }
-        
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
         }
-        
         .actions {
             display: flex;
             gap: 8px;
             justify-content: center;
         }
-        
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
-        }
-        
-        .no-orders-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 40px 20px;
-            text-align: center;
-        }
-        
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 500;
-        }
-        
-        .order-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .order-item:last-child {
-            border-bottom: none;
-        }
-
-        .mobile-menu-btn {
-            display: none;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                padding: 15px;
-            }
-        }
-
-        @media (max-width: 991.98px) {
-            #sepet.collapse.show {
-                position: fixed;
-                top: 0;
-                right: 0;
-                width: 320px;
-                height: 100%;
-                z-index: 1050; /* Higher than navbar */
-                border-radius: 0;
-                box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-            }
-            #sepet .card-body {
-                overflow-y: auto;
-                height: 100%;
-            }
         }
     </style>
 </head>
@@ -366,11 +182,9 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
             <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav ml-auto align-items-center">
                     <li class="nav-item">
@@ -393,9 +207,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
     </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
-        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
+    <div id="app" class="main-content">
         <div class="page-header">
             <div>
                 <h1>Malzeme Yönetimi</h1>
@@ -403,11 +215,13 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
 
-        <div id="alert-placeholder"></div>
+        <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert">
+            {{ alert.message }}
+        </div>
 
         <div class="row">
             <div class="col-md-8">
-                <button id="addMaterialBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Malzeme Ekle</button>
+                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Malzeme Ekle</button>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -416,7 +230,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             <i class="fas fa-boxes"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_materials; ?></h3>
+                            <h3 style="font-size: 1.5rem; margin: 0;">{{ totalMaterials }}</h3>
                             <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Malzeme</p>
                         </div>
                     </div>
@@ -427,6 +241,14 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-list"></i> Malzeme Listesi</h2>
+                <div class="search-container">
+                    <div class="input-group" style="width: 300px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control" v-model="search" @input="loadMaterials(1)" placeholder="Malzeme ara...">
+                    </div>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-responsive">
@@ -447,95 +269,103 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             </tr>
                         </thead>
                         <tbody>
-                            <?php if ($materials_result && $materials_result->num_rows > 0): ?>
-                                <?php while ($material = $materials_result->fetch_assoc()): 
-                                    $stock_class = $material['stok_miktari'] <= 0 ? 'stock-low' : 
-                                                  ($material['stok_miktari'] <= $material['kritik_stok_seviyesi'] ? 'stock-critical' : 'stock-normal');
-                                    $status_text = $material['stok_miktari'] == 0 ? 'Stokta Yok' : 
-                                                 ($material['stok_miktari'] <= $material['kritik_stok_seviyesi'] ? 'Kritik Seviye' : 'Yeterli');
-                                    $status_color = $material['stok_miktari'] == 0 ? '#c62828' : 
-                                                  ($material['stok_miktari'] <= $material['kritik_stok_seviyesi'] ? '#f57f17' : '#2e7d32');
-                                ?>
-                                    <tr>
-                                        <td class="actions">
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $material['malzeme_kodu']; ?>"><i class="fas fa-edit"></i></button>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $material['malzeme_kodu']; ?>"><i class="fas fa-trash"></i></button>
-                                        </td>
-                                        <td><?php echo $material['malzeme_kodu']; ?></td>
-                                        <td><strong><?php echo htmlspecialchars($material['malzeme_ismi']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($material['malzeme_turu']); ?></td>
-                                        <td><?php echo htmlspecialchars($material['not_bilgisi']); ?></td>
-                                        <td>
-                                            <span class="stock-info <?php echo $stock_class; ?>">
-                                                <?php echo $material['stok_miktari']; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <?php 
-                                            // Normalize birim value to display properly
-                                            $birim = $material['birim'];
-                                            switch($birim) {
-                                                case 'adet': echo 'Adet'; break;
-                                                case 'kg': echo 'Kg'; break;
-                                                case 'gr': echo 'Gr'; break;
-                                                case 'lt': echo 'Lt'; break;
-                                                case 'ml': echo 'Ml'; break;
-                                                case 'm': echo 'Mt'; break;
-                                                case 'cm': echo 'Cm'; break;
-                                                case '1': echo 'Adet'; break; // If enum index 1
-                                                case '2': echo 'Kg'; break;   // If enum index 2
-                                                case '3': echo 'Gr'; break;   // If enum index 3
-                                                case '4': echo 'Lt'; break;   // If enum index 4
-                                                case '5': echo 'Ml'; break;   // If enum index 5
-                                                case '6': echo 'Mt'; break;   // If enum index 6
-                                                case '7': echo 'Cm'; break;   // If enum index 7
-                                                default: echo htmlspecialchars($birim); break;
-                                            }
-                                            ?>
-                                        </td>
-                                        <td><?php echo $material['termin_suresi']; ?></td>
-                                        <td><?php echo htmlspecialchars($material['depo']); ?></td>
-                                        <td><?php echo htmlspecialchars($material['raf']); ?></td>
-                                        <td><?php echo $material['kritik_stok_seviyesi']; ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
-                            <?php else: ?>
-                                <tr>
-                                    <td colspan="12" class="text-center p-4">Henüz kayıtlı malzeme bulunmuyor.</td>
-                                </tr>
-                            <?php endif; ?>
+                            <tr v-if="loading">
+                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                            </tr>
+                            <tr v-else-if="materials.length === 0">
+                                <td colspan="11" class="text-center p-4">Aramanızla eşleşen malzeme bulunamadı.</td>
+                            </tr>
+                            <tr v-for="material in materials" :key="material.malzeme_kodu">
+                                <td class="actions">
+                                    <button @click="openModal(material)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                    <button @click="deleteMaterial(material.malzeme_kodu)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                </td>
+                                <td>{{ material.malzeme_kodu }}</td>
+                                <td><strong>{{ material.malzeme_ismi }}</strong></td>
+                                <td>{{ material.malzeme_turu }}</td>
+                                <td>{{ material.not_bilgisi }}</td>
+                                <td>
+                                    <span :class="stockClass(material)">
+                                        {{ material.stok_miktari }}
+                                    </span>
+                                </td>
+                                <td>{{ formatUnit(material.birim) }}</td>
+                                <td>{{ material.termin_suresi }}</td>
+                                <td>{{ material.depo }}</td>
+                                <td>{{ material.raf }}</td>
+                                <td>{{ material.kritik_stok_seviyesi }}</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div class="records-per-page mb-2 mb-md-0">
+                        <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
+                        <select v-model="limit" @change="loadMaterials(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <div class="pagination-info mr-3">
+                            <small class="text-muted">{{ paginationInfo }}</small>
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage - 1)"><i class="fas fa-chevron-left"></i> Önceki</a>
+                                </li>
+                                <li v-if="currentPage > 3" class="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(1)">1</a>
+                                </li>
+                                <li v-if="currentPage > 4" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(page)">{{ page }}</a>
+                                </li>
+                                <li v-if="currentPage < totalPages - 3" class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                <li v-if="currentPage < totalPages - 2" class="page-item">
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(totalPages)">{{ totalPages }}</a>
+                                </li>
+                                <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage + 1)">Sonraki <i class="fas fa-chevron-right"></i></a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
 
     <!-- Material Modal -->
     <div class="modal fade" id="materialModal" tabindex="-1" role="dialog">
         <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
-                <form id="materialForm">
+                <form @submit.prevent="saveMaterial">
                     <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                        <h5 class="modal-title" id="modalTitle"><i class="fas fa-box-open"></i> Malzeme Formu</h5>
+                        <h5 class="modal-title">{{ modal.title }}</h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
                     <div class="modal-body">
-                        <input type="hidden" id="malzeme_kodu" name="malzeme_kodu">
-                        <input type="hidden" id="action" name="action">
+                        <input type="hidden" v-model="modal.data.malzeme_kodu">
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="malzeme_ismi">Malzeme İsmi *</label>
-                                    <input type="text" class="form-control" id="malzeme_ismi" name="malzeme_ismi" required>
+                                    <label>Malzeme İsmi *</label>
+                                    <input type="text" class="form-control" v-model="modal.data.malzeme_ismi" required>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="malzeme_turu">Malzeme Türü</label>
-                                    <select class="form-control" id="malzeme_turu" name="malzeme_turu">
+                                    <label>Malzeme Türü</label>
+                                    <select class="form-control" v-model="modal.data.malzeme_turu">
                                         <option value="sise">Şişe</option>
                                         <option value="kutu">Kutu</option>
                                         <option value="etiket">Etiket</option>
@@ -552,15 +382,15 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="stok_miktari">Stok Miktarı</label>
-                                    <input type="number" step="0.01" class="form-control" id="stok_miktari" name="stok_miktari" min="0">
+                                    <label>Stok Miktarı</label>
+                                    <input type="number" step="0.01" class="form-control" v-model="modal.data.stok_miktari" min="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="birim">Birim</label>
-                                    <select class="form-control" id="birim" name="birim">
-                                        <option value="adet" selected>Adet</option>
+                                    <label>Birim</label>
+                                    <select class="form-control" v-model="modal.data.birim">
+                                        <option value="adet">Adet</option>
                                         <option value="kg">Kg</option>
                                         <option value="gr">Gr</option>
                                         <option value="lt">Lt</option>
@@ -574,15 +404,16 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="termin_suresi">Termin Süresi (Gün)</label>
-                                    <input type="number" class="form-control" id="termin_suresi" name="termin_suresi" min="0">
+                                    <label>Termin Süresi (Gün)</label>
+                                    <input type="number" class="form-control" v-model="modal.data.termin_suresi" min="0">
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="depo">Depo</label>
-                                    <select class="form-control" id="depo" name="depo">
+                                    <label>Depo</label>
+                                    <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)">
                                         <option value="">Depo Seçin</option>
+                                        <option v-for="depo in depoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}</option>
                                     </select>
                                 </div>
                             </div>
@@ -590,31 +421,33 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="raf">Raf</label>
-                                    <select class="form-control" id="raf" name="raf">
+                                    <label>Raf</label>
+                                    <select class="form-control" v-model="modal.data.raf">
                                         <option value="">Önce Depo Seçin</option>
+                                        <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}</option>
                                     </select>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label for="kritik_stok_seviyesi">Kritik Stok Seviyesi</label>
-                                    <input type="number" class="form-control" id="kritik_stok_seviyesi" name="kritik_stok_seviyesi" min="0">
+                                    <label>Kritik Stok Seviyesi</label>
+                                    <input type="number" class="form-control" v-model="modal.data.kritik_stok_seviyesi" min="0">
                                 </div>
                             </div>
                         </div>
                         <div class="form-group mb-3">
-                            <label for="not_bilgisi">Not Bilgisi</label>
-                            <textarea class="form-control" id="not_bilgisi" name="not_bilgisi" rows="3"></textarea>
+                            <label>Not Bilgisi</label>
+                            <textarea class="form-control" v-model="modal.data.not_bilgisi" rows="3"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn"><i class="fas fa-save"></i> Kaydet</button>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
                     </div>
                 </form>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->
@@ -624,207 +457,204 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
 
     <script>
-    $(document).ready(function() {
-        
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
-                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
-                    ${message}
-                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>`
-            );
-        }
-
-        // Load depo list on page load and modal open
-        loadDepoList();
-
-        // Function to load depo list
-        function loadDepoList() {
-            $.ajax({
-                url: 'api_islemleri/urunler_islemler.php?action=get_depo_list',
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var depoSelect = $('#depo');
-                        depoSelect.empty();
-                        depoSelect.append('<option value="">Depo Seçin</option>');
-                        $.each(response.data, function(index, depo) {
-                            depoSelect.append('<option value="' + depo.depo_ismi + '">' + depo.depo_ismi + '</option>');
-                        });
-                    }
-                },
-                error: function() {
-                    console.log('Depo listesi yüklenirken bir hata oluştu.');
-                }
-            });
-        }
-
-        // When depo is selected, load corresponding raf list
-        $('#depo').on('change', function() {
-            var selectedDepo = $(this).val();
-            if (selectedDepo) {
-                loadRafList(selectedDepo);
-            } else {
-                $('#raf').empty().append('<option value="">Önce Depo Seçin</option>');
+    const app = Vue.createApp({
+        data() {
+            return {
+                materials: [],
+                loading: false,
+                alert: { message: '', type: '' },
+                search: '',
+                currentPage: 1,
+                totalPages: 1,
+                totalMaterials: <?php echo $total_materials; ?>,
+                limit: 10,
+                modal: { title: '', data: {} },
+                depoList: [],
+                rafList: []
             }
-        });
+        },
+        computed: {
+            paginationInfo() {
+                if (this.totalPages <= 0 || this.totalMaterials <= 0) {
+                    return 'Gösterilecek kayıt yok';
+                }
+                const startRecord = (this.currentPage - 1) * this.limit + 1;
+                const endRecord = Math.min(this.currentPage * this.limit, this.totalMaterials);
+                return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalMaterials} kayıttan`;
+            },
+            pageNumbers() {
+                const pages = [];
+                const startPage = Math.max(1, this.currentPage - 2);
+                const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
-        // Function to load raf list based on selected depo
-        function loadRafList(depo) {
-            $.ajax({
-                url: 'api_islemleri/urunler_islemler.php?action=get_raf_list&depo=' + encodeURIComponent(depo),
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
+                for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                }
+                return pages;
+            }
+        },
+        methods: {
+            showAlert(message, type) {
+                this.alert.message = message;
+                this.alert.type = type;
+                setTimeout(() => { this.alert.message = ''; }, 3000);
+            },
+            loadMaterials(page = 1) {
+                this.loading = true;
+                this.currentPage = page;
+                let url = `api_islemleri/malzemeler_islemler.php?action=get_materials&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                fetch(url)
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.materials = response.data;
+                            this.totalPages = response.pagination.total_pages;
+                            this.totalMaterials = response.pagination.total_materials;
+                        } else {
+                            this.showAlert('Malzemeler yüklenirken hata oluştu.', 'danger');
+                        }
+                        this.loading = false;
+                    })
+                    .catch(error => {
+                        this.showAlert('Malzemeler yüklenirken bir hata oluştu.', 'danger');
+                        this.loading = false;
+                    });
+            },
+            openModal(material) {
+                this.rafList = []; // Clear raf list
+                if (material) {
+                    this.modal.title = 'Malzemeyi Düzenle';
+                    this.modal.data = { ...material };
+                    if(material.depo) {
+                        this.loadRafList(material.depo, material.raf);
+                    }
+                } else {
+                    this.modal.title = 'Yeni Malzeme Ekle';
+                    this.modal.data = { birim: 'adet' };
+                }
+                this.$nextTick(() => {
+                    $('#materialModal').modal('show');
+                });
+            },
+            saveMaterial() {
+                let action = this.modal.data.malzeme_kodu ? 'update_material' : 'add_material';
+                let formData = new FormData();
+                for (let key in this.modal.data) {
+                    formData.append(key, this.modal.data[key]);
+                }
+                formData.append('action', action);
+
+                fetch('api_islemleri/malzemeler_islemler.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(response => {
                     if (response.status === 'success') {
-                        var rafSelect = $('#raf');
-                        rafSelect.empty();
-                        rafSelect.append('<option value="">Raf Seçin</option>');
-                        $.each(response.data, function(index, raf) {
-                            rafSelect.append('<option value="' + raf.raf + '">' + raf.raf + '</option>');
+                        this.showAlert(response.message, 'success');
+                        $('#materialModal').modal('hide');
+                        this.loadMaterials(this.currentPage);
+                    } else {
+                        this.showAlert(response.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                });
+            },
+            deleteMaterial(id) {
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu malzemeyi silmek istediğinizden emin misiniz?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Evet, sil!',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        let formData = new FormData();
+                        formData.append('action', 'delete_material');
+                        formData.append('malzeme_kodu', id);
+
+                        fetch('api_islemleri/malzemeler_islemler.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                this.loadMaterials(this.currentPage);
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         });
                     }
-                },
-                error: function() {
-                    console.log('Raf listesi yüklenirken bir hata oluştu.');
-                }
-            });
-        }
-
-        // Open modal for adding a new material
-        $('#addMaterialBtn').on('click', function() {
-            $('#materialForm')[0].reset();
-            $('#modalTitle').text('Yeni Malzeme Ekle');
-            $('#action').val('add_material');
-            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
-            $('#materialModal').modal('show');
-        });
-
-        // Open modal for editing a material
-        $('.edit-btn').on('click', function() {
-            var materialId = $(this).data('id');
-            $.ajax({
-                url: 'api_islemleri/malzemeler_islemler.php?action=get_material&id=' + materialId,
-                type: 'GET',
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var material = response.data;
-                        $('#materialForm')[0].reset();
-                        $('#modalTitle').text('Malzemeyi Düzenle');
-                        $('#action').val('update_material');
-                        $('#malzeme_kodu').val(material.malzeme_kodu);
-                        $('#malzeme_ismi').val(material.malzeme_ismi);
-                        $('#malzeme_turu').val(material.malzeme_turu);
-                        $('#stok_miktari').val(material.stok_miktari);
-                        // Normalize birim value for form
-                        let birimValue = material.birim;
-                        // Handle possible enum index values
-                        switch(material.birim) {
-                            case '1': birimValue = 'adet'; break;
-                            case '2': birimValue = 'kg'; break;
-                            case '3': birimValue = 'gr'; break;
-                            case '4': birimValue = 'lt'; break;
-                            case '5': birimValue = 'ml'; break;
-                            case '6': birimValue = 'm'; break;
-                            case '7': birimValue = 'cm'; break;
-                        }
-                        $('#birim').val(birimValue);
-                        $('#termin_suresi').val(material.termin_suresi);
-                        $('#kritik_stok_seviyesi').val(material.kritik_stok_seviyesi);
-                        // Set depo and initialize raf list
-                        $('#depo').val(material.depo);
-
-                        // Manually load raf list for the selected depo
-                        loadRafList(material.depo);
-
-                        // Wait for raf list to load before setting raf value
-                        setTimeout(function() {
-                            $('#raf').val(material.raf);
-                        }, 200);
-                        $('#not_bilgisi').val(material.not_bilgisi);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#materialModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Malzeme bilgileri alınırken bir hata oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle form submission
-        $('#materialForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = $(this).serialize();
-            
-            $.ajax({
-                url: 'api_islemleri/malzemeler_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#materialModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                }
-            });
-        });
-
-        // Handle material deletion
-        $('.delete-btn').on('click', function() {
-            var materialId = $(this).data('id');
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: 'Bu malzemeyi silmek istediğinizden emin misiniz?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Evet',
-                cancelButtonText: 'İptal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/malzemeler_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_material',
-                            malzeme_kodu: materialId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                showAlert(response.message, 'danger');
-                            }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                })
+            },
+            loadDepoList() {
+                fetch('api_islemleri/urunler_islemler.php?action=get_depo_list')
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.depoList = response.data;
                         }
                     });
+            },
+            loadRafList(depo, selectedRaf = null) {
+                if (!depo) {
+                    this.rafList = [];
+                    return;
                 }
-            });
-        });
+                fetch(`api_islemleri/urunler_islemler.php?action=get_raf_list&depo=${encodeURIComponent(depo)}`)
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.rafList = response.data;
+                            if(selectedRaf) {
+                                this.modal.data.raf = selectedRaf;
+                            }
+                        }
+                    });
+            },
+            formatUnit(unit) {
+                switch(unit) {
+                    case 'adet': return 'Adet';
+                    case 'kg': return 'Kg';
+                    case 'gr': return 'Gr';
+                    case 'lt': return 'Lt';
+                    case 'ml': return 'Ml';
+                    case 'm': return 'Mt';
+                    case 'cm': return 'Cm';
+                    case '1': return 'Adet'; // If enum index 1
+                    case '2': return 'Kg';   // If enum index 2
+                    case '3': return 'Gr';   // If enum index 3
+                    case '4': return 'Lt';   // If enum index 4
+                    case '5': return 'Ml';   // If enum index 5
+                    case '6': return 'Mt';   // If enum index 6
+                    case '7': return 'Cm';   // If enum index 7
+                    default: return unit;
+                }
+            },
+            stockClass(material) {
+                const stok = parseFloat(material.stok_miktari);
+                const kritik = parseFloat(material.kritik_stok_seviyesi);
+                if (stok <= 0) return 'stock-low';
+                if (stok <= kritik) return 'stock-critical';
+                return 'stock-normal';
+            }
+        },
+        mounted() {
+            this.loadMaterials();
+            this.loadDepoList();
+        }
     });
+    app.mount('#app');
     </script>
 </body>
 </html>

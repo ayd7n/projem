@@ -38,17 +38,44 @@ switch ($action) {
 function getSuppliers() {
     global $connection;
 
-    $query = "SELECT * FROM tedarikciler ORDER BY tedarikci_adi";
+    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    $offset = ($page - 1) * $limit;
+
+    $where_clause = "";
+    if (!empty($search)) {
+        $search_escaped = $connection->real_escape_string($search);
+        $search_param = '%' . $search_escaped . '%';
+        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param'";
+    }
+
+    $count_query = "SELECT COUNT(*) as total FROM tedarikciler " . $where_clause;
+    $result = $connection->query($count_query);
+    $total_suppliers = $result->fetch_assoc()['total'];
+
+    $total_pages = $limit > 0 ? ceil($total_suppliers / $limit) : 0;
+
+    $query = "SELECT * FROM tedarikciler " . $where_clause . " ORDER BY tedarikci_adi LIMIT $limit OFFSET $offset";
     $result = $connection->query($query);
 
     $suppliers = [];
-    if ($result && $result->num_rows > 0) {
-        while ($row = $result->fetch_assoc()) {
-            $suppliers[] = $row;
-        }
+    while ($row = $result->fetch_assoc()) {
+        $suppliers[] = $row;
     }
 
-    echo json_encode(['status' => 'success', 'data' => $suppliers]);
+    $response = [
+        'status' => 'success',
+        'data' => $suppliers,
+        'pagination' => [
+            'current_page' => $page,
+            'total_pages' => $total_pages,
+            'total_suppliers' => $total_suppliers,
+            'limit' => $limit
+        ]
+    ];
+
+    echo json_encode($response);
 }
 
 function getSupplier() {

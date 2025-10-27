@@ -163,6 +163,12 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                     <div class="tab-pane fade show active" id="product" role="tabpanel">
                         <div class="card mt-3">
                             <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control" placeholder="Ürün ağaçlarında arama yapın..." v-model="productTreeSearchTerm" @input="searchProductTrees">
+                                </div>
                                 <div class="table-wrapper">
                                     <table class="table table-hover">
                                         <thead>
@@ -358,6 +364,6 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
     </script>
     
     <!-- Vue2 Application JS -->
-    <script src="assets/js/urun_agaclari.js"></script>
+    <script src="assets/js/urun_agaclari.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>

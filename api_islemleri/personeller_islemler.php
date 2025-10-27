@@ -20,7 +20,8 @@ if (isset($_GET['action'])) {
     if ($action == 'get_employee' && isset($_GET['id'])) {
         $personel_id = (int)$_GET['id'];
         try {
-            $query = "SELECT * FROM personeller WHERE personel_id = $personel_id";
+            // Don't include password in the response for security
+            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar FROM personeller WHERE personel_id = $personel_id";
             $result = $connection->query($query);
             
             if ($result) {
@@ -39,7 +40,8 @@ if (isset($_GET['action'])) {
     }
     elseif ($action == 'get_all_employees') {
         try {
-            $query = "SELECT * FROM personeller ORDER BY ad_soyad";
+            // Don't include password in the response for security
+            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar FROM personeller ORDER BY ad_soyad";
             $result = $connection->query($query);
             
             if ($result) {
