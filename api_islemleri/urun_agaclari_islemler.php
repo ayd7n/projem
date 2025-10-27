@@ -53,6 +53,72 @@ if ($request_method === 'GET' && $action) {
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
+    } elseif ($action === 'search_product_trees_paginated' && isset($_GET['searchTerm'])) {
+        $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $offset = ($page - 1) * $limit;
+        
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $result = $connection->query($query);
+        
+        // Get total count for pagination
+        $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
+        $total_result = $connection->query($total_query);
+        $total = $total_result->fetch_assoc()['total'];
+        
+        if ($result) {
+            $product_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $product_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $product_trees,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $limit,
+                    'total' => $total,
+                    'total_pages' => ceil($total / $limit)
+                ]
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'search_essence_trees_paginated' && isset($_GET['searchTerm'])) {
+        $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $offset = ($page - 1) * $limit;
+        
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $result = $connection->query($query);
+        
+        // Get total count for pagination
+        $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
+        $total_result = $connection->query($total_query);
+        $total = $total_result->fetch_assoc()['total'];
+        
+        if ($result) {
+            $essence_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $essence_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $essence_trees,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $limit,
+                    'total' => $total,
+                    'total_pages' => ceil($total / $limit)
+                ]
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
     } elseif ($action === 'get_all') {
         // Fetch all product trees
         $query = "SELECT * FROM urun_agaci ORDER BY urun_ismi, bilesen_ismi";
@@ -156,6 +222,72 @@ if ($request_method === 'GET' && $action) {
             $response = [
                 'status' => 'success',
                 'data' => $essence_trees
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'get_product_trees_paginated') {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $offset = ($page - 1) * $limit;
+        
+        // Fetch paginated product trees
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $result = $connection->query($query);
+        
+        // Get total count for pagination
+        $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun'";
+        $total_result = $connection->query($total_query);
+        $total = $total_result->fetch_assoc()['total'];
+        
+        if ($result) {
+            $product_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $product_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $product_trees,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $limit,
+                    'total' => $total,
+                    'total_pages' => ceil($total / $limit)
+                ]
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
+    } elseif ($action === 'get_essence_trees_paginated') {
+        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $offset = ($page - 1) * $limit;
+        
+        // Fetch paginated essence trees
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' ORDER BY urun_ismi, bilesen_ismi LIMIT $limit OFFSET $offset";
+        $result = $connection->query($query);
+        
+        // Get total count for pagination
+        $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans'";
+        $total_result = $connection->query($total_query);
+        $total = $total_result->fetch_assoc()['total'];
+        
+        if ($result) {
+            $essence_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $essence_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $essence_trees,
+                'pagination' => [
+                    'current_page' => $page,
+                    'per_page' => $limit,
+                    'total' => $total,
+                    'total_pages' => ceil($total / $limit)
+                ]
             ];
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];

@@ -169,6 +169,43 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <input type="text" class="form-control" placeholder="Ürün ağaçlarında arama yapın..." v-model="productTreeSearchTerm" @input="searchProductTrees">
                                 </div>
+                                <!-- Pagination controls for Product Trees -->
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-md-6">
+                                        <div class="form-inline">
+                                            <label>Sayfa başına:&nbsp;</label>
+                                            <select class="form-control" v-model="productTreesPerPage" @change="changeProductTreesPerPage">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="25">25</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(1)" :disabled="productTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage - 1)" :disabled="productTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary disabled">
+                                                {{ productTreesCurrentPage }} / {{ productTreesTotalPages }}
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage + 1)" :disabled="productTreesCurrentPage === productTreesTotalPages">
+                                                <i class="fas fa-angle-right"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesTotalPages)" :disabled="productTreesCurrentPage === productTreesTotalPages">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
                                 <div class="table-wrapper">
                                     <table class="table table-hover">
                                         <thead>
@@ -214,6 +251,43 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <span class="input-group-text"><i class="fas fa-search"></i></span>
                                     </div>
                                     <input type="text" class="form-control" placeholder="Esans ağaçlarında arama yapın..." v-model="essenceTreeSearchTerm" @input="searchEssenceTrees">
+                                </div>
+                                <!-- Pagination controls for Essence Trees -->
+                                <div class="row mb-3 align-items-center">
+                                    <div class="col-md-6">
+                                        <div class="form-inline">
+                                            <label>Sayfa başına:&nbsp;</label>
+                                            <select class="form-control" v-model="essenceTreesPerPage" @change="changeEssenceTreesPerPage">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="25">25</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(1)" :disabled="essenceTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage - 1)" :disabled="essenceTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary disabled">
+                                                {{ essenceTreesCurrentPage }} / {{ essenceTreesTotalPages }}
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage + 1)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                                <i class="fas fa-angle-right"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesTotalPages)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                                 <div class="table-wrapper">
                                     <table class="table table-hover">

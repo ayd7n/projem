@@ -36,7 +36,17 @@ new Vue({
         activeTab: 'product', // Default to product trees tab
         kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı',
         productTreeSearchTerm: '', // For product tree search
-        essenceTreeSearchTerm: '' // For essence tree search
+        essenceTreeSearchTerm: '', // For essence tree search
+        // Pagination for product trees
+        productTreesCurrentPage: 1,
+        productTreesPerPage: 10,
+        productTreesTotal: 0,
+        productTreesTotalPages: 0,
+        // Pagination for essence trees
+        essenceTreesCurrentPage: 1,
+        essenceTreesPerPage: 10,
+        essenceTreesTotal: 0,
+        essenceTreesTotalPages: 0
     },
     mounted() {
         this.fetchAllData();
@@ -44,38 +54,20 @@ new Vue({
     methods: {
         async fetchAllData() {
             await Promise.all([
-                this.fetchProductTrees(),
-                this.fetchEssenceTrees(),
+                this.fetchProductTreesPaginated(1),
+                this.fetchEssenceTreesPaginated(1),
                 this.fetchProducts(),
                 this.fetchMaterials(),
                 this.fetchEssences()
             ]);
         },
-        async fetchProductTrees() {
-            try {
-                const response = await axios.get('api_islemleri/urun_agaclari_islemler.php?agac_turu=urun');
-                if (response.data.status === 'success') {
-                    this.productTrees = response.data.data || [];
-                    this.updateTotalProductTrees();
-                } else {
-                    this.showAlert(response.data.message, 'danger');
-                }
-            } catch (error) {
-                this.showAlert('Ürün ağaçları alınırken bir hata oluştu.', 'danger');
-            }
+        updateTotalProductTrees() {
+            const uniqueProducts = new Set(this.productTrees.map(item => item.urun_kodu));
+            this.totalProductTrees = uniqueProducts.size;
         },
-        async fetchEssenceTrees() {
-            try {
-                const response = await axios.get('api_islemleri/urun_agaclari_islemler.php?agac_turu=esans');
-                if (response.data.status === 'success') {
-                    this.essenceTrees = response.data.data || [];
-                    this.updateTotalEssenceTrees();
-                } else {
-                    this.showAlert(response.data.message, 'danger');
-                }
-            } catch (error) {
-                this.showAlert('Esans ağaçları alınırken bir hata oluştu.', 'danger');
-            }
+        updateTotalEssenceTrees() {
+            const uniqueEssences = new Set(this.essenceTrees.map(item => item.urun_kodu));
+            this.totalEssenceTrees = uniqueEssences.size;
         },
         updateTotalProductTrees() {
             const uniqueProducts = new Set(this.productTrees.map(item => item.urun_kodu));
@@ -138,7 +130,8 @@ new Vue({
                 
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
-                    await this.fetchProductTrees();
+                    // Refresh current page after save
+                    await this.searchProductTreesPaginated(this.productTreesCurrentPage);
                     this.closeModal();
                 } else {
                     this.showAlert(response.data.message, 'danger');
@@ -174,7 +167,8 @@ new Vue({
                 
                 if (response.data.status === 'success') {
                     this.showAlert(response.data.message, 'success');
-                    await this.fetchEssenceTrees();
+                    // Refresh current page after save
+                    await this.searchEssenceTreesPaginated(this.essenceTreesCurrentPage);
                     this.closeEssenceModal();
                 } else {
                     this.showAlert(response.data.message, 'danger');
@@ -201,7 +195,8 @@ new Vue({
 
                         if (response.data.status === 'success') {
                             this.showAlert(response.data.message, 'success');
-                            await this.fetchProductTrees();
+                            // Refresh current page after delete
+                            await this.searchProductTreesPaginated(this.productTreesCurrentPage);
                         } else {
                             this.showAlert(response.data.message, 'danger');
                         }
@@ -229,7 +224,8 @@ new Vue({
 
                         if (response.data.status === 'success') {
                             this.showAlert(response.data.message, 'success');
-                            await this.fetchEssenceTrees();
+                            // Refresh current page after delete
+                            await this.searchEssenceTreesPaginated(this.essenceTreesCurrentPage);
                         } else {
                             this.showAlert(response.data.message, 'danger');
                         }
@@ -409,22 +405,77 @@ new Vue({
             // Bootstrap's tab switching
             $('#myTab a[href="#' + tabName + '"]').tab('show');
         },
-        async searchProductTrees() {
+        async fetchProductTreesPaginated(page = 1) {
+            try {
+                const response = await axios.get('api_islemleri/urun_agaclari_islemler.php', {
+                    params: {
+                        action: 'get_product_trees_paginated',
+                        page: page,
+                        limit: this.productTreesPerPage
+                    }
+                });
+                
+                if (response.data.status === 'success') {
+                    this.productTrees = response.data.data || [];
+                    if (response.data.pagination) {
+                        this.productTreesCurrentPage = response.data.pagination.current_page;
+                        this.productTreesTotal = response.data.pagination.total;
+                        this.productTreesTotalPages = response.data.pagination.total_pages;
+                    }
+                } else {
+                    this.showAlert(response.data.message, 'danger');
+                }
+            } catch (error) {
+                this.showAlert('Ürün ağaçları alınırken bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
+            }
+        },
+        async fetchEssenceTreesPaginated(page = 1) {
+            try {
+                const response = await axios.get('api_islemleri/urun_agaclari_islemler.php', {
+                    params: {
+                        action: 'get_essence_trees_paginated',
+                        page: page,
+                        limit: this.essenceTreesPerPage
+                    }
+                });
+                
+                if (response.data.status === 'success') {
+                    this.essenceTrees = response.data.data || [];
+                    if (response.data.pagination) {
+                        this.essenceTreesCurrentPage = response.data.pagination.current_page;
+                        this.essenceTreesTotal = response.data.pagination.total;
+                        this.essenceTreesTotalPages = response.data.pagination.total_pages;
+                    }
+                } else {
+                    this.showAlert(response.data.message, 'danger');
+                }
+            } catch (error) {
+                this.showAlert('Esans ağaçları alınırken bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
+            }
+        },
+        async searchProductTreesPaginated(page = 1) {
             if (this.productTreeSearchTerm.trim() === '') {
-                // If search term is empty, fetch all data
-                await this.fetchProductTrees();
+                // If search term is empty, fetch paginated data
+                await this.fetchProductTreesPaginated(page);
             } else {
-                // Perform search
+                // Perform search with pagination
                 try {
                     const response = await axios.get('api_islemleri/urun_agaclari_islemler.php', {
                         params: {
-                            action: 'search_product_trees',
-                            searchTerm: this.productTreeSearchTerm
+                            action: 'search_product_trees_paginated',
+                            searchTerm: this.productTreeSearchTerm,
+                            page: page,
+                            limit: this.productTreesPerPage
                         }
                     });
                     
                     if (response.data.status === 'success') {
                         this.productTrees = response.data.data || [];
+                        if (response.data.pagination) {
+                            this.productTreesCurrentPage = response.data.pagination.current_page;
+                            this.productTreesTotal = response.data.pagination.total;
+                            this.productTreesTotalPages = response.data.pagination.total_pages;
+                        }
                     } else {
                         this.showAlert(response.data.message, 'danger');
                     }
@@ -433,28 +484,83 @@ new Vue({
                 }
             }
         },
-        async searchEssenceTrees() {
+        async searchEssenceTreesPaginated(page = 1) {
             if (this.essenceTreeSearchTerm.trim() === '') {
-                // If search term is empty, fetch all data
-                await this.fetchEssenceTrees();
+                // If search term is empty, fetch paginated data
+                await this.fetchEssenceTreesPaginated(page);
             } else {
-                // Perform search
+                // Perform search with pagination
                 try {
                     const response = await axios.get('api_islemleri/urun_agaclari_islemler.php', {
                         params: {
-                            action: 'search_essence_trees',
-                            searchTerm: this.essenceTreeSearchTerm
+                            action: 'search_essence_trees_paginated',
+                            searchTerm: this.essenceTreeSearchTerm,
+                            page: page,
+                            limit: this.essenceTreesPerPage
                         }
                     });
                     
                     if (response.data.status === 'success') {
                         this.essenceTrees = response.data.data || [];
+                        if (response.data.pagination) {
+                            this.essenceTreesCurrentPage = response.data.pagination.current_page;
+                            this.essenceTreesTotal = response.data.pagination.total;
+                            this.essenceTreesTotalPages = response.data.pagination.total_pages;
+                        }
                     } else {
                         this.showAlert(response.data.message, 'danger');
                     }
                 } catch (error) {
                     this.showAlert('Arama sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
                 }
+            }
+        },
+        async searchProductTrees() {
+            // Reset to first page when performing a new search
+            this.productTreesCurrentPage = 1;
+            await this.searchProductTreesPaginated(1);
+        },
+        async searchEssenceTrees() {
+            // Reset to first page when performing a new search
+            this.essenceTreesCurrentPage = 1;
+            await this.searchEssenceTreesPaginated(1);
+        },
+        changeProductTreesPage(page) {
+            if (page >= 1 && page <= this.productTreesTotalPages) {
+                this.productTreesCurrentPage = page;
+                if (this.productTreeSearchTerm.trim() === '') {
+                    this.fetchProductTreesPaginated(page);
+                } else {
+                    this.searchProductTreesPaginated(page);
+                }
+            }
+        },
+        changeEssenceTreesPage(page) {
+            if (page >= 1 && page <= this.essenceTreesTotalPages) {
+                this.essenceTreesCurrentPage = page;
+                if (this.essenceTreeSearchTerm.trim() === '') {
+                    this.fetchEssenceTreesPaginated(page);
+                } else {
+                    this.searchEssenceTreesPaginated(page);
+                }
+            }
+        },
+        changeProductTreesPerPage() {
+            // Reset to first page when changing items per page
+            this.productTreesCurrentPage = 1;
+            if (this.productTreeSearchTerm.trim() === '') {
+                this.fetchProductTreesPaginated(1);
+            } else {
+                this.searchProductTreesPaginated(1);
+            }
+        },
+        changeEssenceTreesPerPage() {
+            // Reset to first page when changing items per page
+            this.essenceTreesCurrentPage = 1;
+            if (this.essenceTreeSearchTerm.trim() === '') {
+                this.fetchEssenceTreesPaginated(1);
+            } else {
+                this.searchEssenceTreesPaginated(1);
             }
         }
     }
