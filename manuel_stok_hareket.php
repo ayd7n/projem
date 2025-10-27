@@ -78,14 +78,16 @@ if ($_SESSION['taraf'] !== 'personel') {
             </div>
 
             <div class="row">
-                <div class="col-md-8">
-                    <button class="btn btn-success mr-2" @click="openSayimFazlasiModal"><i class="fas fa-plus-circle"></i> Sayım
-                        Fazlası</button>
-                    <button class="btn btn-danger mr-2" @click="openFireSayimEksigiModal"><i class="fas fa-minus-circle"></i> Fire / Sayım
-                        Eksigi</button>
-                    <button class="btn btn-primary mr-2" @click="openTransferModal"><i class="fas fa-exchange-alt"></i> Yeni Stok
-                        Transferi</button>
-                    <button class="btn btn-info" @click="openMalKabulModal"><i class="fas fa-check-circle"></i> Mal Kabul</button>
+                <div class="col-md-12">
+                    <div class="btn-group" role="group" aria-label="Stok Hareketleri Butonları">
+                        <button class="btn btn-success" @click="openSayimFazlasiModal"><i class="fas fa-plus-circle"></i> Sayım
+                            Fazlası</button>
+                        <button class="btn btn-danger" @click="openFireSayimEksigiModal"><i class="fas fa-minus-circle"></i> Fire / Sayım
+                            Eksigi</button>
+                        <button class="btn btn-primary" @click="openTransferModal"><i class="fas fa-exchange-alt"></i> Yeni Stok
+                            Transferi</button>
+                        <button class="btn btn-info" @click="openMalKabulModal"><i class="fas fa-check-circle"></i> Mal Kabul</button>
+                    </div>
                 </div>
             </div>
 
@@ -94,9 +96,9 @@ if ($_SESSION['taraf'] !== 'personel') {
                     <h2><i class="fas fa-table"></i> Stok Hareketleri Listesi</h2>
                 </div>
                 <div class="card-body">
-                    <div class="table-wrapper">
+                    <div class="table-wrapper" style="max-height: 60vh; overflow-y: auto;">
                         <table class="table table-hover">
-                            <thead>
+                            <thead style="position: sticky; top: 0; background-color: white; z-index: 10;">
                                 <tr>
                                     <th><i class="fas fa-cogs"></i> İşlemler</th>
                                     <th><i class="fas fa-hashtag"></i> ID</th>
@@ -123,7 +125,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                             </thead>
                             <tbody>
                                 <tr v-if="movements.length === 0">
-                                    <td colspan="20" class="text-center p-4">
+                                    <td colspan="21" class="text-center p-4">
                                         <i class="fas fa-exchange-alt fa-3x mb-3" style="color: var(--text-secondary);"></i>
                                         <h4>Henüz Kayıtlı Stok Hareketi Bulunmuyor</h4>
                                         <p class="text-muted">Henüz hiç stok hareketi kaydedilmemiş.</p>
@@ -131,9 +133,6 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </tr>
                                 <tr v-else v-for="movement in movements" :key="movement.hareket_id">
                                     <td class="actions">
-                                        <button class="btn btn-primary btn-sm" @click="editMovement(movement)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
                                         <button class="btn btn-danger btn-sm" @click="deleteMovement(movement.hareket_id)">
                                             <i class="fas fa-trash"></i>
                                         </button>
@@ -351,114 +350,6 @@ if ($_SESSION['taraf'] !== 'personel') {
             </div>
         </div>
 
-        <!-- Stock Movement Modal -->
-        <div class="modal fade" :class="{ show: movementModalVisible }" 
-             :style="{ display: movementModalVisible ? 'block' : 'none' }" 
-             style="z-index: 1050" 
-             @click="closeMovementModal">
-            <div class="modal-dialog modal-lg" @click.stop>
-                <div class="modal-content">
-                    <form @submit.prevent="saveMovement">
-                        <div class="modal-header">
-                            <h5 class="modal-title">{{ movementFormTitle }}</h5>
-                            <button type="button" class="close" @click="closeMovementModal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                        </div>
-                        <div class="modal-body">
-                            <input type="hidden" v-model="movementForm.hareket_id">
-                            <div class="form-row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="stok_turu">Stok Türü *</label>
-                                        <select class="form-control" v-model="movementForm.stok_turu" @change="loadStockItems" required>
-                                            <option value="">Seçiniz</option>
-                                            <option value="malzeme">Malzeme</option>
-                                            <option value="urun">Ürün</option>
-                                            <option value="esans">Esans</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="kod">Kod Seçin *</label>
-                                        <select class="form-control" v-model="movementForm.kod" @change="getStockLocation" required>
-                                            <option value="">Kod Seçin</option>
-                                            <option v-for="item in stockItems" :key="item.kod" :value="item.kod">
-                                                {{ item.kod }} - {{ item.isim }} (Stok: {{ item.stok }})
-                                            </option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-
-
-
-                            <div class="form-row">
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="miktar">Miktar *</label>
-                                        <input type="number" class="form-control" v-model.number="movementForm.miktar" min="0.01"
-                                            step="0.01" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="ilgili_belge_no">İlgili Belge No</label>
-                                        <input type="text" class="form-control" v-model="movementForm.ilgili_belge_no">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="aciklama">Açıklama *</label>
-                                <textarea class="form-control" v-model="movementForm.aciklama" rows="3" required></textarea>
-                            </div>
-
-                            <div id="location-fields" v-if="(movementForm.stok_turu === 'malzeme' || movementForm.stok_turu === 'urun') && movementForm.kod">
-                                <div class="form-row">
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="depo">Depo *</label>
-                                            <select class="form-control" v-model="movementForm.depo" :readonly="!isEdit" required>
-                                                <option value="">Depo Seçin</option>
-                                                <option v-for="location in locations" :key="location.depo_ismi" :value="location.depo_ismi">
-                                                    {{ location.depo_ismi }}
-                                                </option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group">
-                                            <label for="raf">Raf *</label>
-                                            <input type="text" class="form-control" v-model="movementForm.raf" :readonly="!isEdit" required>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div id="tank-fields" v-if="movementForm.stok_turu === 'esans' && movementForm.kod">
-                                <div class="form-group">
-                                    <label for="tank_kodu">Tank Kodu</label>
-                                    <input type="text" class="form-control" v-model="movementForm.tank_kodu">
-                                </div>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeMovementModal"><i
-                                    class="fas fa-times"></i> İptal</button>
-                            <button type="submit" class="btn btn-primary" :class="{ 'loading': isSubmitting }" :disabled="isSubmitting">
-                                <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                                <i v-else class="fas fa-save"></i>
-                                {{ submitButtonText }}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-
-
 
         <!-- Stock Transfer Modal -->
         <div class="modal fade" :class="{ show: transferModalVisible }" 
@@ -659,7 +550,7 @@ if ($_SESSION['taraf'] !== 'personel') {
         </div>
 
         <!-- Modal Backdrop -->
-        <div v-if="movementModalVisible || transferModalVisible || sayimFazlasiModalVisible || fireSayimEksigiModalVisible || malKabulModalVisible" class="modal-backdrop fade show" style="z-index: 1040;"></div>
+        <div v-if="transferModalVisible || sayimFazlasiModalVisible || fireSayimEksigiModalVisible || malKabulModalVisible" class="modal-backdrop fade show" style="z-index: 1040;"></div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->
