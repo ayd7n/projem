@@ -35,7 +35,8 @@ new Vue({
         alertType: 'success',
         activeTab: 'product', // Default to product trees tab
         kullaniciAdi: window.kullaniciBilgisi ? window.kullaniciBilgisi.kullaniciAdi : 'Kullanıcı',
-        productTreeSearchTerm: '' // For product tree search
+        productTreeSearchTerm: '', // For product tree search
+        essenceTreeSearchTerm: '' // For essence tree search
     },
     mounted() {
         this.fetchAllData();
@@ -424,6 +425,30 @@ new Vue({
                     
                     if (response.data.status === 'success') {
                         this.productTrees = response.data.data || [];
+                    } else {
+                        this.showAlert(response.data.message, 'danger');
+                    }
+                } catch (error) {
+                    this.showAlert('Arama sırasında bir hata oluştu: ' + (error.response?.data?.message || error.message), 'danger');
+                }
+            }
+        },
+        async searchEssenceTrees() {
+            if (this.essenceTreeSearchTerm.trim() === '') {
+                // If search term is empty, fetch all data
+                await this.fetchEssenceTrees();
+            } else {
+                // Perform search
+                try {
+                    const response = await axios.get('api_islemleri/urun_agaclari_islemler.php', {
+                        params: {
+                            action: 'search_essence_trees',
+                            searchTerm: this.essenceTreeSearchTerm
+                        }
+                    });
+                    
+                    if (response.data.status === 'success') {
+                        this.essenceTrees = response.data.data || [];
                     } else {
                         this.showAlert(response.data.message, 'danger');
                     }

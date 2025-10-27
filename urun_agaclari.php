@@ -209,6 +209,12 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                     <div class="tab-pane fade" id="essence" role="tabpanel">
                         <div class="card mt-3">
                             <div class="card-body">
+                                <div class="input-group mb-3">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                    </div>
+                                    <input type="text" class="form-control" placeholder="Esans ağaçlarında arama yapın..." v-model="essenceTreeSearchTerm" @input="searchEssenceTrees">
+                                </div>
                                 <div class="table-wrapper">
                                     <table class="table table-hover">
                                         <thead>

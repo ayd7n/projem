@@ -142,6 +142,24 @@ if ($request_method === 'GET' && $action) {
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
+    } elseif ($action === 'search_essence_trees' && isset($_GET['searchTerm'])) {
+        $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
+        $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_ismi, bilesen_ismi";
+        $result = $connection->query($query);
+        
+        if ($result) {
+            $essence_trees = [];
+            while ($row = $result->fetch_assoc()) {
+                $essence_trees[] = $row;
+            }
+            
+            $response = [
+                'status' => 'success',
+                'data' => $essence_trees
+            ];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+        }
     }
 } 
 // Handle POST requests
