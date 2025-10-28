@@ -1,0 +1,36 @@
+# XAMPP and local development files
+*.tmp
+*.temp
+cookies.txt
+
+# PHP session files
+*.sess
+
+# Database files (if any)
+*.db
+*.sqlite
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Local config files (if you have environment-specific configs)
+config-local.php
+.env
+
+# Backup files
+*~
+*.bak
+*.backup
+
+# XAMPP specific
+xampp/

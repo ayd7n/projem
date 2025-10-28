@@ -17,174 +17,263 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     <title>Yönetim Paneli - IDO KOZMETIK</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
-            --bg-main: #fdf8f5; /* Soft Cream */
-            --bg-card: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-muted: #6b7280; /* Medium Gray */
-            --shadow: 0 8px 20px rgba(0, 0, 0, 0.06);
-            --shadow-hover: 0 10px 25px rgba(74, 14, 99, 0.15);
+            --bg-color-start: #0f0c29;
+            --bg-color-mid: #302b63;
+            --bg-color-end: #24243e;
+            --glass-bg: rgba(20, 15, 40, 0.65);
+            --accent-color: #a27cf2;
+            --glow-color: rgba(162, 124, 242, 0.5);
+            --text-color: #e0d9f5;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --border-color: rgba(162, 124, 242, 0.2);
         }
 
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-main);
-            color: var(--text-primary);
+            font-family: 'Montserrat', sans-serif;
+            color: var(--text-color);
+            background: linear-gradient(to bottom, var(--bg-color-start), var(--bg-color-mid), var(--bg-color-end));
             margin: 0;
             padding: 2rem;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        #sky-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
         }
 
         .container {
             max-width: 1200px;
             margin: 0 auto;
+            position: relative;
+            z-index: 2;
         }
 
         .top-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 2rem;
+            margin-bottom: 4rem;
+            padding: 1rem 2rem;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
         }
 
         .logo h1 {
-            font-size: 1.5rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
             font-weight: 700;
-            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            color: var(--text-color);
         }
         .logo .fa-spa {
-            color: var(--primary);
-            margin-right: 0.5rem;
+            color: var(--accent-color);
+            filter: drop-shadow(0 0 10px var(--glow-color));
         }
 
         .user-controls {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 2rem;
+        }
+        
+        .user-info {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            opacity: 0.9;
         }
 
         .user-controls a {
-            color: var(--text-muted);
+            color: var(--text-color);
             text-decoration: none;
-            font-size: 1.1rem;
-            transition: color 0.3s ease;
+            font-size: 1.4rem; /* Larger icons for desktop */
+            transition: color 0.3s ease, transform 0.3s ease;
+        }
+
+        .user-controls a .link-text {
+            display: none; /* Hide text on desktop */
         }
 
         .user-controls a:hover {
-            color: var(--primary);
+            color: var(--accent-color);
+            transform: scale(1.1);
+        }
+
+        .hamburger-menu {
+            display: none;
+            font-size: 1.8rem;
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+            z-index: 101;
         }
         
         .page-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 5rem;
         }
 
         .page-header h1 {
-            font-size: 2.5rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            letter-spacing: 1px;
         }
 
         .page-header p {
-            font-size: 1.1rem;
-            color: var(--text-muted);
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 1.5rem;
+            opacity: 0.8;
             max-width: 600px;
             margin: 0 auto;
         }
 
-        .module-grid-container {
-            display: flex;
-            flex-direction: column;
-            gap: 2.5rem;
-        }
-
         .module-category h3 {
-            font-size: 1.2rem;
-            font-weight: 500;
-            color: var(--text-muted);
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.5rem;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 600;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
             border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
 
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 1.5rem;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 2.5rem;
         }
 
         .module-card {
-            background: var(--bg-card);
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border-radius: 20px;
+            padding: 2rem;
             text-decoration: none;
-            color: var(--text-primary);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            color: var(--text-color);
             text-align: center;
-            box-shadow: var(--shadow);
-            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
         }
 
         .module-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: 0 0 30px var(--glow-color);
+            border-color: var(--accent-color);
         }
 
         .module-card .icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            color: var(--primary);
-            transition: color 0.3s ease;
+            font-size: 3rem;
+            margin-bottom: 1.5rem;
+            color: var(--accent-color);
+            filter: drop-shadow(0 0 10px var(--glow-color));
+            transition: transform 0.3s ease;
         }
         
         .module-card:hover .icon {
-            color: var(--accent);
+            transform: scale(1.1);
         }
 
         .module-card .title {
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
         }
         
         .module-card .description {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            margin-top: 0.5rem;
-            line-height: 1.4;
+            font-size: 0.95rem;
+            opacity: 0.8;
+            line-height: 1.5;
         }
 
         footer {
             text-align: center;
-            margin-top: 4rem;
+            margin-top: 6rem;
             padding-top: 2rem;
             border-top: 1px solid var(--border-color);
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            body { padding: 1rem; }
+            .top-bar { flex-wrap: wrap; }
+            .user-controls {
+                display: none;
+                flex-direction: column;
+                gap: 0;
+                width: 100%;
+                text-align: left;
+                margin-top: 1rem;
+                background: rgba(15, 12, 41, 0.9);
+                padding: 1rem 0;
+                border-radius: 10px;
+            }
+            .user-controls.menu-open {
+                display: flex;
+            }
+            .user-controls .user-info {
+                padding: 0.75rem 1.5rem;
+                font-size: 1.1rem;
+                border-bottom: 1px solid var(--border-color);
+                margin-bottom: 0.5rem;
+            }
+            .user-controls a {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+                font-size: 1.1rem;
+                padding: 0.75rem 1.5rem;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            .user-controls a .link-text {
+                display: inline;
+            }
+            .hamburger-menu { display: block; }
+            .page-header h1 { font-size: 2.8rem; }
+            .page-header p { font-size: 1.3rem; }
+            .module-category h3 { font-size: 1.5rem; }
         }
 
     </style>
 </head>
 <body>
+    <canvas id="sky-canvas"></canvas>
 
     <div class="container">
         <header class="top-bar">
             <div class="logo">
                 <h1><i class="fas fa-spa"></i>IDO KOZMETIK</h1>
             </div>
+            <button class="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </button>
             <div class="user-controls">
                 <span class="user-info">Hoş geldin, <strong><?php echo $kullanici_adi; ?></strong></span>
-                <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key"></i></a>
-                <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i></a>
+                <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key"></i><span class="link-text">Şifre Değiştir</span></a>
+                <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt"></i><span class="link-text">Çıkış Yap</span></a>
             </div>
         </header>
 
@@ -240,6 +329,110 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             IDO KOZMETIK © <?php echo date('Y'); ?> - Yönetim Paneli
         </footer>
     </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const canvas = document.getElementById('sky-canvas');
+        if (!canvas) return; // Do nothing if canvas is not found
+        const ctx = canvas.getContext('2d');
 
+        let width = canvas.width = window.innerWidth;
+        let height = canvas.height = window.innerHeight;
+
+        window.addEventListener('resize', () => {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            initStars(); // Re-initialize stars on resize
+        });
+
+        // --- Starry Sky Animation ---
+        let stars = [];
+        let shootingStars = [];
+        const numStars = 200;
+
+        function initStars() {
+            stars = [];
+            for (let i = 0; i < numStars; i++) {
+                stars.push({
+                    x: Math.random() * width,
+                    y: Math.random() * height,
+                    radius: Math.random() * 1.2 + 0.3,
+                    alpha: Math.random() * 0.7 + 0.3,
+                    twinkleSpeed: Math.random() * 0.01 + 0.005
+                });
+            }
+        }
+
+        function createShootingStar() {
+            shootingStars.push({
+                x: Math.random() * width,
+                y: Math.random() * height * 0.2,
+                len: Math.random() * 80 + 10,
+                speed: Math.random() * 8 + 5,
+                alpha: 1,
+                angle: Math.PI / 4
+            });
+        }
+
+        function draw() {
+            if (!ctx) return;
+            ctx.clearRect(0, 0, width, height);
+            
+            stars.forEach(star => {
+                ctx.save();
+                star.alpha += star.twinkleSpeed;
+                if (star.alpha > 1) {
+                    star.alpha = 1;
+                    star.twinkleSpeed *= -1;
+                } else if (star.alpha < 0.3) {
+                    star.alpha = 0.3;
+                    star.twinkleSpeed *= -1;
+                }
+                ctx.globalAlpha = star.alpha;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            });
+
+            shootingStars.forEach((ss, index) => {
+                ctx.save();
+                ctx.globalAlpha = ss.alpha;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(ss.x, ss.y);
+                ctx.lineTo(ss.x + ss.len * Math.cos(ss.angle), ss.y + ss.len * Math.sin(ss.angle));
+                ctx.stroke();
+                ctx.restore();
+
+                ss.x += ss.speed * Math.cos(ss.angle);
+                ss.y += ss.speed * Math.sin(ss.angle);
+                ss.alpha -= 0.02;
+
+                if (ss.alpha <= 0) {
+                    shootingStars.splice(index, 1);
+                }
+            });
+        }
+
+        function animate() {
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        setInterval(createShootingStar, 3000);
+
+        initStars();
+        animate();
+    });
+
+    // Mobile menu toggle
+    const hamburger = document.querySelector('.hamburger-menu');
+    const userControls = document.querySelector('.user-controls');
+    hamburger.addEventListener('click', () => {
+        userControls.classList.toggle('menu-open');
+    });
+</script>
 </body>
 </html>
