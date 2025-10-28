@@ -14,31 +14,43 @@
     --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
     --transition: all 0.3s ease;
 }
+
 html {
     font-size: 15px;
 }
-* { margin: 0; padding: 0; box-sizing: border-box; }
+
+* { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
+}
+
 body {
     font-family: 'Ubuntu', sans-serif;
     background-color: var(--bg-color);
     color: var(--text-primary);
 }
+
 .main-content {
     padding: 20px;
 }
+
 .page-header {
     margin-bottom: 25px;
 }
+
 .page-header h1 {
     font-size: 1.7rem;
     font-weight: 700;
     margin-bottom: 5px;
     color: var(--text-primary);
 }
+
 .page-header p {
     color: var(--text-secondary);
     font-size: 1rem;
 }
+
 .card {
     background: var(--card-bg);
     border-radius: 10px;
@@ -47,6 +59,7 @@ body {
     margin-bottom: 25px;
     overflow: hidden;
 }
+
 .card-header {
     padding: 18px 20px;
     border-bottom: 1px solid var(--border-color);
@@ -54,11 +67,13 @@ body {
     align-items: center;
     justify-content: space-between;
 }
+
 .card-header h2 {
     font-size: 1.1rem;
     font-weight: 700;
     margin: 0;
 }
+
 .btn {
     padding: 8px 14px;
     border: none;
@@ -72,17 +87,21 @@ body {
     gap: 8px;
     font-size: 0.825rem;
 }
+
 .btn:hover {
      transform: translateY(-2px);
 }
+
 .btn-primary {
     background-color: var(--primary);
     color: white;
 }
+
 .btn-primary:hover {
     background-color: var(--secondary);
     box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
 }
+
 .add-btn {
     width: 40px;
     height: 40px;
@@ -93,14 +112,17 @@ body {
     justify-content: center;
     gap: 0;
 }
+
 .btn-success {
     background-color: var(--success);
     color: white;
 }
+
 .btn-danger {
     background-color: var(--danger);
     color: white;
 }
+
 .alert {
     padding: 1rem;
     margin-bottom: 1.5rem;
@@ -108,22 +130,24 @@ body {
     font-size: 0.9rem;
     border-left: 5px solid;
 }
+
 .alert-danger {
     background-color: #fff5f5;
     color: #c53030;
     border-color: #f56565;
 }
+
 .alert-success {
     background-color: #f0fff4;
     color: #2f855a;
     border-color: #48bb78;
 }
+
 .table th {
     border-top: none;
     border-bottom: 2px solid var(--border-color);
     font-weight: 700;
     color: var(--text-primary);
-    white-space: nowrap;
 }
 
 .table th i {
@@ -146,95 +170,167 @@ body {
     border-radius: 18px;
 }
 
-.no-records-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px;
-    text-align: center;
+.mobile-menu-btn {
+    display: none;
 }
 
-.status-badge {
+.stat-card {
+    background: var(--card-bg);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.stat-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    color: white;
+    background: var(--primary);
+}
+
+.stat-info h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+}
+
+.stat-info p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: block;
+    color: var(--text-primary);
+}
+
+.form-control {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    font-size: 1rem;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 14, 99, 0.1);
+}
+
+.modal-content {
+    border-radius: 10px;
+    border: none;
+}
+
+.modal-header {
+    border-bottom: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+}
+
+.modal-title {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-footer {
+    border-top: 1px solid var(--border-color);
+    padding: 1rem 1.5rem;
+}
+
+.badge {
     padding: 6px 12px;
     border-radius: 20px;
     font-size: 0.85rem;
     font-weight: 500;
 }
 
-.form-control:disabled {
-    background-color: #f8f9fa;
-    opacity: 0.6;
-    cursor: not-allowed;
+.badge-primary {
+    background-color: var(--primary);
+    color: white;
 }
 
-.mobile-menu-btn {
-    display: none;
+.badge-success {
+    background-color: var(--success);
+    color: white;
 }
 
-html {
-    scroll-behavior: smooth;
+.badge-danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.badge-warning {
+    background-color: var(--warning);
+    color: var(--text-primary);
+}
+
+.badge-info {
+    background-color: var(--info);
+    color: white;
+}
+
+.table-wrapper {
+    overflow-x: auto;
 }
 
 @media (max-width: 768px) {
     .main-content {
         padding: 15px;
     }
-}
-
-@media (max-width: 991.98px) {
-    #workOrderModal {
-        position: fixed;
-        top: 0;
-        right: 0;
-        width: 320px;
-        height: 100%;
-        z-index: 1050; /* Higher than navbar */
-        border-radius: 0;
-        box-shadow: -5px 0 20px rgba(0,0,0,0.15);
-        transform: translateX(100%);
-        transition: transform 0.3s ease;
-        overflow-y: auto;
+    
+    .stat-card {
+        padding: 15px;
     }
-    #workOrderModal.show {
-        transform: translateX(0);
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 1.5rem;
+        margin-right: 15px;
+    }
+    
+    .stat-info h3 {
+        font-size: 1.5rem;
     }
 }
 
-.form-group {
-    margin-bottom: 1rem;
+/* Select elementlerinde padding sıfırlama */
+select {
+    padding: 0 !important;
 }
 
-.form-control {
-    border: 1px solid #d1d5db;
-    border-radius: 5px;
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-    transition: border-color 0.2s, box-shadow 0.2s;
+select.form-control {
+    padding: 0 12px !important;
 }
 
-.form-control:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+select.form-control option {
+    padding: 8px 12px !important;
+    line-height: 1.5;
 }
 
-@media (min-width: 1200px) {
-    #workOrderModal .modal-xl {
-        max-width: 95%;
-    }
-}
-
-.btn-gradient {
-    background: linear-gradient(45deg, #dc3545, #f56565);
-    color: white;
-    border: none;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: all 0.3s ease;
-}
-
-.btn-gradient:hover {
-    background: linear-gradient(45deg, #f56565, #dc3545);
-    box-shadow: 0 6px 8px rgba(0,0,0,0.15);
-    transform: translateY(-2px);
+/* Tablo başlıklarında kelime kaydırmasını önle */
+table th {
+    white-space: nowrap;
 }

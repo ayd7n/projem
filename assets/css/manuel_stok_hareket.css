@@ -1,0 +1,240 @@
+.form-group-single {
+    margin-bottom: 0.75rem;
+    display: block;
+}
+
+.form-group-single>.form-group {
+    margin-bottom: 0;
+}
+
+.form-group-aligned {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+
+.form-group-aligned .field-container {
+    flex: 1;
+}
+
+.form-group-aligned .field-container label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.single-fields {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1rem;
+}
+
+.single-fields .single-field-item {
+    flex: 1;
+}
+
+.single-fields .single-field-item label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.loading {
+    position: relative;
+    pointer-events: none;
+}
+
+.loading::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.table-align-top th,
+.table-align-top td {
+    vertical-align: top;
+    white-space: nowrap;
+}
+
+.table-align-top th.actions,
+.table-align-top td.actions {
+    min-width: 80px;
+}
+
+.table-align-top th.long-text,
+.table-align-top td.long-text {
+    white-space: normal;
+}
+
+.table-align-top th:not(.long-text):not(.actions),
+.table-align-top td:not(.long-text):not(.actions) {
+    min-width: 110px;
+}
+
+.table-align-top th[data-column="aciklama"],
+.table-align-top td[data-column="aciklama"] {
+    min-width: 330px;
+}
+
+/* === FINAL ATTEMPT: Explicit Flexbox Override for Pagination Toolbar === */
+
+/* The main container */
+.card-body > .d-flex.justify-content-between.align-items-lg-center {
+    display: flex !important;
+    justify-content: flex-start !important; /* OVERRIDE bootstrap's 'space-between' */
+    align-items: center !important;
+    width: 100% !important;
+    padding: 0.5rem 0 !important;
+    margin-bottom: 1rem !important;
+    background-color: transparent !important; /* Remove diagnostic color */
+    border: none;
+    box-shadow: none;
+}
+
+/* The left-side child */
+.card-body > .d-flex.justify-content-between.align-items-lg-center > div:first-child {
+    /* This element can be as it is, it will naturally sit on the left */
+}
+
+/* The right-side child */
+.card-body > .d-flex.justify-content-between.align-items-lg-center > div:last-child {
+    margin-left: auto !important; /* This MUST push it to the right */
+}
+
+/* --- Keep the aesthetic styles for the controls themselves --- */
+/* Left Side: "Per Page" Control Styling */
+.d-flex.align-items-center .text-muted.small {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.custom-select.custom-select-sm {
+    width: auto !important;
+    min-width: 0 !important;
+    padding: 0.25rem 1.75rem 0.25rem 0.75rem !important;
+    font-size: 0.875rem !important;
+    height: auto !important;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    font-weight: 600;
+    color: var(--text-primary);
+    background-color: #fff;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 5'%3e%3cpath fill='%236c757d' d='M2 0L0 2h4zm0 5L0 3h4z'/%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 8px 10px;
+    box-shadow: none;
+}
+
+.custom-select.custom-select-sm:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(74, 14, 99, 0.1);
+}
+
+/* Right Side: Pagination & Info Styling */
+.d-flex.flex-column.flex-lg-row.align-items-center > .text-muted {
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background-color: transparent;
+    padding: 0;
+    border: none;
+}
+
+.pagination .page-item .page-link {
+    border-radius: 50%;
+    margin: 0 2px;
+    border: none;
+    color: var(--text-secondary);
+    font-weight: 700;
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease-in-out;
+    background-color: transparent;
+}
+
+.pagination .page-item .page-link:hover {
+    background-color: #f2e9f7;
+    color: var(--primary);
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 4px 8px rgba(74, 14, 99, 0.2);
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: transparent;
+    color: #e0e0e0;
+}
+
+.pagination .page-link:focus {
+    box-shadow: 0 0 0 3px rgba(74, 14, 99, 0.15);
+}
+
+@media (max-width: 991.98px) {
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center {
+        flex-direction: row !important;
+        flex-wrap: nowrap;
+        align-items: center !important;
+        justify-content: space-between !important;
+        gap: 0.75rem;
+    }
+
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center > .d-flex.align-items-center {
+        width: auto !important;
+        margin-bottom: 0 !important;
+        flex: 0 0 auto !important;
+    }
+
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center > .d-flex.flex-column.flex-lg-row.align-items-center {
+        width: auto !important;
+        margin-left: 0 !important;
+        flex-direction: row !important;
+        flex-wrap: wrap;
+        align-items: center !important;
+        justify-content: flex-end !important;
+        gap: 0.75rem;
+        flex: 1 1 auto !important;
+        min-width: 0;
+    }
+
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center > .d-flex.flex-column.flex-lg-row.align-items-center > .text-muted {
+        margin-bottom: 0 !important;
+        white-space: nowrap;
+    }
+
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center > .d-flex.flex-column.flex-lg-row.align-items-center nav {
+        flex: 1 1 100%;
+        display: flex;
+        justify-content: center;
+    }
+}
+
+@media (min-width: 992px) {
+    .w-lg-auto {
+        width: auto !important;
+    }
+
+    .card-body > .d-flex.flex-column.flex-lg-row.align-items-lg-center > .d-flex.flex-column.flex-lg-row.align-items-center {
+        width: auto !important;
+        margin-left: auto !important;
+        justify-content: flex-end !important;
+        align-items: center !important;
+        gap: 0.75rem;
+    }
+}

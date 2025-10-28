@@ -26,8 +26,8 @@ if ($_SESSION['taraf'] !== 'personel') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/stil.css">
-    <link rel="stylesheet" href="css/manuel_stok_hareket.css">
+    <link rel="stylesheet" href="assets/css/stil.css?v=<?php echo time(); ?>">
+    <link rel="stylesheet" href="assets/css/manuel_stok_hareket.css?v=<?php echo time(); ?>">
 </head>
 <body>
     <div id="app" data-username="<?php echo addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>">
@@ -603,6 +603,6 @@ if ($_SESSION['taraf'] !== 'personel') {
     <!-- Vue.js 2 -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
     
-    <script src="js/manuel_stok_hareket.js?t=<?php echo time(); ?>"></script>
+    <script src="assets/js/manuel_stok_hareket.js?t=<?php echo time(); ?>"></script>
 </body>
 </html>

@@ -83,49 +83,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $customer_stmt->close();
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parfüm ERP Sistemi - Giriş</title>
+    <title>IDO KOZMETIK - ERP Giriş</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Cormorant+Garamond:wght@400;600&family=Montserrat:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/login.css">
 </head>
 <body>
-    <canvas id="sky-canvas"></canvas>
-
-    <div class="login-container">
-        <div class="login-header">
-            <svg class="perfume-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z"/>
-            </svg>
-            <h2>IDO KOZMETIK</h2>
-            <p>ERP Sistemine Giriş</p>
+    <div class="login-wrapper">
+        <div class="login-image-side">
+            <!-- The background image is set in CSS -->
         </div>
-        
-        <?php if ($error_message): ?>
-            <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
-        <?php endif; ?>
-        
-        <form method="POST" action="">
-            <div class="form-group">
-                <label for="username">E-posta veya Telefon</label>
-                <input type="text" id="username" name="username" required autocomplete="username" placeholder="ornek@mail.com">
+        <div class="login-form-side">
+            <div class="login-header">
+                <svg class="perfume-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z"/>
+                </svg>
+                <h2>IDO KOZMETIK</h2>
+                <p>ERP Sistemine Giriş</p>
             </div>
             
-            <div class="form-group">
-                <label for="password">Şifre</label>
-                <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="********">
-            </div>
+            <?php if ($error_message): ?>
+                <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
+            <?php endif; ?>
             
-            <button type="submit" class="btn">Giriş Yap</button>
-        </form>
+            <form method="POST" action="">
+                <div class="form-group">
+                    <label for="username">E-posta veya Telefon</label>
+                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="ornek@mail.com">
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Şifre</label>
+                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="********">
+                </div>
+                
+                <button type="submit" class="btn">Giriş Yap</button>
+            </form>
+        </div>
     </div>
-
-    <script src="assets/js/login.js"></script>
+    <!-- The old canvas and script are removed. If there was any other logic in login.js, it's gone.
+         This new design doesn't require JS for its core functionality. -->
 </body>
 </html>

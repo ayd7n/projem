@@ -30,7 +30,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/tanklar.css">
+    <link rel="stylesheet" href="assets/css/tanklar.css">
 </head>
 <body>
     <div id="app">
@@ -255,6 +255,6 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
         var session_kullanici_adi = <?php echo json_encode($user_name); ?>;
     </script>
     
-    <script src="js/tanklar.js"></script>
+    <script src="assets/js/tanklar.js"></script>
 </body>
 </html>

@@ -43,7 +43,7 @@ $tanks_result = $connection->query($tanks_query);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/esans_is_emirleri.css?v=1.2">
+    <link rel="stylesheet" href="assets/css/esans_is_emirleri.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>

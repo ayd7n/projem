@@ -4,7 +4,8 @@ document.addEventListener('DOMContentLoaded', function() {
         el: '#app',
         data: {
             user_name: window.session_kullanici_adi || 'Kullanıcı',
-            tanks: [],
+            allTanks: [], // Store all tanks once loaded
+            filtered_tanks: [], // Filtered tanks based on search term
             total_tanks: 0,
             alert: {
                 message: '',
@@ -20,11 +21,41 @@ document.addEventListener('DOMContentLoaded', function() {
                 kapasite: '',
                 not_bilgisi: ''
             },
-            submitButtonText: 'Kaydet'
+            submitButtonText: 'Kaydet',
+            // Pagination and search properties
+            search: '',
+            currentPage: 1,
+            totalPages: 1,
+            limit: 10,
+            isLoading: true // Track loading state
         },
         computed: {
             tankModalTitle() {
                 return this.isEdit ? 'Tankı Düzenle' : 'Yeni Tank Ekle';
+            },
+            // Get paginated tanks based on current page and limit
+            paginatedTanks() {
+                const start = (this.currentPage - 1) * this.limit;
+                const end = start + this.limit;
+                return this.filtered_tanks.slice(start, end);
+            },
+            paginationInfo() {
+                if (this.totalPages <= 0 || this.filtered_tanks.length <= 0) {
+                    return 'Gösterilecek kayıt yok';
+                }
+                const startRecord = (this.currentPage - 1) * this.limit + 1;
+                const endRecord = Math.min(this.currentPage * this.limit, this.filtered_tanks.length);
+                return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.filtered_tanks.length} kayıttan`;
+            },
+            pageNumbers() {
+                const pages = [];
+                const startPage = Math.max(1, this.currentPage - 2);
+                const endPage = Math.min(this.totalPages, this.currentPage + 2);
+
+                for (let i = startPage; i <= endPage; i++) {
+                    pages.push(i);
+                }
+                return pages;
             }
         },
         mounted() {
@@ -32,32 +63,91 @@ document.addEventListener('DOMContentLoaded', function() {
             this.loadTotalTanks();
         },
         methods: {
+            // Load all tanks initially (for client-side filtering)
             loadTanks() {
-                axios.get('api_islemleri/tanklar_islemler.php?action=get_tanks')
+                this.isLoading = true;
+                const url = 'api_islemleri/tanklar_islemler.php?action=get_tanks'; // Load all tanks at once
+                axios.get(url)
                     .then(response => {
                         if (response.data.status === 'success') {
-                            this.tanks = response.data.data || [];
+                            this.allTanks = response.data.data || [];
+                            this.total_tanks = this.allTanks.length; // Set total from actual data
+                            this.applyFilters(); // Apply initial filters
                         } else {
                             this.showAlert(response.data.message || 'Tanklar yüklenirken bir hata oluştu. Hata Kodu: T001', 'danger');
                         }
                     })
                     .catch(error => {
                         this.showAlert('Tanklar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T002', 'danger');
+                    })
+                    .finally(() => {
+                        this.isLoading = false;
                     });
             },
             loadTotalTanks() {
-                axios.get('api_islemleri/tanklar_islemler.php?action=get_total_tanks')
-                    .then(response => {
-                        if (response.data.status === 'success') {
-                            this.total_tanks = response.data.data || 0;
-                        } else {
-                            this.showAlert(response.data.message || 'Toplam tank sayısı alınırken bir hata oluştu. Hata Kodu: T003', 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        this.showAlert('Toplam tank sayısı alınırken bir hata oluştu. Lütfen daha sonra tekrar deneyin. Hata Kodu: T004', 'danger');
-                    });
+                // No need to call API since we have the total from allTanks
+                // The total will be updated when tanks are loaded
             },
+            // Apply filters (search) and update pagination
+            applyFilters() {
+                // Filter tanks based on search term
+                let filtered = this.allTanks;
+                
+                if (this.search && this.search.trim() !== '') {
+                    const searchTerm = this.search.toLowerCase().trim();
+                    filtered = this.allTanks.filter(tank => 
+                        tank.tank_kodu.toLowerCase().includes(searchTerm) ||
+                        tank.tank_ismi.toLowerCase().includes(searchTerm) ||
+                        tank.kapasite.toString().includes(searchTerm) ||
+                        (tank.not_bilgisi && tank.not_bilgisi.toLowerCase().includes(searchTerm))
+                    );
+                }
+                
+                this.filtered_tanks = filtered;
+                
+                // Reset to first page when filters change
+                this.currentPage = 1;
+                
+                // Update total pages based on filtered results
+                this.totalPages = Math.ceil(this.filtered_tanks.length / this.limit);
+                
+                // Ensure current page is valid
+                if (this.currentPage > this.totalPages && this.totalPages > 0) {
+                    this.currentPage = this.totalPages;
+                } else if (this.totalPages === 0) {
+                    this.currentPage = 1;
+                }
+            },
+            
+            // Handle search input changes
+            handleSearchInput() {
+                this.applyFilters();
+            },
+            
+            // Handle limit change (items per page)
+            handleLimitChange() {
+                // Update total pages based on new limit
+                this.totalPages = Math.ceil(this.filtered_tanks.length / this.limit);
+                
+                // Ensure current page is valid with new limit
+                if (this.currentPage > this.totalPages && this.totalPages > 0) {
+                    this.currentPage = this.totalPages;
+                } else if (this.totalPages === 0) {
+                    this.currentPage = 1;
+                }
+                
+                // Apply filters to update pagination
+                this.applyFilters();
+            },
+            
+            // Change to a specific page
+            changePage(page) {
+                // Validate page number
+                if (page >= 1 && page <= this.totalPages) {
+                    this.currentPage = page;
+                }
+            },
+            
             openTankModal() {
                 this.resetTankForm();
                 this.isEdit = false;
@@ -89,8 +179,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (response.data.status === 'success') {
                             this.showAlert(response.data.message, 'success');
                             this.closeTankModal();
-                            this.loadTanks(); // Reload tanks
-                            this.loadTotalTanks(); // Reload total count
+                            // Reload all tanks to update client-side data
+                            this.loadTanks();
                         } else {
                             this.showAlert(response.data.message || 'Tank işlemi sırasında bir hata oluştu. Lütfen bilgileri kontrol edin. Hata Kodu: T005', 'danger');
                         }
@@ -139,8 +229,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         .then(response => {
                             if (response.data.status === 'success') {
                                 this.showAlert(response.data.message, 'success');
-                                this.loadTanks(); // Reload tanks
-                                this.loadTotalTanks(); // Reload total count
+                                // Reload all tanks to update client-side data
+                                this.loadTanks();
                             } else {
                                 this.showAlert(response.data.message || 'Tank silme işlemi sırasında bir hata oluştu. Hata Kodu: T011', 'danger');
                             }

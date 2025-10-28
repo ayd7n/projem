@@ -40,7 +40,7 @@ function display_date($date_string) {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="css/stil.css">
+    <link rel="stylesheet" href="assets/css/stil.css">
 </head>
 <body>
     <!-- Navbar -->
