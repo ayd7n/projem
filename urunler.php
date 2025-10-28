@@ -239,10 +239,10 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
         </div>
 
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-list"></i> Urun Listesi</h2>
-                <div class="search-container">
-                    <div class="input-group" style="width: 300px;">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Urun Listesi</h2>
+                <div class="search-container w-100 w-md-25">
+                    <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
@@ -295,7 +295,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                     </table>
                 </div>
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
-                    <div class="records-per-page mb-2 mb-md-0">
+                    <div class="records-per-page mb-2 mb-md-0 w-100 w-md-auto">
                         <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
                         <select v-model="limit" @change="loadProducts(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
                             <option value="10">10</option>
@@ -304,12 +304,12 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                             <option value="100">100</option>
                         </select>
                     </div>
-                    <div class="d-flex align-items-center">
-                        <div class="pagination-info mr-3">
+                    <div class="d-flex flex-column flex-md-row align-items-center w-100 w-md-auto mt-2 mt-md-0">
+                        <div class="pagination-info mr-0 mr-md-3 mb-2 mb-md-0">
                             <small class="text-muted">{{ paginationInfo }}</small>
                         </div>
                         <nav>
-                            <ul class="pagination mb-0">
+                            <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <a class="page-link" href="#" @click.prevent="loadProducts(currentPage - 1)"><i class="fas fa-chevron-left"></i> Önceki</a>
                                 </li>
