@@ -422,26 +422,20 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
         </div>
 
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-list"></i> Gider Listesi</h2>
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <div class="flex-grow-1">
-                        <div class="input-group input-group-sm">
-                            <input type="text" class="form-control" id="searchInput" placeholder="Kategori, açıklama, fatura no veya kaydeden ara">
-                            <div class="input-group-append">
-                                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Temizle">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
+            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Gider Listesi</h2>
+                <div class="search-container w-100 w-md-25">
+                    <div class="input-group input-group-sm">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Kategori, açıklama, fatura no veya kaydeden ara">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Temizle">
+                                <i class="fas fa-times"></i>
+                            </button>
                         </div>
                     </div>
-                    <div class="text-muted small text-lg-right ml-3">
-                        <div id="listingInfo">Toplam 0 kayıt</div>
-                        <div id="listingSum" class="mt-1">Filtre toplamı: 0,00 TL</div>
-                    </div>
                 </div>
+            </div>
+            <div class="card-body">
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <thead>
@@ -464,8 +458,8 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                     </table>
                 </div>
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
-                    <div class="d-flex align-items-center">
-                        <div class="records-per-page mr-3">
+                    <div class="d-flex flex-column flex-md-row align-items-center w-100 w-md-auto mt-2 mt-md-0">
+                        <div class="records-per-page mr-0 mr-md-3 mb-2 mb-md-0">
                             <label for="perPageSelect"><i class="fas fa-list"></i> Sayfa başına: </label>
                             <select class="custom-select custom-select-sm ml-2" id="perPageSelect" style="width: auto;">
                                 <option value="10">10</option>
@@ -474,13 +468,9 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                                 <option value="100">100</option>
                             </select>
                         </div>
-                        <div class="text-muted small ml-3">
-                            <div id="listingInfo">Toplam 0 kayıt</div>
-                            <div id="listingSum" class="mt-1">Filtre toplamı: 0,00 TL</div>
-                        </div>
                     </div>
                     <nav aria-label="Gider sayfalama">
-                        <ul class="pagination pagination-sm justify-content-md-end mb-0 mt-2 mt-md-0" id="expensesPagination"></ul>
+                        <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0 mt-2 mt-md-0" id="expensesPagination"></ul>
                     </nav>
                 </div>
             </div>

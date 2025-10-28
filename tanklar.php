@@ -108,8 +108,8 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
 
 
             <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h2><i class="fas fa-list"></i> Tank Listesi</h2>
+                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Tank Listesi</h2>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -148,8 +148,8 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                         </table>
                     </div>
                     <div v-if="filtered_tanks.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
-                        <div class="d-flex align-items-center">
-                            <div class="records-per-page mr-3">
+                        <div class="d-flex flex-column flex-md-row align-items-center w-100 w-md-auto mt-2 mt-md-0">
+                            <div class="records-per-page mr-0 mr-md-3 mb-2 mb-md-0">
                                 <label for="tank-page-size"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
                                 <select id="tank-page-size" class="form-control d-inline-block ml-2" style="width: auto;" v-model.number="limit" @change="handleLimitChange">
                                     <option :value="10">10</option>
@@ -157,10 +157,10 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                     <option :value="50">50</option>
                                 </select>
                             </div>
-                            <small class="text-muted ml-3">{{ paginationInfo }}</small>
+                            <small class="text-muted ml-0 ml-md-3 mb-2 mb-md-0">{{ paginationInfo }}</small>
                         </div>
                         <nav aria-label="Tanklar sayfalama">
-                            <ul class="pagination pagination-sm mb-0 justify-content-md-end">
+                            <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Onceki</a>
                                 </li>
