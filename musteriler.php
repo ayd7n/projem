@@ -141,6 +141,9 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             padding: 6px 10px;
             border-radius: 18px;
         }
+        .search-container {
+            max-width: 300px;
+        }
     </style>
 </head>
 <body>
@@ -207,7 +210,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
                 <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Müşteri Listesi</h2>
-                <div class="search-container w-100 w-md-25">
+                <div class="search-container w-100">
                     <div class="input-group">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
@@ -359,7 +362,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Şifre <span v-if="modal.data.giris_yetkisi">*</span></label>
-                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi">
+                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi" :placeholder="modal.data.musteri_id ? 'Şifrenin değişmesini istemiyorsanız boş bırakın' : 'Şifre giriniz'">
                                     </div>
                                 </div>
                             </div>
@@ -456,7 +459,11 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                 openModal(customer) {
                     if (customer) {
                         this.modal.title = 'Müşteriyi Düzenle';
-                        this.modal.data = { ...customer };
+                        // Create a copy of customer data and ensure giris_yetkisi is boolean
+                        this.modal.data = {
+                            ...customer,
+                            giris_yetkisi: customer.giris_yetkisi == 1 || customer.giris_yetkisi === true
+                        };
                     } else {
                         this.modal.title = 'Yeni Müşteri Ekle';
                         this.modal.data = {};

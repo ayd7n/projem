@@ -42,6 +42,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            overflow-x: hidden;
         }
 
         .container {
@@ -49,6 +50,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             max-width: 1400px;
             margin: 0 auto;
             padding: 0 2rem;
+            box-sizing: border-box;
         }
 
         .top-bar-wrapper {
@@ -68,6 +70,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
+            box-sizing: border-box;
         }
 
         .logo h1 {
@@ -284,15 +287,49 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         @media (max-width: 768px) {
             .container {
                 padding: 0 1rem;
+                max-width: 100%;
             }
             .top-bar-wrapper {
                 padding: 1rem;
+            }
+            .top-bar {
+                max-width: 100%;
+                padding: 0;
             }
             .module-card {
                 flex-direction: column;
                 text-align: center;
                 gap: 1rem;
                 padding: 2rem 1.5rem;
+                min-width: 0;
+                overflow: hidden;
+            }
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+            .logo h1 {
+                font-size: 1.3rem;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            body {
+                overflow-x: hidden;
+            }
+            .top-bar-wrapper {
+                padding: 0.8rem 1rem;
+            }
+            .logo h1 {
+                font-size: 1.2rem;
+            }
+            .module-card {
+                padding: 1.5rem 1rem;
+            }
+            .page-header h1 {
+                font-size: 2rem;
+            }
+            .module-category h3 {
+                font-size: 1.3rem;
             }
         }
     </style>

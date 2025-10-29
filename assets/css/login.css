@@ -1,3 +1,4 @@
+
 :root {
     --primary: #4a0e63;
     --secondary: #7c2a99;
@@ -16,43 +17,36 @@
 body {
     font-family: 'Ubuntu', sans-serif;
     margin: 0;
-    padding: 0;
+    padding: 20px;
     background-color: var(--bg-color);
     color: var(--text-primary);
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    overflow: hidden;
+    min-height: 100vh;
 }
 
 .login-wrapper {
-    display: flex;
-    width: 950px;
+    width: 400px;
     max-width: 90%;
-    height: 600px;
+    margin: 0 auto;
     background-color: var(--card-bg);
     box-shadow: var(--shadow);
     border-radius: 15px;
     overflow: hidden;
     border: 1px solid var(--border-color);
+    display: block;
 }
 
 /* Image Side */
 .login-image-side {
-    width: 55%;
-    background: url('https://images.unsplash.com/photo-1598610942252-9b3a125952b3?q=80&w=1974&auto=format&fit=crop') no-repeat center center;
-    background-size: cover;
+    display: none;
 }
 
 /* Form Side */
 .login-form-side {
-    width: 45%;
-    padding: 40px 50px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    width: 100%;
+    padding: 40px 30px;
     box-sizing: border-box;
 }
 
@@ -99,10 +93,12 @@ body {
 /* Form Styles */
 form {
     width: 100%;
+    margin: 0 auto;
 }
 
 .form-group {
     margin-bottom: 20px;
+    text-align: left;
 }
 
 .form-group label {
@@ -167,18 +163,11 @@ form {
 /* Responsive Design for Mobile */
 @media (max-width: 900px) {
     .login-wrapper {
-        flex-direction: column;
         width: 90%;
-        height: auto;
-        max-width: 450px;
-    }
-
-    .login-image-side {
-        display: none;
+        max-width: 350px;
     }
 
     .login-form-side {
-        width: 100%;
-        padding: 40px 30px;
+        padding: 30px 20px;
     }
 }
