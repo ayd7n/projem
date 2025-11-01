@@ -420,8 +420,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                         </a>
                     </div>
                 </div>
-                 <div class="module-category">
-                    <h3><i class="fas fa-building"></i> Altyapı & Finans</h3>
+                <div class="module-category">
+                    <h3><i class="fas fa-building"></i> Altyapı</h3>
                     <div class="module-grid">
                         <a href="lokasyonlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
@@ -435,6 +435,12 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                             <div class="icon"><i class="fas fa-warehouse"></i></div>
                             <div class="card-content"><span class="title">İş Merkezleri</span><p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p></div>
                         </a>
+                    </div>
+                </div>
+                
+                <div class="module-category">
+                    <h3><i class="fas fa-file-invoice-dollar"></i> Finans</h3>
+                    <div class="module-grid">
                         <a href="gider_yonetimi.php" class="module-card">
                             <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
                             <div class="card-content"><span class="title">Gider Yönetimi</span><p class="description">Şirket giderlerini takip edin ve raporlayın.</p></div>

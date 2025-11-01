@@ -251,7 +251,7 @@ function display_date($date_string) {
 
     <!-- Contract Modal -->
     <div class="modal fade" id="contractModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content">
                 <form id="contractForm">
                     <div class="modal-header">
@@ -264,8 +264,8 @@ function display_date($date_string) {
                         <input type="hidden" id="sozlesme_id" name="sozlesme_id">
                         <input type="hidden" id="action" name="action">
                         
-                        <div class="form-grid">
-                            <div class="form-group">
+                        <div class="form-row">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="tedarikci_id"><i class="fas fa-building"></i> Tedarikçi</label>
                                 <select class="form-control" id="tedarikci_id" name="tedarikci_id" required>
                                     <option value="">Seçin</option>
@@ -276,7 +276,7 @@ function display_date($date_string) {
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="malzeme_kodu"><i class="fas fa-box"></i> Malzeme</label>
                                 <select class="form-control" id="malzeme_kodu" name="malzeme_kodu" required>
                                     <option value="">Seçin</option>
@@ -287,11 +287,11 @@ function display_date($date_string) {
                                     <?php endwhile; ?>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="birim_fiyat"><i class="fas fa-tag"></i> Birim Fiyat</label>
                                 <input type="number" class="form-control" id="birim_fiyat" name="birim_fiyat" step="0.01" min="0" required placeholder="0.00">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="para_birimi"><i class="fas fa-coins"></i> Para Birimi</label>
                                 <select class="form-control" id="para_birimi" name="para_birimi" required>
                                     <option value="TL">₺ TRY</option>
@@ -299,23 +299,23 @@ function display_date($date_string) {
                                     <option value="EUR">€ EUR</option>
                                 </select>
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="limit_miktar"><i class="fas fa-chart-bar"></i> Limit</label>
                                 <input type="number" class="form-control" id="limit_miktar" name="limit_miktar" step="1" min="0" required placeholder="0">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="toplu_odenen_miktar"><i class="fas fa-check"></i> Ödenen Miktar</label>
                                 <input type="number" class="form-control" id="toplu_odenen_miktar" name="toplu_odenen_miktar" step="1" min="0" value="0" placeholder="0">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="baslangic_tarihi"><i class="fas fa-calendar-plus"></i> Başlangıç</label>
                                 <input type="date" class="form-control" id="baslangic_tarihi" name="baslangic_tarihi">
                             </div>
-                            <div class="form-group">
+                            <div class="form-group col-12 col-lg-4">
                                 <label for="bitis_tarihi"><i class="fas fa-calendar-times"></i> Bitiş</label>
                                 <input type="date" class="form-control" id="bitis_tarihi" name="bitis_tarihi">
                             </div>
-                            <div class="form-group" style="grid-column: 1 / -1;">
+                            <div class="form-group col-12" style="grid-column: 1 / -1;">
                                 <label for="aciklama"><i class="fas fa-comment"></i> Açıklama</label>
                                 <textarea class="form-control" id="aciklama" name="aciklama" rows="2"></textarea>
                             </div>
