@@ -1,3 +1,0 @@
-inputlarda da fontawesome kullanılacak,
-her inputun bir id değeri olacak html elementinde yani
-sayfanın altında pagination olacak. pagination ajax ile çalışacak.
