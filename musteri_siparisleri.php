@@ -244,22 +244,37 @@ if (!empty($where_clauses)) {
     $where_clause = "WHERE " . implode(' AND ', $where_clauses);
 }
 
-$orders_query = "SELECT * FROM siparisler $where_clause ORDER BY tarih DESC";
+// Pagination parameters
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5; // Default 10 items per page
+$offset = ($page - 1) * $limit;
 
+// Get total count for pagination
+$count_query = "SELECT COUNT(*) as total FROM siparisler $where_clause";
+$count_stmt = $connection->prepare($count_query);
 if (!empty($params)) {
-    $stmt = $connection->prepare($orders_query);
-    if ($stmt) {
-        $stmt->bind_param($param_types, ...$params);
-        $stmt->execute();
-        $orders_result = $stmt->get_result();
-        $stmt->close();
-    } else {
-        $error = "SQL sorgusu prepare edilemedi: " . $connection->error;
-        $orders_result = false;
-    }
-        } else {
-            $orders_result = $connection->query($orders_query);
-        }
+    $count_stmt->bind_param($param_types, ...$params);
+}
+$count_stmt->execute();
+$count_result = $count_stmt->get_result();
+$total_rows = $count_result->fetch_assoc()['total'];
+$total_pages = ceil($total_rows / $limit);
+
+// Add LIMIT and OFFSET to main query
+$orders_query = "SELECT * FROM siparisler $where_clause ORDER BY tarih DESC LIMIT ? OFFSET ?";
+$all_params = array_merge($params, [$limit, $offset]);
+$all_param_types = $param_types . 'ii';
+
+$stmt = $connection->prepare($orders_query);
+if ($stmt) {
+    $stmt->bind_param($all_param_types, ...$all_params);
+    $stmt->execute();
+    $orders_result = $stmt->get_result();
+    $stmt->close();
+} else {
+    $error = "SQL sorgusu prepare edilemedi: " . $connection->error;
+    $orders_result = false;
+}
 
 // Fetch order items for display
 $orders_with_items = [];
@@ -600,6 +615,12 @@ if ($orders_result && $orders_result->num_rows > 0) {
             text-align: center;
         }
         
+        .card-footer {
+            padding: 1.5rem 1.25rem;
+            background-color: #f8f9fa;
+            border-top: 1px solid var(--border-color);
+        }
+        
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -727,25 +748,25 @@ if ($orders_result && $orders_result->num_rows > 0) {
             </div>
             <div class="card-body">
                 <div class="order-filters mb-3">
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['filter' => 'beklemede'])); ?>" class="btn <?php echo $filter === 'beklemede' ? 'btn-primary' : 'btn-outline-primary'; ?>">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'beklemede']))); ?>" class="btn <?php echo $filter === 'beklemede' ? 'btn-primary' : 'btn-outline-primary'; ?>">
                         <i class="fas fa-clock"></i> Bekleyenler
                     </a>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['filter' => 'onaylandi'])); ?>" class="btn <?php echo $filter === 'onaylandi' ? 'btn-success' : 'btn-outline-success'; ?>">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'onaylandi']))); ?>" class="btn <?php echo $filter === 'onaylandi' ? 'btn-success' : 'btn-outline-success'; ?>">
                         <i class="fas fa-check"></i> Onaylanmış
                     </a>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['filter' => 'iptal_edildi'])); ?>" class="btn <?php echo $filter === 'iptal_edildi' ? 'btn-danger' : 'btn-outline-danger'; ?>">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'iptal_edildi']))); ?>" class="btn <?php echo $filter === 'iptal_edildi' ? 'btn-danger' : 'btn-outline-danger'; ?>">
                         <i class="fas fa-times"></i> İptal Edilmiş
                     </a>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['filter' => 'tamamlandi'])); ?>" class="btn <?php echo $filter === 'tamamlandi' ? 'btn-info' : 'btn-outline-info'; ?>">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tamamlandi']))); ?>" class="btn <?php echo $filter === 'tamamlandi' ? 'btn-info' : 'btn-outline-info'; ?>">
                         <i class="fas fa-check-double"></i> Tamamlanmış
                     </a>
-                    <a href="?<?php echo http_build_query(array_merge($_GET, ['filter' => 'tum'])); ?>" class="btn <?php echo !$filter || $filter === 'tum' ? 'btn-primary' : 'btn-outline-primary'; ?>">
+                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tum']))); ?>" class="btn <?php echo !$filter || $filter === 'tum' ? 'btn-primary' : 'btn-outline-primary'; ?>">
                         <i class="fas fa-list"></i> Tümü
                     </a>
                 </div>
 
                 <!-- Search and Date Filters -->
-                <form method="GET" class="mb-0">
+                <form method="GET" class="mb-0" action="">
                     <!-- Keep existing filters in hidden fields -->
                     <?php if ($filter !== 'tum'): ?>
                         <input type="hidden" name="filter" value="<?php echo htmlspecialchars($filter); ?>">
@@ -844,7 +865,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
                                                         <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-success btn-sm" onclick="confirmOnayla(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                        <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
                                                             <i class="fas fa-check"></i> Onayla
                                                         </button>
                                                     </form>
@@ -853,7 +874,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="iptal_edildi">
                                                         <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-danger btn-sm" onclick="confirmIptal(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                        <button type="button" name="update" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmIptal(<?php echo json_encode((int)$order['siparis_id']); ?>)">
                                                             <i class="fas fa-times"></i> İptal
                                                         </button>
                                                     </form>
@@ -862,7 +883,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="tamamlandi">
                                                         <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-info btn-sm" onclick="confirmTamamla(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                        <button type="button" name="update" class="btn btn-info btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmTamamla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
                                                             <i class="fas fa-check-double"></i> Tamamla
                                                         </button>
                                                     </form>
@@ -870,7 +891,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="beklemede">
                                                         <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-warning btn-sm" onclick="confirmBeklemeyeAl(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                        <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmBeklemeyeAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
                                                             <i class="fas fa-undo"></i> Beklemeye Al
                                                         </button>
                                                     </form>
@@ -879,7 +900,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
                                                         <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-warning btn-sm" onclick="confirmGeriAl(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                        <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmGeriAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
                                                             <i class="fas fa-undo"></i> Geri Al
                                                         </button>
                                                     </form>
@@ -900,6 +921,112 @@ if ($orders_result && $orders_result->num_rows > 0) {
                 <?php endif; ?>
             </div>
         </div>
+        
+        <!-- Pagination -->
+        <?php if ($total_pages > 1 && $orders_result && $orders_result->num_rows > 0): ?>
+        <div class="card-footer">
+            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center">
+                <div class="mb-2 mb-lg-0">
+                    <div class="d-flex align-items-center">
+                        <span class="text-muted mr-2">Sayfa başına:</span>
+                        <select id="itemsPerPage" class="form-control form-control-sm mr-3" style="width: auto;">
+                            <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
+                            <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
+                            <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
+                            <option value="50" <?php echo $limit == 50 ? 'selected' : ''; ?>>50</option>
+                        </select>
+                        <span class="text-muted ml-3">
+                            <?php
+                            $start_record = ($page - 1) * $limit + 1;
+                            $end_record = min($page * $limit, $total_rows);
+                            echo "Gösterilen: $start_record - $end_record / Toplam: $total_rows sipariş";
+                            ?>
+                        </span>
+                    </div>
+                </div>
+                <div>
+                    <nav aria-label="Order pagination">
+                        <ul class="pagination pagination-sm mb-0">
+                            <?php
+                                    // Sanitize and get only the parameters we want to preserve in pagination
+                                    $base_params = [];
+                                    if (isset($_GET['filter']) && !empty($_GET['filter'])) {
+                                        $base_params['filter'] = htmlspecialchars($_GET['filter'], ENT_QUOTES, 'UTF-8');
+                                    }
+                                    if (isset($_GET['search']) && !empty($_GET['search'])) {
+                                        $base_params['search'] = htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8');
+                                    }
+                                    if (isset($_GET['date_from']) && !empty($_GET['date_from'])) {
+                                        $base_params['date_from'] = htmlspecialchars($_GET['date_from'], ENT_QUOTES, 'UTF-8');
+                                    }
+                                    if (isset($_GET['date_to']) && !empty($_GET['date_to'])) {
+                                        $base_params['date_to'] = htmlspecialchars($_GET['date_to'], ENT_QUOTES, 'UTF-8');
+                                    }
+                                    if (isset($_GET['limit']) && !empty($_GET['limit'])) {
+                                        $base_params['limit'] = (int)$_GET['limit'];
+                                    }
+                                    
+                                    // Previous button
+                                    $prev_disabled = ($page <= 1) ? 'disabled' : '';
+                                    $prev_page = ($page > 1) ? $page - 1 : 1;
+                                    $prev_url_params = http_build_query(array_merge($base_params, ['page' => $prev_page]));
+                                    echo "<li class='page-item $prev_disabled'>";
+                                    echo "<a class='page-link' href='?" . htmlspecialchars($prev_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Previous'>";
+                                    echo "<span aria-hidden='true'>&laquo;</span>";
+                                    echo "</a>";
+                                    echo "</li>";
+                                    
+                                    // Page numbers with ellipsis logic
+                                    $max_visible_pages = 5;
+                                    $start_page = max(1, $page - floor($max_visible_pages / 2));
+                                    $end_page = min($total_pages, $start_page + $max_visible_pages - 1);
+                                    
+                                    // Adjust start page if we're near the end
+                                    if ($end_page - $start_page + 1 < $max_visible_pages) {
+                                        $start_page = max(1, $end_page - $max_visible_pages + 1);
+                                    }
+                                    
+                                    // First page + ellipsis if needed
+                                    if ($start_page > 1) {
+                                        $first_url_params = http_build_query(array_merge($base_params, ['page' => 1]));
+                                        echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($first_url_params, ENT_QUOTES, 'UTF-8') . "'>1</a></li>";
+                                        if ($start_page > 2) {
+                                            echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
+                                        }
+                                    }
+                                    
+                                    // Page numbers
+                                    for ($i = $start_page; $i <= $end_page; $i++) {
+                                        $active = ($i == $page) ? 'active' : '';
+                                        $page_url_params = http_build_query(array_merge($base_params, ['page' => $i]));
+                                        echo "<li class='page-item $active'><a class='page-link' href='?" . htmlspecialchars($page_url_params, ENT_QUOTES, 'UTF-8') . "'>$i</a></li>";
+                                    }
+                                    
+                                    // Last page + ellipsis if needed
+                                    if ($end_page < $total_pages) {
+                                        if ($end_page < $total_pages - 1) {
+                                            echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
+                                        }
+                                        $last_url_params = http_build_query(array_merge($base_params, ['page' => $total_pages]));
+                                        echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($last_url_params, ENT_QUOTES, 'UTF-8') . "'>$total_pages</a></li>";
+                                    }
+                                    
+                                    // Next button
+                                    $next_disabled = ($page >= $total_pages) ? 'disabled' : '';
+                                    $next_page = ($page < $total_pages) ? $page + 1 : $total_pages;
+                                    $next_url_params = http_build_query(array_merge($base_params, ['page' => $next_page]));
+                                    echo "<li class='page-item $next_disabled'>";
+                                    echo "<a class='page-link' href='?" . htmlspecialchars($next_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Next'>";
+                                    echo "<span aria-hidden='true'>&raquo;</span>";
+                                    echo "</a>";
+                                    echo "</li>";
+                            ?>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
     </div>
 
     <!-- jQuery for AJAX functionality -->
@@ -1048,6 +1175,20 @@ if ($orders_result && $orders_result->num_rows > 0) {
             }
         });
     }
+    
+        // Handle items per page change
+        document.addEventListener('DOMContentLoaded', function() {
+            const itemsPerPageSelect = document.getElementById('itemsPerPage');
+            if (itemsPerPageSelect) {
+                itemsPerPageSelect.addEventListener('change', function() {
+                    const selectedLimit = this.value;
+                    const urlParams = new URLSearchParams(window.location.search);
+                    urlParams.set('limit', selectedLimit);
+                    urlParams.set('page', 1); // Reset to first page when changing items per page
+                    window.location.search = urlParams.toString();
+                });
+            }
+        });
     </script>
 </body>
 </html>
