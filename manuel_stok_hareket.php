@@ -96,43 +96,6 @@ if ($_SESSION['taraf'] !== 'personel') {
                     <h2 class="mb-2 mb-md-0"><i class="fas fa-table"></i> Stok Hareketleri Listesi</h2>
                 </div>
                 <div class="card-body">
-                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center mb-3">
-                        <div class="d-flex align-items-center mb-2 mb-lg-0 w-100 w-lg-auto">
-                            <span class="text-muted small mr-2" style="white-space: nowrap;">Sayfa başına</span>
-                            <select class="custom-select custom-select-sm" style="min-width: 90px;" v-model.number="itemsPerPage">
-                                <option v-for="option in itemsPerPageOptions" :key="'per-page-' + option" :value="option">
-                                    {{ option }}
-                                </option>
-                            </select>
-                        </div>
-                        <div class="d-flex flex-column flex-lg-row align-items-center w-100 w-lg-auto mt-2 mt-lg-0">
-                            <small class="text-muted mr-0 mr-lg-3 mb-2 mb-lg-0">
-                                <span v-if="total_movements === 0">Toplam 0 kayıt</span>
-                                <span v-else>{{ pageRangeStart }}-{{ pageRangeEnd }} / {{ total_movements }} kayıt</span>
-                            </small>
-                            <nav v-if="totalPages > 1" aria-label="Stok hareketleri sayfalama">
-                                <ul class="pagination pagination-sm justify-content-center justify-content-lg-end mb-0">
-                                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                        <a class="page-link" href="#" @click.prevent="changePage(-1)" aria-label="Önceki">
-                                            <span aria-hidden="true">&laquo;</span>
-                                        </a>
-                                    </li>
-                                    <li class="page-item"
-                                        v-for="(page, index) in paginationPages"
-                                        :key="'page-' + index"
-                                        :class="{ active: currentPage === page, disabled: page === '...' }">
-                                        <a v-if="page !== '...'" class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
-                                        <span v-else class="page-link">...</span>
-                                    </li>
-                                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                        <a class="page-link" href="#" @click.prevent="changePage(1)" aria-label="Sonraki">
-                                            <span aria-hidden="true">&raquo;</span>
-                                        </a>
-                                    </li>
-                                </ul>
-                            </nav>
-                        </div>
-                    </div>
                     <div class="table-wrapper" style="max-height: 60vh; overflow-y: auto;">
                         <table class="table table-hover table-align-top">
                             <thead style="position: sticky; top: 0; background-color: white; z-index: 10;">
@@ -212,6 +175,43 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center my-5 pt-4 pb-4 border-top" style="margin-top: 3rem !important; margin-bottom: 3rem !important;">
+                        <div class="d-flex align-items-center mb-2 mb-lg-0 w-100 w-lg-auto">
+                            <span class="text-muted small mr-2" style="white-space: nowrap;">Sayfa başına</span>
+                            <select class="custom-select custom-select-sm" style="min-width: 90px;" v-model.number="itemsPerPage">
+                                <option v-for="option in itemsPerPageOptions" :key="'per-page-' + option" :value="option">
+                                    {{ option }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="d-flex flex-column flex-lg-row align-items-center w-100 w-lg-auto mt-2 mt-lg-0">
+                            <small class="text-muted mr-0 mr-lg-3 mb-2 mb-lg-0">
+                                <span v-if="total_movements === 0">Toplam 0 kayıt</span>
+                                <span v-else>{{ pageRangeStart }}-{{ pageRangeEnd }} / {{ total_movements }} kayıt</span>
+                            </small>
+                            <nav v-if="totalPages > 1">
+                                <ul class="pagination pagination-sm justify-content-center justify-content-lg-end mb-0" aria-label="Stok hareketleri sayfalama">
+                                    <li class="page-item" :class="{ disabled: currentPage === 1 }">
+                                        <a class="page-link" href="#" @click.prevent="changePage(-1)" aria-label="Önceki">
+                                            <span aria-hidden="true">&laquo;</span>
+                                        </a>
+                                    </li>
+                                    <li class="page-item"
+                                        v-for="(page, index) in paginationPages"
+                                        :key="'page-' + index"
+                                        :class="{ active: currentPage === page, disabled: page === '...' }">
+                                        <a v-if="page !== '...'" class="page-link" href="#" @click.prevent="goToPage(page)">{{ page }}</a>
+                                        <span v-else class="page-link">...</span>
+                                    </li>
+                                    <li class="page-item" :class="{ disabled: currentPage === totalPages }">
+                                        <a class="page-link" href="#" @click.prevent="changePage(1)" aria-label="Sonraki">
+                                            <span aria-hidden="true">&raquo;</span>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </div>
