@@ -539,11 +539,13 @@ switch ($action) {
             break;
         }
 
-        // Get item name and unit based on stock type
+        // Get item name, unit, and current location based on stock type
         $item_name = '';
         $item_unit = '';
+        $current_depo = '';
+        $current_raf = '';
 
-        $item_query = "SELECT malzeme_ismi, birim FROM malzemeler WHERE malzeme_kodu = ?";
+        $item_query = "SELECT malzeme_ismi, birim, depo, raf FROM malzemeler WHERE malzeme_kodu = ?";
         $item_stmt = $connection->prepare($item_query);
         $item_stmt->bind_param('s', $kod);
         
@@ -553,12 +555,22 @@ switch ($action) {
             $item = $item_result->fetch_assoc();
             $item_name = $item['malzeme_ismi'];
             $item_unit = $item['birim'];
+            $current_depo = $item['depo'] ?? '';
+            $current_raf = $item['raf'] ?? '';
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Geçersiz malzeme kodu.']);
             $item_stmt->close();
             break;
         }
         $item_stmt->close();
+
+        // Use current location if not provided in the form
+        if (!$depo) {
+            $depo = $current_depo;
+        }
+        if (!$raf) {
+            $raf = $current_raf;
+        }
 
         // Get supplier name from ID
         $tedarikci_ismi = '';
