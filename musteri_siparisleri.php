@@ -33,9 +33,16 @@ $error = '';
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['update'])) {
+        // Debug logging for form submission
+        error_log("DEBUG - Form submission initiated");
+        
         // Update order status
         $siparis_id = $_POST['siparis_id'];
         $durum = $_POST['durum'];
+        
+        // More detailed debug logging for form submission
+        error_log("DEBUG - Form submission: siparis_id=$siparis_id, durum=$durum, user_id=".$_SESSION['user_id']);
+        error_log("DEBUG - POST data: " . print_r($_POST, true));
 
         // Get the current status before update
         $current_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
@@ -56,13 +63,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt = $connection->prepare($query);
             $stmt->bind_param('sisi', $durum, $personel_id, $personel_adi, $siparis_id);
         } else {
-            $query = "UPDATE siparisler SET durum = ? WHERE siparis_id = ?";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('si', $durum, $siparis_id);
+            if ($durum === 'beklemede') {
+                // Onay detaylarını sıfırla
+                $query = "UPDATE siparisler SET durum = ?, onaylayan_personel_id = NULL, onaylayan_personel_adi = NULL, onay_tarihi = NULL WHERE siparis_id = ?";
+                $stmt = $connection->prepare($query);
+                $stmt->bind_param('si', $durum, $siparis_id);
+            } else {
+                $query = "UPDATE siparisler SET durum = ? WHERE siparis_id = ?";
+                $stmt = $connection->prepare($query);
+                $stmt->bind_param('si', $durum, $siparis_id);
+            }
         }
 
         if ($stmt->execute()) {
             $message = "Sipariş başarıyla güncellendi.";
+            error_log("DEBUG - Database update successful for siparis_id: $siparis_id, new status: $durum");
 
             // If the order is completed, update stock and add movement records
             // Handle stock movements based on status changes
@@ -101,7 +116,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $adet = floatval($item['adet']); // decimal/miktar için
                     $yon = mysqli_real_escape_string($connection, 'cikis');
                     $hareket_turu = mysqli_real_escape_string($connection, 'cikis');
-                    $siparis_id = intval($siparis_id); // integer olarak
+                    $order_id = intval($siparis_id); // integer olarak - using a different variable to avoid overwriting
                     $aciklama = mysqli_real_escape_string($connection, 'Müşteri siparişi');
                     $user_id = intval($_SESSION['user_id']); // integer olarak
                     $user_name = mysqli_real_escape_string($connection, $user_name);
@@ -109,7 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $movement_query = "INSERT INTO stok_hareket_kayitlari 
                         (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
                         VALUES 
-                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $siparis_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
+                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $order_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
                     
                     if (!$connection->query($movement_query)) {
                         error_log("Failed to insert stock movement: " . $connection->error);
@@ -153,7 +168,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $adet = floatval($item['adet']); // decimal/miktar için
                     $yon = mysqli_real_escape_string($connection, 'giriş');
                     $hareket_turu = mysqli_real_escape_string($connection, 'iptal_cikis');
-                    $siparis_id = intval($siparis_id); // integer olarak
+                    $order_id = intval($siparis_id); // integer olarak - using a different variable to avoid overwriting
                     $aciklama = mysqli_real_escape_string($connection, 'Satış İptali - Müşteri siparişi');
                     $user_id = intval($_SESSION['user_id']); // integer olarak
                     $user_name = mysqli_real_escape_string($connection, $user_name);
@@ -161,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $movement_query = "INSERT INTO stok_hareket_kayitlari 
                         (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
                         VALUES 
-                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $siparis_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
+                        ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $order_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
                     
                     if (!$connection->query($movement_query)) {
                         error_log("Failed to insert reverse stock movement: " . $connection->error);
@@ -172,6 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             $error = "Sipariş güncellenirken hata oluştu: " . $connection->error;
+            error_log("DEBUG - Database update failed for siparis_id: $siparis_id, error: " . $connection->error);
         }
         $stmt->close();
     }
@@ -370,6 +386,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             align-items: center;
             gap: 8px;
             font-size: 0.825rem;
+            white-space: nowrap;
         }
         .btn:hover {
              transform: translateY(-2px);
@@ -554,13 +571,24 @@ if ($orders_result && $orders_result->num_rows > 0) {
         
         .actions {
             display: flex;
-            gap: 8px;
+            flex-direction: column;
+            gap: 5px;
             justify-content: center;
+            align-items: center;
         }
         
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        @media (min-width: 768px) {
+            .actions {
+                flex-direction: row;
+            }
         }
         
         .no-orders-container {
@@ -667,17 +695,29 @@ if ($orders_result && $orders_result->num_rows > 0) {
         </div>
 
         <?php if ($message): ?>
-            <div class="alert alert-success">
-                <i class="fas fa-check-circle"></i>
-                <?php echo htmlspecialchars($message); ?>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        title: 'İşlem Başarılı!',
+                        html: '<?php echo addslashes(htmlspecialchars($message, ENT_QUOTES)); ?>',
+                        icon: 'success',
+                        confirmButtonText: 'Tamam'
+                    });
+                });
+            </script>
         <?php endif; ?>
 
         <?php if ($error): ?>
-            <div class="alert alert-danger">
-                <i class="fas fa-exclamation-circle"></i>
-                <?php echo htmlspecialchars($error); ?>
-            </div>
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    Swal.fire({
+                        title: 'Hata Oluştu!',
+                        html: '<?php echo addslashes(htmlspecialchars($error, ENT_QUOTES)); ?>',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                });
+            </script>
         <?php endif; ?>
 
         <!-- Status Filters -->
@@ -800,34 +840,46 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                 </a>
 
                                                 <?php if ($order['durum'] === 'beklemede'): ?>
-                                                    <form method="POST" class="d-inline">
+                                                    <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
-                                                        <button type="submit" name="update" class="btn btn-success btn-sm" onclick="confirmOnayla(event, this.form)">
+                                                        <input type="hidden" name="update" value="1">
+                                                        <button type="button" name="update" class="btn btn-success btn-sm" onclick="confirmOnayla(<?php echo json_encode($order['siparis_id']); ?>)">
                                                             <i class="fas fa-check"></i> Onayla
                                                         </button>
                                                     </form>
 
-                                                    <form method="POST" class="d-inline">
+                                                    <form method="POST" class="d-inline cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="iptal_edildi">
-                                                        <button type="submit" name="update" class="btn btn-danger btn-sm" onclick="confirmIptal(event, this.form)">
+                                                        <input type="hidden" name="update" value="1">
+                                                        <button type="button" name="update" class="btn btn-danger btn-sm" onclick="confirmIptal(<?php echo json_encode($order['siparis_id']); ?>)">
                                                             <i class="fas fa-times"></i> İptal
                                                         </button>
                                                     </form>
                                                 <?php elseif ($order['durum'] === 'onaylandi'): ?>
-                                                    <form method="POST" class="d-inline">
+                                                    <form method="POST" class="d-inline complete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="tamamlandi">
-                                                        <button type="submit" name="update" class="btn btn-info btn-sm" onclick="confirmTamamla(event, this.form)">
+                                                        <input type="hidden" name="update" value="1">
+                                                        <button type="button" name="update" class="btn btn-info btn-sm" onclick="confirmTamamla(<?php echo json_encode($order['siparis_id']); ?>)">
                                                             <i class="fas fa-check-double"></i> Tamamla
                                                         </button>
                                                     </form>
+                                                    <form method="POST" class="d-inline revert-approval-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                        <input type="hidden" name="durum" value="beklemede">
+                                                        <input type="hidden" name="update" value="1">
+                                                        <button type="button" name="update" class="btn btn-warning btn-sm" onclick="confirmBeklemeyeAl(<?php echo json_encode($order['siparis_id']); ?>)">
+                                                            <i class="fas fa-undo"></i> Beklemeye Al
+                                                        </button>
+                                                    </form>
                                                 <?php elseif ($order['durum'] === 'tamamlandi'): ?>
-                                                    <form method="POST" class="d-inline">
+                                                    <form method="POST" class="d-inline revert-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="durum" value="onaylandi">
-                                                        <button type="submit" name="update" class="btn btn-warning btn-sm" onclick="confirmGeriAl(event, this.form)">
+                                                        <input type="hidden" name="update" value="1">
+                                                        <button type="button" name="update" class="btn btn-warning btn-sm" onclick="confirmGeriAl(<?php echo json_encode($order['siparis_id']); ?>)">
                                                             <i class="fas fa-undo"></i> Geri Al
                                                         </button>
                                                     </form>
@@ -879,66 +931,120 @@ if ($orders_result && $orders_result->num_rows > 0) {
         });
     });
 
-    function confirmOnayla(event, form) {
-        event.preventDefault();
+    function confirmOnayla(siparis_id) {
+        console.log('confirmOnayla called with siparis_id:', siparis_id);
         Swal.fire({
-            title: 'Emin misiniz?',
-            text: 'Bu siparişi onaylamak istediğinizden emin misiniz?',
+            title: 'Siparişi Onaylamak İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Onaylayan personel bilgileri kaydedilecektir.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Evet',
-            cancelButtonText: 'İptal'
+            confirmButtonText: 'Evet, Onayla',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                console.log('Confirmation accepted for approval, trying to find form for siparis_id:', siparis_id);
+                // Use data attribute selector which is more reliable
+                var form = document.querySelector('form.approve-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    console.log('Approve form found, submitting...');
+                    form.submit();
+                } else {
+                    console.error('Approve form not found for siparis_id: ' + siparis_id);
+                }
             }
         });
     }
 
-    function confirmIptal(event, form) {
-        event.preventDefault();
+    function confirmIptal(siparis_id) {
         Swal.fire({
-            title: 'Emin misiniz?',
-            text: 'Bu siparişi iptal etmek istediğinizden emin misiniz?',
+            title: 'Siparişi İptal Etmek İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "İptal Edildi" olarak değiştirilecektir.<br>Bu işlem geri alınamaz!',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Evet',
-            cancelButtonText: 'İptal'
+            confirmButtonText: 'Evet, İptal Et',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Use data attribute selector which is more reliable
+                var form = document.querySelector('form.cancel-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Form not found for siparis_id: ' + siparis_id);
+                }
             }
         });
     }
 
-    function confirmTamamla(event, form) {
-        event.preventDefault();
+    function confirmTamamla(siparis_id) {
         Swal.fire({
-            title: 'Emin misiniz?',
-            text: 'Bu siparişi tamamlamak istediğinizden emin misiniz? Stok hareketi oluşturulacaktır.',
+            title: 'Siparişi Tamamlamak İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Tamamlandı" olarak değiştirilecektir.<br>Stok hareketi oluşturulacak ve ürünler stoktan düşülecektir.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Evet',
-            cancelButtonText: 'İptal'
+            confirmButtonText: 'Evet, Tamamla',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Use data attribute selector which is more reliable
+                var form = document.querySelector('form.complete-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Form not found for siparis_id: ' + siparis_id);
+                }
             }
         });
     }
 
-    function confirmGeriAl(event, form) {
-        event.preventDefault();
+    function confirmGeriAl(siparis_id) {
         Swal.fire({
-            title: 'Emin misiniz?',
-            text: 'Bu tamamlanmış siparişi geri almak istediğinizden emin misiniz? Stok hareketleri geri alınacaktır.',
+            title: 'Tamamlanmış Siparişi Geri Almak İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Stok hareketleri geri alınacak ve ürünler tekrar stoğa eklenecektir.',
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonText: 'Evet',
-            cancelButtonText: 'İptal'
+            confirmButtonText: 'Evet, Geri Al',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                // Use data attribute selector which is more reliable
+                var form = document.querySelector('form.revert-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Form not found for siparis_id: ' + siparis_id);
+                }
+            }
+        });
+    }
+
+    function confirmBeklemeyeAl(siparis_id) {
+        console.log('confirmBeklemeyeAl called with siparis_id:', siparis_id);
+        Swal.fire({
+            title: 'Onaylanmış Siparişi Beklemeye Almak İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Beklemede" olarak değiştirilecektir.<br>Onaylayan personel bilgileri sıfırlanacaktır.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet, Beklemeye Al',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                console.log('Confirmation accepted, trying to find form for siparis_id:', siparis_id);
+                // Use data attribute selector which is more reliable
+                var form = document.querySelector('form.revert-approval-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    console.log('Form found, submitting...');
+                    form.submit();
+                } else {
+                    console.error('Form not found for siparis_id: ' + siparis_id);
+                }
+            } else {
+                console.log('User cancelled the action');
             }
         });
     }

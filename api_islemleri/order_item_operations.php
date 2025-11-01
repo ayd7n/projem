@@ -13,6 +13,22 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = isset($_POST['action']) ? $_POST['action'] : '';
     
+    // Check if order is in 'beklemede' status before allowing operations
+    $siparis_id = isset($_POST['siparis_id']) ? (int)$_POST['siparis_id'] : 0;
+    if ($siparis_id > 0) {
+        $check_status_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
+        $check_status_stmt = $connection->prepare($check_status_query);
+        $check_status_stmt->bind_param('i', $siparis_id);
+        $check_status_stmt->execute();
+        $status_result = $check_status_stmt->get_result();
+        $order = $status_result->fetch_assoc();
+        
+        if ($order && $order['durum'] !== 'beklemede') {
+            echo json_encode(['status' => 'error', 'message' => 'Sadece beklemede olan siparişlerde değişiklik yapılabilir!']);
+            exit;
+        }
+    }
+    
     if ($action === 'add_order_item') {
         $siparis_id = isset($_POST['siparis_id']) ? (int)$_POST['siparis_id'] : 0;
         $urun_kodu = isset($_POST['urun_kodu']) ? (int)$_POST['urun_kodu'] : 0;
@@ -204,6 +220,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         
         if ($siparis_id <= 0 || $urun_kodu <= 0) {
             echo json_encode(['status' => 'error', 'message' => 'Geçersiz parametreler!']);
+            exit;
+        }
+        
+        // Check if order is in 'beklemede' status before allowing operations
+        $check_status_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
+        $check_status_stmt = $connection->prepare($check_status_query);
+        $check_status_stmt->bind_param('i', $siparis_id);
+        $check_status_stmt->execute();
+        $status_result = $check_status_stmt->get_result();
+        $order = $status_result->fetch_assoc();
+        
+        if ($order && $order['durum'] !== 'beklemede') {
+            echo json_encode(['status' => 'error', 'message' => 'Sadece beklemede olan siparişlerde değişiklik yapılabilir!']);
             exit;
         }
         

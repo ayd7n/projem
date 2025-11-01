@@ -558,17 +558,22 @@ $products_result = $connection->query($products_query);
                                     <td><?php echo number_format($item['birim_fiyat'], 2); ?> TL</td>
                                     <td><?php echo number_format($item['toplam_tutar'], 2); ?> TL</td>
                                     <td class="actions">
-                                        <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">
-                                            <i class="fas fa-edit"></i> Düzenle
-                                        </a>
-                                        <form style="display: inline;" class="d-inline">
-                                            <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
-                                            <button type="button" class="btn btn-danger btn-sm delete-item-btn">
-                                                <i class="fas fa-trash"></i> Sil
-                                            </button>
-                                        </form>
+                                        <?php if ($order['durum'] === 'beklemede'): ?>
+                                            <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">
+                                                <i class="fas fa-edit"></i> Düzenle
+                                            </a>
+                                            <form style="display: inline;" class="d-inline">
+                                                <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
+                                                <button type="button" class="btn btn-danger btn-sm delete-item-btn">
+                                                    <i class="fas fa-trash"></i> Sil
+                                                </button>
+                                            </form>
+                                        <?php else: ?>
+                                            <span class="text-muted">İşlem yok</span>
+                                        <?php endif; ?>
                                     </td>
                                 </tr>
+                                <?php if ($order['durum'] === 'beklemede'): ?>
                                 <tr id="update-form-<?php echo $item['urun_kodu']; ?>" style="display:none;">
                                     <td colspan="7">
                                         <div class="card mt-3">
@@ -605,6 +610,7 @@ $products_result = $connection->query($products_query);
                                         </div>
                                     </td>
                                 </tr>
+                                <?php endif; ?>
                             <?php endwhile; ?>
                         </tbody>
                     </table>
@@ -612,6 +618,7 @@ $products_result = $connection->query($products_query);
             </div>
         </div>
         
+        <?php if ($order['durum'] === 'beklemede'): ?>
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-plus-circle"></i> Yeni Sipariş Kalemi Ekle</h2>
@@ -648,6 +655,16 @@ $products_result = $connection->query($products_query);
                 </form>
             </div>
         </div>
+        <?php else: ?>
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-info-circle"></i> Sipariş Durumu</h2>
+            </div>
+            <div class="card-body">
+                <p>Sipariş durumu "<?php echo $order['durum'] === 'onaylandi' ? 'Onaylandı' : ($order['durum'] === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi'); ?>" olduğu için sipariş kalemleri üzerinde değişiklik yapamazsınız.</p>
+            </div>
+        </div>
+        <?php endif; ?>
         
         <div class="text-center mt-4">
             <a href="musteri_siparisleri.php" class="btn btn-secondary">
@@ -699,14 +716,16 @@ $products_result = $connection->query($products_query);
         document.getElementById('update-form-' + itemId).style.display = 'none';
     }
     
+    <?php if ($order['durum'] === 'beklemede'): ?>
     // Add click event to all edit buttons
-    document.querySelectorAll('a[href^="#update-form-\"]').forEach(function(button) {
+    document.querySelectorAll('a[href^="#update-form-"]').forEach(function(button) {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const targetId = this.getAttribute('href').substring(1);
             showUpdateForm(targetId.split('-')[2]);
         });
     });
+    <?php endif; ?>
     
     // Function to display messages
     function showMessage(message, type) {
@@ -729,6 +748,7 @@ $products_result = $connection->query($products_query);
         }
     }
     
+    <?php if ($order['durum'] === 'beklemede'): ?>
     // AJAX form submission for adding new order item
     $('#add-item-form').on('submit', function(e) {
         e.preventDefault(); // Prevent default form submission
@@ -866,6 +886,7 @@ $products_result = $connection->query($products_query);
             }
         });
     });
+    <?php endif; ?>
     
     // Function to add new order item to the table
     function addOrderItemToTable(itemData) {
