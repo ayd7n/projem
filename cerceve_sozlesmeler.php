@@ -239,14 +239,14 @@ function display_date($date_string) {
                                     <td><?php echo $contract['kalan_miktar']; ?></td>
                                     <td>
                                         <?php 
-                                        $status_class = $contract['gecerlilik_durumu'] === 'Geçerli' ? 'badge-success' : 'badge-danger';
+                                        $status_class = $contract['gecerlilik_durumu'] === 'Gecerli' ? 'badge-success' : 'badge-danger';
                                         echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
                                         ?>
                                     </td>
                                     <td>
                                         <?php 
                                         $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
-                                        $usage_text = $contract['gecerli_mi'] ? 'Kullanılabilir' : 'Kullanılamaz';
+                                        $usage_text = $contract['gecerli_mi'] ? 'Kullanilabilir' : 'Kullanilamaz';
                                         echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
                                         ?>
                                     </td>

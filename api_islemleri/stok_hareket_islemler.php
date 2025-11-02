@@ -559,7 +559,7 @@ switch ($action) {
         
         if ($contract_result->num_rows == 0) {
             // No valid contract found
-            echo json_encode(['status' => 'error', 'message' => 'Bu tedarikçiden bu malzeme için geçerli bir çerçeve sözleşmesi bulunmamaktadır veya tüm sözleşme limitleri dolmuştur.']);
+            echo json_encode(['status' => 'error', 'message' => 'Bu tedarikciden bu malzeme icin gecerli bir cerceve sozlesmesi bulunmamaktadir veya tum sozlesme limitleri dolmustur.']);
             $contract_check_stmt->close();
             break;
         }
@@ -580,9 +580,9 @@ switch ($action) {
         
         if (!$valid_contract) {
             if ($max_allowed_amount > 0) {
-                echo json_encode(['status' => 'error', 'message' => "Girilen miktar (" . $miktar . ") mevcut çerçeve sözleşme limitini aşıyor. Maksimum girilebilecek miktar: " . $max_allowed_amount]);
+                echo json_encode(['status' => 'error', 'message' => "Girilen miktar (" . $miktar . ") mevcut cerceve sozlesme limitini asiyor. Maksimum girilebilecek miktar: " . $max_allowed_amount]);
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Bu malzeme için tüm çerçeve sözleşme limitleri dolmuştur.']);
+                echo json_encode(['status' => 'error', 'message' => 'Bu malzeme icin tum cerceve sozlesme limitleri dolmustur.']);
             }
             $contract_check_stmt->close();
             break;
