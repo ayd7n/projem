@@ -481,6 +481,13 @@ switch ($action) {
         $delete_stmt->bind_param('i', $hareket_id);
 
         if ($delete_stmt->execute()) {
+            // Also delete the related contract linkage if exists
+            $contract_delete_query = "DELETE FROM stok_hareketleri_sozlesmeler WHERE hareket_id = ?";
+            $contract_delete_stmt = $connection->prepare($contract_delete_query);
+            $contract_delete_stmt->bind_param('i', $hareket_id);
+            $contract_delete_stmt->execute();
+            $contract_delete_stmt->close();
+            
             // Reverse stock adjustment
             $direction = ($movement['yon'] === 'giris') ? -$movement['miktar'] : $movement['miktar'];
 
