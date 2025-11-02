@@ -375,90 +375,7 @@ function display_date($date_string) {
     
     <!-- Simple Custom Styles for SweetAlert -->
     <style>
-        .swal2-popup {
-            max-width: 90vw !important;
-            font-family: 'Ubuntu', sans-serif !important;
-        }
-        
-        .swal2-title {
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-            color: #333 !important;
-            padding: 10px 20px 0 20px !important;
-        }
-        
-        .swal2-content {
-            max-height: 80vh !important;
-            overflow-y: hidden !important;
-            padding: 0 20px 20px 20px !important;
-        }
-        
-        .swal2-popup table {
-            border-collapse: collapse;
-            margin-bottom: 0;
-            width: 100%;
-            background-color: #fff;
-            border: 1px solid #dee2e6;
-        }
-        
-        .swal2-popup table th,
-        .swal2-popup table td {
-            border: 1px solid #dee2e6;
-            padding: 0.7rem;
-            vertical-align: top;
-            font-size: 0.9rem;
-            text-align: center;
-        }
-        
-        .swal2-popup table th {
-            background-color: #f8f9fa;
-            font-weight: 600;
-        }
-        
-        .swal2-popup table tbody tr:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-        
-        .swal2-popup table thead th {
-            position: sticky;
-            top: 0;
-            background-color: #f8f9fa;
-            z-index: 10;
-            font-weight: 600;
-        }
-        
-        /* Scrollbar styling */
-        .swal2-popup ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        
-        .swal2-popup ::-webkit-scrollbar-track {
-            background: #f1f1f1;
-        }
-        
-        .swal2-popup ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
-        }
-        
-        .swal2-popup ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
-        }
-        
-        /* Confirm button styling */
-        .swal2-confirm {
-            background-color: #007bff !important;
-            border-radius: 5px !important;
-            padding: 8px 25px !important;
-            font-weight: 500 !important;
-            border: none !important;
-            margin-top: 15px !important;
-        }
-        
-        .swal2-confirm:hover {
-            background-color: #0056b3 !important;
-        }
+        /* SweetAlert2 stilleri kaldırıldı, artık Bootstrap modal kullanılıyor */
     </style>
     
     <!-- Custom Styles for SweetAlert -->
@@ -778,21 +695,14 @@ function display_date($date_string) {
             });
         });
 
-        // Handle contract detail view with SweetAlert2
+        // Handle contract detail view with Bootstrap modal
         $(document).on('click', '.detail-btn', function() {
             var contractId = $(this).data('id');
             
-            // Show loading indicator
-            Swal.fire({
-                title: 'Yükleniyor...',
-                text: 'Mal Kabul geçmişi alınıyor',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                showConfirmButton: false,
-                didOpen: () => {
-                    Swal.showLoading();
-                }
-            });
+            // Show loading in modal
+            $('#detailModal .modal-title').html('Mal Kabul Geçmişi - Sözleşme ID: ' + contractId);
+            $('#detailModal .modal-body').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Yükleniyor...</span></div><p class="mt-2">Mal Kabul geçmişi alınıyor...</p></div>');
+            $('#detailModal').modal('show');
             
             $.ajax({
                 url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
@@ -808,14 +718,14 @@ function display_date($date_string) {
                         
                         if (response.movements && response.movements.length > 0) {
                             tableHtml = `
-                                <div style="max-height: 400px; overflow-y: auto;">
-                                    <table class="table table-sm table-bordered" style="width: 100%; font-size: 0.9rem;">
-                                        <thead class="thead-light" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;">
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered table-sm">
+                                        <thead class="thead-light">
                                             <tr>
-                                                <th style="padding: 0.5rem;">Hareket ID</th>
-                                                <th style="padding: 0.5rem;">Miktar</th>
-                                                <th style="padding: 0.5rem;">Tarih</th>
-                                                <th style="padding: 0.5rem;">Açıklama</th>
+                                                <th>Hareket ID</th>
+                                                <th>Miktar</th>
+                                                <th>Tarih</th>
+                                                <th>Açıklama</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -824,10 +734,10 @@ function display_date($date_string) {
                             response.movements.forEach(function(movement) {
                                 tableHtml += `
                                     <tr>
-                                        <td style="padding: 0.4rem;">${movement.hareket_id}</td>
-                                        <td style="padding: 0.4rem;">${movement.miktar}</td>
-                                        <td style="padding: 0.4rem;">${movement.tarih}</td>
-                                        <td style="padding: 0.4rem;">${movement.aciklama || '-'}</td>
+                                        <td>${movement.hareket_id}</td>
+                                        <td>${movement.miktar}</td>
+                                        <td>${movement.tarih}</td>
+                                        <td>${movement.aciklama || '-'}</td>
                                     </tr>
                                 `;
                             });
@@ -840,40 +750,18 @@ function display_date($date_string) {
                         } else {
                             tableHtml = `
                                 <div class="alert alert-info text-center">
-                                    <i class="fas fa-info-circle"></i> 
                                     Henüz bu sözleşmeyle ilgili Mal Kabul kaydı bulunmamaktadır.
                                 </div>
                             `;
                         }
                         
-                        Swal.fire({
-                            title: `Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
-                            html: tableHtml,
-                            width: '800px',
-                            showCloseButton: false,
-                            showConfirmButton: true,
-                            confirmButtonText: 'Tamam',
-                            customClass: {
-                                popup: 'swal2-popup',
-                                content: 'swal2-content'
-                            }
-                        });
+                        $('#detailModal .modal-body').html(tableHtml);
                     } else {
-                        Swal.fire({
-                            title: 'Hata!',
-                            text: response.message,
-                            icon: 'error',
-                            confirmButtonText: 'Tamam'
-                        });
+                        $('#detailModal .modal-body').html('<div class="alert alert-danger">Hata: ' + response.message + '</div>');
                     }
                 },
                 error: function() {
-                    Swal.fire({
-                        title: 'Hata!',
-                        text: 'Mal Kabul geçmişi alınırken bir hata oluştu.',
-                        icon: 'error',
-                        confirmButtonText: 'Tamam'
-                    });
+                    $('#detailModal .modal-body').html('<div class="alert alert-danger">Mal Kabul geçmişi alınırken bir hata oluştu.</div>');
                 }
             });
         });
