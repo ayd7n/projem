@@ -513,75 +513,30 @@ function display_date($date_string) {
                 url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
                 type: 'POST',
                 data: {
-                    action: 'get_contract_details',
+                    action: 'get_contract_movements',
                     sozlesme_id: contractId
                 },
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        var contract = response.data;
-                        var detailHtml = `
-                            <h5>Sözleşme Detayları</h5>
-                            <div class="row">
-                                <div class="col-6"><strong>Sözleşme ID:</strong></div>
-                                <div class="col-6">${contract.sozlesme_id}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Tedarikçi:</strong></div>
-                                <div class="col-6">${contract.tedarikci_adi}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Malzeme:</strong></div>
-                                <div class="col-6">${contract.malzeme_ismi}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Toplam Limit:</strong></div>
-                                <div class="col-6">${contract.limit_miktar}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Kullanılan Miktar:</strong></div>
-                                <div class="col-6">${contract.toplam_mal_kabul_miktari}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Kalan Miktar:</strong></div>
-                                <div class="col-6">${contract.kalan_miktar}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Öncelik:</strong></div>
-                                <div class="col-6">${contract.oncelik}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Başlangıç Tarihi:</strong></div>
-                                <div class="col-6">${contract.baslangic_tarihi || '-'}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Bitiş Tarihi:</strong></div>
-                                <div class="col-6">${contract.bitis_tarihi || '-'}</div>
-                            </div>
-                            <div class="row mt-2">
-                                <div class="col-6"><strong>Geçerlilik Durumu:</strong></div>
-                                <div class="col-6">
-                                    <span class="${contract.gecerli_mi ? 'badge badge-success' : 'badge badge-danger'}">
-                                        ${contract.gecerlilik_durumu}
-                                    </span>
-                                </div>
-                            </div>
-                            
-                            <h5 class="mt-4">Mal Kabul Geçmişi</h5>
-                            <div class="table-responsive">
-                                <table class="table table-sm table-bordered">
-                                    <thead class="thead-light">
-                                        <tr>
-                                            <th>Hareket ID</th>
-                                            <th>Miktar</th>
-                                            <th>Tarih</th>
-                                            <th>Açıklama</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                        `;
+                        var titleHtml = `<h5>Mal Kabul Geçmişi - Sözleşme ID: ${contractId}</h5>`;
+                        var detailHtml = '';
                         
                         if (response.movements && response.movements.length > 0) {
+                            detailHtml = `
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th>Hareket ID</th>
+                                                <th>Miktar</th>
+                                                <th>Tarih</th>
+                                                <th>Açıklama</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                            `;
+                            
                             response.movements.forEach(function(movement) {
                                 detailHtml += `
                                     <tr>
@@ -592,20 +547,19 @@ function display_date($date_string) {
                                     </tr>
                                 `;
                             });
-                        } else {
+                            
                             detailHtml += `
-                                <tr>
-                                    <td colspan="4" class="text-center">Henüz Mal Kabul kaydı bulunmamaktadır</td>
-                                </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            `;
+                        } else {
+                            detailHtml = `
+                                <div class="alert alert-info">Henüz bu sözleşmeyle ilgili Mal Kabul kaydı bulunmamaktadır.</div>
                             `;
                         }
                         
-                        detailHtml += `
-                                    </tbody>
-                                </table>
-                            </div>
-                        `;
-                        
+                        $('#detailModal .modal-title').html(titleHtml);
                         $('#detailModal .modal-body').html(detailHtml);
                         $('#detailModal').modal('show');
                     } else {
@@ -613,7 +567,7 @@ function display_date($date_string) {
                     }
                 },
                 error: function() {
-                    showAlert('Sözleşme detayları alınırken bir hata oluştu.', 'danger');
+                    showAlert('Mal Kabul geçmişi alınırken bir hata oluştu.', 'danger');
                 }
             });
         });

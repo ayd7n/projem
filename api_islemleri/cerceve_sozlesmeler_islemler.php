@@ -195,7 +195,7 @@ switch ($action) {
         $stmt->close();
         break;
 
-    case 'get_contract_details':
+    case 'get_contract_movements':
         $sozlesme_id = $_POST['sozlesme_id'] ?? 0;
 
         if (!$sozlesme_id) {
@@ -203,41 +203,19 @@ switch ($action) {
             break;
         }
 
-        // Get contract details
-        $contract_query = "SELECT c.sozlesme_id, c.tedarikci_id, c.tedarikci_adi, c.malzeme_kodu, c.malzeme_ismi, 
-                          c.birim_fiyat, c.para_birimi, c.limit_miktar, c.toplu_odenen_miktar,
-                          c.baslangic_tarihi, c.bitis_tarihi, c.olusturan, c.olusturulma_tarihi, 
-                          c.aciklama, c.oncelik,
-                          COALESCE(shs.toplam_kullanilan, 0) as toplam_mal_kabul_miktari,
-                          (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) as kalan_miktar,
-                          CASE WHEN c.bitis_tarihi < CURDATE() THEN 0 WHEN COALESCE(shs.toplam_kullanilan, 0) >= c.limit_miktar THEN 0 ELSE 1 END as gecerli_mi,
-                          CASE WHEN c.bitis_tarihi < CURDATE() THEN 'Suresi Dolmus' WHEN COALESCE(shs.toplam_kullanilan, 0) >= c.limit_miktar THEN 'Limit Dolmus' ELSE 'Gecerli' END as gecerlilik_durumu
-                          FROM cerceve_sozlesmeler c
-                          LEFT JOIN (
-                              SELECT sozlesme_id, SUM(kullanilan_miktar) as toplam_kullanilan
-                              FROM stok_hareketleri_sozlesmeler shs
-                              WHERE EXISTS (
-                                  SELECT 1 FROM stok_hareket_kayitlari
-                                  WHERE stok_hareket_kayitlari.hareket_id = shs.hareket_id
-                                  AND stok_hareket_kayitlari.hareket_turu = 'mal_kabul'
-                              )
-                              GROUP BY sozlesme_id
-                          ) shs ON c.sozlesme_id = shs.sozlesme_id
-                          WHERE c.sozlesme_id = ?";
+        // Check if contract exists
+        $contract_check_query = "SELECT sozlesme_id FROM cerceve_sozlesmeler WHERE sozlesme_id = ?";
+        $contract_check_stmt = $connection->prepare($contract_check_query);
+        $contract_check_stmt->bind_param('i', $sozlesme_id);
+        $contract_check_stmt->execute();
+        $contract_check_result = $contract_check_stmt->get_result();
         
-        $contract_stmt = $connection->prepare($contract_query);
-        $contract_stmt->bind_param('i', $sozlesme_id);
-        $contract_stmt->execute();
-        $contract_result = $contract_stmt->get_result();
-        
-        if ($contract_result->num_rows === 0) {
+        if ($contract_check_result->num_rows === 0) {
             echo json_encode(['status' => 'error', 'message' => 'Sözleşme bulunamadı.']);
-            $contract_stmt->close();
+            $contract_check_stmt->close();
             break;
         }
-        
-        $contract = $contract_result->fetch_assoc();
-        $contract_stmt->close();
+        $contract_check_stmt->close();
 
         // Get related stock movements
         $movements_query = "SELECT shk.hareket_id, shk.miktar, shk.tarih, shk.aciklama
@@ -259,7 +237,6 @@ switch ($action) {
 
         echo json_encode([
             'status' => 'success',
-            'data' => $contract,
             'movements' => $movements
         ]);
         break;
