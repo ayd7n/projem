@@ -919,8 +919,77 @@ switch ($action) {
         $connection->autocommit(TRUE); // Reset autocommit
         break;
 
+    case 'check_framework_contract':
+        $material_kodu = $_POST['material_kodu'] ?? '';
+        $tedarikci_id = $_POST['tedarikci_id'] ?? '';
+        
+        if (!$material_kodu || !$tedarikci_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu ve tedarikçi ID gerekli.']);
+            break;
+        }
+        
+        // Get material name
+        $material_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
+        $material_stmt = $connection->prepare($material_query);
+        $material_stmt->bind_param('s', $material_kodu);
+        $material_stmt->execute();
+        $material_result = $material_stmt->get_result();
+        $material_name = '';
+        if ($material_result->num_rows > 0) {
+            $material = $material_result->fetch_assoc();
+            $material_name = $material['malzeme_ismi'];
+        }
+        $material_stmt->close();
+        
+        // Check if there is a valid framework contract for this supplier and material
+        $contract_check_query = "SELECT c.sozlesme_id, c.limit_miktar, 
+                                COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
+                                (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar
+                                FROM cerceve_sozlesmeler c
+                                LEFT JOIN (
+                                    SELECT 
+                                        tedarikci_id,
+                                        kod as malzeme_kodu,
+                                        SUM(miktar) as toplam_mal_kabul
+                                    FROM stok_hareket_kayitlari
+                                    WHERE hareket_turu = 'mal_kabul'
+                                    GROUP BY tedarikci_id, kod
+                                ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
+                                AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                                WHERE c.tedarikci_id = ? 
+                                AND c.malzeme_kodu = ?
+                                AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
+                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar";
+        $contract_check_stmt = $connection->prepare($contract_check_query);
+        $contract_check_stmt->bind_param('is', $tedarikci_id, $material_kodu);
+        $contract_check_stmt->execute();
+        $contract_result = $contract_check_stmt->get_result();
+        
+        if ($contract_result->num_rows > 0) {
+            $contract = $contract_result->fetch_assoc();
+            echo json_encode([
+                'status' => 'success', 
+                'contract_info' => [
+                    'has_valid_contract' => true,
+                    'material_name' => $material_name,
+                    'remaining_amount' => $contract['kalan_miktar']
+                ]
+            ]);
+        } else {
+            echo json_encode([
+                'status' => 'success', 
+                'contract_info' => [
+                    'has_valid_contract' => false,
+                    'material_name' => $material_name,
+                    'remaining_amount' => 0
+                ]
+            ]);
+        }
+        $contract_check_stmt->close();
+        break;
+
     default:
-        echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
+        echo json_encode(['status' => 'error', 'message' => 'Gecersiz islem.']);
         break;
 }
 ?>

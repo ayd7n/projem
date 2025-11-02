@@ -531,7 +531,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 <div class="col-md-12">
                                     <div class="form-group">
                                         <label for="mal_kabul_kod">Malzeme Seçin *</label>
-                                        <select class="form-control" v-model="malKabulForm.kod" @change="loadMalKabulSuppliers" required>
+                                        <select class="form-control" v-model="malKabulForm.kod" @change="loadMalKabulSuppliersAndCheckContract" required>
                                             <option value="">Malzeme Seçin</option>
                                             <option v-for="item in malKabulStockItems" :key="item.kod" :value="item.kod">
                                                 {{ item.kod }} - {{ item.isim }}
@@ -564,13 +564,15 @@ if ($_SESSION['taraf'] !== 'personel') {
 
                             <div class="form-group">
                                 <label for="mal_kabul_tedarikci">Tedarikçi *</label>
-                                <select class="form-control" v-model="malKabulForm.tedarikci" required>
+                                <select class="form-control" v-model="malKabulForm.tedarikci" @change="checkFrameworkContract" required>
                                     <option value="">Tedarikçi Seçin</option>
                                     <option v-for="supplier in malKabulSuppliers" :key="supplier.tedarikci_id" :value="supplier.tedarikci_id">
                                         {{ supplier.tedarikci_ismi }}
                                     </option>
                                 </select>
                             </div>
+                            
+                            <div id="contractStatusInfo"></div>
                         </div>
                         <div class="modal-footer">
                             <button type="button" class="btn btn-secondary" @click="closeMalKabulModal"><i

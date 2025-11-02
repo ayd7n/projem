@@ -941,6 +941,7 @@ const app = new Vue({
             if (!this.malKabulForm.kod) {
                 this.malKabulSuppliers = [];
                 this.malKabulForm.tedarikci = '';
+                document.getElementById('contractStatusInfo') && (document.getElementById('contractStatusInfo').innerHTML = '');
                 return;
             }
             
@@ -958,12 +959,62 @@ const app = new Vue({
                         } */
                     } else {
                         this.malKabulSuppliers = []; // Clear suppliers on error
-                        this.showAlert(response.data.message || 'Tedarikçiler yüklenirken bir hata oluştu', 'danger');
+                        this.showAlert(response.data.message || 'Tedarikciler yuklenirken bir hata olustu', 'danger');
                     }
                 })
                 .catch(error => {
-                    this.showAlert('Tedarikçiler yüklenirken bir hata oluştu', 'danger');
+                    this.showAlert('Tedarikciler yuklenirken bir hata olustu', 'danger');
                 });
+        },
+
+        // Check framework contract validity for selected material and supplier
+        checkFrameworkContract() {
+            if (!this.malKabulForm.kod || !this.malKabulForm.tedarikci) {
+                document.getElementById('contractStatusInfo') && (document.getElementById('contractStatusInfo').innerHTML = '');
+                return;
+            }
+
+            axios.post('api_islemleri/stok_hareket_islemler.php', {
+                action: 'check_framework_contract',
+                material_kodu: this.malKabulForm.kod,
+                tedarikci_id: this.malKabulForm.tedarikci
+            })
+            .then(response => {
+                if (response.data.status === 'success') {
+                    const contractInfo = response.data.contract_info;
+                    let statusHtml = '';
+                    
+                    if (contractInfo.has_valid_contract) {
+                        statusHtml = `
+                            <div class="alert alert-success">
+                                <i class="fas fa-check-circle"></i> 
+                                <strong>Gecerli Sozlesme:</strong> Bu tedarikci ile ${contractInfo.material_name} malzemesi icin gecerli bir cerceve sozlesmesi bulunmaktadir.
+                                <br><strong>Kalan Miktar:</strong> ${contractInfo.remaining_amount}
+                            </div>
+                        `;
+                    } else {
+                        statusHtml = `
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>Sozlesme Yok:</strong> Bu tedarikci ile secili malzeme icin gecerli bir cerceve sozlesmesi bulunmamaktadir.
+                            </div>
+                        `;
+                    }
+                    
+                    document.getElementById('contractStatusInfo') && (document.getElementById('contractStatusInfo').innerHTML = statusHtml);
+                } else {
+                    document.getElementById('contractStatusInfo') && (document.getElementById('contractStatusInfo').innerHTML = '');
+                }
+            })
+            .catch(error => {
+                console.error('Error checking framework contract:', error);
+                document.getElementById('contractStatusInfo') && (document.getElementById('contractStatusInfo').innerHTML = '');
+            });
+        },
+        
+        // Load suppliers and check framework contract
+        loadMalKabulSuppliersAndCheckContract() {
+            this.loadMalKabulSuppliers();
         },
         
         saveMalKabul() {
