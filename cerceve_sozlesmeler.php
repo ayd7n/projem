@@ -377,11 +377,25 @@ function display_date($date_string) {
     <style>
         .swal2-popup {
             max-width: 90vw !important;
+            border-radius: 12px !important;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25) !important;
+            font-family: 'Ubuntu', sans-serif !important;
+        }
+        
+        .swal2-title {
+            font-size: 1.3rem !important;
+            font-weight: 700 !important;
+            color: #2c3e50 !important;
+            padding: 15px 25px 5px 25px !important;
+            text-align: center !important;
+            border-bottom: 2px solid #f0f0f0 !important;
+            margin-bottom: 15px !important;
         }
         
         .swal2-content {
             max-height: 80vh !important;
             overflow-y: hidden !important;
+            padding: 0 25px 15px 25px !important;
         }
         
         .my-swal-container .swal2-popup {
@@ -398,54 +412,149 @@ function display_date($date_string) {
             border-collapse: collapse;
             margin-bottom: 0;
             width: 100%;
+            background-color: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            border: 1px solid #e0e0e0;
         }
         
         .swal2-popup table th,
         .swal2-popup table td {
-            border: 1px solid #dee2e6;
-            padding: 0.5rem;
-            vertical-align: top;
-            font-size: 0.9rem;
+            border: 1px solid #e0e0e0;
+            padding: 0.8rem;
+            vertical-align: middle;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+        
+        .swal2-popup table th {
+            background: linear-gradient(135deg, #4a0e63 0%, #7c2a99 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .swal2-popup table tbody tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        .swal2-popup table tbody tr:hover {
+            background-color: #f0e6f7;
+            transform: scale(1.01);
+            transition: all 0.2s ease;
         }
         
         .swal2-popup table thead th {
             position: sticky;
             top: 0;
-            background-color: #f8f9fa;
+            background: linear-gradient(135deg, #4a0e63 0%, #7c2a99 100%);
+            color: white;
             z-index: 10;
+            font-weight: 600;
+            padding: 1rem;
         }
         
         /* Scrollbar styling */
         .swal2-popup ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
         }
         
         .swal2-popup ::-webkit-scrollbar-track {
             background: #f1f1f1;
+            border-radius: 5px;
         }
         
         .swal2-popup ::-webkit-scrollbar-thumb {
-            background: #c1c1c1;
-            border-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 5px;
         }
         
         .swal2-popup ::-webkit-scrollbar-thumb:hover {
-            background: #a8a8a8;
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+        }
+        
+        /* Confirm button styling */
+        .swal2-confirm {
+            background: linear-gradient(135deg, #4a0e63 0%, #7c2a99 100%) !important;
+            border-radius: 30px !important;
+            padding: 12px 35px !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(74, 14, 99, 0.3) !important;
+            border: none !important;
+            margin-top: 15px !important;
+        }
+        
+        .swal2-confirm:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 20px rgba(74, 14, 99, 0.4) !important;
+        }
+        
+        .swal2-confirm:active {
+            transform: translateY(-1px) !important;
         }
         
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .swal2-popup {
                 max-width: 95vw !important;
-                margin: 10px;
+                margin: 15px;
             }
             
             .swal2-popup table th,
             .swal2-popup table td {
-                padding: 0.3rem;
+                padding: 0.6rem;
+                font-size: 0.9rem;
+            }
+            
+            .swal2-title {
+                font-size: 1.1rem !important;
+            }
+            
+            .swal2-confirm {
+                padding: 10px 30px !important;
+                font-size: 0.95rem !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .swal2-popup table th,
+            .swal2-popup table td {
+                padding: 0.5rem;
+                font-size: 0.85rem;
+            }
+            
+            .swal2-popup table thead th {
+                padding: 0.7rem;
                 font-size: 0.8rem;
             }
+        }
+        
+        /* Loading popup style */
+        .swal2-loading-popup {
+            border-radius: 15px !important;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+        }
+        
+        .swal2-loading-popup .swal2-title {
+            border-bottom: none !important;
+            margin-bottom: 0 !important;
+            padding-bottom: 5px !important;
+        }
+        
+        /* Animation effects */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .swal2-popup {
+            animation: fadeIn 0.3s ease-out;
         }
     </style>
 
@@ -587,11 +696,14 @@ function display_date($date_string) {
             
             // Show loading indicator
             Swal.fire({
-                title: 'Yükleniyor...',
-                text: 'Mal Kabul geçmişi alınıyor',
+                title: '<i class="fas fa-spinner fa-spin mr-2"></i>Yükleniyor...',
+                html: '<div class="mt-2"><i class="fas fa-history mr-2"></i>Mal Kabul geçmişi alınıyor</div>',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
+                customClass: {
+                    popup: 'swal2-loading-popup'
+                },
                 didOpen: () => {
                     Swal.showLoading();
                 }
@@ -650,16 +762,22 @@ function display_date($date_string) {
                         }
                         
                         Swal.fire({
-                            title: `Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
+                            title: `<i class="fas fa-history mr-2"></i>Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
                             html: tableHtml,
-                            width: '800px',
-                            showCloseButton: true,
-                            showConfirmButton: false,
+                            width: '850px',
+                            padding: '25px',
+                            showCloseButton: false,
+                            showConfirmButton: true,
+                            confirmButtonText: '<i class="fas fa-check mr-2"></i>Tamam',
                             customClass: {
                                 container: 'my-swal-container',
                                 popup: 'my-swal-popup',
-                                content: 'my-swal-content'
+                                content: 'my-swal-content',
+                                confirmButton: 'swal2-confirm'
                             },
+                            backdrop: 'rgba(0,0,0,0.4)',
+                            allowOutsideClick: false,
+                            allowEscapeKey: false,
                             didOpen: () => {
                                 // Custom styling for better scrollability
                                 const popup = Swal.getPopup();
