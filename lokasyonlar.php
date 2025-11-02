@@ -297,7 +297,7 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
                         <nav>
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage - 1)"><i class="fas fa-chevron-left"></i> Önceki</a>
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage - 1)"><i class="fas fa-chevron-left"></i> Previous</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadLocations(1)">1</a>
@@ -315,7 +315,7 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
                                     <a class="page-link" href="#" @click.prevent="loadLocations(totalPages)">{{ totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage + 1)">Sonraki <i class="fas fa-chevron-right"></i></a>
+                                    <a class="page-link" href="#" @click.prevent="loadLocations(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
                         </nav>

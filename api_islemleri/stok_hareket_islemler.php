@@ -533,6 +533,63 @@ switch ($action) {
             break;
         }
 
+        // Check if there is a valid framework contract for this supplier and material
+        $contract_check_query = "SELECT c.sozlesme_id, c.limit_miktar, 
+                                COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
+                                (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar
+                                FROM cerceve_sozlesmeler c
+                                LEFT JOIN (
+                                    SELECT 
+                                        tedarikci_id,
+                                        kod as malzeme_kodu,
+                                        SUM(miktar) as toplam_mal_kabul
+                                    FROM stok_hareket_kayitlari
+                                    WHERE hareket_turu = 'mal_kabul'
+                                    GROUP BY tedarikci_id, kod
+                                ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
+                                AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                                WHERE c.tedarikci_id = ? 
+                                AND c.malzeme_kodu = ?
+                                AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
+                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar";
+        $contract_check_stmt = $connection->prepare($contract_check_query);
+        $contract_check_stmt->bind_param('is', $tedarikci_id, $kod);
+        $contract_check_stmt->execute();
+        $contract_result = $contract_check_stmt->get_result();
+        
+        if ($contract_result->num_rows == 0) {
+            // No valid contract found
+            echo json_encode(['status' => 'error', 'message' => 'Bu tedarikçiden bu malzeme için geçerli bir çerçeve sözleşmesi bulunmamaktadır veya tüm sözleşme limitleri dolmuştur.']);
+            $contract_check_stmt->close();
+            break;
+        }
+        
+        // Check if adding this amount would exceed any contract limit
+        $valid_contract = false;
+        $max_allowed_amount = 0;
+        
+        while ($contract_row = $contract_result->fetch_assoc()) {
+            $available_amount = $contract_row['kalan_miktar'];
+            if ($miktar <= $available_amount) {
+                $valid_contract = true;
+                break;
+            } elseif ($available_amount > $max_allowed_amount) {
+                $max_allowed_amount = $available_amount;
+            }
+        }
+        
+        if (!$valid_contract) {
+            if ($max_allowed_amount > 0) {
+                echo json_encode(['status' => 'error', 'message' => "Girilen miktar (" . $miktar . ") mevcut çerçeve sözleşme limitini aşıyor. Maksimum girilebilecek miktar: " . $max_allowed_amount]);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Bu malzeme için tüm çerçeve sözleşme limitleri dolmuştur.']);
+            }
+            $contract_check_stmt->close();
+            break;
+        }
+        
+        $contract_check_stmt->close();
+
         // Ensure we're dealing with materials only
         if ($stok_turu !== 'malzeme') {
             echo json_encode(['status' => 'error', 'message' => 'Mal kabul sadece malzeme türü için yapılabilir.']);

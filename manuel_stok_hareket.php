@@ -193,7 +193,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                             <nav v-if="totalPages > 1">
                                 <ul class="pagination pagination-sm justify-content-center justify-content-lg-end mb-0" aria-label="Stok hareketleri sayfalama">
                                     <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                        <a class="page-link" href="#" @click.prevent="changePage(-1)" aria-label="Önceki">
+                                        <a class="page-link" href="#" @click.prevent="changePage(-1)" aria-label="Previous">
                                             <span aria-hidden="true">&laquo;</span>
                                         </a>
                                     </li>
@@ -205,7 +205,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                         <span v-else class="page-link">...</span>
                                     </li>
                                     <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                        <a class="page-link" href="#" @click.prevent="changePage(1)" aria-label="Sonraki">
+                                        <a class="page-link" href="#" @click.prevent="changePage(1)" aria-label="Next">
                                             <span aria-hidden="true">&raquo;</span>
                                         </a>
                                     </li>

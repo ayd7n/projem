@@ -1570,7 +1570,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             // Previous button
             const prevDisabled = activePage <= 1 ? 'disabled' : '';
             paginationHtml += `<li class="page-item ${prevDisabled}">
-                <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Önceki">
+                <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Previous">
                     <i class="fas fa-chevron-left"></i>
                 </a>
             </li>`;
@@ -1620,7 +1620,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             // Next button
             const nextDisabled = activePage >= totalPages ? 'disabled' : '';
             paginationHtml += `<li class="page-item ${nextDisabled}">
-                <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Sonraki">
+                <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Next">
                     <i class="fas fa-chevron-right"></i>
                 </a>
             </li>`;

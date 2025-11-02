@@ -681,7 +681,7 @@ $work_centers_result = $connection->query($work_centers_query);
             
             // Previous button
             const prevDisabled = currentPage === 1 ? 'disabled' : '';
-            paginationList.append(`<li class="page-item ${prevDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage - 1}"><i class="fas fa-chevron-left"></i> Önceki</a></li>`);
+            paginationList.append(`<li class="page-item ${prevDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage - 1}"><i class="fas fa-chevron-left"></i> Previous</a></li>`);
             
             // First page and ellipsis if needed
             if (currentPage > 3) {
@@ -707,7 +707,7 @@ $work_centers_result = $connection->query($work_centers_query);
             
             // Next button
             const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            paginationList.append(`<li class="page-item ${nextDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage + 1}">Sonraki <i class="fas fa-chevron-right"></i></a></li>`);
+            paginationList.append(`<li class="page-item ${nextDisabled}"><a class="page-link page-nav-link" href="#" data-page="${currentPage + 1}">Next <i class="fas fa-chevron-right"></i></a></li>`);
         }
         
         // Bind event for records per page change

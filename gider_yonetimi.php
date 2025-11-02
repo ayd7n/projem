@@ -679,7 +679,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
             }
 
             const prevDisabled = currentPage === 1 ? ' disabled' : '';
-            $pagination.append(`<li class="page-item${prevDisabled}"><a class="page-link" href="#" aria-label="Önceki" data-shift="-1">&laquo;</a></li>`);
+            $pagination.append(`<li class="page-item${prevDisabled}"><a class="page-link" href="#" aria-label="Previous" data-shift="-1">&laquo;</a></li>`);
 
             const pages = computePages(totalPages);
             pages.forEach(function(page) {
@@ -692,7 +692,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
             });
 
             const nextDisabled = currentPage === totalPages ? ' disabled' : '';
-            $pagination.append(`<li class="page-item${nextDisabled}"><a class="page-link" href="#" aria-label="Sonraki" data-shift="1">&raquo;</a></li>`);
+            $pagination.append(`<li class="page-item${nextDisabled}"><a class="page-link" href="#" aria-label="Next" data-shift="1">&raquo;</a></li>`);
         }
 
         function updateListingSummary() {

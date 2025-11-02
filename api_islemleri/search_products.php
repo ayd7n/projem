@@ -82,7 +82,7 @@ if ($total_pages > 1) {
     echo '        <ul class="pagination justify-content-center mb-0">';
     
     $prev_class = ($current_page <= 1) ? 'disabled' : '';
-    echo "<li class='page-item {$prev_class}'><a class='page-link' href='?page=".($current_page - 1)."{$search_query_string}'>Önceki</a></li>";
+    echo "<li class='page-item {$prev_class}'><a class='page-link' href='?page=".($current_page - 1)."{$search_query_string}'>Previous</a></li>";
 
     for ($i = 1; $i <= $total_pages; $i++) {
         $active_class = ($i == $current_page) ? 'active' : '';
@@ -90,7 +90,7 @@ if ($total_pages > 1) {
     }
 
     $next_class = ($current_page >= $total_pages) ? 'disabled' : '';
-    echo "<li class='page-item {$next_class}'><a class='page-link' href='?page=".($current_page + 1)."{$search_query_string}'>Sonraki</a></li>";
+    echo "<li class='page-item {$next_class}'><a class='page-link' href='?page=".($current_page + 1)."{$search_query_string}'>Next</a></li>";
 
     echo '        </ul>';
     echo '    </nav>';

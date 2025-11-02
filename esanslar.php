@@ -215,7 +215,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <!-- Previous button -->
                                     <li class="page-item" :class="{ disabled: currentPage <= 1 }">
                                         <a class="page-link" href="#" @click.prevent="esanslariYukle(Math.max(1, currentPage - 1))">
-                                            <i class="fas fa-chevron-left"></i> Önceki
+                                            <i class="fas fa-chevron-left"></i> Previous
                                         </a>
                                     </li>
                                     
@@ -243,7 +243,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <!-- Next button -->
                                     <li class="page-item" :class="{ disabled: currentPage >= totalPages }">
                                         <a class="page-link" href="#" @click.prevent="esanslariYukle(Math.min(totalPages, currentPage + 1))">
-                                            Sonraki <i class="fas fa-chevron-right"></i>
+                                            Next <i class="fas fa-chevron-right"></i>
                                         </a>
                                     </li>
                                 </ul>

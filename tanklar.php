@@ -168,7 +168,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                     <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
-                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Sonraki</a>
+                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
                                 </li>
                             </ul>
                         </nav>

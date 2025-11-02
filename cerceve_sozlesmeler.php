@@ -6,7 +6,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-$contracts_query = "SELECT * FROM cerceve_sozlesmeler ORDER BY olusturulma_tarihi DESC";
+$contracts_query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik ORDER BY olusturulma_tarihi DESC";
 $contracts_result = $connection->query($contracts_query);
 
 // Calculate total contracts
@@ -200,12 +200,16 @@ function display_date($date_string) {
                                 <th><i class="fas fa-calendar-plus"></i> Başlangıç</th>
                                 <th><i class="fas fa-calendar-times"></i> Bitiş</th>
                                 <th><i class="fas fa-user"></i> Oluşturan</th>
+                                <th><i class="fas fa-box-open"></i> Toplam Mal Kabul</th>
+                                <th><i class="fas fa-chart-line"></i> Kalan Miktar</th>
+                                <th><i class="fas fa-info-circle"></i> Geçerlilik Durumu</th>
+                                <th><i class="fas fa-check-circle"></i> Kullanılabilirlik</th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php if ($contracts_result && $contracts_result->num_rows > 0): ?>
                                 <?php while ($contract = $contracts_result->fetch_assoc()): ?>
-                                <tr>
+                                <tr class="<?php echo $contract['gecerli_mi'] ? 'table-success' : 'table-danger'; ?>">
                                     <td class="actions">
                                         <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
                                             <i class="fas fa-edit"></i>
@@ -231,6 +235,21 @@ function display_date($date_string) {
                                     <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
                                     <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
                                     <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
+                                    <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
+                                    <td><?php echo $contract['kalan_miktar']; ?></td>
+                                    <td>
+                                        <?php 
+                                        $status_class = $contract['gecerlilik_durumu'] === 'Geçerli' ? 'badge-success' : 'badge-danger';
+                                        echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
+                                        ?>
+                                    </td>
+                                    <td>
+                                        <?php 
+                                        $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
+                                        $usage_text = $contract['gecerli_mi'] ? 'Kullanılabilir' : 'Kullanılamaz';
+                                        echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
+                                        ?>
+                                    </td>
                                 </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
