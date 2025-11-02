@@ -373,6 +373,94 @@ function display_date($date_string) {
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     
+    <!-- Simple Custom Styles for SweetAlert -->
+    <style>
+        .swal2-popup {
+            max-width: 90vw !important;
+            font-family: 'Ubuntu', sans-serif !important;
+        }
+        
+        .swal2-title {
+            font-size: 1.2rem !important;
+            font-weight: 600 !important;
+            color: #333 !important;
+            padding: 10px 20px 0 20px !important;
+        }
+        
+        .swal2-content {
+            max-height: 80vh !important;
+            overflow-y: hidden !important;
+            padding: 0 20px 20px 20px !important;
+        }
+        
+        .swal2-popup table {
+            border-collapse: collapse;
+            margin-bottom: 0;
+            width: 100%;
+            background-color: #fff;
+            border: 1px solid #dee2e6;
+        }
+        
+        .swal2-popup table th,
+        .swal2-popup table td {
+            border: 1px solid #dee2e6;
+            padding: 0.7rem;
+            vertical-align: top;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+        
+        .swal2-popup table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .swal2-popup table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .swal2-popup table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+            font-weight: 600;
+        }
+        
+        /* Scrollbar styling */
+        .swal2-popup ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Confirm button styling */
+        .swal2-confirm {
+            background-color: #007bff !important;
+            border-radius: 5px !important;
+            padding: 8px 25px !important;
+            font-weight: 500 !important;
+            border: none !important;
+            margin-top: 15px !important;
+        }
+        
+        .swal2-confirm:hover {
+            background-color: #0056b3 !important;
+        }
+    </style>
+    
     <!-- Custom Styles for SweetAlert -->
     <style>
         .swal2-popup {
@@ -696,14 +784,11 @@ function display_date($date_string) {
             
             // Show loading indicator
             Swal.fire({
-                title: '<i class="fas fa-spinner fa-spin mr-2"></i>Yükleniyor...',
-                html: '<div class="mt-2"><i class="fas fa-history mr-2"></i>Mal Kabul geçmişi alınıyor</div>',
+                title: 'Yükleniyor...',
+                text: 'Mal Kabul geçmişi alınıyor',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,
-                customClass: {
-                    popup: 'swal2-loading-popup'
-                },
                 didOpen: () => {
                     Swal.showLoading();
                 }
@@ -762,29 +847,15 @@ function display_date($date_string) {
                         }
                         
                         Swal.fire({
-                            title: `<i class="fas fa-history mr-2"></i>Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
+                            title: `Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
                             html: tableHtml,
-                            width: '850px',
-                            padding: '25px',
+                            width: '800px',
                             showCloseButton: false,
                             showConfirmButton: true,
-                            confirmButtonText: '<i class="fas fa-check mr-2"></i>Tamam',
+                            confirmButtonText: 'Tamam',
                             customClass: {
-                                container: 'my-swal-container',
-                                popup: 'my-swal-popup',
-                                content: 'my-swal-content',
-                                confirmButton: 'swal2-confirm'
-                            },
-                            backdrop: 'rgba(0,0,0,0.4)',
-                            allowOutsideClick: false,
-                            allowEscapeKey: false,
-                            didOpen: () => {
-                                // Custom styling for better scrollability
-                                const popup = Swal.getPopup();
-                                if (popup) {
-                                    popup.style.maxHeight = '90vh';
-                                    popup.style.overflow = 'hidden';
-                                }
+                                popup: 'swal2-popup',
+                                content: 'swal2-content'
                             }
                         });
                     } else {
