@@ -218,7 +218,9 @@ switch ($action) {
         $contract_check_stmt->close();
 
         // Get related stock movements
-        $movements_query = "SELECT shk.hareket_id, shk.miktar, shk.tarih, shk.aciklama
+        $movements_query = "SELECT shk.hareket_id, shk.miktar, 
+                           COALESCE(DATE_FORMAT(shk.tarih, '%d.%m.%Y %H:%i'), '-') as tarih,
+                           COALESCE(shk.aciklama, '-') as aciklama
                            FROM stok_hareket_kayitlari shk
                            JOIN stok_hareketleri_sozlesmeler shs ON shk.hareket_id = shs.hareket_id
                            WHERE shs.sozlesme_id = ? AND shk.hareket_turu = 'mal_kabul'

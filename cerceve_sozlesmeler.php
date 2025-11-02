@@ -372,6 +372,82 @@ function display_date($date_string) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+    
+    <!-- Custom Styles for SweetAlert -->
+    <style>
+        .swal2-popup {
+            max-width: 90vw !important;
+        }
+        
+        .swal2-content {
+            max-height: 80vh !important;
+            overflow-y: hidden !important;
+        }
+        
+        .my-swal-container .swal2-popup {
+            max-height: 90vh !important;
+        }
+        
+        .my-swal-content {
+            max-height: 75vh !important;
+            overflow-y: auto !important;
+        }
+        
+        /* Table styles inside SweetAlert */
+        .swal2-popup table {
+            border-collapse: collapse;
+            margin-bottom: 0;
+            width: 100%;
+        }
+        
+        .swal2-popup table th,
+        .swal2-popup table td {
+            border: 1px solid #dee2e6;
+            padding: 0.5rem;
+            vertical-align: top;
+            font-size: 0.9rem;
+        }
+        
+        .swal2-popup table thead th {
+            position: sticky;
+            top: 0;
+            background-color: #f8f9fa;
+            z-index: 10;
+        }
+        
+        /* Scrollbar styling */
+        .swal2-popup ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 4px;
+        }
+        
+        .swal2-popup ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .swal2-popup {
+                max-width: 95vw !important;
+                margin: 10px;
+            }
+            
+            .swal2-popup table th,
+            .swal2-popup table td {
+                padding: 0.3rem;
+                font-size: 0.8rem;
+            }
+        }
+    </style>
 
     <script>
     $(document).ready(function() {
@@ -505,9 +581,21 @@ function display_date($date_string) {
             });
         });
 
-        // Handle contract detail view
+        // Handle contract detail view with SweetAlert2
         $(document).on('click', '.detail-btn', function() {
             var contractId = $(this).data('id');
+            
+            // Show loading indicator
+            Swal.fire({
+                title: 'Yükleniyor...',
+                text: 'Mal Kabul geçmişi alınıyor',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
             
             $.ajax({
                 url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
@@ -519,55 +607,84 @@ function display_date($date_string) {
                 dataType: 'json',
                 success: function(response) {
                     if (response.status === 'success') {
-                        var titleHtml = `<h5>Mal Kabul Geçmişi - Sözleşme ID: ${contractId}</h5>`;
-                        var detailHtml = '';
+                        var tableHtml = '';
                         
                         if (response.movements && response.movements.length > 0) {
-                            detailHtml = `
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-bordered">
-                                        <thead class="thead-light">
+                            tableHtml = `
+                                <div style="max-height: 400px; overflow-y: auto;">
+                                    <table class="table table-sm table-bordered" style="width: 100%; font-size: 0.9rem;">
+                                        <thead class="thead-light" style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;">
                                             <tr>
-                                                <th>Hareket ID</th>
-                                                <th>Miktar</th>
-                                                <th>Tarih</th>
-                                                <th>Açıklama</th>
+                                                <th style="padding: 0.5rem;">Hareket ID</th>
+                                                <th style="padding: 0.5rem;">Miktar</th>
+                                                <th style="padding: 0.5rem;">Tarih</th>
+                                                <th style="padding: 0.5rem;">Açıklama</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                             `;
                             
                             response.movements.forEach(function(movement) {
-                                detailHtml += `
+                                tableHtml += `
                                     <tr>
-                                        <td>${movement.hareket_id}</td>
-                                        <td>${movement.miktar}</td>
-                                        <td>${movement.tarih}</td>
-                                        <td>${movement.aciklama}</td>
+                                        <td style="padding: 0.4rem;">${movement.hareket_id}</td>
+                                        <td style="padding: 0.4rem;">${movement.miktar}</td>
+                                        <td style="padding: 0.4rem;">${movement.tarih}</td>
+                                        <td style="padding: 0.4rem;">${movement.aciklama || '-'}</td>
                                     </tr>
                                 `;
                             });
                             
-                            detailHtml += `
+                            tableHtml += `
                                         </tbody>
                                     </table>
                                 </div>
                             `;
                         } else {
-                            detailHtml = `
-                                <div class="alert alert-info">Henüz bu sözleşmeyle ilgili Mal Kabul kaydı bulunmamaktadır.</div>
+                            tableHtml = `
+                                <div class="alert alert-info text-center">
+                                    <i class="fas fa-info-circle"></i> 
+                                    Henüz bu sözleşmeyle ilgili Mal Kabul kaydı bulunmamaktadır.
+                                </div>
                             `;
                         }
                         
-                        $('#detailModal .modal-title').html(titleHtml);
-                        $('#detailModal .modal-body').html(detailHtml);
-                        $('#detailModal').modal('show');
+                        Swal.fire({
+                            title: `Mal Kabul Geçmişi - Sözleşme ID: ${contractId}`,
+                            html: tableHtml,
+                            width: '800px',
+                            showCloseButton: true,
+                            showConfirmButton: false,
+                            customClass: {
+                                container: 'my-swal-container',
+                                popup: 'my-swal-popup',
+                                content: 'my-swal-content'
+                            },
+                            didOpen: () => {
+                                // Custom styling for better scrollability
+                                const popup = Swal.getPopup();
+                                if (popup) {
+                                    popup.style.maxHeight = '90vh';
+                                    popup.style.overflow = 'hidden';
+                                }
+                            }
+                        });
                     } else {
-                        showAlert(response.message, 'danger');
+                        Swal.fire({
+                            title: 'Hata!',
+                            text: response.message,
+                            icon: 'error',
+                            confirmButtonText: 'Tamam'
+                        });
                     }
                 },
                 error: function() {
-                    showAlert('Mal Kabul geçmişi alınırken bir hata oluştu.', 'danger');
+                    Swal.fire({
+                        title: 'Hata!',
+                        text: 'Mal Kabul geçmişi alınırken bir hata oluştu.',
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
                 }
             });
         });
