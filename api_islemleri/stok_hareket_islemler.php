@@ -919,12 +919,56 @@ switch ($action) {
         $connection->autocommit(TRUE); // Reset autocommit
         break;
 
+    case 'get_contracts_by_priority':
+        $material_kodu = $_POST['material_kodu'] ?? '';
+        $tedarikci_id = $_POST['tedarikci_id'] ?? '';
+        
+        if (!$material_kodu || !$tedarikci_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu ve tedarikci ID gerekli.']);
+            break;
+        }
+        
+        $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, 
+                          COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
+                          (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar,
+                          c.oncelik
+                          FROM cerceve_sozlesmeler c
+                          LEFT JOIN (
+                              SELECT 
+                                  tedarikci_id,
+                                  kod as malzeme_kodu,
+                                  SUM(miktar) as toplam_mal_kabul
+                              FROM stok_hareket_kayitlari
+                              WHERE hareket_turu = 'mal_kabul'
+                              GROUP BY tedarikci_id, kod
+                          ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
+                          AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                          WHERE c.tedarikci_id = ? 
+                          AND c.malzeme_kodu = ?
+                          AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
+                          AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                          ORDER BY c.oncelik ASC, kalan_miktar DESC";
+        
+        $contract_stmt = $connection->prepare($contract_query);
+        $contract_stmt->bind_param('is', $tedarikci_id, $material_kodu);
+        $contract_stmt->execute();
+        $contract_result = $contract_stmt->get_result();
+        
+        $contracts = [];
+        while ($row = $contract_result->fetch_assoc()) {
+            $contracts[] = $row;
+        }
+        
+        echo json_encode(['status' => 'success', 'contracts' => $contracts]);
+        $contract_stmt->close();
+        break;
+
     case 'check_framework_contract':
         $material_kodu = $_POST['material_kodu'] ?? '';
         $tedarikci_id = $_POST['tedarikci_id'] ?? '';
         
         if (!$material_kodu || !$tedarikci_id) {
-            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu ve tedarikçi ID gerekli.']);
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu ve tedarikci ID gerekli.']);
             break;
         }
         
@@ -959,7 +1003,8 @@ switch ($action) {
                                 WHERE c.tedarikci_id = ? 
                                 AND c.malzeme_kodu = ?
                                 AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar";
+                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                                ORDER BY c.oncelik ASC, kalan_miktar DESC";
         $contract_check_stmt = $connection->prepare($contract_check_query);
         $contract_check_stmt->bind_param('is', $tedarikci_id, $material_kodu);
         $contract_check_stmt->execute();
@@ -986,6 +1031,175 @@ switch ($action) {
             ]);
         }
         $contract_check_stmt->close();
+        break;
+
+    case 'add_mal_kabul':
+        $stok_turu = $_POST['stok_turu'] ?? '';
+        $kod = $_POST['kod'] ?? '';
+        $miktar = $_POST['miktar'] ?? 0;
+        $aciklama = $_POST['aciklama'] ?? '';
+        $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
+        $tedarikci_id = $_POST['tedarikci'] ?? '';
+        $depo = $_POST['depo'] ?? '';
+        $raf = $_POST['raf'] ?? '';
+
+        // Validation
+        if (!$stok_turu || !$kod || !$miktar || !$aciklama || !$tedarikci_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Lutfen tum zorunlu alanlari doldurun (stok_turu, kod, miktar, aciklama ve tedarikci).']);
+            break;
+        }
+
+        // Ensure we're dealing with materials only
+        if ($stok_turu !== 'malzeme') {
+            echo json_encode(['status' => 'error', 'message' => 'Mal kabul sadece malzeme turu icin yapilabilir.']);
+            break;
+        }
+
+        // Get item name, unit, and current location based on stock type
+        $item_name = '';
+        $item_unit = '';
+        $current_depo = '';
+        $current_raf = '';
+
+        $item_query = "SELECT malzeme_ismi, birim, depo, raf FROM malzemeler WHERE malzeme_kodu = ?";
+        $item_stmt = $connection->prepare($item_query);
+        $item_stmt->bind_param('s', $kod);
+        
+        $item_stmt->execute();
+        $item_result = $item_stmt->get_result();
+        if ($item_result->num_rows > 0) {
+            $item = $item_result->fetch_assoc();
+            $item_name = $item['malzeme_ismi'];
+            $item_unit = $item['birim'];
+            $current_depo = $item['depo'] ?? '';
+            $current_raf = $item['raf'] ?? '';
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Gecersiz malzeme kodu.']);
+            $item_stmt->close();
+            break;
+        }
+        $item_stmt->close();
+
+        // Use current location if not provided in the form
+        if (!$depo) {
+            $depo = $current_depo;
+        }
+        if (!$raf) {
+            $raf = $current_raf;
+        }
+
+        // Get supplier name from ID
+        $tedarikci_ismi = '';
+        $supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
+        $supplier_stmt = $connection->prepare($supplier_query);
+        $supplier_stmt->bind_param('i', $tedarikci_id);
+        $supplier_stmt->execute();
+        $supplier_result = $supplier_stmt->get_result();
+        if ($supplier_result->num_rows > 0) {
+            $supplier = $supplier_result->fetch_assoc();
+            $tedarikci_ismi = $supplier['tedarikci_adi'];
+        }
+        $supplier_stmt->close();
+
+        // Check available framework contracts and split the amount if necessary
+        $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, 
+                          COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
+                          (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar,
+                          c.oncelik
+                          FROM cerceve_sozlesmeler c
+                          LEFT JOIN (
+                              SELECT 
+                                  tedarikci_id,
+                                  kod as malzeme_kodu,
+                                  SUM(miktar) as toplam_mal_kabul
+                              FROM stok_hareket_kayitlari
+                              WHERE hareket_turu = 'mal_kabul'
+                              GROUP BY tedarikci_id, kod
+                          ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
+                          AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                          WHERE c.tedarikci_id = ? 
+                          AND c.malzeme_kodu = ?
+                          AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
+                          AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                          ORDER BY c.oncelik ASC, kalan_miktar DESC";
+        
+        $contract_stmt = $connection->prepare($contract_query);
+        $contract_stmt->bind_param('is', $tedarikci_id, $kod);
+        $contract_stmt->execute();
+        $contract_result = $contract_stmt->get_result();
+        
+        $contracts = [];
+        while ($row = $contract_result->fetch_assoc()) {
+            $contracts[] = $row;
+        }
+        $contract_stmt->close();
+        
+        // Check if we have enough contracts to cover the requested amount
+        $total_available = array_sum(array_column($contracts, 'kalan_miktar'));
+        $requested_amount = $miktar;
+        
+        if ($total_available < $requested_amount) {
+            echo json_encode(['status' => 'error', 'message' => 'Tum gecerli sozlesme limitleri bu islem icin yeterli degildir.']);
+            break;
+        }
+
+        // Process the amount using contracts in priority order
+        $remaining_amount = $requested_amount;
+        $total_updated_stock = 0;
+        
+        foreach ($contracts as $contract) {
+            if ($remaining_amount <= 0) {
+                break; // All requested amount has been allocated
+            }
+            
+            $contract_amount = min($contract['kalan_miktar'], $remaining_amount);
+            
+            // Insert stock movement for this contract portion
+            $yon = 'giris'; // Mal kabul is always incoming
+            $hareket_turu = 'mal_kabul'; // Specific for mal kabul
+            $tank_kodu = $_POST['tank_kodu'] ?? ''; // Although not typically used for materials
+
+            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $movement_stmt = $connection->prepare($movement_query);
+            $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']', $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
+
+            if (!$movement_stmt->execute()) {
+                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $connection->error]);
+                $movement_stmt->close();
+                break;
+            }
+            
+            $movement_stmt->close();
+            $remaining_amount -= $contract_amount;
+            $total_updated_stock += $contract_amount;
+        }
+
+        // Update the material stock in the main materials table
+        if ($total_updated_stock > 0) {
+            $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
+            $stock_stmt = $connection->prepare($stock_query);
+            $stock_stmt->bind_param('ds', $total_updated_stock, $kod);
+
+            if ($stock_stmt->execute()) {
+                // Also update the location information if provided
+                if ($depo && $raf) {
+                    $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
+                    $location_stmt = $connection->prepare($location_query);
+                    $location_stmt->bind_param('sss', $depo, $raf, $kod);
+                    $location_stmt->execute();
+                    $location_stmt->close();
+                }
+                
+                echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $connection->error]);
+            }
+
+            $stock_stmt->close();
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
+        }
+        
         break;
 
     default:

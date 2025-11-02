@@ -200,6 +200,7 @@ function display_date($date_string) {
                                 <th><i class="fas fa-calendar-plus"></i> Başlangıç</th>
                                 <th><i class="fas fa-calendar-times"></i> Bitiş</th>
                                 <th><i class="fas fa-user"></i> Oluşturan</th>
+                                <th><i class="fas fa-sort-numeric-up"></i> Öncelik</th>
                                 <th><i class="fas fa-box-open"></i> Toplam Mal Kabul</th>
                                 <th><i class="fas fa-chart-line"></i> Kalan Miktar</th>
                                 <th><i class="fas fa-info-circle"></i> Geçerlilik Durumu</th>
@@ -235,6 +236,9 @@ function display_date($date_string) {
                                     <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
                                     <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
                                     <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
+                                    <td>
+                                        <span class="badge badge-info"><?php echo $contract['oncelik']; ?></span>
+                                    </td>
                                     <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
                                     <td><?php echo $contract['kalan_miktar']; ?></td>
                                     <td>
@@ -333,6 +337,16 @@ function display_date($date_string) {
                             <div class="form-group col-12 col-lg-4">
                                 <label for="bitis_tarihi"><i class="fas fa-calendar-times"></i> Bitiş</label>
                                 <input type="date" class="form-control" id="bitis_tarihi" name="bitis_tarihi">
+                            </div>
+                            <div class="form-group col-12 col-lg-4">
+                                <label for="oncelik"><i class="fas fa-sort-numeric-up"></i> Öncelik</label>
+                                <select class="form-control" id="oncelik" name="oncelik" required>
+                                    <option value="1">1 - En Yüksek</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5 - En Düşük</option>
+                                </select>
                             </div>
                             <div class="form-group col-12" style="grid-column: 1 / -1;">
                                 <label for="aciklama"><i class="fas fa-comment"></i> Açıklama</label>
