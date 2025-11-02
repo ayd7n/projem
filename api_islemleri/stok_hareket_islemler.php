@@ -1159,19 +1159,49 @@ switch ($action) {
             $hareket_turu = 'mal_kabul'; // Specific for mal kabul
             $tank_kodu = $_POST['tank_kodu'] ?? ''; // Although not typically used for materials
 
+            $connection->autocommit(FALSE); // Start transaction
+            
             $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $movement_stmt = $connection->prepare($movement_query);
             $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']', $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
 
             if (!$movement_stmt->execute()) {
+                $connection->rollback();
                 echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $connection->error]);
                 $movement_stmt->close();
                 break;
             }
             
+            $hareket_id = $connection->insert_id;
             $movement_stmt->close();
+            
+            // Insert the relationship between stock movement and contract
+            $contract_link_query = "INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, kullanilan_miktar) VALUES (?, ?, ?)";
+            $contract_link_stmt = $connection->prepare($contract_link_query);
+            $contract_link_stmt->bind_param('iid', $hareket_id, $contract['sozlesme_id'], $contract_amount);
+            
+            if (!$contract_link_stmt->execute()) {
+                $connection->rollback();
+                echo json_encode(['status' => 'error', 'message' => 'Sozlesme baglantisi kaydedilirken hata olustu: ' . $connection->error]);
+                $contract_link_stmt->close();
+                break;
+            }
+            
+            $contract_link_stmt->close();
+            
             $remaining_amount -= $contract_amount;
             $total_updated_stock += $contract_amount;
+        }
+        
+        // Commit the transaction if everything was successful
+        if ($remaining_amount <= 0) {
+            $connection->commit();
+            $connection->autocommit(TRUE);
+        } else {
+            $connection->rollback();
+            $connection->autocommit(TRUE);
+            echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
+            break;
         }
 
         // Update the material stock in the main materials table
