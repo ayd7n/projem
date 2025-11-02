@@ -218,6 +218,9 @@ function display_date($date_string) {
                                         <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        <button class="btn btn-info btn-sm detail-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                            <i class="fas fa-info-circle"></i>
+                                        </button>
                                     </td>
                                     <td><strong>#<?php echo $contract['sozlesme_id']; ?></strong></td>
                                     <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
@@ -501,6 +504,119 @@ function display_date($date_string) {
                 }
             });
         });
+
+        // Handle contract detail view
+        $(document).on('click', '.detail-btn', function() {
+            var contractId = $(this).data('id');
+            
+            $.ajax({
+                url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                type: 'POST',
+                data: {
+                    action: 'get_contract_details',
+                    sozlesme_id: contractId
+                },
+                dataType: 'json',
+                success: function(response) {
+                    if (response.status === 'success') {
+                        var contract = response.data;
+                        var detailHtml = `
+                            <h5>Sözleşme Detayları</h5>
+                            <div class="row">
+                                <div class="col-6"><strong>Sözleşme ID:</strong></div>
+                                <div class="col-6">${contract.sozlesme_id}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Tedarikçi:</strong></div>
+                                <div class="col-6">${contract.tedarikci_adi}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Malzeme:</strong></div>
+                                <div class="col-6">${contract.malzeme_ismi}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Toplam Limit:</strong></div>
+                                <div class="col-6">${contract.limit_miktar}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Kullanılan Miktar:</strong></div>
+                                <div class="col-6">${contract.toplam_mal_kabul_miktari}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Kalan Miktar:</strong></div>
+                                <div class="col-6">${contract.kalan_miktar}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Öncelik:</strong></div>
+                                <div class="col-6">${contract.oncelik}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Başlangıç Tarihi:</strong></div>
+                                <div class="col-6">${contract.baslangic_tarihi || '-'}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Bitiş Tarihi:</strong></div>
+                                <div class="col-6">${contract.bitis_tarihi || '-'}</div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-6"><strong>Geçerlilik Durumu:</strong></div>
+                                <div class="col-6">
+                                    <span class="${contract.gecerli_mi ? 'badge badge-success' : 'badge badge-danger'}">
+                                        ${contract.gecerlilik_durumu}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <h5 class="mt-4">Mal Kabul Geçmişi</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th>Hareket ID</th>
+                                            <th>Miktar</th>
+                                            <th>Tarih</th>
+                                            <th>Açıklama</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                        `;
+                        
+                        if (response.movements && response.movements.length > 0) {
+                            response.movements.forEach(function(movement) {
+                                detailHtml += `
+                                    <tr>
+                                        <td>${movement.hareket_id}</td>
+                                        <td>${movement.miktar}</td>
+                                        <td>${movement.tarih}</td>
+                                        <td>${movement.aciklama}</td>
+                                    </tr>
+                                `;
+                            });
+                        } else {
+                            detailHtml += `
+                                <tr>
+                                    <td colspan="4" class="text-center">Henüz Mal Kabul kaydı bulunmamaktadır</td>
+                                </tr>
+                            `;
+                        }
+                        
+                        detailHtml += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                        
+                        $('#detailModal .modal-body').html(detailHtml);
+                        $('#detailModal').modal('show');
+                    } else {
+                        showAlert(response.message, 'danger');
+                    }
+                },
+                error: function() {
+                    showAlert('Sözleşme detayları alınırken bir hata oluştu.', 'danger');
+                }
+            });
+        });
     });
     </script>
 
@@ -567,6 +683,26 @@ function display_date($date_string) {
                         <h6><i class="fas fa-lightbulb"></i> Uygulama Önerisi</h6>
                         <p>En çok kullandığınız tedarikçi anlaşmalarına daha yüksek (düşük sayı) öncelik vererek sistemden en iyi şekilde yararlanabilirsiniz.</p>
                     </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detay Modal -->
+    <div class="modal fade" id="detailModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Sözleşme Detayı</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <!-- Dinamik içerik buraya yüklenecek -->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
