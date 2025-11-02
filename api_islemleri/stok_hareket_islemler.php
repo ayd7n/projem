@@ -517,170 +517,7 @@ switch ($action) {
         $delete_stmt->close();
         break;
 
-    case 'add_mal_kabul':
-        $stok_turu = $_POST['stok_turu'] ?? '';
-        $kod = $_POST['kod'] ?? '';
-        $miktar = $_POST['miktar'] ?? 0;
-        $aciklama = $_POST['aciklama'] ?? '';
-        $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
-        $tedarikci_id = $_POST['tedarikci'] ?? ''; // tedarikci form alanı artık ID tutuyor
-        $depo = $_POST['depo'] ?? '';
-        $raf = $_POST['raf'] ?? '';
 
-        // Validation
-        if (!$stok_turu || !$kod || !$miktar || !$aciklama || !$tedarikci_id) {
-            echo json_encode(['status' => 'error', 'message' => 'Lütfen tüm zorunlu alanları doldurun (stok_türü, kod, miktar, açıklama ve tedarikçi).']);
-            break;
-        }
-
-        // Check if there is a valid framework contract for this supplier and material
-        $contract_check_query = "SELECT c.sozlesme_id, c.limit_miktar, 
-                                COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
-                                (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar
-                                FROM cerceve_sozlesmeler c
-                                LEFT JOIN (
-                                    SELECT 
-                                        tedarikci_id,
-                                        kod as malzeme_kodu,
-                                        SUM(miktar) as toplam_mal_kabul
-                                    FROM stok_hareket_kayitlari
-                                    WHERE hareket_turu = 'mal_kabul'
-                                    GROUP BY tedarikci_id, kod
-                                ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
-                                AND c.malzeme_kodu = kullanilan.malzeme_kodu
-                                WHERE c.tedarikci_id = ? 
-                                AND c.malzeme_kodu = ?
-                                AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar";
-        $contract_check_stmt = $connection->prepare($contract_check_query);
-        $contract_check_stmt->bind_param('is', $tedarikci_id, $kod);
-        $contract_check_stmt->execute();
-        $contract_result = $contract_check_stmt->get_result();
-        
-        if ($contract_result->num_rows == 0) {
-            // No valid contract found
-            echo json_encode(['status' => 'error', 'message' => 'Bu tedarikciden bu malzeme icin gecerli bir cerceve sozlesmesi bulunmamaktadir veya tum sozlesme limitleri dolmustur.']);
-            $contract_check_stmt->close();
-            break;
-        }
-        
-        // Check if adding this amount would exceed any contract limit
-        $valid_contract = false;
-        $max_allowed_amount = 0;
-        
-        while ($contract_row = $contract_result->fetch_assoc()) {
-            $available_amount = $contract_row['kalan_miktar'];
-            if ($miktar <= $available_amount) {
-                $valid_contract = true;
-                break;
-            } elseif ($available_amount > $max_allowed_amount) {
-                $max_allowed_amount = $available_amount;
-            }
-        }
-        
-        if (!$valid_contract) {
-            if ($max_allowed_amount > 0) {
-                echo json_encode(['status' => 'error', 'message' => "Girilen miktar (" . $miktar . ") mevcut cerceve sozlesme limitini asiyor. Maksimum girilebilecek miktar: " . $max_allowed_amount]);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Bu malzeme icin tum cerceve sozlesme limitleri dolmustur.']);
-            }
-            $contract_check_stmt->close();
-            break;
-        }
-        
-        $contract_check_stmt->close();
-
-        // Ensure we're dealing with materials only
-        if ($stok_turu !== 'malzeme') {
-            echo json_encode(['status' => 'error', 'message' => 'Mal kabul sadece malzeme türü için yapılabilir.']);
-            break;
-        }
-
-        // Get item name, unit, and current location based on stock type
-        $item_name = '';
-        $item_unit = '';
-        $current_depo = '';
-        $current_raf = '';
-
-        $item_query = "SELECT malzeme_ismi, birim, depo, raf FROM malzemeler WHERE malzeme_kodu = ?";
-        $item_stmt = $connection->prepare($item_query);
-        $item_stmt->bind_param('s', $kod);
-        
-        $item_stmt->execute();
-        $item_result = $item_stmt->get_result();
-        if ($item_result->num_rows > 0) {
-            $item = $item_result->fetch_assoc();
-            $item_name = $item['malzeme_ismi'];
-            $item_unit = $item['birim'];
-            $current_depo = $item['depo'] ?? '';
-            $current_raf = $item['raf'] ?? '';
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Geçersiz malzeme kodu.']);
-            $item_stmt->close();
-            break;
-        }
-        $item_stmt->close();
-
-        // Use current location if not provided in the form
-        if (!$depo) {
-            $depo = $current_depo;
-        }
-        if (!$raf) {
-            $raf = $current_raf;
-        }
-
-        // Get supplier name from ID
-        $tedarikci_ismi = '';
-        $supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
-        $supplier_stmt = $connection->prepare($supplier_query);
-        $supplier_stmt->bind_param('i', $tedarikci_id);
-        $supplier_stmt->execute();
-        $supplier_result = $supplier_stmt->get_result();
-        if ($supplier_result->num_rows > 0) {
-            $supplier = $supplier_result->fetch_assoc();
-            $tedarikci_ismi = $supplier['tedarikci_adi'];
-        }
-        $supplier_stmt->close();
-
-        // Insert stock movement for mal kabul (incoming)
-        $yon = 'giris'; // Mal kabul is always incoming
-        $hareket_turu = 'mal_kabul'; // Specific for mal kabul
-        $tank_kodu = $_POST['tank_kodu'] ?? ''; // Although not typically used for materials
-
-        // Insert the stock movement record
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
-
-        if ($movement_stmt->execute()) {
-            $hareket_id = $movement_stmt->insert_id;
-
-            // Update the material stock in the main materials table
-            $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-            $stock_stmt = $connection->prepare($stock_query);
-            $stock_stmt->bind_param('ds', $miktar, $kod);
-
-            if ($stock_stmt->execute()) {
-                // Also update the location information if provided
-                if ($depo && $raf) {
-                    $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
-                    $location_stmt = $connection->prepare($location_query);
-                    $location_stmt->bind_param('sss', $depo, $raf, $kod);
-                    $location_stmt->execute();
-                    $location_stmt->close();
-                }
-                
-                echo json_encode(['status' => 'success', 'message' => 'Mal kabul işlemi başarıyla kaydedildi ve stok güncellendi.']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi kaydedildi ama stok güncellenirken hata oluştu: ' . $connection->error]);
-            }
-
-            $stock_stmt->close();
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Mal kabul işlemi kaydedilirken hata oluştu: ' . $connection->error]);
-        }
-        $movement_stmt->close();
-        break;
 
     case 'transfer_stock':
         // Get transfer parameters
@@ -1103,24 +940,24 @@ switch ($action) {
 
         // Check available framework contracts and split the amount if necessary
         $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, 
-                          COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
-                          (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar,
+                          COALESCE(shs.toplam_kullanilan, 0) as toplam_mal_kabul_miktari,
+                          (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) as kalan_miktar,
                           c.oncelik
                           FROM cerceve_sozlesmeler c
                           LEFT JOIN (
-                              SELECT 
-                                  tedarikci_id,
-                                  kod as malzeme_kodu,
-                                  SUM(miktar) as toplam_mal_kabul
-                              FROM stok_hareket_kayitlari
-                              WHERE hareket_turu = 'mal_kabul'
-                              GROUP BY tedarikci_id, kod
-                          ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
-                          AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                              SELECT sozlesme_id, SUM(kullanilan_miktar) as toplam_kullanilan
+                              FROM stok_hareketleri_sozlesmeler shs
+                              WHERE EXISTS (
+                                  SELECT 1 FROM stok_hareket_kayitlari
+                                  WHERE stok_hareket_kayitlari.hareket_id = shs.hareket_id
+                                  AND stok_hareket_kayitlari.hareket_turu = 'mal_kabul'
+                              )
+                              GROUP BY sozlesme_id
+                          ) shs ON c.sozlesme_id = shs.sozlesme_id
                           WHERE c.tedarikci_id = ? 
                           AND c.malzeme_kodu = ?
                           AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                          AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                          AND COALESCE(shs.toplam_kullanilan, 0) < c.limit_miktar
                           ORDER BY c.oncelik ASC, kalan_miktar DESC";
         
         $contract_stmt = $connection->prepare($contract_query);
@@ -1161,9 +998,10 @@ switch ($action) {
 
             $connection->autocommit(FALSE); // Start transaction
             
+            $contract_specific_aciklama = $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']';
             $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $movement_stmt = $connection->prepare($movement_query);
-            $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']', $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
+            $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $contract_specific_aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
 
             if (!$movement_stmt->execute()) {
                 $connection->rollback();
@@ -1175,10 +1013,11 @@ switch ($action) {
             $hareket_id = $connection->insert_id;
             $movement_stmt->close();
             
+            $contract_id = $contract['sozlesme_id'];
             // Insert the relationship between stock movement and contract
             $contract_link_query = "INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, kullanilan_miktar) VALUES (?, ?, ?)";
             $contract_link_stmt = $connection->prepare($contract_link_query);
-            $contract_link_stmt->bind_param('iid', $hareket_id, $contract['sozlesme_id'], $contract_amount);
+            $contract_link_stmt->bind_param('iid', $hareket_id, $contract_id, $contract_amount);
             
             if (!$contract_link_stmt->execute()) {
                 $connection->rollback();

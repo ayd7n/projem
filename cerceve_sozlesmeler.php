@@ -79,7 +79,7 @@ function display_date($date_string) {
         
         <div class="page-header">
             <div>
-                <h1>Çerçeve Sözleşmeler</h1>
+                <h1>Çerçeve Sözleşmeler <button class="btn btn-info btn-sm ml-2" data-toggle="modal" data-target="#bilgiModal"><i class="fas fa-info-circle"></i> Sistem Nasıl Çalışır?</button></h1>
                 <p>Çerçeve sözleşmeleri yönetin ve izleyin</p>
             </div>
         </div>
@@ -503,5 +503,76 @@ function display_date($date_string) {
         });
     });
     </script>
+
+    <!-- Bilgi Modal -->
+    <div class="modal fade" id="bilgiModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Çerçeve Sözleşme Sistemi - Nasıl Çalışır?</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-exclamation-circle"></i> Sistem Özeti</h6>
+                        <p>Çerçeve sözleşme sistemi, tedarikçinizle yaptığınız anlaşmaları takip etmenizi ve Mal Kabul işlemlerinde bu anlaşmaları otomatik olarak kullanmanızı sağlar.</p>
+                    </div>
+                    
+                    <h6><i class="fas fa-star"></i> Öncelik Sistemi</h6>
+                    <p>Her çerçeve sözleşmesine 1-5 arasında bir öncelik seviyesi verilir:</p>
+                    <ul>
+                        <li><strong>1 - En Yüksek Öncelik</strong>: Bu sözleşmeler Mal Kabul sırasında ilk olarak kullanılır</li>
+                        <li><strong>2-5 - Daha Düşük Öncelik</strong>: Daha yüksek öncelikli sözleşmeler tükenince kullanılır</li>
+                    </ul>
+                    
+                    <h6><i class="fas fa-exchange-alt"></i> Bölünmüş Mal Kabul</h6>
+                    <p>Sistem, tek bir Mal Kabul işlemini birden fazla sözleşme kullanarak bölerek tamamlayabilir:</p>
+                    <ul>
+                        <li>Kullanıcı 1000 birim Mal Kabul yapmak isterse</li>
+                        <li>Sistem önce öncelik 1 olan sözleşme ile 300 birim kullanır</li>
+                        <li>Kalan 700 birimi öncelik 2 olan sözleşme ile tamamlar</li>
+                        <li>Bu sayede tüm Mal Kabul işlemleri takip edilebilir olur</li>
+                    </ul>
+                    
+                    <h6><i class="fas fa-search"></i> Takip ve Raporlama</h6>
+                    <p>Sistem her Mal Kabul işlemini hangi sözleşmeyle yaptığını kaydeder:</p>
+                    <ul>
+                        <li><strong>Kalan Miktar:</strong> Her sözleşme için kalan limit doğru şekilde hesaplanır</li>
+                        <li><strong>Görsel Gösterim:</strong> Geçerli, Limit Dolmuş, Süresi Dolmuş durumları farklı renklerle gösterilir</li>
+                        <li><strong>Sipariş Takibi:</strong> Mal Kabul sırasında hangi sözleşmeyle işlem yapıldığı bilgisi saklanır</li>
+                    </ul>
+                    
+                    <h6><i class="fas fa-check-circle"></i> Mal Kabul İşlemi</h6>
+                    <p>Mal Kabul sırasında sistem şu adımları uygular:</p>
+                    <ol>
+                        <li>Kullanıcının seçtiği tedarikçi ve malzeme için geçerli tüm sözleşmeleri bulur</li>
+                        <li>Bulunan sözleşmeleri öncelik sırasına göre sıralar</li>
+                        <li>Kullanıcının girdiği miktarı bu sıraya göre dağıtır</li>
+                        <li>Her dağıtım için ayrı bir stok hareketi oluşturur</li>
+                        <li>Her hareketi hangi sözleşmeyle yapıldığına göre kaydeder</li>
+                    </ol>
+                    
+                    <h6><i class="fas fa-bell"></i> Geçerlilik Kontrolleri</h6>
+                    <p>Sistem Mal Kabul sırasında şu kontrolleri yapar:</p>
+                    <ul>
+                        <li>Sözleşmenin bitiş tarihi geçmiş mi?</li>
+                        <li>Sözleşmenin limiti dolmuş mu?</li>
+                        <li>Toplam kalan limit kullanıcı miktarını karşılayabiliyor mu?</li>
+                        <li>Geçerli sözleşme var mı?</li>
+                    </ul>
+                    
+                    <div class="alert alert-success mt-3">
+                        <h6><i class="fas fa-lightbulb"></i> Uygulama Önerisi</h6>
+                        <p>En çok kullandığınız tedarikçi anlaşmalarına daha yüksek (düşük sayı) öncelik vererek sistemden en iyi şekilde yararlanabilirsiniz.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
