@@ -23,7 +23,7 @@ if (isset($_GET['action'])) {
         $offset = ($page - 1) * $limit;
 
         // Validate order_by and order_dir to prevent SQL injection
-        $allowed_columns = ['malzeme_kodu', 'malzeme_ismi', 'malzeme_turu', 'stok_miktari', 'birim', 'alis_fiyati', 'termin_suresi', 'depo', 'raf', 'kritik_stok_seviyesi'];
+        $allowed_columns = ['malzeme_kodu', 'malzeme_ismi', 'malzeme_turu', 'stok_miktari', 'birim', 'alis_fiyati', 'para_birimi', 'termin_suresi', 'depo', 'raf', 'kritik_stok_seviyesi'];
         $allowed_directions = ['ASC', 'DESC'];
         
         if (!in_array($order_by, $allowed_columns)) {
@@ -109,6 +109,7 @@ if (isset($_GET['action'])) {
     $stok_miktari = isset($_POST['stok_miktari']) ? (float)$_POST['stok_miktari'] : 0;
     $birim = $_POST['birim'] ?? 'adet';
     $alis_fiyati = isset($_POST['alis_fiyati']) ? (float)$_POST['alis_fiyati'] : 0.00;
+    $para_birimi = $_POST['para_birimi'] ?? 'TRY';
     $termin_suresi = isset($_POST['termin_suresi']) ? (int)$_POST['termin_suresi'] : 0;
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
@@ -118,10 +119,10 @@ if (isset($_GET['action'])) {
         if (empty($malzeme_ismi)) {
             $response = ['status' => 'error', 'message' => 'Malzeme ismi boş olamaz.'];
         } else {
-            $query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, not_bilgisi, stok_miktari, birim, alis_fiyati, termin_suresi, depo, raf, kritik_stok_seviyesi) 
-                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, not_bilgisi, stok_miktari, birim, alis_fiyati, para_birimi, termin_suresi, depo, raf, kritik_stok_seviyesi) 
+                      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssdsdissi', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi);
+            $stmt->bind_param('sssdsdissii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi);
 
             if ($stmt->execute()) {
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla eklendi.'];
@@ -136,9 +137,22 @@ if (isset($_GET['action'])) {
         if (empty($malzeme_ismi)) {
             $response = ['status' => 'error', 'message' => 'Malzeme ismi boş olamaz.'];
         } else {
-            $query = "UPDATE malzemeler SET malzeme_ismi = ?, malzeme_turu = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, alis_fiyati = ?, termin_suresi = ?, depo = ?, raf = ?, kritik_stok_seviyesi = ? WHERE malzeme_kodu = ?";
+            // Check if the price was manually changed
+            $price_check_stmt = $connection->prepare("SELECT alis_fiyati FROM malzemeler WHERE malzeme_kodu = ?");
+            $price_check_stmt->bind_param('i', $malzeme_kodu);
+            $price_check_stmt->execute();
+            $result = $price_check_stmt->get_result();
+            $current_material = $result->fetch_assoc();
+            $price_check_stmt->close();
+
+            $maliyet_manuel_girildi = false;
+            if ($current_material && (float)$current_material['alis_fiyati'] != (float)$alis_fiyati) {
+                $maliyet_manuel_girildi = true;
+            }
+
+            $query = "UPDATE malzemeler SET malzeme_ismi = ?, malzeme_turu = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, alis_fiyati = ?, para_birimi = ?, maliyet_manuel_girildi = ?, termin_suresi = ?, depo = ?, raf = ?, kritik_stok_seviyesi = ? WHERE malzeme_kodu = ?";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssdsdissii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi, $malzeme_kodu);
+            $stmt->bind_param('sssdsdsisssii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $maliyet_manuel_girildi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi, $malzeme_kodu);
 
             if ($stmt->execute()) {
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla güncellendi.'];

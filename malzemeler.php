@@ -263,6 +263,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-lira-sign"></i> Alış Fiyatı</th>
+                                <th><i class="fas fa-coins"></i> Para Birimi</th>
                                 <th><i class="fas fa-clock"></i> Termin</th>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
                                 <th><i class="fas fa-cube"></i> Raf</th>
@@ -271,10 +272,10 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="12" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                <td colspan="13" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="materials.length === 0">
-                                <td colspan="12" class="text-center p-4">Aramanızla eşleşen malzeme bulunamadı.</td>
+                                <td colspan="13" class="text-center p-4">Aramanızla eşleşen malzeme bulunamadı.</td>
                             </tr>
                             <tr v-for="material in materials" :key="material.malzeme_kodu">
                                 <td class="actions">
@@ -292,6 +293,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                                 </td>
                                 <td>{{ formatUnit(material.birim) }}</td>
                                 <td>{{ material.alis_fiyati }}</td>
+                                <td>{{ material.para_birimi }}</td>
                                 <td>{{ material.termin_suresi }}</td>
                                 <td>{{ material.depo }}</td>
                                 <td>{{ material.raf }}</td>
@@ -414,12 +416,22 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
-                                    <label>Termin Süresi (Gün)</label>
-                                    <input type="number" class="form-control" v-model="modal.data.termin_suresi" min="0">
+                                    <label>Para Birimi</label>
+                                    <select class="form-control" v-model="modal.data.para_birimi">
+                                        <option value="TRY">TRY</option>
+                                        <option value="USD">USD</option>
+                                        <option value="EUR">EUR</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
                         <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label>Termin Süresi (Gün)</label>
+                                    <input type="number" class="form-control" v-model="modal.data.termin_suresi" min="0">
+                                </div>
+                            </div>
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Depo *</label>
@@ -429,6 +441,8 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                                     </select>
                                 </div>
                             </div>
+                        </div>
+                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Raf *</label>
@@ -438,8 +452,6 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                                     </select>
                                 </div>
                             </div>
-                        </div>
-                        <div class="row">
                             <div class="col-md-6">
                                 <div class="form-group mb-3">
                                     <label>Kritik Stok Seviyesi</label>
@@ -546,6 +558,7 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                         birim: 'adet',
                         malzeme_turu: 'diger',
                         alis_fiyati: 0.00,
+                        para_birimi: 'TRY',
                         depo: '',
                         raf: ''
                     };

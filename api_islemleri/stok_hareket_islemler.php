@@ -459,69 +459,112 @@ switch ($action) {
             break;
         }
 
-        // Get movement details before deletion for stock adjustment
-        $get_query = "SELECT * FROM stok_hareket_kayitlari WHERE hareket_id = ?";
-        $get_stmt = $connection->prepare($get_query);
-        $get_stmt->bind_param('i', $hareket_id);
-        $get_stmt->execute();
-        $get_result = $get_stmt->get_result();
+        $connection->autocommit(FALSE); // Start transaction
 
-        if ($get_result->num_rows === 0) {
-            echo json_encode(['status' => 'error', 'message' => 'Stok hareketi bulunamadı.']);
-            $get_stmt->close();
-            break;
-        }
+        try {
+            // 1. Get all necessary data BEFORE making any changes
+            $movement_query = "SELECT * FROM stok_hareket_kayitlari WHERE hareket_id = ?";
+            $movement_stmt = $connection->prepare($movement_query);
+            $movement_stmt->bind_param('i', $hareket_id);
+            $movement_stmt->execute();
+            $movement_result = $movement_stmt->get_result();
+            if ($movement_result->num_rows === 0) {
+                throw new Exception('Stok hareketi bulunamadı.');
+            }
+            $movement = $movement_result->fetch_assoc();
+            $movement_stmt->close();
 
-        $movement = $get_result->fetch_assoc();
-        $get_stmt->close();
+            $malzeme_kodu = $movement['kod'];
+            $is_mal_kabul = ($movement['stok_turu'] === 'malzeme' && $movement['hareket_turu'] === 'mal_kabul');
+            
+            $deleted_miktar = (float)$movement['miktar'];
+            $deleted_birim_fiyat = 0;
+            $mevcut_stok = 0;
+            $mevcut_alis_fiyati = 0;
 
-        // Delete the movement
-        $delete_query = "DELETE FROM stok_hareket_kayitlari WHERE hareket_id = ?";
-        $delete_stmt = $connection->prepare($delete_query);
-        $delete_stmt->bind_param('i', $hareket_id);
+            if ($is_mal_kabul) {
+                $contract_details_query = "SELECT birim_fiyat FROM stok_hareketleri_sozlesmeler WHERE hareket_id = ?";
+                $contract_stmt = $connection->prepare($contract_details_query);
+                $contract_stmt->bind_param('i', $hareket_id);
+                $contract_stmt->execute();
+                $contract_result = $contract_stmt->get_result();
+                if ($contract_result->num_rows > 0) {
+                    $contract_details = $contract_result->fetch_assoc();
+                    $deleted_birim_fiyat = (float)$contract_details['birim_fiyat'];
+                }
+                $contract_stmt->close();
 
-        if ($delete_stmt->execute()) {
-            // Also delete the related contract linkage if exists
+                $material_query = "SELECT stok_miktari, alis_fiyati FROM malzemeler WHERE malzeme_kodu = ?";
+                $material_stmt = $connection->prepare($material_query);
+                $material_stmt->bind_param('s', $malzeme_kodu);
+                $material_stmt->execute();
+                $material_result = $material_stmt->get_result();
+                $material_data = $material_result->fetch_assoc();
+                $mevcut_stok = (float)$material_data['stok_miktari'];
+                $mevcut_alis_fiyati = (float)$material_data['alis_fiyati'];
+                $material_stmt->close();
+            }
+
+            // 2. Perform all database writes
+            // Delete from child table first
             $contract_delete_query = "DELETE FROM stok_hareketleri_sozlesmeler WHERE hareket_id = ?";
             $contract_delete_stmt = $connection->prepare($contract_delete_query);
             $contract_delete_stmt->bind_param('i', $hareket_id);
-            $contract_delete_stmt->execute();
+            if (!$contract_delete_stmt->execute()) {
+                throw new Exception('Sözleşme bağlantısı silinirken hata oluştu: ' . $contract_delete_stmt->error);
+            }
             $contract_delete_stmt->close();
-            
-            // Reverse stock adjustment
-            $direction = ($movement['yon'] === 'giris') ? -$movement['miktar'] : $movement['miktar'];
 
-            switch ($movement['stok_turu']) {
-                case 'malzeme':
-                    $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('di', $direction, $movement['kod']);
-                    break;
-                case 'esans':
-                    $stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari + ? WHERE esans_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('ds', $direction, $movement['kod']);
-                    break;
-                case 'urun':
-                    $stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + ? WHERE urun_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('ii', $direction, $movement['kod']);
-                    break;
+            // Delete from main movement table
+            $delete_query = "DELETE FROM stok_hareket_kayitlari WHERE hareket_id = ?";
+            $delete_stmt = $connection->prepare($delete_query);
+            $delete_stmt->bind_param('i', $hareket_id);
+            if (!$delete_stmt->execute()) {
+                throw new Exception('Stok hareketi silinirken hata oluştu: ' . $delete_stmt->error);
             }
+            $delete_stmt->close();
 
-            if (isset($stock_stmt) && $stock_stmt->execute()) {
-                echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla silindi.']);
+            // 3. Update material stock and cost
+            if ($is_mal_kabul) {
+                $yeni_stok = $mevcut_stok - $deleted_miktar;
+                $yeni_toplam_maliyet = ($mevcut_stok * $mevcut_alis_fiyati) - ($deleted_miktar * $deleted_birim_fiyat);
+                
+                $yeni_agirlikli_ortalama = 0;
+                if ($yeni_stok > 0 && $yeni_toplam_maliyet > 0) {
+                    $yeni_agirlikli_ortalama = round($yeni_toplam_maliyet / $yeni_stok, 4); // Round to 4 decimal places
+                }
+
+                $maliyet_manuel_girildi_yeni = false;
+                $update_cost_query = "UPDATE malzemeler SET stok_miktari = ?, alis_fiyati = ?, maliyet_manuel_girildi = ? WHERE malzeme_kodu = ?";
+                $update_cost_stmt = $connection->prepare($update_cost_query);
+                $update_cost_stmt->bind_param('ddis', $yeni_stok, $yeni_agirlikli_ortalama, $maliyet_manuel_girildi_yeni, $malzeme_kodu);
+                if (!$update_cost_stmt->execute()) {
+                    throw new Exception('Malzeme maliyeti güncellenirken hata oluştu: ' . $update_cost_stmt->error);
+                }
+                $update_cost_stmt->close();
             } else {
-                echo json_encode(['status' => 'error', 'message' => 'Stok hareketi silindi ama stok geri yüklenirken hata oluştu.']);
-            }
-
-            if (isset($stock_stmt)) {
+                // If not a mal_kabul, just reverse the stock quantity
+                $direction = ($movement['yon'] === 'giris') ? -$deleted_miktar : $deleted_miktar;
+                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
+                $stock_stmt = $connection->prepare($stock_query);
+                $stock_stmt->bind_param('ds', $direction, $malzeme_kodu);
+                if (!$stock_stmt->execute()) {
+                    throw new Exception('Stok geri yüklenirken hata oluştu: ' . $stock_stmt->error);
+                }
                 $stock_stmt->close();
             }
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Stok hareketi silinirken hata oluştu: ' . $connection->error]);
+
+            // 4. If all successful, commit
+            $connection->commit();
+            echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla silindi.']);
+
+        } catch (Exception $e) {
+            // 5. If any step fails, roll back
+            $connection->rollback();
+            echo json_encode(['status' => 'error', 'message' => 'Silme sırasında bir hata oluştu: ' . $e->getMessage()]);
         }
-        $delete_stmt->close();
+
+        $connection->autocommit(TRUE); // Restore autocommit mode
         break;
 
 
@@ -902,8 +945,11 @@ switch ($action) {
         $item_unit = '';
         $current_depo = '';
         $current_raf = '';
+        $mevcut_stok = 0;
+        $mevcut_alis_fiyati = 0;
+        $maliyet_manuel_girildi = false;
 
-        $item_query = "SELECT malzeme_ismi, birim, depo, raf FROM malzemeler WHERE malzeme_kodu = ?";
+        $item_query = "SELECT malzeme_ismi, birim, depo, raf, stok_miktari, alis_fiyati, maliyet_manuel_girildi FROM malzemeler WHERE malzeme_kodu = ?";
         $item_stmt = $connection->prepare($item_query);
         $item_stmt->bind_param('s', $kod);
         
@@ -915,6 +961,9 @@ switch ($action) {
             $item_unit = $item['birim'];
             $current_depo = $item['depo'] ?? '';
             $current_raf = $item['raf'] ?? '';
+            $mevcut_stok = (float)$item['stok_miktari'];
+            $mevcut_alis_fiyati = (float)$item['alis_fiyati'];
+            $maliyet_manuel_girildi = (bool)$item['maliyet_manuel_girildi'];
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Gecersiz malzeme kodu.']);
             $item_stmt->close();
@@ -978,6 +1027,9 @@ switch ($action) {
         $total_updated_stock = 0;
         $error_occured = false;
         
+        $yeni_gelen_toplam_maliyet = 0;
+        $yeni_gelen_toplam_miktar = 0;
+
         foreach ($contracts as $contract) {
             if ($remaining_amount <= 0) break;
             
@@ -986,6 +1038,9 @@ switch ($action) {
             $yon = 'giris';
             $hareket_turu = 'mal_kabul';
             
+            $yeni_gelen_toplam_maliyet += $contract_amount * $contract['birim_fiyat'];
+            $yeni_gelen_toplam_miktar += $contract_amount;
+
             $contract_specific_aciklama = $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']';
             $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $movement_stmt = $connection->prepare($movement_query);
@@ -1029,9 +1084,19 @@ switch ($action) {
 
         if (!$error_occured) {
             if ($total_updated_stock > 0) {
-                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
+                // If cost was entered manually, it's the starting point.
+                // Otherwise, the starting point is the existing weighted average.
+                $toplam_maliyet = ($mevcut_stok * $mevcut_alis_fiyati) + $yeni_gelen_toplam_maliyet;
+                $toplam_stok = $mevcut_stok + $yeni_gelen_toplam_miktar;
+                $yeni_agirlikli_ortalama = $toplam_stok > 0 ? $toplam_maliyet / $toplam_stok : 0;
+                $son_para_birimi = end($contracts)['para_birimi'] ?? 'TRY';
+
+                // After calculation, the price is no longer manually set.
+                $maliyet_manuel_girildi_yeni = false;
+
+                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ?, alis_fiyati = ?, para_birimi = ?, maliyet_manuel_girildi = ? WHERE malzeme_kodu = ?";
                 $stock_stmt = $connection->prepare($stock_query);
-                $stock_stmt->bind_param('ds', $total_updated_stock, $kod);
+                $stock_stmt->bind_param('ddsis', $total_updated_stock, $yeni_agirlikli_ortalama, $son_para_birimi, $maliyet_manuel_girildi_yeni, $kod);
 
                 if ($stock_stmt->execute()) {
                     if ($depo && $raf) {
@@ -1041,12 +1106,11 @@ switch ($action) {
                         $location_stmt->execute();
                         $location_stmt->close();
                     }
-                                    echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
-                                    // Trigger cost calculation service
-                                    file_get_contents("http://localhost/projem/maliyet_hesaplama_servisi.php?malzeme_kodu=" . $kod);
-                                } else {
-                                    echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $stock_stmt->error]);
-                                }                $stock_stmt->close();
+                    echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $stock_stmt->error]);
+                }
+                $stock_stmt->close();
             } else {
                  echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
             }
