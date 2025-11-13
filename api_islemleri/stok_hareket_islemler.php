@@ -893,13 +893,11 @@ switch ($action) {
             break;
         }
 
-        // Ensure we're dealing with materials only
         if ($stok_turu !== 'malzeme') {
             echo json_encode(['status' => 'error', 'message' => 'Mal kabul sadece malzeme turu icin yapilabilir.']);
             break;
         }
 
-        // Get item name, unit, and current location based on stock type
         $item_name = '';
         $item_unit = '';
         $current_depo = '';
@@ -924,15 +922,9 @@ switch ($action) {
         }
         $item_stmt->close();
 
-        // Use current location if not provided in the form
-        if (!$depo) {
-            $depo = $current_depo;
-        }
-        if (!$raf) {
-            $raf = $current_raf;
-        }
+        if (!$depo) $depo = $current_depo;
+        if (!$raf) $raf = $current_raf;
 
-        // Get supplier name from ID
         $tedarikci_ismi = '';
         $supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
         $supplier_stmt = $connection->prepare($supplier_query);
@@ -945,26 +937,20 @@ switch ($action) {
         }
         $supplier_stmt->close();
 
-        // Check available framework contracts and split the amount if necessary
-        $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, 
+        $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, c.birim_fiyat, c.para_birimi, c.baslangic_tarihi, c.bitis_tarihi,
                           COALESCE(shs.toplam_kullanilan, 0) as toplam_mal_kabul_miktari,
                           (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) as kalan_miktar,
                           c.oncelik
                           FROM cerceve_sozlesmeler c
                           LEFT JOIN (
                               SELECT sozlesme_id, SUM(kullanilan_miktar) as toplam_kullanilan
-                              FROM stok_hareketleri_sozlesmeler shs
-                              WHERE EXISTS (
-                                  SELECT 1 FROM stok_hareket_kayitlari
-                                  WHERE stok_hareket_kayitlari.hareket_id = shs.hareket_id
-                                  AND stok_hareket_kayitlari.hareket_turu = 'mal_kabul'
-                              )
+                              FROM stok_hareketleri_sozlesmeler
                               GROUP BY sozlesme_id
                           ) shs ON c.sozlesme_id = shs.sozlesme_id
                           WHERE c.tedarikci_id = ? 
                           AND c.malzeme_kodu = ?
                           AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                          AND COALESCE(shs.toplam_kullanilan, 0) < c.limit_miktar
+                          AND (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) > 0
                           ORDER BY c.oncelik ASC, kalan_miktar DESC";
         
         $contract_stmt = $connection->prepare($contract_query);
@@ -978,42 +964,36 @@ switch ($action) {
         }
         $contract_stmt->close();
         
-        // Check if we have enough contracts to cover the requested amount
         $total_available = array_sum(array_column($contracts, 'kalan_miktar'));
         $requested_amount = $miktar;
         
         if ($total_available < $requested_amount) {
-            echo json_encode(['status' => 'error', 'message' => 'Tum gecerli sozlesme limitleri bu islem icin yeterli degildir.']);
+            echo json_encode(['status' => 'error', 'message' => 'Tum gecerli sozlesme limitleri bu islem icin yeterli degildir. Kalan Miktar: ' . $total_available]);
             break;
         }
 
-        // Process the amount using contracts in priority order
+        $connection->autocommit(FALSE);
+        
         $remaining_amount = $requested_amount;
         $total_updated_stock = 0;
+        $error_occured = false;
         
         foreach ($contracts as $contract) {
-            if ($remaining_amount <= 0) {
-                break; // All requested amount has been allocated
-            }
+            if ($remaining_amount <= 0) break;
             
             $contract_amount = min($contract['kalan_miktar'], $remaining_amount);
             
-            // Insert stock movement for this contract portion
-            $yon = 'giris'; // Mal kabul is always incoming
-            $hareket_turu = 'mal_kabul'; // Specific for mal kabul
-            $tank_kodu = $_POST['tank_kodu'] ?? ''; // Although not typically used for materials
-
-            $connection->autocommit(FALSE); // Start transaction
+            $yon = 'giris';
+            $hareket_turu = 'mal_kabul';
             
             $contract_specific_aciklama = $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']';
-            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $movement_stmt = $connection->prepare($movement_query);
-            $movement_stmt->bind_param('ssssdssssssisssi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $contract_specific_aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
+            $movement_stmt->bind_param('ssssdssssssissi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $ilgili_belge_no, $contract_specific_aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
 
             if (!$movement_stmt->execute()) {
-                $connection->rollback();
-                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $connection->error]);
-                $movement_stmt->close();
+                $error_occured = true;
+                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $movement_stmt->error]);
                 break;
             }
             
@@ -1021,61 +1001,56 @@ switch ($action) {
             $movement_stmt->close();
             
             $contract_id = $contract['sozlesme_id'];
-            // Insert the relationship between stock movement and contract
-            $contract_link_query = "INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, kullanilan_miktar) VALUES (?, ?, ?)";
-            $contract_link_stmt = $connection->prepare($contract_link_query);
-            $contract_link_stmt->bind_param('iid', $hareket_id, $contract_id, $contract_amount);
+            $birim_fiyat = $contract['birim_fiyat'];
+            $para_birimi = $connection->real_escape_string($contract['para_birimi']);
+            $tedarikci_ismi_escaped = $connection->real_escape_string($tedarikci_ismi);
             
-            if (!$contract_link_stmt->execute()) {
-                $connection->rollback();
+            $baslangic_tarihi_val = (!empty($contract['baslangic_tarihi']) && $contract['baslangic_tarihi'] !== '0000-00-00') ? "'" . $contract['baslangic_tarihi'] . "'" : "NULL";
+            $bitis_tarihi_val = (!empty($contract['bitis_tarihi']) && $contract['bitis_tarihi'] !== '0000-00-00') ? "'" . $contract['bitis_tarihi'] . "'" : "NULL";
+
+            $contract_link_query = "INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, malzeme_kodu, kullanilan_miktar, birim_fiyat, para_birimi, tedarikci_adi, tedarikci_id, baslangic_tarihi, bitis_tarihi) VALUES ($hareket_id, $contract_id, $kod, $contract_amount, $birim_fiyat, '$para_birimi', '$tedarikci_ismi_escaped', $tedarikci_id, $baslangic_tarihi_val, $bitis_tarihi_val)";
+            
+            if (!$connection->query($contract_link_query)) {
+                $error_occured = true;
                 echo json_encode(['status' => 'error', 'message' => 'Sozlesme baglantisi kaydedilirken hata olustu: ' . $connection->error]);
-                $contract_link_stmt->close();
                 break;
             }
-            
-            $contract_link_stmt->close();
             
             $remaining_amount -= $contract_amount;
             $total_updated_stock += $contract_amount;
         }
         
-        // Commit the transaction if everything was successful
-        if ($remaining_amount <= 0) {
-            $connection->commit();
-            $connection->autocommit(TRUE);
-        } else {
+        if ($error_occured) {
             $connection->rollback();
-            $connection->autocommit(TRUE);
-            echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
-            break;
-        }
-
-        // Update the material stock in the main materials table
-        if ($total_updated_stock > 0) {
-            $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-            $stock_stmt = $connection->prepare($stock_query);
-            $stock_stmt->bind_param('ds', $total_updated_stock, $kod);
-
-            if ($stock_stmt->execute()) {
-                // Also update the location information if provided
-                if ($depo && $raf) {
-                    $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
-                    $location_stmt = $connection->prepare($location_query);
-                    $location_stmt->bind_param('sss', $depo, $raf, $kod);
-                    $location_stmt->execute();
-                    $location_stmt->close();
-                }
-                
-                echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
-            } else {
-                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $connection->error]);
-            }
-
-            $stock_stmt->close();
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
+            $connection->commit();
         }
-        
+        $connection->autocommit(TRUE);
+
+        if (!$error_occured) {
+            if ($total_updated_stock > 0) {
+                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
+                $stock_stmt = $connection->prepare($stock_query);
+                $stock_stmt->bind_param('ds', $total_updated_stock, $kod);
+
+                if ($stock_stmt->execute()) {
+                    if ($depo && $raf) {
+                        $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
+                        $location_stmt = $connection->prepare($location_query);
+                        $location_stmt->bind_param('sss', $depo, $raf, $kod);
+                        $location_stmt->execute();
+                        $location_stmt->close();
+                    }
+                                    echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
+                                    // Trigger cost calculation service
+                                    file_get_contents("http://localhost/projem/maliyet_hesaplama_servisi.php?malzeme_kodu=" . $kod);
+                                } else {
+                                    echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $stock_stmt->error]);
+                                }                $stock_stmt->close();
+            } else {
+                 echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
+            }
+        }
         break;
 
     default:

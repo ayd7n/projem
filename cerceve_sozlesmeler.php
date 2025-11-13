@@ -205,6 +205,7 @@ function display_date($date_string) {
                                 <th><i class="fas fa-chart-line"></i> Kalan Miktar</th>
                                 <th><i class="fas fa-info-circle"></i> Geçerlilik Durumu</th>
                                 <th><i class="fas fa-check-circle"></i> Kullanılabilirlik</th>
+                                <th><i class="fas fa-comment"></i> Açıklama</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -257,11 +258,12 @@ function display_date($date_string) {
                                         echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
                                         ?>
                                     </td>
+                                    <td><?php echo htmlspecialchars($contract['aciklama']); ?></td>
                                 </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="11" class="text-center p-4">
+                                    <td colspan="12" class="text-center p-4">
                                         <i class="fas fa-file-contract fa-3x mb-3" style="color: var(--text-secondary);"></i>
                                         <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
                                         <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle" butonunu kullanabilirsiniz.</p>
@@ -375,6 +377,13 @@ function display_date($date_string) {
     
     <!-- Simple Custom Styles for SweetAlert -->
     <style>
+        /* Disable word wrap for all table cells */
+        table th,
+        table td {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         /* SweetAlert2 stilleri kaldırıldı, artık Bootstrap modal kullanılıyor */
     </style>
     
@@ -492,16 +501,49 @@ function display_date($date_string) {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
             box-shadow: 0 4px 15px rgba(74, 14, 99, 0.3) !important;
             border: none !important;
-            margin-top: 15px !important;
+            margin: 0 10px !important;
         }
-        
+
         .swal2-confirm:hover {
             transform: translateY(-3px) !important;
             box-shadow: 0 8px 20px rgba(74, 14, 99, 0.4) !important;
         }
-        
+
         .swal2-confirm:active {
             transform: translateY(-1px) !important;
+        }
+
+        /* Cancel button styling */
+        .swal2-cancel {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%) !important;
+            border-radius: 30px !important;
+            padding: 12px 35px !important;
+            font-weight: 600 !important;
+            font-size: 1rem !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            box-shadow: 0 4px 15px rgba(108, 117, 125, 0.3) !important;
+            border: none !important;
+            margin: 0 10px !important;
+            color: white !important;
+        }
+
+        .swal2-cancel:hover {
+            transform: translateY(-3px) !important;
+            box-shadow: 0 8px 20px rgba(108, 117, 125, 0.4) !important;
+            background: linear-gradient(135deg, #5a6268 0%, #343a40 100%) !important;
+        }
+
+        .swal2-cancel:active {
+            transform: translateY(-1px) !important;
+        }
+
+        /* Actions container for buttons */
+        .swal2-actions {
+            margin-top: 20px !important;
+            display: flex !important;
+            justify-content: center !important;
+            gap: 10px !important;
         }
         
         /* Responsive adjustments */
@@ -560,6 +602,28 @@ function display_date($date_string) {
         
         .swal2-popup {
             animation: fadeIn 0.3s ease-out;
+        }
+        
+        /* Ensure proper backdrop handling */
+        .swal2-container {
+            z-index: 9999 !important;
+        }
+        
+        .swal2-backdrop {
+            background-color: rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        /* Ensure swal2-hide properly hides elements and removes backdrop */
+        .swal2-container {
+            z-index: 9999 !important;
+        }
+        
+        .swal2-backdrop-show {
+            background: rgba(0, 0, 0, 0.4) !important;
+        }
+        
+        .swal2-backdrop-hide {
+            background: transparent !important;
         }
     </style>
 
@@ -665,8 +729,11 @@ function display_date($date_string) {
                 text: 'Bu sözleşmeyi silmek istediğinizden emin misiniz?',
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonText: 'Evet',
-                cancelButtonText: 'İptal'
+                confirmButtonColor: '#3085d6',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Evet, sil!',
+                cancelButtonText: 'İptal',
+                allowOutsideClick: true
             }).then((result) => {
                 if (result.isConfirmed) {
                     $.ajax({
@@ -691,6 +758,12 @@ function display_date($date_string) {
                             showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         }
                     });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    // Ensure complete cleanup when cancelled
+                    setTimeout(() => {
+                        $('body').removeClass('swal2-no-backdrop swal2-shown');
+                        $('.swal2-container').remove();
+                    }, 100);
                 }
             });
         });

@@ -1,0 +1,42 @@
+Amaç: Elimizdeki mevcut bir malzemenin stok maliyetini, o stoğu oluşturan en son alımlara dayanarak adil bir şekilde hesaplamak.
+
+Mantık:
+
+Sistem, bir malzemenin maliyetini hesaplarken kendine şu soruyu sorar:
+"Elimdeki 80 birimlik stok, hangi alımlardan kalma?"
+
+Cevabı bulmak için de en son yaptığı alımdan başlayarak geriye doğru gider. İşte adımları:
+
+1.  Mevcut Stok Miktarı Tespiti:
+    *   İlk olarak, maliyetini hesaplayacağımız malzemenin malzemeler tablosundan mevcut stok miktarı alınır. (Örn: 80 birim).
+
+2.  Alım Geçmişini Sorgulama:
+    *   Sistem, maliyet ve miktar bilgisinin olduğu stok_hareketleri_sozlesmeler tablosuna gider.
+    *   Bu tablodaki kayıtları, en yeni tarihli alım en üstte olacak şekilde sıralar.
+
+3.  Geriye Dönük Hesaplama Döngüsü:
+    *   Sistem, elindeki 80 birimlik stoğu "karşılayana" kadar en yeni alım kaydından başlayarak geriye doğru ilerler.
+
+    Örnek Senaryo (Stok: 80 birim):
+
+    *   1. Adım (En Yeni Alım):
+        *   Sistem, en yeni alım kaydına bakar: 50 birim @ 10 TL/birim.
+        *   Hesap: 80 birimlik stoğun 50 birimi bu alımdan gelmiş.
+        *   Kalan İhtiyaç: 80 - 50 = 30 birim.
+        *   Ara Toplam Maliyet: 50 * 10 TL = 500 TL.
+
+    *   2. Adım (İkinci En Yeni Alım):
+        *   Hala 30 birimlik stoğun kaynağını bulmamız gerekiyor. Sistem bir önceki alım kaydına geçer: 40 birim @ 8 TL/birim.
+        *   Hesap: Bize sadece 30 birim lazım, bu yüzden bu alımın tamamını değil, sadece ihtiyacımız olan 30 birimini hesaba katarız.
+        *   Kalan İhtiyaç: 30 - 30 = 0 birim. (Hedefe ulaştık!)
+        *   Ara Toplam Maliyet: 500 TL (önceki adımdan) + (30 * 8 TL) = 500 + 240 = 740 TL.
+
+    *   Döngü Sonu: Karşılamamız gereken stok miktarı (80 birim) bittiği için sistem daha eski kayıtlara bakmayı durdurur.
+
+4.  Nihai Sonuç (Ağırlıklı Ortalama):
+    *   Sistem artık elindeki toplam maliyeti ve toplam miktarı bilir.
+    *   Toplam Maliyet: 740 TL
+    *   Toplam Miktar: 80 birim
+    *   Ağırlıklı Ortalama Maliyet: 740 TL / 80 birim = 9.25 TL/birim
+
+İşte bu 9.25 TL, o malzemenin güncel birim maliyeti olarak malzeme_maliyetleri tablosuna kaydedilir. Kısacası sistem, stoğunuzu oluşturan en güncel maliyet dilimlerini bularak size en gerçekçi birim fiyatı verir.
