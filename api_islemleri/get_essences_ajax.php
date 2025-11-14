@@ -28,11 +28,11 @@ $where_clause = "";
 if (!empty($search)) {
     $search_escaped = $connection->real_escape_string($search);
     $search_param = '%' . $search_escaped . '%';
-    $where_clause = "WHERE esans_kodu LIKE '$search_param' OR esans_ismi LIKE '$search_param' OR tank_kodu LIKE '$search_param' OR tank_ismi LIKE '$search_param'";
+    $where_clause = "WHERE e.esans_kodu LIKE '$search_param' OR e.esans_ismi LIKE '$search_param' OR e.tank_kodu LIKE '$search_param' OR e.tank_ismi LIKE '$search_param'";
 }
 
 // Get total count
-$count_query = "SELECT COUNT(*) as total FROM esanslar " . $where_clause;
+$count_query = "SELECT COUNT(*) as total FROM esanslar e " . $where_clause;
 $result = $connection->query($count_query);
 $total_essences = $result->fetch_assoc()['total'];
 
@@ -40,7 +40,16 @@ $total_essences = $result->fetch_assoc()['total'];
 $total_pages = $limit > 0 ? ceil($total_essences / $limit) : 0;
 
 // Get essences for current page
-$query = "SELECT * FROM esanslar " . $where_clause . " ORDER BY esans_ismi LIMIT $limit OFFSET $offset";
+$query = "
+    SELECT 
+        e.*, 
+        COALESCE(vem.toplam_maliyet, 0) AS maliyet
+    FROM 
+        esanslar e
+    LEFT JOIN 
+        v_esans_maliyetleri vem ON e.esans_kodu = vem.esans_kodu "
+    . $where_clause . 
+    " ORDER BY e.esans_ismi LIMIT $limit OFFSET $offset";
 $result = $connection->query($query);
 
 $essences = [];

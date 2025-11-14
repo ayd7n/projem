@@ -261,9 +261,9 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
+                                <th><i class="fas fa-dollar-sign"></i> Teorik Maliyet</th>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
                                 <th><i class="fas fa-cube"></i> Raf</th>
-                                
                             </tr>
                         </thead>
                         <tbody>
@@ -287,9 +287,9 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 </td>
                                 <td>{{ product.birim }}</td>
                                 <td>{{ formatCurrency(product.satis_fiyati) }}</td>
+                                <td>{{ formatCurrency(product.teorik_maliyet || 0) }}</td>
                                 <td>{{ product.depo }}</td>
                                 <td>{{ product.raf }}</td>
-
                             </tr>
                         </tbody>
                     </table>

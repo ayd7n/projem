@@ -1,9 +1,11 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
+
 include '../config.php';
 
 header('Content-Type: application/json');
 
-// Check if user is logged in and is staff
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim.']);
     exit;
@@ -15,47 +17,55 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_products') {
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
-        $search = isset($_GET['search']) ? $_GET['search'] : '';
-        $offset = ($page - 1) * $limit;
+        try {
+            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $search = isset($_GET['search']) ? $_GET['search'] : '';
+            $offset = ($page - 1) * $limit;
+            $search_term = '%' . $search . '%';
 
-        $search_term = '%' . $search . '%';
-        
-        // Get total count for pagination
-        $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
-        $stmt = $connection->prepare($count_query);
-        $stmt->bind_param('ss', $search_term, $search_term);
-        $stmt->execute();
-        $count_result = $stmt->get_result()->fetch_assoc();
-        $total_products = $count_result['total'];
-        $total_pages = ceil($total_products / $limit);
-        $stmt->close();
+            $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
+            $stmt_count = $connection->prepare($count_query);
+            $stmt_count->bind_param('ss', $search_term, $search_term);
+            $stmt_count->execute();
+            $count_result = $stmt_count->get_result()->fetch_assoc();
+            $total_products = $count_result['total'];
+            $total_pages = ceil($total_products / $limit);
+            $stmt_count->close();
 
-        // Get paginated data
-        $query = "SELECT * FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ? ORDER BY urun_ismi LIMIT ? OFFSET ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        
-        $products = [];
-        while ($row = $result->fetch_assoc()) {
-            $products[] = $row;
+            $query = "
+                SELECT u.*, vum.teorik_maliyet 
+                FROM urunler u
+                LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu
+                WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ? 
+                ORDER BY u.urun_ismi 
+                LIMIT ? OFFSET ?";
+            $stmt_data = $connection->prepare($query);
+            $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+            $stmt_data->execute();
+            $result = $stmt_data->get_result();
+            
+            $products = [];
+            if ($result) {
+                while ($row = $result->fetch_assoc()) {
+                    $products[] = $row;
+                }
+            }
+            $stmt_data->close();
+
+            $response = [
+                'status' => 'success',
+                'data' => $products,
+                'pagination' => [
+                    'total_pages' => $total_pages,
+                    'total_products' => $total_products,
+                    'current_page' => $page
+                ]
+            ];
+        } catch (Throwable $t) {
+            $response = ['status' => 'error', 'message' => 'Bir hata oluştu: ' . $t->getMessage()];
         }
-        $stmt->close();
-
-        $response = [
-            'status' => 'success',
-            'data' => $products,
-            'pagination' => [
-                'total_pages' => $total_pages,
-                'total_products' => $total_products,
-                'current_page' => $page
-            ]
-        ];
-    }
-    else if ($action == 'get_product' && isset($_GET['id'])) {
+    } elseif ($action == 'get_product' && isset($_GET['id'])) {
         $urun_kodu = (int)$_GET['id'];
         $query = "SELECT * FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
@@ -70,8 +80,7 @@ if (isset($_GET['action'])) {
         } else {
             $response = ['status' => 'error', 'message' => 'Ürün bulunamadı.'];
         }
-    }
-    elseif ($action == 'get_depo_list') {
+    } elseif ($action == 'get_depo_list') {
         $query = "SELECT DISTINCT depo_ismi FROM lokasyonlar ORDER BY depo_ismi";
         $result = $connection->query($query);
         $depolar = [];
@@ -83,8 +92,7 @@ if (isset($_GET['action'])) {
         } else {
             $response = ['status' => 'error', 'message' => 'Depo listesi alınamadı.'];
         }
-    }
-    elseif ($action == 'get_raf_list') {
+    } elseif ($action == 'get_raf_list') {
         $depo = $_GET['depo'] ?? '';
         $query = "SELECT DISTINCT raf FROM lokasyonlar WHERE depo_ismi = ? ORDER BY raf";
         $stmt = $connection->prepare($query);
@@ -97,8 +105,7 @@ if (isset($_GET['action'])) {
         }
         $stmt->close();
         $response = ['status' => 'success', 'data' => $raflar];
-    }
-    elseif ($action == 'get_all_products') {
+    } elseif ($action == 'get_all_products') {
         $query = "SELECT * FROM urunler ORDER BY urun_ismi";
         $result = $connection->query($query);
         
@@ -115,7 +122,6 @@ if (isset($_GET['action'])) {
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
 
-    // Extract data from POST
     $urun_ismi = $_POST['urun_ismi'] ?? null;
     $not_bilgisi = $_POST['not_bilgisi'] ?? '';
     $stok_miktari = isset($_POST['stok_miktari']) ? (int)$_POST['stok_miktari'] : 0;
@@ -128,10 +134,6 @@ if (isset($_GET['action'])) {
     if ($action == 'add_product') {
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
-        } elseif (empty($depo)) {
-            $response = ['status' => 'error', 'message' => 'Depo seçimi zorunludur.'];
-        } elseif (empty($raf)) {
-            $response = ['status' => 'error', 'message' => 'Raf seçimi zorunludur.'];
         } else {
             $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
@@ -148,10 +150,6 @@ if (isset($_GET['action'])) {
         $urun_kodu = (int)$_POST['urun_kodu'];
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
-        } elseif (empty($depo)) {
-            $response = ['status' => 'error', 'message' => 'Depo seçimi zorunludur.'];
-        } elseif (empty($raf)) {
-            $response = ['status' => 'error', 'message' => 'Raf seçimi zorunludur.'];
         } else {
             $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ? WHERE urun_kodu = ?";
             $stmt = $connection->prepare($query);

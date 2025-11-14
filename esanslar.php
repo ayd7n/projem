@@ -150,6 +150,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <th><i class="fas fa-database"></i> Tank Kodu</th>
                                     <th><i class="fas fa-water"></i> Tank</th>
                                     <th><i class="fas fa-warehouse"></i> Stok</th>
+                                    <th><i class="fas fa-dollar-sign"></i> Maliyet</th>
                                     <th><i class="fas fa-ruler"></i> Birim</th>
                                     <th><i class="fas fa-clock"></i> Demlenme Süresi (Gün)</th>
                                     <th><i class="fas fa-sticky-note"></i> Not</th>
@@ -172,6 +173,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <td>{{ esans.tank_kodu || '-' }}</td>
                                     <td>{{ esans.tank_ismi || '-' }}</td>
                                     <td>{{ esans.stok_miktari }}</td>
+                                    <td class="text-right">{{ (parseFloat(esans.maliyet || 0)).toFixed(2) }} ₺</td>
                                     <td>{{ esans.birim }}</td>
                                     <td>{{ esans.demlenme_suresi_gun }}</td>
                                     <td>{{ esans.not_bilgisi }}</td>
