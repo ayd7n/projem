@@ -1,6 +1,19 @@
 <?php
 include 'config.php';
 
+// --- Maintenance Mode Check ---
+// This must be after config.php is included and before any other output.
+$maintenance_mode = get_setting($connection, 'maintenance_mode');
+// Use the email from session for a reliable admin check
+$is_admin = isset($_SESSION['email']) && $_SESSION['email'] === 'admin@parfum.com';
+$current_page = basename($_SERVER['PHP_SELF']);
+
+if ($maintenance_mode === 'on' && !$is_admin && $current_page !== 'maintenance.php' && $current_page !== 'login.php') {
+    header('Location: maintenance.php');
+    exit;
+}
+// --- End Maintenance Mode Check ---
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -434,6 +447,26 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                         <a href="is_merkezleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-warehouse"></i></div>
                             <div class="card-content"><span class="title">İş Merkezleri</span><p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p></div>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="module-category">
+                    <h3><i class="fas fa-chart-pie"></i> Raporlama</h3>
+                    <div class="module-grid">
+                        <a href="raporlar.php" class="module-card">
+                            <div class="icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="card-content"><span class="title">Raporlar</span><p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p></div>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="module-category">
+                    <h3><i class="fas fa-cogs"></i> Sistem</h3>
+                    <div class="module-grid">
+                        <a href="ayarlar.php" class="module-card">
+                            <div class="icon"><i class="fas fa-cog"></i></div>
+                            <div class="card-content"><span class="title">Ayarlar</span><p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p></div>
                         </a>
                     </div>
                 </div>

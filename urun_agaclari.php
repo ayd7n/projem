@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:urun_agaclari')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Fetch all product and essence trees
 $product_trees_query = "SELECT * FROM urun_agaci ORDER BY agac_turu, urun_kodu, bilesen_kodu";
 $product_trees_result = $connection->query($product_trees_query);
@@ -106,8 +111,10 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
 
             <div class="row">
                 <div class="col-md-12">
-                    <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
-                    <button @click="openEssenceAddModal" class="btn btn-success mb-3 ml-2"><i class="fas fa-plus"></i> Yeni Esans Ağacı Ekle</button>
+                    <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
+                        <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
+                        <button @click="openEssenceAddModal" class="btn btn-success mb-3 ml-2"><i class="fas fa-plus"></i> Yeni Esans Ağacı Ekle</button>
+                    <?php endif; ?>
                 </div>
             </div>
 
@@ -189,8 +196,12 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <tbody>
                                             <tr v-for="pt in productTrees" :key="pt.urun_agaci_id">
                                                 <td class="actions">
-                                                    <button @click="openEditModal(pt.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
-                                                    <button @click="deleteProductTree(pt.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                    <?php if (yetkisi_var('action:urun_agaclari:edit')): ?>
+                                                        <button @click="openEditModal(pt.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if (yetkisi_var('action:urun_agaclari:delete')): ?>
+                                                        <button @click="deleteProductTree(pt.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>{{ pt.urun_kodu }}</td>
                                                 <td><strong>{{ pt.urun_ismi }}</strong></td>
@@ -272,8 +283,12 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <tbody>
                                             <tr v-for="et in essenceTrees" :key="et.urun_agaci_id">
                                                 <td class="actions">
-                                                    <button @click="openEssenceEditModal(et.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
-                                                    <button @click="deleteEssenceTree(et.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                    <?php if (yetkisi_var('action:urun_agaclari:edit')): ?>
+                                                        <button @click="openEssenceEditModal(et.urun_agaci_id)" class="btn btn-primary btn-sm" title="Düzenle"><i class="fas fa-edit"></i></button>
+                                                    <?php endif; ?>
+                                                    <?php if (yetkisi_var('action:urun_agaclari:delete')): ?>
+                                                        <button @click="deleteEssenceTree(et.urun_agaci_id)" class="btn btn-danger btn-sm" title="Sil"><i class="fas fa-trash"></i></button>
+                                                    <?php endif; ?>
                                                 </td>
                                                 <td>{{ et.urun_kodu }}</td>
                                                 <td><strong>{{ et.urun_ismi }}</strong></td>

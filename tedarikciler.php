@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:tedarikciler')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total suppliers
 $total_result = $connection->query("SELECT COUNT(*) as total FROM tedarikciler");
 $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
@@ -221,7 +226,9 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="row">
             <div class="col-md-8">
-                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi Ekle</button>
+                <?php if (yetkisi_var('action:tedarikciler:create')): ?>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -273,8 +280,12 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                             </tr>
                             <tr v-for="supplier in suppliers" :key="supplier.tedarikci_id">
                                 <td class="actions">
-                                    <button @click="openModal(supplier)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
-                                    <button @click="deleteSupplier(supplier.tedarikci_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    <?php if (yetkisi_var('action:tedarikciler:edit')): ?>
+                                        <button @click="openModal(supplier)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                    <?php endif; ?>
+                                    <?php if (yetkisi_var('action:tedarikciler:delete')): ?>
+                                        <button @click="deleteSupplier(supplier.tedarikci_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    <?php endif; ?>
                                 </td>
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
                                 <td>{{ supplier.vergi_no_tc || '-' }}</td>

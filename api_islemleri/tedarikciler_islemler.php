@@ -38,6 +38,11 @@ switch ($action) {
 function getSuppliers() {
     global $connection;
 
+    if (!yetkisi_var('page:view:tedarikciler')) {
+        echo json_encode(['status' => 'error', 'message' => 'Tedarikçileri görüntüleme yetkiniz yok.']);
+        return;
+    }
+
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -81,6 +86,11 @@ function getSuppliers() {
 function getSupplier() {
     global $connection;
 
+    if (!yetkisi_var('page:view:tedarikciler')) {
+        echo json_encode(['status' => 'error', 'message' => 'Tedarikçi görüntüleme yetkiniz yok.']);
+        return;
+    }
+
     $id = $_GET['id'] ?? '';
     if (empty($id)) {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi ID gerekli.']);
@@ -105,6 +115,11 @@ function getSupplier() {
 
 function addSupplier() {
     global $connection;
+
+    if (!yetkisi_var('action:tedarikciler:create')) {
+        echo json_encode(['status' => 'error', 'message' => 'Yeni tedarikçi ekleme yetkiniz yok.']);
+        return;
+    }
 
     $tedarikci_adi = $_POST['tedarikci_adi'] ?? '';
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
@@ -135,6 +150,11 @@ function addSupplier() {
 function updateSupplier() {
     global $connection;
 
+    if (!yetkisi_var('action:tedarikciler:edit')) {
+        echo json_encode(['status' => 'error', 'message' => 'Tedarikçi bilgilerini düzenleme yetkiniz yok.']);
+        return;
+    }
+
     $tedarikci_id = $_POST['tedarikci_id'] ?? '';
     $tedarikci_adi = $_POST['tedarikci_adi'] ?? '';
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
@@ -164,6 +184,11 @@ function updateSupplier() {
 
 function deleteSupplier() {
     global $connection;
+
+    if (!yetkisi_var('action:tedarikciler:delete')) {
+        echo json_encode(['status' => 'error', 'message' => 'Tedarikçi silme yetkiniz yok.']);
+        return;
+    }
 
     $tedarikci_id = $_POST['tedarikci_id'] ?? '';
     if (empty($tedarikci_id)) {

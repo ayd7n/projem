@@ -38,6 +38,11 @@ switch ($action) {
 function getCustomers() {
     global $connection;
 
+    if (!yetkisi_var('page:view:musteriler')) {
+        echo json_encode(['status' => 'error', 'message' => 'Müşterileri görüntüleme yetkiniz yok.']);
+        return;
+    }
+
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -81,6 +86,11 @@ function getCustomers() {
 function getCustomer() {
     global $connection;
 
+    if (!yetkisi_var('page:view:musteriler')) {
+        echo json_encode(['status' => 'error', 'message' => 'Müşteri görüntüleme yetkiniz yok.']);
+        return;
+    }
+
     $id = $_GET['id'] ?? '';
     if (empty($id)) {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri ID gerekli.']);
@@ -101,6 +111,11 @@ function getCustomer() {
 
 function addCustomer() {
     global $connection;
+
+    if (!yetkisi_var('action:musteriler:create')) {
+        echo json_encode(['status' => 'error', 'message' => 'Yeni müşteri ekleme yetkiniz yok.']);
+        return;
+    }
 
     $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
     $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
@@ -147,6 +162,11 @@ function addCustomer() {
 function updateCustomer() {
     global $connection;
 
+    if (!yetkisi_var('action:musteriler:edit')) {
+        echo json_encode(['status' => 'error', 'message' => 'Müşteri bilgilerini düzenleme yetkiniz yok.']);
+        return;
+    }
+
     $musteri_id = (int)($_POST['musteri_id'] ?? '');
     $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
     $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
@@ -192,6 +212,11 @@ function updateCustomer() {
 
 function deleteCustomer() {
     global $connection;
+
+    if (!yetkisi_var('action:musteriler:delete')) {
+        echo json_encode(['status' => 'error', 'message' => 'Müşteri silme yetkiniz yok.']);
+        return;
+    }
 
     $musteri_id = (int)($_POST['musteri_id'] ?? '');
     if (empty($musteri_id)) {

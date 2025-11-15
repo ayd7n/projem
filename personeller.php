@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:personeller')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total employees
 $total_result = $connection->query("SELECT COUNT(*) as total FROM personeller");
 $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
@@ -222,7 +227,9 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="row">
             <div class="col-md-8">
-                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Personel Ekle</button>
+                <?php if (yetkisi_var('action:personeller:create')): ?>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Personel Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -276,12 +283,21 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             </tr>
                             <tr v-for="employee in employees" :key="employee.personel_id" :class="employee.ad_soyad === 'Admin User' ? 'disabled-row' : ''">
                                 <td class="actions">
-                                    <button @click="openModal(employee)" class="btn btn-primary btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : ''">
-                                        <i class="fas fa-edit"></i>
-                                    </button>
-                                    <button @click="deleteEmployee(employee.personel_id)" class="btn btn-danger btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı silinemez' : ''">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                    <?php if (yetkisi_var('action:personeller:edit')): ?>
+                                        <button @click="openModal(employee)" class="btn btn-primary btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : ''">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                    <?php endif; ?>
+                                    <?php if (yetkisi_var('action:personeller:permissions')): ?>
+                                        <a :href="'personel_yetki.php?id=' + employee.personel_id" class="btn btn-info btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : 'Yetkileri Düzenle'">
+                                            <i class="fas fa-shield-alt"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                    <?php if (yetkisi_var('action:personeller:delete')): ?>
+                                        <button @click="deleteEmployee(employee.personel_id)" class="btn btn-danger btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı silinemez' : ''">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    <?php endif; ?>
                                 </td>
                                 <td><strong>{{ employee.ad_soyad }}</strong></td>
                                 <td>{{ employee.pozisyon || '-' }}</td>

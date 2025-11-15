@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:musteri_siparisleri')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Get the current user's information to ensure we have the correct name in stock movements
 $user_id = $_SESSION['user_id'];
 $user_info_query = "SELECT ad_soyad FROM personeller WHERE personel_id = ?";
@@ -854,56 +859,78 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                         <td><?php echo htmlspecialchars($order['olusturan_musteri']); ?></td>
                                         <td><?php echo htmlspecialchars($order['onaylayan_personel_adi'] ?: '-'); ?></td>
                                         <td><?php echo htmlspecialchars($order['aciklama'] ?: '-'); ?></td>
-                                        <td>
-                                            <div class="actions">
-                                                <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm">
-                                                    <i class="fas fa-eye"></i> Görüntüle
-                                                </a>
+                                                                                 <td>
+                                                                                    <div class="actions">
+                                                                                        <?php if (yetkisi_var('action:musteri_siparisleri:view')): ?>
+                                                                                            <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm">
+                                                                                                <i class="fas fa-eye"></i> Görüntüle
+                                                                                            </a>
+                                                                                        <?php endif; ?>
+                                        
+                                                                                                                                        <?php if ($order['durum'] === 'beklemede'): ?>
+                                        
+                                                                                                                                            <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
+                                        
+                                                                                                                                                <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                        
+                                                                                                                                                    <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                        
+                                                                                                                                                    <input type="hidden" name="durum" value="onaylandi">
+                                        
+                                                                                                                                                    <input type="hidden" name="update" value="1">
+                                        
+                                                                                                                                                    <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                        
+                                                                                                                                                        <i class="fas fa-check"></i> Onayla
+                                        
+                                                                                                                                                    </button>
+                                        
+                                                                                                                                                </form>
+                                        
+                                                                                                                                            <?php endif; ?>
 
-                                                <?php if ($order['durum'] === 'beklemede'): ?>
-                                                    <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="durum" value="onaylandi">
-                                                        <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-check"></i> Onayla
-                                                        </button>
-                                                    </form>
-
-                                                    <form method="POST" class="d-inline cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="durum" value="iptal_edildi">
-                                                        <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmIptal(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-times"></i> İptal
-                                                        </button>
-                                                    </form>
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:cancel')): ?>
+                                                        <form method="POST" class="d-inline cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="durum" value="iptal_edildi">
+                                                            <input type="hidden" name="update" value="1">
+                                                            <button type="button" name="update" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmIptal(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                                                <i class="fas fa-times"></i> İptal
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
                                                 <?php elseif ($order['durum'] === 'onaylandi'): ?>
-                                                    <form method="POST" class="d-inline complete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="durum" value="tamamlandi">
-                                                        <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-info btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmTamamla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-check-double"></i> Tamamla
-                                                        </button>
-                                                    </form>
-                                                    <form method="POST" class="d-inline revert-approval-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="durum" value="beklemede">
-                                                        <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmBeklemeyeAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-undo"></i> Beklemeye Al
-                                                        </button>
-                                                    </form>
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:complete')): ?>
+                                                        <form method="POST" class="d-inline complete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="durum" value="tamamlandi">
+                                                            <input type="hidden" name="update" value="1">
+                                                            <button type="button" name="update" class="btn btn-info btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmTamamla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                                                <i class="fas fa-check-double"></i> Tamamla
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_pending')): ?>
+                                                        <form method="POST" class="d-inline revert-approval-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="durum" value="beklemede">
+                                                            <input type="hidden" name="update" value="1">
+                                                            <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmBeklemeyeAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                                                <i class="fas fa-undo"></i> Beklemeye Al
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
                                                 <?php elseif ($order['durum'] === 'tamamlandi'): ?>
-                                                    <form method="POST" class="d-inline revert-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                                        <input type="hidden" name="durum" value="onaylandi">
-                                                        <input type="hidden" name="update" value="1">
-                                                        <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmGeriAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-undo"></i> Geri Al
-                                                        </button>
-                                                    </form>
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_approved')): ?>
+                                                        <form method="POST" class="d-inline revert-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="durum" value="onaylandi">
+                                                            <input type="hidden" name="update" value="1">
+                                                            <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmGeriAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                                                <i class="fas fa-undo"></i> Geri Al
+                                                            </button>
+                                                        </form>
+                                                    <?php endif; ?>
                                                 <?php endif; ?>
                                             </div>
                                         </td>

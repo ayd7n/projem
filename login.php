@@ -66,7 +66,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['taraf'] = $staff['taraf'];
                 $_SESSION['id'] = $staff['user_id'];
                 $_SESSION['kullanici_adi'] = $staff['kullanici_adi'];
+                $_SESSION['email'] = $username; // Store email for admin check
                 $_SESSION['rol'] = 'personel';
+                $_SESSION['izinler'] = []; // Default to empty array
+
+                // Set a flag for the admin user
+                if ($username === 'admin@parfum.com') {
+                    $_SESSION['is_admin'] = true;
+                } else {
+                    // For non-admin staff, load their specific permissions
+                    $_SESSION['is_admin'] = false;
+                    $izin_stmt = $connection->prepare("SELECT izin_anahtari FROM personel_izinleri WHERE personel_id = ?");
+                    $izin_stmt->bind_param('i', $staff['user_id']);
+                    $izin_stmt->execute();
+                    $izin_result = $izin_stmt->get_result();
+                    $izinler = [];
+                    while ($row = $izin_result->fetch_assoc()) {
+                        $izinler[] = $row['izin_anahtari'];
+                    }
+                    $_SESSION['izinler'] = $izinler;
+                    $izin_stmt->close();
+                }
                 
                 header('Location: navigation.php');
                 exit;

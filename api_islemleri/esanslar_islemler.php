@@ -21,6 +21,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     
     switch ($action) {
         case 'get_all_essences':
+            if (!yetkisi_var('page:view:esanslar')) {
+                echo json_encode(['status' => 'error', 'message' => 'Esansları görüntüleme yetkiniz yok.']);
+                exit;
+            }
             $essences_query = "SELECT * FROM esanslar ORDER BY esans_ismi";
             $essences_result = $connection->query($essences_query);
             
@@ -36,6 +40,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             break;
             
         case 'get_essence':
+            if (!yetkisi_var('page:view:esanslar')) {
+                echo json_encode(['status' => 'error', 'message' => 'Esans görüntüleme yetkiniz yok.']);
+                exit;
+            }
             $esans_id = $_GET['id'] ?? null;
             if ($esans_id) {
                 $stmt = $connection->prepare("SELECT * FROM esanslar WHERE esans_id = ?");
@@ -74,6 +82,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     switch ($action) {
         case 'add_essence':
+            if (!yetkisi_var('action:esanslar:create')) {
+                echo json_encode(['status' => 'error', 'message' => 'Yeni esans ekleme yetkiniz yok.']);
+                exit;
+            }
             $esans_kodu = $input['esans_kodu'] ?? '';
             $esans_ismi = $input['esans_ismi'] ?? '';
             $stok_miktari = floatval($input['stok_miktari'] ?? 0);
@@ -106,6 +118,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             
         case 'update_essence':
+            if (!yetkisi_var('action:esanslar:edit')) {
+                echo json_encode(['status' => 'error', 'message' => 'Esans düzenleme yetkiniz yok.']);
+                exit;
+            }
             $esans_id = $input['esans_id'] ?? null;
             $esans_kodu = $input['esans_kodu'] ?? '';
             $esans_ismi = $input['esans_ismi'] ?? '';
@@ -143,6 +159,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
             
         case 'delete_essence':
+            if (!yetkisi_var('action:esanslar:delete')) {
+                echo json_encode(['status' => 'error', 'message' => 'Esans silme yetkiniz yok.']);
+                exit;
+            }
             $esans_id = $input['esans_id'] ?? null;
             
             if ($esans_id) {

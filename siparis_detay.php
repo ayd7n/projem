@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:musteri_siparisleri')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 $siparis_id = isset($_GET['siparis_id']) ? (int)$_GET['siparis_id'] : 0;
 
 if ($siparis_id <= 0) {
@@ -557,24 +562,25 @@ $products_result = $connection->query($products_query);
                                     <td><?php echo htmlspecialchars($item['birim']); ?></td>
                                     <td><?php echo number_format($item['birim_fiyat'], 2); ?> TL</td>
                                     <td><?php echo number_format($item['toplam_tutar'], 2); ?> TL</td>
-                                    <td class="actions">
-                                        <?php if ($order['durum'] === 'beklemede'): ?>
-                                            <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">
-                                                <i class="fas fa-edit"></i> Düzenle
-                                            </a>
-                                            <form style="display: inline;" class="d-inline">
-                                                <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
-                                                <button type="button" class="btn btn-danger btn-sm delete-item-btn">
-                                                    <i class="fas fa-trash"></i> Sil
-                                                </button>
-                                            </form>
-                                        <?php else: ?>
-                                            <span class="text-muted">İşlem yok</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
-                                <?php if ($order['durum'] === 'beklemede'): ?>
-                                <tr id="update-form-<?php echo $item['urun_kodu']; ?>" style="display:none;">
+                                                                         <td class="actions">
+                                                                            <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
+                                                                                <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">
+                                                                                    <i class="fas fa-edit"></i> Düzenle
+                                                                                </a>
+                                                                                <form style="display: inline;" class="d-inline">
+                                                                                    <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
+                                                                                    <button type="button" class="btn btn-danger btn-sm delete-item-btn">
+                                                                                        <i class="fas fa-trash"></i> Sil
+                                                                                    </button>
+                                                                                </form>
+                                                                            <?php elseif ($order['durum'] === 'beklemede'): ?>
+                                                                                <span class="text-muted">Düzenleme yetkiniz yok</span>
+                                                                            <?php else: ?>
+                                                                                <span class="text-muted">İşlem yok</span>
+                                                                            <?php endif; ?>
+                                                                        </td>
+                                                                    </tr>
+                                                                    <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>                                <tr id="update-form-<?php echo $item['urun_kodu']; ?>" style="display:none;">
                                     <td colspan="7">
                                         <div class="card mt-3">
                                             <div class="card-body">
@@ -618,7 +624,7 @@ $products_result = $connection->query($products_query);
             </div>
         </div>
         
-        <?php if ($order['durum'] === 'beklemede'): ?>
+        <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-plus-circle"></i> Yeni Sipariş Kalemi Ekle</h2>
@@ -661,7 +667,11 @@ $products_result = $connection->query($products_query);
                 <h2><i class="fas fa-info-circle"></i> Sipariş Durumu</h2>
             </div>
             <div class="card-body">
-                <p>Sipariş durumu "<?php echo $order['durum'] === 'onaylandi' ? 'Onaylandı' : ($order['durum'] === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi'); ?>" olduğu için sipariş kalemleri üzerinde değişiklik yapamazsınız.</p>
+                <?php if ($order['durum'] !== 'beklemede'): ?>
+                    <p>Sipariş durumu "<?php echo $order['durum'] === 'onaylandi' ? 'Onaylandı' : ($order['durum'] === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi'); ?>" olduğu için sipariş kalemleri üzerinde değişiklik yapamazsınız.</p>
+                <?php else: ?>
+                    <p>Bu sipariş üzerinde değişiklik yapma yetkiniz yok.</p>
+                <?php endif; ?>
             </div>
         </div>
         <?php endif; ?>

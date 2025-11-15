@@ -17,6 +17,10 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_products') {
+        if (!yetkisi_var('page:view:urunler')) {
+            echo json_encode(['status' => 'error', 'message' => 'Ürünleri görüntüleme yetkiniz yok.']);
+            exit;
+        }
         try {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
@@ -33,10 +37,13 @@ if (isset($_GET['action'])) {
             $total_pages = ceil($total_products / $limit);
             $stmt_count->close();
 
+            $can_view_cost = yetkisi_var('action:urunler:view_cost');
+            $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
+
             $query = "
-                SELECT u.*, vum.teorik_maliyet 
+                SELECT u.* {$cost_column}
                 FROM urunler u
-                LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu
+                " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
                 WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ? 
                 ORDER BY u.urun_ismi 
                 LIMIT ? OFFSET ?";
@@ -48,6 +55,9 @@ if (isset($_GET['action'])) {
             $products = [];
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
+                    if (!$can_view_cost) {
+                        unset($row['teorik_maliyet']);
+                    }
                     $products[] = $row;
                 }
             }
@@ -66,6 +76,10 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Bir hata oluştu: ' . $t->getMessage()];
         }
     } elseif ($action == 'get_product' && isset($_GET['id'])) {
+        if (!yetkisi_var('page:view:urunler')) {
+            echo json_encode(['status' => 'error', 'message' => 'Ürün görüntüleme yetkiniz yok.']);
+            exit;
+        }
         $urun_kodu = (int)$_GET['id'];
         $query = "SELECT * FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
@@ -132,6 +146,10 @@ if (isset($_GET['action'])) {
     $raf = $_POST['raf'] ?? '';
 
     if ($action == 'add_product') {
+        if (!yetkisi_var('action:urunler:create')) {
+            echo json_encode(['status' => 'error', 'message' => 'Yeni ürün ekleme yetkiniz yok.']);
+            exit;
+        }
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
         } else {
@@ -147,6 +165,10 @@ if (isset($_GET['action'])) {
             $stmt->close();
         }
     } elseif ($action == 'update_product' && isset($_POST['urun_kodu'])) {
+        if (!yetkisi_var('action:urunler:edit')) {
+            echo json_encode(['status' => 'error', 'message' => 'Ürün düzenleme yetkiniz yok.']);
+            exit;
+        }
         $urun_kodu = (int)$_POST['urun_kodu'];
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
@@ -163,6 +185,10 @@ if (isset($_GET['action'])) {
             $stmt->close();
         }
     } elseif ($action == 'delete_product' && isset($_POST['urun_kodu'])) {
+        if (!yetkisi_var('action:urunler:delete')) {
+            echo json_encode(['status' => 'error', 'message' => 'Ürün silme yetkiniz yok.']);
+            exit;
+        }
         $urun_kodu = (int)$_POST['urun_kodu'];
         $query = "DELETE FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);

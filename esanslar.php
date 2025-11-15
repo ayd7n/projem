@@ -12,6 +12,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     header('Location: login.php');
     exit;
 }
+
+// Page-level permission check
+if (!yetkisi_var('page:view:esanslar')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
 ?>
 
 <!DOCTYPE html>
@@ -110,7 +115,9 @@ if ($_SESSION['taraf'] !== 'personel') {
 
             <div class="row">
                 <div class="col-md-8">
-                    <button @click="acYeniEsansModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Ekle</button>
+                    <?php if (yetkisi_var('action:esanslar:create')): ?>
+                        <button @click="acYeniEsansModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Ekle</button>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-4">
                     <div class="card mb-3">
@@ -150,7 +157,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                     <th><i class="fas fa-database"></i> Tank Kodu</th>
                                     <th><i class="fas fa-water"></i> Tank</th>
                                     <th><i class="fas fa-warehouse"></i> Stok</th>
-                                    <th><i class="fas fa-dollar-sign"></i> Maliyet</th>
+                                    <th>Maliyet (₺)</th>
                                     <th><i class="fas fa-ruler"></i> Birim</th>
                                     <th><i class="fas fa-clock"></i> Demlenme Süresi (Gün)</th>
                                     <th><i class="fas fa-sticky-note"></i> Not</th>
@@ -165,8 +172,12 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </tr>
                                 <tr v-for="esans in esansListesi" :key="esans.esans_id">
                                     <td class="actions">
-                                        <button @click="acDuzenleModal(esans)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
-                                        <button @click="silEsans(esans.esans_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                        <?php if (yetkisi_var('action:esanslar:edit')): ?>
+                                            <button @click="acDuzenleModal(esans)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                        <?php endif; ?>
+                                        <?php if (yetkisi_var('action:esanslar:delete')): ?>
+                                            <button @click="silEsans(esans.esans_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                        <?php endif; ?>
                                     </td>
                                     <td>{{ esans.esans_kodu }}</td>
                                     <td><strong>{{ esans.esans_ismi }}</strong></td>

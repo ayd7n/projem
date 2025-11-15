@@ -15,6 +15,10 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_materials') {
+        if (!yetkisi_var('page:view:malzemeler')) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzemeleri görüntüleme yetkiniz yok.']);
+            exit;
+        }
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
@@ -70,6 +74,10 @@ if (isset($_GET['action'])) {
         ];
     }
     elseif ($action == 'get_material' && isset($_GET['id'])) {
+        if (!yetkisi_var('page:view:malzemeler')) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme görüntüleme yetkiniz yok.']);
+            exit;
+        }
         $malzeme_kodu = (int)$_GET['id'];
         $query = "SELECT * FROM malzemeler WHERE malzeme_kodu = ?";
         $stmt = $connection->prepare($query);
@@ -116,6 +124,10 @@ if (isset($_GET['action'])) {
     $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int)$_POST['kritik_stok_seviyesi'] : 0;
 
     if ($action == 'add_material') {
+        if (!yetkisi_var('action:malzemeler:create')) {
+            echo json_encode(['status' => 'error', 'message' => 'Yeni malzeme ekleme yetkiniz yok.']);
+            exit;
+        }
         if (empty($malzeme_ismi)) {
             $response = ['status' => 'error', 'message' => 'Malzeme ismi boş olamaz.'];
         } else {
@@ -132,6 +144,10 @@ if (isset($_GET['action'])) {
             $stmt->close();
         }
     } elseif ($action == 'update_material' && isset($_POST['malzeme_kodu'])) {
+        if (!yetkisi_var('action:malzemeler:edit')) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme düzenleme yetkiniz yok.']);
+            exit;
+        }
         $malzeme_kodu = (int)$_POST['malzeme_kodu'];
         
         if (empty($malzeme_ismi)) {
@@ -162,6 +178,10 @@ if (isset($_GET['action'])) {
             $stmt->close();
         }
     } elseif ($action == 'delete_material' && isset($_POST['malzeme_kodu'])) {
+        if (!yetkisi_var('action:malzemeler:delete')) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme silme yetkiniz yok.']);
+            exit;
+        }
         $malzeme_kodu = (int)$_POST['malzeme_kodu'];
         
         $query = "DELETE FROM malzemeler WHERE malzeme_kodu = ?";

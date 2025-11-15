@@ -169,6 +169,53 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
     }
+    elseif ($action == 'update_permissions' && isset($_POST['personel_id'])) {
+        // Only the super-admin can change permissions
+        if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
+            echo json_encode(['status' => 'error', 'message' => 'Bu işlemi yapma yetkiniz yok.']);
+            exit;
+        }
+
+        $personel_id = (int)$_POST['personel_id'];
+        $permissions = $_POST['permissions'] ?? [];
+
+        // Prevent changing admin's permissions
+        $check_query = "SELECT e_posta FROM personeller WHERE personel_id = $personel_id";
+        $check_result = $connection->query($check_query);
+        if ($check_result && $check_result->num_rows > 0) {
+            $user_to_check = $check_result->fetch_assoc();
+            if ($user_to_check['e_posta'] === 'admin@parfum.com') {
+                echo json_encode(['status' => 'error', 'message' => 'Admin kullanıcısının yetkileri değiştirilemez.']);
+                exit;
+            }
+        }
+
+        $connection->begin_transaction();
+        try {
+            // Delete old permissions
+            $delete_stmt = $connection->prepare("DELETE FROM personel_izinleri WHERE personel_id = ?");
+            $delete_stmt->bind_param('i', $personel_id);
+            $delete_stmt->execute();
+            $delete_stmt->close();
+
+            // Insert new permissions
+            if (!empty($permissions)) {
+                $insert_stmt = $connection->prepare("INSERT INTO personel_izinleri (personel_id, izin_anahtari) VALUES (?, ?)");
+                foreach ($permissions as $permission_key) {
+                    $insert_stmt->bind_param('is', $personel_id, $permission_key);
+                    $insert_stmt->execute();
+                }
+                $insert_stmt->close();
+            }
+
+            $connection->commit();
+            $response = ['status' => 'success', 'message' => 'Personel yetkileri başarıyla güncellendi.'];
+
+        } catch (mysqli_sql_exception $e) {
+            $connection->rollback();
+            $response = ['status' => 'error', 'message' => 'Yetkiler güncellenirken bir veritabanı hatası oluştu: ' . $e->getMessage()];
+        }
+    }
 }
 
 $connection->close();

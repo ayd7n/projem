@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:musteriler')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total customers
 $total_result = $connection->query("SELECT COUNT(*) as total FROM musteriler");
 $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
@@ -190,7 +195,9 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="row">
             <div class="col-md-8">
-                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Müşteri Ekle</button>
+                <?php if (yetkisi_var('action:musteriler:create')): ?>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Müşteri Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -243,8 +250,12 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                             </tr>
                             <tr v-for="customer in customers" :key="customer.musteri_id">
                                 <td class="actions">
-                                    <button @click="openModal(customer)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
-                                    <button @click="deleteCustomer(customer.musteri_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    <?php if (yetkisi_var('action:musteriler:edit')): ?>
+                                        <button @click="openModal(customer)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                    <?php endif; ?>
+                                    <?php if (yetkisi_var('action:musteriler:delete')): ?>
+                                        <button @click="deleteCustomer(customer.musteri_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                    <?php endif; ?>
                                 </td>
                                 <td>
                                     <span v-if="customer.giris_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
