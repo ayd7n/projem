@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:lokasyonlar')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total locations
 $total_result = $connection->query("SELECT COUNT(*) as total FROM lokasyonlar");
 $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
@@ -233,7 +238,9 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
         </div>
 
         <div class="d-flex flex-column flex-md-row justify-content-start align-items-start mb-3">
+            <?php if (yetkisi_var('action:lokasyonlar:create')): ?>
             <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon Ekle</button>
+            <?php endif; ?>
         </div>
 
         <div class="card">
@@ -267,12 +274,16 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
                             </tr>
                             <tr v-for="location in locations" :key="location.lokasyon_id">
                                 <td class="actions">
+                                    <?php if (yetkisi_var('action:lokasyonlar:edit')): ?>
                                     <button @click="openModal(location)" class="btn btn-primary btn-sm">
                                         <i class="fas fa-edit"></i>
                                     </button>
+                                    <?php endif; ?>
+                                    <?php if (yetkisi_var('action:lokasyonlar:delete')): ?>
                                     <button @click="deleteLocation(location.lokasyon_id)" class="btn btn-danger btn-sm">
                                         <i class="fas fa-trash"></i>
                                     </button>
+                                    <?php endif; ?>
                                 </td>
                                 <td><strong>{{ location.depo_ismi }}</strong></td>
                                 <td>{{ location.raf }}</td>

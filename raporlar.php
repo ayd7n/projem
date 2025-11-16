@@ -12,6 +12,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     header('Location: login.php');
     exit;
 }
+
+// Page-level permission check
+if (!yetkisi_var('page:view:raporlar')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
 ?>
 
 <!DOCTYPE html>
@@ -127,6 +132,7 @@ if ($_SESSION['taraf'] !== 'personel') {
             </div>
         </div>
 
+        <?php if (yetkisi_var('action:raporlar:view_sales')): ?>
         <div class="row">
             <div class="col-12">
                 <div class="chart-card">
@@ -135,6 +141,40 @@ if ($_SESSION['taraf'] !== 'personel') {
                 </div>
             </div>
         </div>
+        <?php endif; ?>
+
+        <?php if (yetkisi_var('action:raporlar:view_stock')): ?>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="mb-3">Stok Raporu</h5>
+                    <p>Stok raporu burada gösterilecek.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (yetkisi_var('action:raporlar:view_cost')): ?>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="mb-3">Maliyet Raporu</h5>
+                    <p>Maliyet raporu burada gösterilecek.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if (yetkisi_var('action:raporlar:view_production')): ?>
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="chart-card">
+                    <h5 class="mb-3">Üretim Raporu</h5>
+                    <p>Üretim raporu burada gösterilecek.</p>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
 
     </div>
 

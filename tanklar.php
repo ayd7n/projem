@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:tanklar')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Kullanıcı adını JavaScript'e aktarmak için
 $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
 ?>
@@ -88,7 +93,9 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
 
             <div class="row">
                 <div class="col-md-8">
+                    <?php if (yetkisi_var('action:tanklar:create')): ?>
                     <button class="btn btn-primary mb-3" @click="openTankModal()"><i class="fas fa-plus"></i> Yeni Tank Ekle</button>
+                    <?php endif; ?>
                 </div>
                 <div class="col-md-4">
                     <div class="card mb-3">
@@ -132,12 +139,16 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                 </tr>
                                 <tr v-else v-for="tank in paginatedTanks" :key="tank.tank_id">
                                     <td class="actions">
+                                        <?php if (yetkisi_var('action:tanklar:edit')): ?>
                                         <button class="btn btn-primary btn-sm" @click="editTank(tank)">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <?php endif; ?>
+                                        <?php if (yetkisi_var('action:tanklar:delete')): ?>
                                         <button class="btn btn-danger btn-sm" @click="deleteTank(tank.tank_id)">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        <?php endif; ?>
                                     </td>
                                     <td><strong>{{ tank.tank_kodu }}</strong></td>
                                     <td>{{ tank.tank_ismi }}</td>

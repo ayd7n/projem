@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:ayarlar')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Fetch current maintenance mode status
 $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
 
@@ -156,6 +161,7 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
         <div id="alert-container"></div>
 
         <div class="row">
+            <?php if (yetkisi_var('action:ayarlar:currency')): ?>
             <div class="col-md-6 col-lg-4 mb-4">
                 <a href="doviz_kurlari.php" class="settings-card">
                     <div class="d-flex align-items-center">
@@ -167,6 +173,8 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                     </div>
                 </a>
             </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('action:ayarlar:backup')): ?>
             <div class="col-md-6 col-lg-4 mb-4">
                 <a href="yedekleme.php" class="settings-card">
                     <div class="d-flex align-items-center">
@@ -178,6 +186,8 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                     </div>
                 </a>
             </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('action:ayarlar:export')): ?>
             <div class="col-md-6 col-lg-4 mb-4">
                 <a href="excele_aktar.php" class="settings-card">
                     <div class="d-flex align-items-center">
@@ -189,8 +199,10 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                     </div>
                 </a>
             </div>
+            <?php endif; ?>
             
             <!-- Maintenance Mode Card -->
+            <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): ?>
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="settings-form-card">
                     <div class="d-flex align-items-center mb-3">
@@ -208,6 +220,7 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                     </form>
                 </div>
             </div>
+            <?php endif; ?>
 
         </div>
     </div>

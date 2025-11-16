@@ -857,18 +857,34 @@ app = new Vue({
         calculateMissingAmount() {
             // Calculate missing amount as planned amount minus completed amount
             // Ensure it doesn't go below 0
-            if (this.selectedWorkOrder && 
-                this.selectedWorkOrder.planlanan_miktar !== undefined && 
+            if (this.selectedWorkOrder &&
+                this.selectedWorkOrder.planlanan_miktar !== undefined &&
                 this.selectedWorkOrder.tamamlanan_miktar !== undefined) {
-                
+
                 const planned = parseFloat(this.selectedWorkOrder.planlanan_miktar) || 0;
                 const completed = parseFloat(this.selectedWorkOrder.tamamlanan_miktar) || 0;
-                
+
                 // Calculate missing amount: planned - completed, but minimum 0
                 const missing = Math.max(0, planned - completed);
-                
+
                 this.selectedWorkOrder.eksik_miktar_toplami = missing;
             }
+        },
+
+        // Custom dropdown methods
+        toggleDropdown(id) {
+            // Close other open dropdowns first
+            Object.keys(this.dropdownStates).forEach(key => {
+                if (key !== id.toString()) {
+                    this.$set(this.dropdownStates, key, false);
+                }
+            });
+            // Toggle the clicked dropdown
+            this.$set(this.dropdownStates, id.toString(), !this.dropdownStates[id.toString()]);
+        },
+
+        closeDropdown() {
+            this.dropdownStates = {};
         }
     },
     watch: {

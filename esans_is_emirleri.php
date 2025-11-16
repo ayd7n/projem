@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:esans_is_emirleri')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Fetch all essence work orders
 $work_orders_query = "SELECT * FROM esans_is_emirleri ORDER BY olusturulma_tarihi DESC";
 $work_orders_result = $connection->query($work_orders_query);
@@ -43,7 +48,7 @@ $tanks_result = $connection->query($tanks_query);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <link rel="stylesheet" href="assets/css/esans_is_emirleri.css?v=1.2">
+    <link rel="stylesheet" href="assets/css/stil.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
@@ -583,8 +588,6 @@ $tanks_result = $connection->query($tanks_query);
 
     <!-- Main Content -->
     <div class="main-content">
-        <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
         <div class="page-header">
             <div>
                 <h1><i class="fas fa-flask"></i> Esans Is Emirleri</h1>
@@ -602,15 +605,15 @@ $tanks_result = $connection->query($tanks_query);
 
         <div class="row">
             <div class="col-md-12">
+                <?php if (yetkisi_var('action:esans_is_emirleri:create')): ?>
                 <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Esans Is Emri Olustur</button>
+                <?php endif; ?>
                 <button @click="showInfoModal = true" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
             </div>
         </div>
 
-
-
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h2><i class="fas fa-list"></i> Esans Is Emirleri Listesi</h2>
             </div>
             <div class="card-body">
@@ -655,6 +658,7 @@ $tanks_result = $connection->query($tanks_query);
                                             <i class="fas fa-cogs"></i> Islemler
                                         </button>
                                         <div class="dropdown-menu">
+                                            <?php if (yetkisi_var('action:esans_is_emirleri:start')): ?>
                                             <button 
                                                 v-if="workOrder && workOrder.durum === 'olusturuldu'" 
                                                 @click="startWorkOrder(workOrder.is_emri_numarasi)" 
@@ -662,6 +666,8 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Is Emrini Baslat">
                                                 <i class="fas fa-play text-success"></i> Is Emrini Baslat
                                             </button>
+                                            <?php endif; ?>
+                                            <?php if (yetkisi_var('action:esans_is_emirleri:complete')): ?>
                                             <button 
                                                 v-if="workOrder && workOrder.durum === 'uretimde'" 
                                                 @click="openCompleteModal(workOrder.is_emri_numarasi)" 
@@ -669,7 +675,9 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Is Emrini Tamamla">
                                                 <i class="fas fa-check-square text-success"></i> Is Emrini Tamamla
                                             </button>
+                                            <?php endif; ?>
                                             
+                                            <?php if (yetkisi_var('action:esans_is_emirleri:edit')): ?>
                                             <button 
                                                 @click="openEditModal(workOrder.is_emri_numarasi)" 
                                                 v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'" 
@@ -677,6 +685,7 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Duzenle">
                                                 <i class="fas fa-edit text-primary"></i> Duzenle
                                             </button>
+                                            <?php endif; ?>
                                             <button 
                                                 @click="showWorkOrderDetails(workOrder.is_emri_numarasi)" 
                                                 class="dropdown-item" 
@@ -689,6 +698,7 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Yazdır">
                                                 <i class="fas fa-print text-secondary"></i> Yazdir
                                             </button>
+                                            <?php if (yetkisi_var('action:esans_is_emirleri:edit')): ?>
                                             <button 
                                                 @click="revertWorkOrder(workOrder.is_emri_numarasi)" 
                                                 v-if="workOrder && workOrder.durum === 'uretimde'" 
@@ -696,6 +706,8 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Uretimi Durdur/Geri Al">
                                                 <i class="fas fa-undo text-warning"></i> Uretimi Durdur/Geri Al
                                             </button>
+                                            <?php endif; ?>
+                                            <?php if (yetkisi_var('action:esans_is_emirleri:delete')): ?>
                                             <button 
                                                 @click="deleteWorkOrder(workOrder.is_emri_numarasi)" 
                                                 v-if="workOrder && workOrder.durum !== 'tamamlandi'" 
@@ -703,17 +715,18 @@ $tanks_result = $connection->query($tanks_query);
                                                 title="Sil">
                                                 <i class="fas fa-trash"></i> Sil
                                             </button>
+                                            <?php endif; ?>
                                         </div>
                                     </div>
 
                                 <td><strong>{{ workOrder.is_emri_numarasi }}</strong></td>
                                 <td>
-                                    <span :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
+                                    <span :class="`badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
                                         {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' : 'Iptal')) }}
                                     </span>
                                 </td>
-                                <td><strong>{{ workOrder.esans_kodu }} - {{ workOrder.esans_ismi }}</strong></td>
-                                <td>{{ workOrder.tank_kodu }} - {{ workOrder.tank_ismi }}</td>
+                                <td style="white-space: nowrap;"><div><strong>{{ workOrder.esans_kodu }} - {{ workOrder.esans_ismi }}</strong></div></td>
+                                <td style="white-space: nowrap;">{{ workOrder.tank_kodu }} - {{ workOrder.tank_ismi }}</td>
                                 <td>{{ parseFloat(workOrder.planlanan_miktar).toFixed(2) }}</td>
                                 <td>{{ parseFloat(workOrder.tamamlanan_miktar).toFixed(2) }}</td>
                                 <td>{{ parseFloat(workOrder.eksik_miktar_toplami).toFixed(2) }}</td>
@@ -725,7 +738,7 @@ $tanks_result = $connection->query($tanks_query);
                                 <td>{{ workOrder.gerceklesen_baslangic_tarihi }}</td>
                                 <td>{{ workOrder.gerceklesen_bitis_tarihi }}</td>
                                 <td>{{ workOrder.demlenme_suresi_gun }}</td>
-                                <td>{{ workOrder.aciklama }}</td>
+                                <td style="white-space: nowrap;">{{ workOrder.aciklama }}</td>
                             </tr>
                             <tr v-if="!loading && workOrders.length === 0">
                                 <td colspan="17" class="text-center p-4">Henüz kayitli esans is emri bulunmuyor.</td>

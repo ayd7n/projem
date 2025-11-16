@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:is_merkezleri')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total work centers
 $total_result = $connection->query("SELECT COUNT(*) as total FROM is_merkezleri");
 $total_work_centers = $total_result->fetch_assoc()['total'] ?? 0;
@@ -407,7 +412,9 @@ $work_centers_result = $connection->query($work_centers_query);
 
         <div class="row">
             <div class="col-md-8">
+                <?php if (yetkisi_var('action:is_merkezleri:create')): ?>
                 <button id="addWorkCenterBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni İş Merkezi Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -566,12 +573,16 @@ $work_centers_result = $connection->query($work_centers_query);
                                 const row = `
                                     <tr>
                                         <td class="actions">
+                                            <?php if (yetkisi_var('action:is_merkezleri:edit')): ?>
                                             <button class="btn btn-primary btn-sm edit-btn" data-id="${workCenter.is_merkezi_id}">
                                                 <i class="fas fa-edit"></i>
                                             </button>
+                                            <?php endif; ?>
+                                            <?php if (yetkisi_var('action:is_merkezleri:delete')): ?>
                                             <button class="btn btn-danger btn-sm delete-btn" data-id="${workCenter.is_merkezi_id}">
                                                 <i class="fas fa-trash"></i>
                                             </button>
+                                            <?php endif; ?>
                                         </td>
                                         <td><strong>${workCenter.isim}</strong></td>
                                         <td>${workCenter.aciklama || ''}</td>

@@ -211,6 +211,12 @@ if (isset($_GET['action'])) {
             $connection->commit();
             $response = ['status' => 'success', 'message' => 'Personel yetkileri başarıyla güncellendi.'];
 
+            // Reload permissions if the updated user is the current user
+            if (isset($_SESSION['user_id']) && (int)$personel_id === (int)$_SESSION['user_id']) {
+                require_once __DIR__ . '/../includes/auth_functions.php';
+                reload_permissions($personel_id, $connection);
+            }
+
         } catch (mysqli_sql_exception $e) {
             $connection->rollback();
             $response = ['status' => 'error', 'message' => 'Yetkiler güncellenirken bir veritabanı hatası oluştu: ' . $e->getMessage()];

@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:gider_yonetimi')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 // Calculate total expenses
 $total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi");
 $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
@@ -404,7 +409,9 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="row">
             <div class="col-md-8">
+                <?php if (yetkisi_var('action:gider_yonetimi:create')): ?>
                 <button id="addExpenseBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Gider Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
@@ -778,12 +785,16 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
                         return `<tr>
                             <td class="actions">
+                                <?php if (yetkisi_var('action:gider_yonetimi:edit')): ?>
                                 <button class="btn btn-primary btn-sm edit-btn" data-id="${expense.gider_id}">
                                     <i class="fas fa-edit"></i>
                                 </button>
+                                <?php endif; ?>
+                                <?php if (yetkisi_var('action:gider_yonetimi:delete')): ?>
                                 <button class="btn btn-danger btn-sm delete-btn" data-id="${expense.gider_id}">
                                     <i class="fas fa-trash"></i>
                                 </button>
+                                <?php endif; ?>
                             </td>
                             <td>${tarih}</td>
                             <td>${kategori}</td>

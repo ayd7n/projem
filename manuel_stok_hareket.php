@@ -12,6 +12,12 @@ if ($_SESSION['taraf'] !== 'personel') {
     header('Location: login.php');
     exit;
 }
+
+// Page-level permission check
+if (!yetkisi_var('page:view:manuel_stok_hareket')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -80,13 +86,21 @@ if ($_SESSION['taraf'] !== 'personel') {
             <div class="row">
                 <div class="col-md-12">
                     <div class="btn-group" role="group" aria-label="Stok Hareketleri Butonları">
+                        <?php if (yetkisi_var('action:manuel_stok_hareket:sayim_fazlasi')): ?>
                         <button class="btn btn-success" @click="openSayimFazlasiModal"><i class="fas fa-plus-circle"></i> Sayım
                             Fazlası</button>
+                        <?php endif; ?>
+                        <?php if (yetkisi_var('action:manuel_stok_hareket:fire_sayim_eksigi')): ?>
                         <button class="btn btn-danger" @click="openFireSayimEksigiModal"><i class="fas fa-minus-circle"></i> Fire / Sayım
                             Eksigi</button>
+                        <?php endif; ?>
+                        <?php if (yetkisi_var('action:manuel_stok_hareket:transfer')): ?>
                         <button class="btn btn-primary" @click="openTransferModal"><i class="fas fa-exchange-alt"></i> Yeni Stok
                             Transferi</button>
+                        <?php endif; ?>
+                        <?php if (yetkisi_var('action:manuel_stok_hareket:mal_kabul')): ?>
                         <button class="btn btn-info" @click="openMalKabulModal"><i class="fas fa-check-circle"></i> Mal Kabul</button>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -133,9 +147,11 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </tr>
                                 <tr v-else v-for="movement in paginatedMovements" :key="movement.hareket_id">
                                     <td class="actions">
+                                        <?php if (yetkisi_var('action:manuel_stok_hareket:delete')): ?>
                                         <button class="btn btn-danger btn-sm" @click="deleteMovement(movement.hareket_id)">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        <?php endif; ?>
                                     </td>
                                     <td><strong>{{ movement.hareket_id }}</strong></td>
                                     <td>{{ formatDate(movement.tarih) }}</td>

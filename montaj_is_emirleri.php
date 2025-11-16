@@ -530,7 +530,9 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
 
             <div class="row">
                 <div class="col-md-12">
+                    <?php if (yetkisi_var('action:montaj_is_emirleri:create')): ?>
                     <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Montaj Is Emri Olustur</button>
+                    <?php endif; ?>
                     <button @click="showInfoModal = true" class="btn btn-info mb-3 ml-2"><i class="fas fa-info-circle"></i> Bilgi</button>
                 </div>
             </div>
@@ -579,10 +581,11 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                 <tr v-else v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
                                     <td class="actions">
                                         <div class="dropdown">
-                                            <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" data-container="body" aria-haspopup="true" aria-expanded="false">
                                                 <i class="fas fa-cogs"></i> Islemler
                                             </button>
                                             <div class="dropdown-menu">
+                                                <?php if (yetkisi_var('action:montaj_is_emirleri:start')): ?>
                                                 <button
                                                     v-if="workOrder && workOrder.durum === 'olusturuldu'"
                                                     @click="startWorkOrder(workOrder.is_emri_numarasi)"
@@ -590,6 +593,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Is Emrini Baslat">       
                                                     <i class="fas fa-play text-success"></i> Is Emrini Baslat
                                                 </button>
+                                                <?php endif; ?>
+                                                <?php if (yetkisi_var('action:montaj_is_emirleri:complete')): ?>
                                                 <button
                                                     v-if="workOrder && workOrder.durum === 'uretimde'"
                                                     @click="openCompleteModal(workOrder.is_emri_numarasi)"
@@ -597,7 +602,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Is Emrini Tamamla">      
                                                     <i class="fas fa-check-square text-success"></i> Is Emrini Tamamla
                                                 </button>
-
+                                                <?php endif; ?>
+                                                <?php if (yetkisi_var('action:montaj_is_emirleri:edit')): ?>
                                                 <button
                                                     @click="openEditModal(workOrder.is_emri_numarasi)"
                                                     v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'"
@@ -605,6 +611,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Duzenle">
                                                     <i class="fas fa-edit text-primary"></i> Duzenle
                                                 </button>
+                                                <?php endif; ?>
                                                 <button
                                                     @click="showWorkOrderDetails(workOrder.is_emri_numarasi)"
                                                     class="dropdown-item"
@@ -617,6 +624,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Yazdır">
                                                     <i class="fas fa-print text-secondary"></i> Yazdir
                                                 </button>
+                                                <?php if (yetkisi_var('action:montaj_is_emirleri:edit')): ?>
                                                 <button
                                                     @click="revertWorkOrder(workOrder.is_emri_numarasi)"
                                                     v-if="workOrder && workOrder.durum === 'uretimde'"
@@ -624,6 +632,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Uretimi Durdur/Geri Al"> 
                                                     <i class="fas fa-undo text-warning"></i> Uretimi Durdur/Geri Al
                                                 </button>
+                                                <?php endif; ?>
+                                                <?php if (yetkisi_var('action:montaj_is_emirleri:delete')): ?>
                                                 <button
                                                     @click="deleteWorkOrder(workOrder.is_emri_numarasi)"
                                                     v-if="workOrder && workOrder.durum !== 'tamamlandi'"
@@ -631,6 +641,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     title="Sil">
                                                     <i class="fas fa-trash"></i> Sil
                                                 </button>
+                                                <?php endif; ?>
                                             </div>
                                         </div>
 

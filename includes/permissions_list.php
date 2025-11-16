@@ -45,62 +45,6 @@ function get_all_permissions() {
             'action:personeller:delete' => 'Personel Silme',
             'action:personeller:permissions' => 'Personel Yetkilerini Düzenleme',
         ],
-        'Ürünler' => [
-            'action:urunler:create' => 'Yeni Ürün Ekleme',
-            'action:urunler:edit' => 'Ürün Bilgilerini Düzenleme',
-            'action:urunler:delete' => 'Ürün Silme',
-            'action:urunler:view_cost' => 'Ürün Maliyetini Görme',
-        ],
-        'Manuel Stok Hareketi' => [
-            'action:manuel_stok_hareket:sayim_fazlasi' => 'Sayım Fazlası Ekleme',
-            'action:manuel_stok_hareket:fire_sayim_eksigi' => 'Fire / Sayım Eksiği Ekleme',
-            'action:manuel_stok_hareket:transfer' => 'Stok Transferi Yapma',
-            'action:manuel_stok_hareket:mal_kabul' => 'Mal Kabul Yapma',
-            'action:manuel_stok_hareket:delete' => 'Stok Hareketi Silme',
-        ],
-        'Ayarlar' => [
-            'action:ayarlar:maintenance_mode' => 'Bakım Modunu Değiştirme',
-            'action:ayarlar:currency' => 'Döviz Kurlarını Değiştirme',
-            'action:ayarlar:backup' => 'Yedekleme İşlemleri Yapma',
-            'action:ayarlar:export' => 'Excel\'e Aktarma İşlemleri Yapma',
-        ],
-        'Tedarikçiler' => [
-            'action:tedarikciler:create' => 'Yeni Tedarikçi Ekleme',
-            'action:tedarikciler:edit' => 'Tedarikçi Bilgilerini Düzenleme',
-            'action:tedarikciler:delete' => 'Tedarikçi Silme',
-        ],
-        'Ürünler' => [
-            'action:urunler:create' => 'Yeni Ürün Ekleme',
-            'action:urunler:edit' => 'Ürün Bilgilerini Düzenleme',
-            'action:urunler:delete' => 'Ürün Silme',
-            'action:urunler:view_cost' => 'Ürün Maliyetini Görme',
-        ],
-        'Esanslar' => [
-            'action:esanslar:create' => 'Yeni Esans Ekleme',
-            'action:esanslar:edit' => 'Esans Bilgilerini Düzenleme',
-            'action:esanslar:delete' => 'Esans Silme',
-        ],
-        'Malzemeler' => [
-            'action:malzemeler:create' => 'Yeni Malzeme Ekleme',
-            'action:malzemeler:edit' => 'Malzeme Bilgilerini Düzenleme',
-            'action:malzemeler:delete' => 'Malzeme Silme',
-        ],
-        'Ürün Ağaçları' => [
-            'action:urun_agaclari:create' => 'Yeni Ürün Ağacı Ekleme',
-            'action:urun_agaclari:edit' => 'Ürün Ağacı Bilgilerini Düzenleme',
-            'action:urun_agaclari:delete' => 'Ürün Ağacı Silme',
-        ],
-        'Müşteri Siparişleri' => [
-            'action:musteri_siparisleri:create' => 'Yeni Müşteri Siparişi Ekleme',
-            'action:musteri_siparisleri:edit' => 'Müşteri Siparişi Bilgilerini Düzenleme',
-            'action:musteri_siparisleri:delete' => 'Müşteri Siparişi Silme',
-            'action:musteri_siparisleri:view' => 'Müşteri Siparişi Görüntüleme',
-            'action:musteri_siparisleri:approve' => 'Müşteri Siparişi Onaylama',
-            'action:musteri_siparisleri:cancel' => 'Müşteri Siparişi İptal Etme',
-            'action:musteri_siparisleri:complete' => 'Müşteri Siparişi Tamamlama',
-            'action:musteri_siparisleri:revert_to_pending' => 'Müşteri Siparişini Beklemeye Alma',
-            'action:musteri_siparisleri:revert_to_approved' => 'Tamamlanmış Siparişi Onaylanana Geri Alma',
-        ],
         'Tedarikçiler' => [
             'action:tedarikciler:create' => 'Yeni Tedarikçi Ekleme',
             'action:tedarikciler:edit' => 'Tedarikçi Bilgilerini Düzenleme',
@@ -122,8 +66,81 @@ function get_all_permissions() {
             'action:esanslar:edit' => 'Esans Bilgilerini Düzenleme',
             'action:esanslar:delete' => 'Esans Silme',
         ],
-        // Add other modules with specific actions here...
-        // e.g., etc.
+        'Ürün Ağaçları' => [
+            'action:urun_agaclari:create' => 'Yeni Ürün Ağacı Ekleme',
+            'action:urun_agaclari:edit' => 'Ürün Ağacı Bilgilerini Düzenleme',
+            'action:urun_agaclari:delete' => 'Ürün Ağacı Silme',
+        ],
+        'Müşteri Siparişleri' => [
+            'action:musteri_siparisleri:create' => 'Yeni Müşteri Siparişi Ekleme',
+            'action:musteri_siparisleri:edit' => 'Müşteri Siparişi Bilgilerini Düzenleme',
+            'action:musteri_siparisleri:delete' => 'Müşteri Siparişi Silme',
+            'action:musteri_siparisleri:view' => 'Müşteri Siparişi Görüntüleme',
+            'action:musteri_siparisleri:approve' => 'Müşteri Siparişi Onaylama',
+            'action:musteri_siparisleri:cancel' => 'Müşteri Siparişi İptal Etme',
+            'action:musteri_siparisleri:complete' => 'Müşteri Siparişi Tamamlama',
+            'action:musteri_siparisleri:revert_to_pending' => 'Müşteri Siparişini Beklemeye Alma',
+            'action:musteri_siparisleri:revert_to_approved' => 'Tamamlanmış Siparişi Onaylanana Geri Alma',
+        ],
+        'Esans İş Emirleri' => [
+            'action:esans_is_emirleri:create' => 'Yeni Esans İş Emri Oluşturma',
+            'action:esans_is_emirleri:edit' => 'Esans İş Emri Düzenleme',
+            'action:esans_is_emirleri:delete' => 'Esans İş Emri Silme',
+            'action:esans_is_emirleri:start' => 'Esans İş Emrine Başlama',
+            'action:esans_is_emirleri:complete' => 'Esans İş Emrini Tamamlama',
+        ],
+        'Montaj İş Emirleri' => [
+            'action:montaj_is_emirleri:create' => 'Yeni Montaj İş Emri Oluşturma',
+            'action:montaj_is_emirleri:edit' => 'Montaj İş Emri Düzenleme',
+            'action:montaj_is_emirleri:delete' => 'Montaj İş Emri Silme',
+            'action:montaj_is_emirleri:start' => 'Montaj İş Emrine Başlama',
+            'action:montaj_is_emirleri:complete' => 'Montaj İş Emrini Tamamlama',
+        ],
+        'Manuel Stok Hareketi' => [
+            'action:manuel_stok_hareket:sayim_fazlasi' => 'Sayım Fazlası Ekleme',
+            'action:manuel_stok_hareket:fire_sayim_eksigi' => 'Fire / Sayım Eksiği Ekleme',
+            'action:manuel_stok_hareket:transfer' => 'Stok Transferi Yapma',
+            'action:manuel_stok_hareket:mal_kabul' => 'Mal Kabul Yapma',
+            'action:manuel_stok_hareket:delete' => 'Stok Hareketi Silme',
+        ],
+        'Lokasyonlar' => [
+            'action:lokasyonlar:create' => 'Yeni Lokasyon Ekleme',
+            'action:lokasyonlar:edit' => 'Lokasyon Düzenleme',
+            'action:lokasyonlar:delete' => 'Lokasyon Silme',
+        ],
+        'Tanklar' => [
+            'action:tanklar:create' => 'Yeni Tank Ekleme',
+            'action:tanklar:edit' => 'Tank Düzenleme',
+            'action:tanklar:delete' => 'Tank Silme',
+        ],
+        'İş Merkezleri' => [
+            'action:is_merkezleri:create' => 'Yeni İş Merkezi Ekleme',
+            'action:is_merkezleri:edit' => 'İş Merkezi Düzenleme',
+            'action:is_merkezleri:delete' => 'İş Merkezi Silme',
+        ],
+        'Gider Yönetimi' => [
+            'action:gider_yonetimi:create' => 'Yeni Gider Ekleme',
+            'action:gider_yonetimi:edit' => 'Gider Düzenleme',
+            'action:gider_yonetimi:delete' => 'Gider Silme',
+            'action:gider_yonetimi:approve' => 'Gider Onaylama',
+        ],
+        'Çerçeve Sözleşmeler' => [
+            'action:cerceve_sozlesmeler:create' => 'Yeni Sözleşme Ekleme',
+            'action:cerceve_sozlesmeler:edit' => 'Sözleşme Düzenleme',
+            'action:cerceve_sozlesmeler:delete' => 'Sözleşme Silme',
+        ],
+        'Raporlar' => [
+            'action:raporlar:view_stock' => 'Stok Raporlarını Görüntüleme',
+            'action:raporlar:view_sales' => 'Satış Raporlarını Görüntüleme',
+            'action:raporlar:view_cost' => 'Maliyet Raporlarını Görüntüleme',
+            'action:raporlar:view_production' => 'Üretim Raporlarını Görüntüleme',
+        ],
+        'Ayarlar' => [
+            'action:ayarlar:maintenance_mode' => 'Bakım Modunu Değiştirme',
+            'action:ayarlar:currency' => 'Döviz Kurlarını Değiştirme',
+            'action:ayarlar:backup' => 'Yedekleme İşlemleri Yapma',
+            'action:ayarlar:export' => 'Excel\'e Aktarma İşlemleri Yapma',
+        ],
     ];
 }
 ?>

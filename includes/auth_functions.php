@@ -23,4 +23,23 @@ function yetkisi_var($permission_key) {
     // Check if the specific permission key exists in the user's permission array.
     return in_array($permission_key, $_SESSION['izinler']);
 }
+
+/**
+ * Reloads permissions for a given user ID from the database and updates the session.
+ *
+ * @param int $user_id The ID of the user whose permissions to reload.
+ * @param mysqli $connection The database connection object.
+ */
+function reload_permissions($user_id, $connection) {
+    $izinler = [];
+    $stmt = $connection->prepare("SELECT izin_anahtari FROM personel_izinleri WHERE personel_id = ?");
+    $stmt->bind_param('i', $user_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        $izinler[] = $row['izin_anahtari'];
+    }
+    $stmt->close();
+    $_SESSION['izinler'] = $izinler;
+}
 ?>

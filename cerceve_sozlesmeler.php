@@ -6,6 +6,11 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:cerceve_sozlesmeler')) {
+    die('Bu sayfayı görüntüleme yetkiniz yok.');
+}
+
 $contracts_query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik ORDER BY olusturulma_tarihi DESC";
 $contracts_result = $connection->query($contracts_query);
 
@@ -167,7 +172,9 @@ function display_date($date_string) {
 
         <div class="row">
             <div class="col-md-8">
+                <?php if (yetkisi_var('action:cerceve_sozlesmeler:create')): ?>
                 <button id="addContractBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Sözleşme Ekle</button>
+                <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="stat-card mb-3">
@@ -213,12 +220,16 @@ function display_date($date_string) {
                                 <?php while ($contract = $contracts_result->fetch_assoc()): ?>
                                 <tr class="<?php echo $contract['gecerli_mi'] ? 'table-success' : 'table-danger'; ?>">
                                     <td class="actions">
+                                        <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
                                         <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
                                             <i class="fas fa-edit"></i>
                                         </button>
+                                        <?php endif; ?>
+                                        <?php if (yetkisi_var('action:cerceve_sozlesmeler:delete')): ?>
                                         <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
                                             <i class="fas fa-trash"></i>
                                         </button>
+                                        <?php endif; ?>
                                         <button class="btn btn-info btn-sm detail-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
                                             <i class="fas fa-info-circle"></i>
                                         </button>

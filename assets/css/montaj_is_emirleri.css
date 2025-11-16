@@ -133,6 +133,7 @@ body {
 .table td {
     vertical-align: middle;
     color: var(--text-secondary);
+    white-space: nowrap;
 }
 
 .actions {
