@@ -166,6 +166,17 @@ if (!yetkisi_var('page:view:raporlar')) {
                     </div>
                 </a>
             </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="kritik_stok_raporlari.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-exclamation-triangle icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Kritik Stok Seviyeleri</h5>
+                            <p class="card-text mb-0">Kritik seviye altındaki ürün ve malzeme stoğunu analiz edin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 
