@@ -21,6 +21,10 @@ if (!yetkisi_var('page:view:malzemeler')) {
 // Calculate total materials
 $total_result = $connection->query("SELECT COUNT(*) as total FROM malzemeler");
 $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate materials below critical stock level
+$critical_result = $connection->query("SELECT COUNT(*) as total FROM malzemeler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0");
+$critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -224,21 +228,38 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
             {{ alert.message }}
         </div>
 
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:malzemeler:create')): ?>
                     <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Malzeme Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-boxes"></i>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="card">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ totalMaterials }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Malzeme</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;">{{ totalMaterials }}</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Malzeme</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card" @click="toggleCriticalStockFilter" style="cursor: pointer; transition: all 0.3s;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-icon" style="background: var(--danger); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ criticalMaterials }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Kritik Stok Altı</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -502,10 +523,12 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                 currentPage: 1,
                 totalPages: 1,
                 totalMaterials: <?php echo $total_materials; ?>,
+                criticalMaterials: <?php echo $critical_materials; ?>,
                 limit: 10,
                 modal: { title: '', data: {} },
                 depoList: [],
-                rafList: []
+                rafList: [],
+                criticalStockFilterEnabled: false
             }
         },
         computed: {
@@ -538,6 +561,9 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                 this.loading = true;
                 this.currentPage = page;
                 let url = `api_islemleri/malzemeler_islemler.php?action=get_materials&page=${this.currentPage}&limit=${this.limit}&search=${this.search}&order_by=malzeme_kodu&order_dir=desc`;
+                if (this.criticalStockFilterEnabled) {
+                    url += '&filter=critical';
+                }
                 fetch(url)
                     .then(response => response.json())
                     .then(response => {
@@ -689,6 +715,10 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
                 if (stok <= 0) return 'stock-low';
                 if (stok <= kritik) return 'stock-critical';
                 return 'stock-normal';
+            },
+            toggleCriticalStockFilter() {
+                this.criticalStockFilterEnabled = !this.criticalStockFilterEnabled;
+                this.loadMaterials(1);
             }
         },
         mounted() {

@@ -22,6 +22,7 @@ if (isset($_GET['action'])) {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
+        $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
         $order_by = isset($_GET['order_by']) ? $_GET['order_by'] : 'malzeme_ismi';
         $order_dir = isset($_GET['order_dir']) ? strtoupper($_GET['order_dir']) : 'ASC';
         $offset = ($page - 1) * $limit;
@@ -29,11 +30,11 @@ if (isset($_GET['action'])) {
         // Validate order_by and order_dir to prevent SQL injection
         $allowed_columns = ['malzeme_kodu', 'malzeme_ismi', 'malzeme_turu', 'stok_miktari', 'birim', 'alis_fiyati', 'para_birimi', 'termin_suresi', 'depo', 'raf', 'kritik_stok_seviyesi'];
         $allowed_directions = ['ASC', 'DESC'];
-        
+
         if (!in_array($order_by, $allowed_columns)) {
             $order_by = 'malzeme_ismi';
         }
-        
+
         if (!in_array($order_dir, $allowed_directions)) {
             $order_dir = 'ASC';
         }
@@ -41,9 +42,15 @@ if (isset($_GET['action'])) {
         $search_term = '%' . $search . '%';
 
         // Get total count for pagination
-        $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?";
-        $stmt = $connection->prepare($count_query);
-        $stmt->bind_param('ss', $search_term, $search_term);
+        if ($filter === 'critical') {
+            $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE (malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+            $stmt = $connection->prepare($count_query);
+            $stmt->bind_param('ss', $search_term, $search_term);
+        } else {
+            $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?";
+            $stmt = $connection->prepare($count_query);
+            $stmt->bind_param('ss', $search_term, $search_term);
+        }
         $stmt->execute();
         $count_result = $stmt->get_result()->fetch_assoc();
         $total_materials = $count_result['total'];
@@ -51,9 +58,15 @@ if (isset($_GET['action'])) {
         $stmt->close();
 
         // Get paginated data
-        $query = "SELECT * FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ? ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
-        $stmt = $connection->prepare($query);
-        $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+        if ($filter === 'critical') {
+            $query = "SELECT * FROM malzemeler WHERE (malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0 ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
+            $stmt = $connection->prepare($query);
+            $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+        } else {
+            $query = "SELECT * FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ? ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
+            $stmt = $connection->prepare($query);
+            $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+        }
         $stmt->execute();
         $result = $stmt->get_result();
 

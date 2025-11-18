@@ -21,6 +21,17 @@ if (!yetkisi_var('page:view:urunler')) {
 // Calculate total products
 $total_result = $connection->query("SELECT COUNT(*) as total FROM urunler");
 $total_products = $total_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate products below critical stock level
+$critical_result = $connection->query("SELECT COUNT(*) as total FROM urunler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0");
+$critical_products = $critical_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate products above critical stock level
+$above_critical_result = $connection->query("SELECT COUNT(*) as total FROM urunler WHERE stok_miktari > kritik_stok_seviyesi OR kritik_stok_seviyesi = 0");
+$above_critical_products = $above_critical_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate percentage of products above critical stock level
+$above_critical_percentage = $total_products > 0 ? round(($above_critical_products / $total_products) * 100) : 0;
 ?>
 
 <!DOCTYPE html>
@@ -224,26 +235,44 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
             {{ alert.message }}
         </div>
 
-        <div class="row">
+        <div class="row mb-4">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:urunler:create')): ?>
                     <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Urun Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-boxes"></i>
+                <div class="row">
+                    <div class="col-6 mb-3">
+                        <div class="card">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    <i class="fas fa-boxes"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ totalProducts }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Urun</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;">{{ totalProducts }}</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Urun</p>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="card" @click="toggleCriticalStockFilter" style="cursor: pointer; transition: all 0.3s;">
+                            <div class="card-body d-flex align-items-center">
+                                <div class="stat-icon" style="background: var(--danger); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ criticalProducts }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Kritik Stok Altı</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
+
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
@@ -266,6 +295,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-barcode"></i> Urun Kodu</th>
                                 <th><i class="fas fa-tag"></i> Urun Ismi</th>
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
+                                <th><i class="fas fa-exclamation-triangle"></i> Kritik Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
@@ -298,6 +328,7 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                                         {{ product.stok_miktari }}
                                     </span>
                                 </td>
+                                <td>{{ product.kritik_stok_seviyesi }}</td>
                                 <td>{{ product.birim }}</td>
                                 <td>{{ formatCurrency(product.satis_fiyati) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
@@ -461,10 +492,12 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                 currentPage: 1,
                 totalPages: 1,
                 totalProducts: <?php echo $total_products; ?>,
+                criticalProducts: <?php echo $critical_products; ?>,
                 limit: 10,
                 modal: { title: '', data: {} },
                 depoList: [],
-                rafList: []
+                rafList: [],
+                criticalStockFilterEnabled: false
             }
         },
         computed: {
@@ -497,6 +530,9 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                 this.loading = true;
                 this.currentPage = page;
                 let url = `api_islemleri/urunler_islemler.php?action=get_products&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                if (this.criticalStockFilterEnabled) {
+                    url += '&filter=critical';
+                }
                 fetch(url)
                     .then(response => response.json())
                     .then(response => {
@@ -635,6 +671,10 @@ $total_products = $total_result->fetch_assoc()['total'] ?? 0;
                 } else {
                     return '<span style="color: #2e7d32; font-weight: bold;">Yeterli</span>';
                 }
+            },
+            toggleCriticalStockFilter() {
+                this.criticalStockFilterEnabled = !this.criticalStockFilterEnabled;
+                this.loadProducts(1);
             }
         },
         mounted() {

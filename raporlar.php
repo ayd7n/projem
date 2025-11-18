@@ -177,6 +177,29 @@ if (!yetkisi_var('page:view:raporlar')) {
                     </div>
                 </a>
             </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="urun_agaci_analiz.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-sitemap icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Eksik Bileşen Raporu</h5>
+                            <p class="card-text mb-0">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri analiz edin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="bileseni_eksik_esanslar.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-wine-bottle icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Ağaçları Olmayan Esanslar</h5>
+                            <p class="card-text mb-0">Kendi üretim ağaçları olmayan esansları analiz edin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 

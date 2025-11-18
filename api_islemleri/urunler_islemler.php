@@ -25,12 +25,19 @@ if (isset($_GET['action'])) {
             $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
             $search = isset($_GET['search']) ? $_GET['search'] : '';
+            $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
             $offset = ($page - 1) * $limit;
             $search_term = '%' . $search . '%';
 
-            $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
-            $stmt_count = $connection->prepare($count_query);
-            $stmt_count->bind_param('ss', $search_term, $search_term);
+            if ($filter === 'critical') {
+                $count_query = "SELECT COUNT(*) as total FROM urunler WHERE (urun_ismi LIKE ? OR urun_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+                $stmt_count = $connection->prepare($count_query);
+                $stmt_count->bind_param('ss', $search_term, $search_term);
+            } else {
+                $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
+                $stmt_count = $connection->prepare($count_query);
+                $stmt_count->bind_param('ss', $search_term, $search_term);
+            }
             $stmt_count->execute();
             $count_result = $stmt_count->get_result()->fetch_assoc();
             $total_products = $count_result['total'];
@@ -40,18 +47,30 @@ if (isset($_GET['action'])) {
             $can_view_cost = yetkisi_var('action:urunler:view_cost');
             $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
 
-            $query = "
-                SELECT u.* {$cost_column}
-                FROM urunler u
-                " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
-                WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ? 
-                ORDER BY u.urun_ismi 
-                LIMIT ? OFFSET ?";
-            $stmt_data = $connection->prepare($query);
-            $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+            if ($filter === 'critical') {
+                $query = "
+                    SELECT u.* {$cost_column}
+                    FROM urunler u
+                    " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
+                    WHERE (u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?) AND u.stok_miktari <= u.kritik_stok_seviyesi AND u.kritik_stok_seviyesi > 0
+                    ORDER BY u.urun_ismi
+                    LIMIT ? OFFSET ?";
+                $stmt_data = $connection->prepare($query);
+                $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+            } else {
+                $query = "
+                    SELECT u.* {$cost_column}
+                    FROM urunler u
+                    " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
+                    WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?
+                    ORDER BY u.urun_ismi
+                    LIMIT ? OFFSET ?";
+                $stmt_data = $connection->prepare($query);
+                $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
+            }
             $stmt_data->execute();
             $result = $stmt_data->get_result();
-            
+
             $products = [];
             if ($result) {
                 while ($row = $result->fetch_assoc()) {
@@ -199,6 +218,22 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
         }
         $stmt->close();
+    } elseif ($action == 'count_products') {
+        if (!yetkisi_var('page:view:urunler')) {
+            echo json_encode(['status' => 'error', 'message' => 'Ürünleri görüntüleme yetkiniz yok.']);
+            exit;
+        }
+
+        $query = "SELECT COUNT(*) as total FROM urunler";
+        $result = $connection->query($query);
+
+        if ($result) {
+            $row = $result->fetch_assoc();
+            echo json_encode(['status' => 'success', 'total' => (int)$row['total']]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error]);
+        }
+        exit; // Exit here to prevent the final response
     }
 }
 
