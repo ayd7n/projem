@@ -201,6 +201,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 </a>
             </div>
         </div>
+
     </div>
 
     <!-- Bootstrap JS -->

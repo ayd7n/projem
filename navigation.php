@@ -37,14 +37,16 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             --primary: #4a0e63;
             --secondary: #7c2a99;
             --accent: #d4af37;
-            --bg-color: #f8f9fa;
+            --bg-color: #f4f6f9;
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --shadow-sm: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            --shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
-            --transition: all 0.3s ease;
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+            --shadow: 0 10px 25px rgba(74, 14, 99, 0.1);
+            --shadow-hover: 0 15px 35px rgba(74, 14, 99, 0.15);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
         }
 
         body {
@@ -56,6 +58,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
+            background-image: radial-gradient(circle at 10% 20%, rgba(124, 42, 153, 0.03) 0%, rgba(74, 14, 99, 0.03) 90%);
         }
 
         .container {
@@ -68,12 +71,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
         .top-bar-wrapper {
             padding: 1rem 2rem;
-            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            background: var(--gradient-primary);
             color: white;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 20px rgba(74, 14, 99, 0.2);
             position: sticky;
             top: 0;
             z-index: 1000;
+            backdrop-filter: blur(10px);
         }
         
         .top-bar {
@@ -89,42 +93,56 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .logo h1 {
             font-family: 'Ubuntu', sans-serif;
             font-weight: 700;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 0.7rem;
+            gap: 0.8rem;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
         .logo .fa-spa {
             color: var(--accent);
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
         }
 
         .user-controls {
             display: flex;
             align-items: center;
             gap: 1.5rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .user-info {
             font-weight: 500;
+            font-size: 0.95rem;
         }
 
         .user-controls a {
             color: white;
             text-decoration: none;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             transition: var(--transition);
-            opacity: 0.8;
+            opacity: 0.9;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
 
         .user-controls a:hover {
             opacity: 1;
-            transform: scale(1.1);
+            transform: translateY(-2px);
+            color: var(--accent);
         }
 
         .user-controls .link-text {
-            display: none;
+            font-size: 0.9rem;
+            font-weight: 500;
         }
 
         .hamburger-menu {
@@ -135,129 +153,193 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             color: white;
             cursor: pointer;
             z-index: 1001;
+            transition: var(--transition);
+        }
+
+        .hamburger-menu:hover {
+            transform: scale(1.1);
         }
 
         main {
-            padding: 3rem 0;
+            padding: 4rem 0;
             flex-grow: 1;
         }
 
         .page-header {
             text-align: center;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
+            position: relative;
         }
 
         .page-header h1 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-            color: var(--text-primary);
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            color: var(--primary);
+            letter-spacing: -1px;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .page-header p {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             color: var(--text-secondary);
             max-width: 600px;
             margin: 0 auto;
+            line-height: 1.6;
         }
 
         .module-category {
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
+            animation: fadeIn 0.6s ease-out forwards;
+            opacity: 0;
         }
 
+        .module-category:nth-child(1) { animation-delay: 0.1s; }
+        .module-category:nth-child(2) { animation-delay: 0.2s; }
+        .module-category:nth-child(3) { animation-delay: 0.3s; }
+        .module-category:nth-child(4) { animation-delay: 0.4s; }
+        .module-category:nth-child(5) { animation-delay: 0.5s; }
+        .module-category:nth-child(6) { animation-delay: 0.6s; }
+        .module-category:nth-child(7) { animation-delay: 0.7s; }
+
         .module-category h3 {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            margin-bottom: 1.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--border-color);
+            margin-bottom: 2rem;
+            padding-left: 1rem;
+            border-left: 5px solid var(--accent);
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 1rem;
             color: var(--primary);
+            background: linear-gradient(to right, rgba(74, 14, 99, 0.05), transparent);
+            padding: 1rem;
+            border-radius: 0 12px 12px 0;
         }
 
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 2rem;
         }
 
         .module-card {
             background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            padding: 1.5rem;
+            border: none;
+            border-radius: 20px;
+            padding: 2rem;
             text-decoration: none;
             color: var(--text-primary);
             text-align: left;
             transition: var(--transition);
             box-shadow: var(--shadow-sm);
             display: flex;
-            align-items: center;
+            align-items: flex-start;
             gap: 1.5rem;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .module-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, rgba(74, 14, 99, 0.03), rgba(124, 42, 153, 0.03));
+            opacity: 0;
+            transition: var(--transition);
+            z-index: -1;
         }
 
         .module-card:hover {
-            transform: translateY(-5px);
-            box-shadow: var(--shadow);
-            border-color: var(--primary);
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-hover);
+        }
+
+        .module-card:hover::before {
+            opacity: 1;
         }
 
         .module-card .icon {
-            font-size: 2.2rem;
-            color: var(--primary);
-            background-color: #f2e9f7;
-            border-radius: 50%;
-            width: 60px;
-            height: 60px;
+            font-size: 1.8rem;
+            color: white;
+            background: var(--gradient-primary);
+            border-radius: 16px;
+            width: 64px;
+            height: 64px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             transition: var(--transition);
+            box-shadow: 0 8px 16px rgba(74, 14, 99, 0.2);
         }
 
         .module-card:hover .icon {
-            background-color: var(--primary);
-            color: white;
+            transform: scale(1.1) rotate(-5deg);
+            box-shadow: 0 12px 20px rgba(74, 14, 99, 0.3);
+        }
+
+        .module-card .card-content {
+            flex: 1;
         }
 
         .module-card .card-content .title {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            margin-bottom: 0.25rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+            display: block;
         }
 
         .module-card .card-content .description {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
-            line-height: 1.5;
+            line-height: 1.6;
+            margin: 0;
         }
 
         footer {
             text-align: center;
-            padding: 1.5rem;
-            background-color: var(--card-bg);
+            padding: 2rem;
+            background-color: white;
             border-top: 1px solid var(--border-color);
             color: var(--text-secondary);
             font-size: 0.9rem;
+            margin-top: auto;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         @media (max-width: 992px) {
             .user-controls {
                 display: none;
                 position: absolute;
-                top: 68px; /* Adjust based on top-bar height */
+                top: 80px;
                 right: 1rem;
                 background: white;
                 color: var(--text-primary);
                 flex-direction: column;
-                min-width: 220px;
-                border-radius: 8px;
+                min-width: 250px;
+                border-radius: 16px;
                 box-shadow: var(--shadow);
                 gap: 0;
                 border: 1px solid var(--border-color);
+                padding: 0.5rem;
             }
             
             .hamburger-menu {
@@ -266,6 +348,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             .user-controls.menu-open {
                 display: flex;
+                animation: fadeIn 0.2s ease-out;
             }
 
             .user-controls .user-info {
@@ -274,19 +357,24 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 color: var(--text-primary);
                 font-weight: 700;
                 text-align: center;
+                width: 100%;
+                box-sizing: border-box;
             }
 
             .user-controls a {
                 color: var(--text-secondary);
                 font-size: 1rem;
-                padding: 0.8rem 1rem;
+                padding: 1rem;
                 display: flex;
                 align-items: center;
-                gap: 0.75rem;
+                gap: 1rem;
+                border-radius: 8px;
+                width: 100%;
+                box-sizing: border-box;
             }
             
             .user-controls a:hover {
-                background-color: var(--bg-color);
+                background-color: rgba(74, 14, 99, 0.05);
                 color: var(--primary);
                 transform: none;
                 opacity: 1;
@@ -299,50 +387,35 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
         @media (max-width: 768px) {
             .container {
-                padding: 0 1rem;
-                max-width: 100%;
+                padding: 0 1.5rem;
             }
             .top-bar-wrapper {
                 padding: 1rem;
             }
-            .top-bar {
-                max-width: 100%;
-                padding: 0;
-            }
             .module-card {
-                flex-direction: column;
-                text-align: center;
-                gap: 1rem;
-                padding: 2rem 1.5rem;
-                min-width: 0;
-                overflow: hidden;
+                padding: 1.5rem;
             }
-            .module-grid {
-                grid-template-columns: 1fr;
-            }
-            .logo h1 {
-                font-size: 1.3rem;
+            .page-header h1 {
+                font-size: 2.2rem;
             }
         }
         
         @media (max-width: 576px) {
-            body {
-                overflow-x: hidden;
-            }
-            .top-bar-wrapper {
-                padding: 0.8rem 1rem;
-            }
             .logo h1 {
-                font-size: 1.2rem;
+                font-size: 1.3rem;
             }
             .module-card {
-                padding: 1.5rem 1rem;
-            }
-            .page-header h1 {
-                font-size: 2rem;
+                flex-direction: column;
+                text-align: center;
+                align-items: center;
+                gap: 1rem;
             }
             .module-category h3 {
-                font-size: 1.3rem;
+                justify-content: center;
+                border-left: none;
+                border-bottom: 3px solid var(--accent);
+                border-radius: 0;
+                padding-left: 0;
             }
         }
     </style>

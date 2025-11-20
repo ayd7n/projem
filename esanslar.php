@@ -58,6 +58,11 @@ if (!yetkisi_var('page:view:esanslar')) {
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+        
+        /* Prevent word wrapping in table cells */
+        .table td, .table th {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -157,7 +162,7 @@ if (!yetkisi_var('page:view:esanslar')) {
                                     <th><i class="fas fa-database"></i> Tank Kodu</th>
                                     <th><i class="fas fa-water"></i> Tank</th>
                                     <th><i class="fas fa-warehouse"></i> Stok</th>
-                                    <th>Maliyet (₺)</th>
+                                    <th>Teorik Maliyet (₺)</th>
                                     <th><i class="fas fa-ruler"></i> Birim</th>
                                     <th><i class="fas fa-clock"></i> Demlenme Süresi (Gün)</th>
                                     <th><i class="fas fa-sticky-note"></i> Not</th>
