@@ -1,16 +1,22 @@
 :root {
-    --primary: #4a0e63; /* Deep Purple */
-    --secondary: #7c2a99; /* Lighter Purple */
-    --accent: #d4af37; /* Gold */
+    --primary: #4a0e63;
+    /* Deep Purple */
+    --secondary: #7c2a99;
+    /* Lighter Purple */
+    --accent: #d4af37;
+    /* Gold */
     --success: #28a745;
     --danger: #dc3545;
     --warning: #ffc107;
     --info: #17a2b8;
-    --bg-color: #fdf8f5; /* Soft Cream */
+    --bg-color: #fdf8f5;
+    /* Soft Cream */
     --card-bg: #ffffff;
     --border-color: #e9ecef;
-    --text-primary: #111827; /* Dark Gray/Black */
-    --text-secondary: #6b7280; /* Medium Gray */
+    --text-primary: #111827;
+    /* Dark Gray/Black */
+    --text-secondary: #6b7280;
+    /* Medium Gray */
     --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
     --transition: all 0.3s ease;
 }
@@ -19,10 +25,10 @@ html {
     font-size: 15px;
 }
 
-* { 
-    margin: 0; 
-    padding: 0; 
-    box-sizing: border-box; 
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
 }
 
 body {
@@ -89,7 +95,7 @@ body {
 }
 
 .btn:hover {
-     transform: translateY(-2px);
+    transform: translateY(-2px);
 }
 
 .btn-primary {
@@ -148,7 +154,8 @@ body {
     border-bottom: 2px solid var(--border-color);
     font-weight: 700;
     color: var(--text-primary);
-    white-space: nowrap; /* Prevent wrapping in headers */
+    white-space: nowrap;
+    /* Prevent wrapping in headers */
 }
 
 .table th i {
@@ -303,18 +310,18 @@ body {
     .main-content {
         padding: 15px;
     }
-    
+
     .stat-card {
         padding: 15px;
     }
-    
+
     .stat-icon {
         width: 50px;
         height: 50px;
         font-size: 1.5rem;
         margin-right: 15px;
     }
-    
+
     .stat-info h3 {
         font-size: 1.5rem;
     }

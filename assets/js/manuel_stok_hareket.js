@@ -422,7 +422,7 @@ const app = new Vue({
                         this.transferForm.kaynak_raf = location.raf || '';
                         this.transferForm.tank_kodu = location.tank_kodu || '';
                         this.transferForm.miktar = location.stok_miktari || 0;
-                        this.showAlert(`Kaynak konum ve miktar otomatik olarak dolduruldu: ${location.stok_miktari}`, 'info');
+                        // this.showAlert(`Kaynak konum ve miktar otomatik olarak dolduruldu: ${location.stok_miktari}`, 'info');
                     } else {
                         this.showAlert(response.data.message || 'Lokasyon bilgisi alınırken bir hata oluştu', 'warning');
                         this.isTransferAutoFill = false;
