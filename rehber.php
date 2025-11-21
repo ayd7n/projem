@@ -876,6 +876,7 @@
                     <li>Tüm stok hareketleri <strong>Stok Hareketleri</strong> sayfasından takip edilebilir.</li>
                     <li>Stok sayımı sırasında fazla çıkan ürünler için <strong>"Sayım Fazlası"</strong> hareketi girilir.</li>
                     <li>Stok sayımı sırasında eksik çıkan ürünler için <strong>"Fire / Sayım Eksigi"</strong> hareketi girilir.</li>
+                    <li><strong>Önemli:</strong> "Fire" seçeneği ile yapılan çıkışlar, sistem tarafından otomatik olarak maliyetlendirilir ve "Fire Gideri" olarak giderlere eklenir. "Sayım Eksiği" ise sadece stoktan düşer, gider oluşturmaz.</li>
                     <li>Farklı depolar veya raflar arasında <strong>Transfer</strong> işlemleri yapılır (depolar ve raflar önceden tanımlanmış olmalıdır).</li>
                     <li>Stok seviyeleri <strong>Kritik Stok Raporları</strong> ile takip edilir.</li>
                     <li>Stok seviyeleri düşük olan ürünler için otomatik uyarı sistemlerinden yararlanılır.</li>
