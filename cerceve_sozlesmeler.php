@@ -11,12 +11,17 @@ if (!yetkisi_var('page:view:cerceve_sozlesmeler')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
-$contracts_query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik ORDER BY olusturulma_tarihi DESC";
+$contracts_query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik ORDER BY sozlesme_id DESC";
 $contracts_result = $connection->query($contracts_query);
 
 // Calculate total contracts
 $total_result = $connection->query("SELECT COUNT(*) as total FROM cerceve_sozlesmeler");
 $total_contracts = $total_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate pending payment contracts
+$pending_payment_query = "SELECT COUNT(*) as total FROM cerceve_sozlesmeler_gecerlilik WHERE toplam_mal_kabul_miktari > IFNULL(toplu_odenen_miktar, 0)";
+$pending_payment_result = $connection->query($pending_payment_query);
+$pending_payment_count = $pending_payment_result->fetch_assoc()['total'] ?? 0;
 
 $suppliers_result = $connection->query("SELECT tedarikci_id, tedarikci_adi FROM tedarikciler ORDER BY tedarikci_adi");
 $materials_result = $connection->query("SELECT malzeme_kodu, malzeme_ismi FROM malzemeler ORDER BY malzeme_ismi");
@@ -89,99 +94,94 @@ function display_date($date_string) {
             </div>
         </div>
 
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm">
+        <div class="row mb-3">
+            <div class="col-md-4 mb-2 mb-md-0">
+                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
                     <div class="card-body p-3">
-                        <div class="d-flex align-items-center mb-3">
-                            <div class="stat-icon" style="background: linear-gradient(135deg, var(--primary), #667eea); width: 50px; height: 50px; min-width: 50px;">
-                                <i class="fas fa-file-contract" style="color: white;"></i>
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
+                                 style="width: 42px; height: 42px; background: rgba(102, 126, 234, 0.1); color: #667eea;">
+                                <i class="fas fa-boxes"></i>
                             </div>
-                            <div class="ml-3">
-                                <h5 class="mb-0" style="color: var(--dark);">Çerçeve Sözleşme Bilgisi</h5>
-                            </div>
+                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Limit</h6>
                         </div>
-                        
-                        <div class="row g-3">
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #e3f2fd, #bbdefb);">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-start">
-                                            <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center mr-2" 
-                                                 style="background: var(--primary); width: 35px; height: 35px; flex-shrink: 0;">
-                                                <i class="fas fa-boxes" style="color: white; font-size: 0.9rem;"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="card-title font-weight-bold mb-1" style="color: var(--primary);">Limit</h6>
-                                                <p class="card-text text-muted small mb-0">
-                                                    Sözleşmede belirlenen toplam adet miktarıdır. Örneğin 100 adet limit belirlenmişse, 
-                                                    tedarikçiyle 100 adet malzeme temini için anlaşma yapıldığını gösterir.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+                            Sözleşmede belirlenen <strong style="color: #667eea;">toplam adet</strong> miktarıdır. 
+                            Tedarikçiyle 100 adet malzeme temini için anlaşma yapıldığını gösterir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-2 mb-md-0">
+                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
+                                 style="width: 42px; height: 42px; background: rgba(246, 173, 85, 0.1); color: #f6ad55;">
+                                <i class="fas fa-money-bill-wave"></i>
                             </div>
-                            
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #fff8e1, #ffecb3);">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-start">
-                                            <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center mr-2" 
-                                                 style="background: var(--warning); width: 35px; height: 35px; flex-shrink: 0;">
-                                                <i class="fas fa-money-bill-wave" style="color: white; font-size: 0.9rem;"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="card-title font-weight-bold mb-1" style="color: var(--warning);">Ödenen</h6>
-                                                <p class="card-text text-muted small mb-0">
-                                                    Bu 100 adetlik sınırın içinde peşin olarak ödemesi yapılan adedi belirtir. 
-                                                    Yani 100 adet için yapılan anlaşmada 60 adedi ödenmişse, anlaşmanın başından itibaren 
-                                                    60 adedinin parası peşin olarak ödendiği, kalan 40 adet için ise ödeme henüz yapılmadığı anlamına gelir.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="card h-100 border-0 shadow-sm" style="background: linear-gradient(135deg, #e8f5e9, #c8e6c9);">
-                                    <div class="card-body p-3">
-                                        <div class="d-flex align-items-start">
-                                            <div class="stat-icon rounded-circle d-flex align-items-center justify-content-center mr-2" 
-                                                 style="background: var(--success); width: 35px; height: 35px; flex-shrink: 0;">
-                                                <i class="fas fa-calendar-check" style="color: white; font-size: 0.9rem;"></i>
-                                            </div>
-                                            <div>
-                                                <h6 class="card-title font-weight-bold mb-1" style="color: var(--success);">Sözleşme Geçerliliği</h6>
-                                                <p class="card-text text-muted small mb-0">
-                                                    Sözleşme, toplam limite ulaşılana kadar veya bitiş tarihi dolana kadar geçerli kalır.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Ödenen</h6>
                         </div>
+                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+                            Limitin <strong style="color: #f6ad55;">peşin ödenen</strong> kısmıdır. 
+                            Örneğin 60 adet ödenmişse, kalan 40 adet için ödeme henüz yapılmamıştır.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
+                    <div class="card-body p-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
+                                 style="width: 42px; height: 42px; background: rgba(72, 187, 120, 0.1); color: #48bb78;">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Geçerlilik</h6>
+                        </div>
+                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
+                            Sözleşme, <strong style="color: #48bb78;">toplam limite</strong> ulaşılana kadar veya <strong style="color: #48bb78;">bitiş tarihi</strong> dolana kadar geçerli kalır.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
+        
+        <style>
+            .hover-scale {
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .hover-scale:hover {
+                transform: translateY(-5px);
+                box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+            }
+        </style>
 
         <div id="alert-placeholder"></div>
 
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <?php if (yetkisi_var('action:cerceve_sozlesmeler:create')): ?>
                 <button id="addContractBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Sözleşme Ekle</button>
                 <?php endif; ?>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
                 <div class="stat-card mb-3">
                     <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-file-contract"></i></div>
                     <div class="stat-info">
                         <h3><?php echo $total_contracts; ?></h3>
                         <p>Toplam Sözleşme</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card mb-3" id="filterPendingPayment" style="cursor: pointer;" title="Ödeme bekleyenleri filtrele">
+                    <div class="stat-icon" style="background: #f6ad55;"><i class="fas fa-hourglass-half"></i></div>
+                    <div class="stat-info">
+                        <h3><?php echo $pending_payment_count; ?></h3>
+                        <p>Ödeme Bekleyen</p>
                     </div>
                 </div>
             </div>
@@ -204,6 +204,7 @@ function display_date($date_string) {
                                 <th><i class="fas fa-coins"></i> Birim</th>
                                 <th><i class="fas fa-chart-bar"></i> Limit</th>
                                 <th><i class="fas fa-check"></i> Ödenen</th>
+                                <th><i class="fas fa-exclamation-circle"></i> Yapılacak Ödeme</th>
                                 <th><i class="fas fa-calendar-plus"></i> Başlangıç</th>
                                 <th><i class="fas fa-calendar-times"></i> Bitiş</th>
                                 <th><i class="fas fa-user"></i> Oluşturan</th>
@@ -217,8 +218,16 @@ function display_date($date_string) {
                         </thead>
                         <tbody>
                             <?php if ($contracts_result && $contracts_result->num_rows > 0): ?>
-                                <?php while ($contract = $contracts_result->fetch_assoc()): ?>
-                                <tr class="<?php echo $contract['gecerli_mi'] ? 'table-success' : 'table-danger'; ?>">
+                                <?php while ($contract = $contracts_result->fetch_assoc()): 
+                                    $odenen = $contract['toplu_odenen_miktar'] ?? 0;
+                                    $kabul = $contract['toplam_mal_kabul_miktari'] ?? 0;
+                                    $fark = $kabul - $odenen;
+                                    $has_pending_payment = $fark > 0;
+                                    
+                                    $row_class = $contract['gecerli_mi'] ? 'table-success' : 'table-danger';
+                                    $payment_class = $has_pending_payment ? 'has-pending-payment' : '';
+                                ?>
+                                <tr class="<?php echo $row_class; ?> <?php echo $payment_class; ?>">
                                     <td class="actions">
                                         <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
                                         <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
@@ -248,6 +257,21 @@ function display_date($date_string) {
                                     </td>
                                     <td><?php echo $contract['limit_miktar']; ?></td>
                                     <td><?php echo $contract['toplu_odenen_miktar'] ?? 0; ?></td>
+                                    <td>
+                                        <?php
+                                        if ($has_pending_payment) {
+                                            echo '<button class="btn btn-primary btn-sm make-payment-btn" 
+                                                            data-id="' . $contract['sozlesme_id'] . '" 
+                                                            data-quantity="' . $fark . '"
+                                                            data-price="' . $contract['birim_fiyat'] . '"
+                                                            data-currency="' . $contract['para_birimi'] . '">
+                                                            <i class="fas fa-money-bill-wave"></i> ' . $fark . ' Adet Ödeme Yap
+                                                    </button>';
+                                        } else {
+                                            echo '<span class="text-success"><i class="fas fa-check"></i> Tamamlandı</span>';
+                                        }
+                                        ?>
+                                    </td>
                                     <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
                                     <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
                                     <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
@@ -273,8 +297,8 @@ function display_date($date_string) {
                                 </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
-                                <tr>
-                                    <td colspan="12" class="text-center p-4">
+                                <tr class="no-contracts-row">
+                                    <td colspan="18" class="text-center p-4">
                                         <i class="fas fa-file-contract fa-3x mb-3" style="color: var(--text-secondary);"></i>
                                         <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
                                         <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle" butonunu kullanabilirsiniz.</p>
@@ -394,6 +418,17 @@ function display_date($date_string) {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        .stat-card {
+            transition: all 0.2s ease-in-out;
+        }
+        .stat-card .stat-info p { /* Target the specific paragraph */
+            white-space: nowrap;
+        }
+        .stat-card.active-filter {
+            border: 2px solid #4a0e63;
+            box-shadow: 0 0 15px rgba(74, 14, 99, 0.4);
+            transform: translateY(-3px);
         }
         /* SweetAlert2 stilleri kaldırıldı, artık Bootstrap modal kullanılıyor */
     </style>
@@ -802,53 +837,151 @@ function display_date($date_string) {
                         
                         if (response.movements && response.movements.length > 0) {
                             tableHtml = `
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-bordered table-sm">
-                                        <thead class="thead-light">
-                                            <tr>
-                                                <th>Hareket ID</th>
-                                                <th>Miktar</th>
-                                                <th>Tarih</th>
-                                                <th>Açıklama</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                            `;
-                            
-                            response.movements.forEach(function(movement) {
-                                tableHtml += `
-                                    <tr>
-                                        <td>${movement.hareket_id}</td>
-                                        <td>${movement.miktar}</td>
-                                        <td>${movement.tarih}</td>
-                                        <td>${movement.aciklama || '-'}</td>
-                                    </tr>
-                                `;
-                            });
-                            
-                            tableHtml += `
+                                            ${response.movements.map(m => `
+                                                <tr>
+                                                    <td>#${m.hareket_id}</td>
+                                                    <td><span class="badge badge-primary">${m.miktar}</span></td>
+                                                    <td>${m.tarih}</td>
+                                                    <td>${m.aciklama}</td>
+                                                </tr>
+                                            `).join('')}
                                         </tbody>
                                     </table>
-                                </div>
-                            `;
+                                </div>`;
                         } else {
-                            tableHtml = `
-                                <div class="alert alert-info text-center">
-                                    Henüz bu sözleşmeyle ilgili Mal Kabul kaydı bulunmamaktadır.
-                                </div>
-                            `;
+                            tableHtml = '<div class="alert alert-info">Bu sözleşmeye ait mal kabul hareketi bulunmamaktadır.</div>';
                         }
                         
                         $('#detailModal .modal-body').html(tableHtml);
                     } else {
-                        $('#detailModal .modal-body').html('<div class="alert alert-danger">Hata: ' + response.message + '</div>');
+                        $('#detailModal .modal-body').html('<div class="alert alert-danger">' + response.message + '</div>');
                     }
                 },
                 error: function() {
-                    $('#detailModal .modal-body').html('<div class="alert alert-danger">Mal Kabul geçmişi alınırken bir hata oluştu.</div>');
+                    $('#detailModal .modal-body').html('<div class="alert alert-danger">Veriler alınırken bir hata oluştu.</div>');
                 }
             });
         });
+
+        // Handle Make Payment Button
+        $(document).on('click', '.make-payment-btn', function() {
+            var contractId = $(this).data('id');
+            var maxQuantity = $(this).data('quantity');
+            var price = $(this).data('price');
+            var currency = $(this).data('currency');
+            
+            var currencySymbol = '₺';
+            if (currency === 'USD') currencySymbol = '$';
+            else if (currency === 'EUR') currencySymbol = '€';
+
+            Swal.fire({
+                title: 'Ödeme Yap',
+                html: `
+                    <div class="text-left">
+                        <div class="form-group">
+                            <label>Ödenecek Miktar (Adet)</label>
+                            <input type="number" id="payment-amount" class="form-control" value="${maxQuantity}" max="${maxQuantity}" min="1">
+                            <small class="text-muted">Maksimum ödenebilir: ${maxQuantity} Adet</small>
+                        </div>
+                        <p><strong>Birim Fiyat:</strong> ${price} ${currencySymbol}</p>
+                        <p class="h5 mt-3"><strong>Toplam Tutar:</strong> <span id="total-amount" class="text-success">${(maxQuantity * price).toFixed(2)} ${currencySymbol}</span></p>
+                        <p class="text-muted mt-2 small">Bu işlem onaylandığında Giderler tablosuna "Ara Ödeme" olarak kaydedilecektir.</p>
+                    </div>
+                `,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#d33',
+                confirmButtonText: 'Ödeme Yap',
+                cancelButtonText: 'İptal',
+                didOpen: () => {
+                    const input = Swal.getPopup().querySelector('#payment-amount');
+                    const totalSpan = Swal.getPopup().querySelector('#total-amount');
+                    
+                    input.oninput = () => {
+                        let val = parseFloat(input.value) || 0;
+                        if (val > maxQuantity) {
+                            val = maxQuantity;
+                            input.value = maxQuantity;
+                        }
+                        if (val < 0) {
+                            val = 0;
+                            input.value = 0;
+                        }
+                        totalSpan.textContent = (val * price).toFixed(2) + ' ' + currencySymbol;
+                    };
+                },
+                preConfirm: () => {
+                    const quantity = Swal.getPopup().querySelector('#payment-amount').value;
+                    if (!quantity || quantity <= 0) {
+                        Swal.showValidationMessage('Lütfen geçerli bir miktar giriniz');
+                    }
+                    return { quantity: quantity };
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    const quantity = result.value.quantity;
+                    
+                    $.ajax({
+                        url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                        type: 'POST',
+                        data: {
+                            action: 'make_payment',
+                            sozlesme_id: contractId,
+                            quantity: quantity
+                        },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                Swal.fire('Başarılı!', response.message, 'success')
+                                .then(() => {
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire('Hata!', response.message, 'error');
+                            }
+                        },
+                        error: function() {
+                            Swal.fire('Hata!', 'İşlem sırasında bir hata oluştu.', 'error');
+                        }
+                    });
+                } else if (result.dismiss === Swal.DismissReason.cancel) {
+                    // Ensure complete cleanup when cancelled
+                    setTimeout(() => {
+                        $('body').removeClass('swal2-no-backdrop swal2-shown');
+                        $('.swal2-container').remove();
+                    }, 100);
+                }
+            });
+        });
+
+        var isFiltered = false;
+        $('#filterPendingPayment').on('click', function() {
+            var $this = $(this);
+            isFiltered = !isFiltered;
+            
+            var $rows = $('tbody tr');
+            
+            $('.no-filter-results').remove();
+
+            if (isFiltered) {
+                $this.addClass('active-filter');
+                $rows.hide();
+                var $filteredRows = $rows.filter('.has-pending-payment');
+                $filteredRows.show();
+
+                if ($filteredRows.length === 0 && $('.no-contracts-row').length === 0) {
+                    $('tbody').append('<tr class="no-filter-results"><td colspan="18" class="text-center p-4">Filtreyle eşleşen ödeme bekleyen sözleşme bulunamadı.</td></tr>');
+                }
+            } else {
+                $this.removeClass('active-filter');
+                $rows.show();
+            }
+        });
+
     });
     </script>
 
@@ -944,3 +1077,4 @@ function display_date($date_string) {
     </div>
 </body>
 </html>
+

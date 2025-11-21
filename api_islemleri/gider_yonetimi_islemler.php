@@ -70,6 +70,7 @@ function getExpenses() {
             OR DATE_FORMAT(tarih, '%d.%m.%Y') LIKE {$searchLike}
             OR DATE_FORMAT(tarih, '%Y-%m-%d') LIKE {$searchLike}
             OR CAST(tutar AS CHAR) LIKE {$searchLike}
+            OR odeme_yapilan_firma LIKE {$searchLike}
         )";
     }
 
@@ -109,7 +110,7 @@ function getExpenses() {
     $perPageSql = (int) $per_page;
     $offsetSql = (int) $offset;
 
-    $dataQuery = "SELECT * FROM gider_yonetimi" . $whereClause . " ORDER BY tarih DESC, gider_id DESC LIMIT {$perPageSql} OFFSET {$offsetSql}";
+    $dataQuery = "SELECT * FROM gider_yonetimi" . $whereClause . " ORDER BY gider_id DESC LIMIT {$perPageSql} OFFSET {$offsetSql}";
     $dataResult = $connection->query($dataQuery);
     if (!$dataResult) {
         echo json_encode(['status' => 'error', 'message' => 'Giderler alınamadı: ' . $connection->error]);
@@ -122,8 +123,9 @@ function getExpenses() {
     }
     $dataResult->free();
 
-    $overallSum = 0.0;
-    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gider_yonetimi");
+    $current_month_start = date('Y-m-01');
+    $current_month_end = date('Y-m-t');
+    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gider_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
     if ($overallResult && $overallRow = $overallResult->fetch_assoc()) {
         $overallSum = (float) $overallRow['overall_sum'];
     }
@@ -183,13 +185,14 @@ function addExpense() {
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
     $personel_id = $_SESSION['user_id'];
     $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
+    $odeme_yapilan_firma = $connection->real_escape_string($_POST['odeme_yapilan_firma'] ?? '');
 
     if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, açıklama ve ödeme tipi alanları zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi')";
+    $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi', '$odeme_yapilan_firma')";
 
     if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla eklendi.']);
@@ -208,13 +211,14 @@ function updateExpense() {
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $fatura_no = $connection->real_escape_string($_POST['fatura_no'] ?? '');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
+    $odeme_yapilan_firma = $connection->real_escape_string($_POST['odeme_yapilan_firma'] ?? '');
 
     if (empty($gider_id) || empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tüm alanlar zorunludur.']);
         return;
     }
 
-    $query = "UPDATE gider_yonetimi SET tarih = '$tarih', tutar = $tutar, kategori = '$kategori', aciklama = '$aciklama', fatura_no = '$fatura_no', odeme_tipi = '$odeme_tipi' WHERE gider_id = $gider_id";
+    $query = "UPDATE gider_yonetimi SET tarih = '$tarih', tutar = $tutar, kategori = '$kategori', aciklama = '$aciklama', fatura_no = '$fatura_no', odeme_tipi = '$odeme_tipi', odeme_yapilan_firma = '$odeme_yapilan_firma' WHERE gider_id = $gider_id";
 
     if ($connection->query($query)) {
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla güncellendi.']);

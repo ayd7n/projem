@@ -71,6 +71,18 @@ if ($_SESSION['taraf'] !== 'personel') {
         #searchInput {
             margin-bottom: 1rem;
         }
+
+        /* Responsive adjustments for mobile */
+        @media (max-width: 576px) {
+            .table-list .list-group-item {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .table-list .list-group-item > div:first-child {
+                word-wrap: break-word;
+                margin-bottom: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>

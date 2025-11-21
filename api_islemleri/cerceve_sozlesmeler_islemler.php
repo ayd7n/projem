@@ -89,9 +89,53 @@ switch ($action) {
         $malzeme_ismi = $malzeme['malzeme_ismi'];
 
         // Insert contract
-        $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, oncelik, aciklama, olusturan) VALUES ($tedarikci_id, '$tedarikci_adi', $malzeme_kodu, '$malzeme_ismi', $birim_fiyat, '$para_birimi', $limit_miktar, $toplu_odenen_miktar, '$baslangic_tarihi', '$bitis_tarihi', $oncelik, '$aciklama', '" . $_SESSION['kullanici_adi'] . "')";
+        $olusturan = $connection->real_escape_string((string)($_SESSION['kullanici_adi'] ?? ''));
+        $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, oncelik, aciklama, olusturan) VALUES ($tedarikci_id, '$tedarikci_adi', $malzeme_kodu, '$malzeme_ismi', $birim_fiyat, '$para_birimi', $limit_miktar, $toplu_odenen_miktar, '$baslangic_tarihi', '$bitis_tarihi', $oncelik, '$aciklama', '$olusturan')";
+
+        // --- DEBUG LOGGING ---
+        $log_file = 'C:/Users/AYDIN/.gemini/tmp/de7b2d039006603d4eef2de07c6180acfffb7c9889e7c7fd347c897d4a766b4a/debug_log.txt';
+        $log_content = "Timestamp: " . date('Y-m-d H:i:s') . "\n";
+        $log_content .= "Session Data: " . print_r($_SESSION, true) . "\n";
+        $log_content .= "Generated Query: " . $query . "\n\n";
+        file_put_contents($log_file, $log_content, FILE_APPEND);
+        // --- END DEBUG LOGGING ---
 
         if ($connection->query($query)) {
+            // Check if there is a pre-payment
+            if ($toplu_odenen_miktar > 0) {
+                $amount_in_foreign_currency = $toplu_odenen_miktar * $birim_fiyat;
+                $gider_tarih = date('Y-m-d');
+                $gider_aciklama = "$malzeme_ismi için $toplu_odenen_miktar adet ön ödeme";
+                $user_id = $_SESSION['user_id'];
+
+                // Get exchange rates
+                $rates_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+                $rates_result = $connection->query($rates_query);
+                $rates_data = [];
+                while ($row = $rates_result->fetch_assoc()) {
+                    $rates_data[$row['ayar_anahtar']] = $row['ayar_deger'];
+                }
+                $dolar_kuru = $rates_data['dolar_kuru'] ?? 1.0;
+                $euro_kuru = $rates_data['euro_kuru'] ?? 1.0;
+                
+                $final_tl_amount = $amount_in_foreign_currency;
+                $exchange_rate_info = "";
+
+                if ($para_birimi === 'USD') {
+                    $final_tl_amount = $amount_in_foreign_currency * $dolar_kuru;
+                    $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " USD @ " . number_format($dolar_kuru, 4, ',', '.') . ")";
+                } elseif ($para_birimi === 'EUR') {
+                    $final_tl_amount = $amount_in_foreign_currency * $euro_kuru;
+                    $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " EUR @ " . number_format($euro_kuru, 4, ',', '.') . ")";
+                }
+                
+                $gider_aciklama .= $exchange_rate_info;
+
+                $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
+                $gider_query = "INSERT INTO gider_yonetimi (tarih, kategori, tutar, odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_yapilan_firma) VALUES ('$gider_tarih', 'Malzeme Gideri', $final_tl_amount, 'Diğer', '$gider_aciklama', $user_id, '$personel_adi', '$tedarikci_adi')";
+                $connection->query($gider_query);
+            }
+
             echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme başarıyla oluşturuldu.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Çerçeve sözleşme oluşturulurken hata oluştu: ' . $connection->error]);
@@ -203,6 +247,86 @@ switch ($action) {
             'status' => 'success',
             'movements' => $movements
         ]);
+        break;
+
+    case 'make_payment':
+        $sozlesme_id = $_POST['sozlesme_id'] ?? 0;
+        $payment_quantity = $_POST['quantity'] ?? 0;
+
+        if (!$sozlesme_id || !$payment_quantity || $payment_quantity <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Geçersiz parametreler.']);
+            break;
+        }
+
+        // Get contract details
+        $contract_query = "SELECT * FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
+        $contract_result = $connection->query($contract_query);
+
+        if (!$contract_result || $contract_result->num_rows === 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Sözleşme bulunamadı.']);
+            break;
+        }
+
+        $contract = $contract_result->fetch_assoc();
+        
+        // Calculate amount in foreign currency
+        $amount_in_foreign_currency = $payment_quantity * $contract['birim_fiyat'];
+        $para_birimi = $contract['para_birimi'];
+        $tedarikci_adi = $contract['tedarikci_adi'];
+        $malzeme_ismi = $contract['malzeme_ismi'];
+        
+        // Start transaction
+        $connection->begin_transaction();
+
+        try {
+            // 1. Update contract paid amount
+            $update_query = "UPDATE cerceve_sozlesmeler SET toplu_odenen_miktar = toplu_odenen_miktar + $payment_quantity WHERE sozlesme_id = $sozlesme_id";
+            if (!$connection->query($update_query)) {
+                throw new Exception("Sözleşme güncellenemedi: " . $connection->error);
+            }
+
+            // 2. Insert expense record
+            $gider_tarih = date('Y-m-d');
+            $gider_aciklama = "$malzeme_ismi için $payment_quantity adet ara ödeme";
+            $user_id = $_SESSION['user_id'];
+            
+            // Get exchange rates
+            $rates_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+            $rates_result = $connection->query($rates_query);
+            $rates_data = [];
+            while ($row = $rates_result->fetch_assoc()) {
+                $rates_data[$row['ayar_anahtar']] = $row['ayar_deger'];
+            }
+            $dolar_kuru = $rates_data['dolar_kuru'] ?? 1.0;
+            $euro_kuru = $rates_data['euro_kuru'] ?? 1.0;
+            
+            $final_tl_amount = $amount_in_foreign_currency;
+            $exchange_rate_info = "";
+
+            if ($para_birimi === 'USD') {
+                $final_tl_amount = $amount_in_foreign_currency * $dolar_kuru;
+                $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " USD @ " . number_format($dolar_kuru, 4, ',', '.') . ")";
+            } elseif ($para_birimi === 'EUR') {
+                $final_tl_amount = $amount_in_foreign_currency * $euro_kuru;
+                $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " EUR @ " . number_format($euro_kuru, 4, ',', '.') . ")";
+            }
+            
+            $gider_aciklama .= $exchange_rate_info;
+
+            $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
+            $gider_query = "INSERT INTO gider_yonetimi (tarih, kategori, tutar, odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_yapilan_firma) VALUES ('$gider_tarih', 'Malzeme Gideri', $final_tl_amount, 'Diğer', '$gider_aciklama', $user_id, '$personel_adi', '$tedarikci_adi')";
+
+            if (!$connection->query($gider_query)) {
+                throw new Exception("Gider kaydı oluşturulamadı: " . $connection->error);
+            }
+
+            $connection->commit();
+            echo json_encode(['status' => 'success', 'message' => 'Ödeme başarıyla gerçekleştirildi ve giderlere işlendi.']);
+
+        } catch (Exception $e) {
+            $connection->rollback();
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
         break;
 
     default:

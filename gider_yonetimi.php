@@ -18,11 +18,17 @@ if (!yetkisi_var('page:view:gider_yonetimi')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
-// Calculate total expenses
-$total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi");
+// Calculate total expenses for current month
+$current_month_start = date('Y-m-01');
+$current_month_end = date('Y-m-t');
+$total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
 $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
 ?>
+
+<script>
+    const currentMonthTotal = <?php echo json_encode($total_expenses); ?>;
+</script>
 
 <!DOCTYPE html>
 <html lang="tr">
@@ -407,6 +413,16 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div id="alert-placeholder"></div>
 
+        <div class="alert alert-info" role="alert" style="border-left: 5px solid var(--info);">
+            <h4 class="alert-heading" style="color: var(--info);"><i class="fas fa-info-circle"></i> Bilgilendirme</h4>
+            <p>Bu sayfadaki gider kayıtları birkaç farklı şekilde oluşabilir:</p>
+            <ul class="mb-0">
+                <li><strong>Manuel Gider Girişi:</strong> Bu sayfadaki "Yeni Gider Ekle" butonu kullanılarak personel, işletme, kira gibi çeşitli giderler manuel olarak eklenebilir.</li>
+                <li><strong>Çerçeve Sözleşme Ödemeleri:</strong> Tedarikçilerle yapılan çerçeve sözleşmeleri için "Ön Ödeme" veya "Ara Ödeme" yapıldığında, bu ödemeler otomatik olarak "Malzeme Gideri" kategorisinde buraya kaydedilir.</li>
+            </ul>
+        </div>
+
+
         <div class="row">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:gider_yonetimi:create')): ?>
@@ -421,7 +437,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                         </div>
                         <div class="stat-info">
                             <h3 id="overallTotal" style="font-size: 1.5rem; margin: 0;"><?php echo number_format($total_expenses, 2, ',', '.'); ?> TL</h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Gider</p>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Bu Ayın Toplam Gideri</p>
                         </div>
                     </div>
                 </div>
@@ -433,7 +449,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                 <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Gider Listesi</h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group input-group-sm">
-                        <input type="text" class="form-control" id="searchInput" placeholder="Kategori, açıklama, fatura no veya kaydeden ara">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Firma, kategori, açıklama, fatura no veya kaydeden ara">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Temizle">
                                 <i class="fas fa-times"></i>
@@ -454,6 +470,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-credit-card"></i> Ödeme Tipi</th>
                                 <th><i class="fas fa-file-invoice"></i> Fatura No</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
+                                <th><i class="fas fa-building"></i> Ödeme Yapılan Firma</th>
                                 <th><i class="fas fa-user"></i> Kaydeden</th>
                             </tr>
                         </thead>
@@ -542,6 +559,10 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="form-group mb-3">
                             <label for="fatura_no">Fatura No</label>
                             <input type="text" class="form-control" id="fatura_no" name="fatura_no">
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="odeme_yapilan_firma">Ödeme Yapılan Firma</label>
+                            <input type="text" class="form-control" id="odeme_yapilan_firma" name="odeme_yapilan_firma">
                         </div>
                         <div class="form-group mb-3">
                             <label for="aciklama">Açıklama *</label>
@@ -779,6 +800,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                         const odemeTipi = escapeHtml(expense.odeme_tipi);
                         const faturaNo = expense.fatura_no ? escapeHtml(expense.fatura_no) : '-';
                         const aciklama = escapeHtml(expense.aciklama);
+                        const odemeYapilanFirma = expense.odeme_yapilan_firma ? escapeHtml(expense.odeme_yapilan_firma) : '-';
                         const kaydeden = expense.kaydeden_personel_ismi
                             ? escapeHtml(expense.kaydeden_personel_ismi)
                             : (expense.kaydeden_personel_id ? escapeHtml(expense.kaydeden_personel_id) : '-');
@@ -802,6 +824,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                             <td>${odemeTipi}</td>
                             <td>${faturaNo}</td>
                             <td>${aciklama}</td>
+                            <td>${odemeYapilanFirma}</td>
                             <td>${kaydeden}</td>
                         </tr>`;
                     }).join('');
@@ -928,6 +951,7 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#odeme_tipi').val(expense.odeme_tipi);
                         $('#aciklama').val(expense.aciklama);
                         $('#fatura_no').val(expense.fatura_no);
+                        $('#odeme_yapilan_firma').val(expense.odeme_yapilan_firma);
                         $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
                         $('#expenseModal').modal('show');
                     } else {

@@ -557,6 +557,16 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                         </a>
                     </div>
                 </div>
+
+                <div class="module-category">
+                    <h3><i class="fas fa-life-ring"></i> Yardım & Destek</h3>
+                    <div class="module-grid">
+                        <a href="rehber.php" class="module-card">
+                            <div class="icon"><i class="fas fa-book-reader"></i></div>
+                            <div class="card-content"><span class="title">Kullanım Rehberi</span><p class="description">Sistemin nasıl çalıştığını ve süreçleri öğrenin.</p></div>
+                        </a>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
