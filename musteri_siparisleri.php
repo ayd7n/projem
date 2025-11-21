@@ -713,11 +713,14 @@ if ($orders_result && $orders_result->num_rows > 0) {
     <div class="main-content">
         <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
         
-        <div class="page-header">
+        <div class="page-header d-flex justify-content-between align-items-center">
             <div>
                 <h1>Müşteri Siparişleri</h1>
                 <p>Bu panel üzerinden müşteri siparişlerini yönetebilir, durumlarını güncelleyebilir ve takip edebilirsiniz.</p>
             </div>
+            <a href="yeni_musteri_siparisi.php" class="btn btn-success">
+                <i class="fas fa-plus-circle"></i> Yeni Sipariş Oluştur
+            </a>
         </div>
 
         <?php if ($message): ?>

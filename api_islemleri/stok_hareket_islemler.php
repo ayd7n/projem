@@ -336,48 +336,116 @@ switch ($action) {
         }
         $item_stmt->close();
 
-        // Insert stock movement
-        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci);
+        // Insert stock movement - converted from prepared statement to direct query
+        $stok_turu = $connection->real_escape_string($stok_turu);
+        $kod = $connection->real_escape_string($kod);
+        $item_name = $connection->real_escape_string($item_name);
+        $item_unit = $connection->real_escape_string($item_unit);
+        $miktar = floatval($miktar);
+        $yon = $connection->real_escape_string($yon);
+        $hareket_turu = $connection->real_escape_string($hareket_turu);
+        $depo = $connection->real_escape_string($depo);
+        $raf = $connection->real_escape_string($raf);
+        $tank_kodu = $connection->real_escape_string($tank_kodu);
+        $ilgili_belge_no = $connection->real_escape_string($ilgili_belge_no);
+        $aciklama = $connection->real_escape_string($aciklama);
+        $kaydeden_personel_id = intval($_SESSION['user_id']);
+        $kaydeden_personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi']);
+        $tedarikci = $connection->real_escape_string($tedarikci);
 
-        if ($movement_stmt->execute()) {
-            $hareket_id = $movement_stmt->insert_id;
+        $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi) VALUES ('$stok_turu', '$kod', '$item_name', '$item_unit', $miktar, '$yon', '$hareket_turu', '$depo', '$raf', '$tank_kodu', '$ilgili_belge_no', '$aciklama', $kaydeden_personel_id, '$kaydeden_personel_adi', '$tedarikci')";
+
+        if ($connection->query($movement_query)) {
+            $hareket_id = $connection->insert_id;
 
             // Update stock based on movement
             $direction = ($yon === 'giris') ? $miktar : -$miktar;
 
+            // Update stock based on movement type
+            $direction = floatval($direction);
+            $escaped_kod = $connection->real_escape_string($kod);
+
             switch ($stok_turu) {
                 case 'malzeme':
-                    $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('di', $direction, $kod);
+                    $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + $direction WHERE malzeme_kodu = '$escaped_kod'";
+                    $result = $connection->query($stock_query);
                     break;
                 case 'esans':
-                    $stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari + ? WHERE esans_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('ds', $direction, $kod);
+                    $stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari + $direction WHERE esans_kodu = '$escaped_kod'";
+                    $result = $connection->query($stock_query);
                     break;
                 case 'urun':
-                    $stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + ? WHERE urun_kodu = ?";
-                    $stock_stmt = $connection->prepare($stock_query);
-                    $stock_stmt->bind_param('ii', $direction, $kod);
+                    $stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + $direction WHERE urun_kodu = '$escaped_kod'";
+                    $result = $connection->query($stock_query);
                     break;
             }
 
-            if (isset($stock_stmt) && $stock_stmt->execute()) {
-                echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi.']);
+            if (isset($result) && $result) {
+                // If this movement is a fire (waste) with exit direction, create an expense record
+                if ($hareket_turu === 'fire' && $yon === 'cikis') {
+                    // Get the theoretical cost for the item based on its stock type
+                    $theoretical_cost = 0;
+                    $item_description = $item_name;
+
+                    switch ($stok_turu) {
+                        case 'malzeme':
+                            // For malzeme, we expect alis_fiyati to exist based on our earlier code
+                            $cost_query = "SELECT alis_fiyati FROM malzemeler WHERE malzeme_kodu = '$kod'";
+                            $cost_result = $connection->query($cost_query);
+                            if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                $theoretical_cost = floatval($cost_row['alis_fiyati']);
+                            }
+                            break;
+                        case 'urun':
+                            // For urun, use v_urun_maliyetleri view
+                            $cost_query = "SELECT teorik_maliyet FROM v_urun_maliyetleri WHERE urun_kodu = '$kod'";
+                            $cost_result = $connection->query($cost_query);
+                            if ($cost_result) {
+                                if ($cost_row = $cost_result->fetch_assoc()) {
+                                    $theoretical_cost = floatval($cost_row['teorik_maliyet']);
+                                }
+                            }
+                            break;
+                        case 'esans':
+                            // For esans, use v_esans_maliyetleri view
+                            $cost_query = "SELECT toplam_maliyet FROM v_esans_maliyetleri WHERE esans_kodu = '$kod'";
+                            $cost_result = @$connection->query($cost_query);
+                            if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                $theoretical_cost = floatval($cost_row['toplam_maliyet']);
+                            }
+                            break;
+                    }
+
+                    // Calculate the total cost (miktar * theoretical cost)
+                    $total_cost = $miktar * $theoretical_cost;
+
+                    if ($total_cost > 0) {
+                        // Insert expense record
+                        $expense_description = "Fire kaydı - " . $item_name . " - " . $miktar . " " . $item_unit . " (" . $kod . ")";
+                        $expense_tarih = date('Y-m-d');
+                        $personel_id = intval($_SESSION['user_id']);
+                        $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi']);
+
+                        $expense_query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$expense_tarih', $total_cost, 'Fire Gideri', '$expense_description', $personel_id, '$personel_adi', 'Fire_Kaydi_$hareket_id', 'Diğer', 'İç Gider')";
+
+                        if ($connection->query($expense_query)) {
+                            echo json_encode(['status' => 'success', 'message' => 'Stok hareketi ve ilgili gider kaydı başarıyla kaydedildi.']);
+                        } else {
+                            // If expense creation fails, still indicate success for the stock movement
+                            echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi ancak gider kaydı oluşturulurken hata oluştu: ' . $connection->error]);
+                        }
+                    } else {
+                        echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi. (Maliyet 0 hesaplandı)']);
+                    }
+                } else {
+                    echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi.']);
+                }
             } else {
                 echo json_encode(['status' => 'error', 'message' => 'Stok hareketi kaydedildi ama stok güncellenirken hata oluştu.']);
-            }
-
-            if (isset($stock_stmt)) {
-                $stock_stmt->close();
             }
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Stok hareketi kaydedilirken hata oluştu: ' . $connection->error]);
         }
-        $movement_stmt->close();
         break;
 
     case 'update_movement':
@@ -438,17 +506,146 @@ switch ($action) {
         }
         $item_stmt->close();
 
-        // Update stock movement
-        $movement_query = "UPDATE stok_hareket_kayitlari SET stok_turu = ?, kod = ?, isim = ?, birim = ?, miktar = ?, yon = ?, hareket_turu = ?, depo = ?, raf = ?, tank_kodu = ?, ilgili_belge_no = ?, aciklama = ?, tedarikci_ismi = ? WHERE hareket_id = ?";
-        $movement_stmt = $connection->prepare($movement_query);
-        $movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon, $hareket_turu, $depo, $raf, $tank_kodu, $ilgili_belge_no, $aciklama, $tedarikci, $hareket_id);
+        // Update stock movement - converted from prepared statement to direct query
+        $stok_turu = $connection->real_escape_string($stok_turu);
+        $kod = $connection->real_escape_string($kod);
+        $item_name = $connection->real_escape_string($item_name);
+        $item_unit = $connection->real_escape_string($item_unit);
+        $miktar = floatval($miktar);
+        $yon = $connection->real_escape_string($yon);
+        $hareket_turu = $connection->real_escape_string($hareket_turu);
+        $depo = $connection->real_escape_string($depo);
+        $raf = $connection->real_escape_string($raf);
+        $tank_kodu = $connection->real_escape_string($tank_kodu);
+        $ilgili_belge_no = $connection->real_escape_string($ilgili_belge_no);
+        $aciklama = $connection->real_escape_string($aciklama);
+        $tedarikci = $connection->real_escape_string($tedarikci);
+        $hareket_id = intval($hareket_id);
 
-        if ($movement_stmt->execute()) {
-            echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
+        $movement_query = "UPDATE stok_hareket_kayitlari SET stok_turu = '$stok_turu', kod = '$kod', isim = '$item_name', birim = '$item_unit', miktar = $miktar, yon = '$yon', hareket_turu = '$hareket_turu', depo = '$depo', raf = '$raf', tank_kodu = '$tank_kodu', ilgili_belge_no = '$ilgili_belge_no', aciklama = '$aciklama', tedarikci_ismi = '$tedarikci' WHERE hareket_id = $hareket_id";
+
+        if ($connection->query($movement_query)) {
+            // If this movement is a fire (waste) or sayim eksigi (shortage) with exit direction, ensure expense record is handled appropriately
+            if (($hareket_turu === 'fire' || $hareket_turu === 'sayim_eksigi') && $yon === 'cikis') {
+                // Get the theoretical cost for the item based on its stock type
+                $theoretical_cost = 0;
+
+                switch ($stok_turu) {
+                    case 'malzeme':
+                        $cost_query = "SELECT alis_fiyati FROM malzemeler WHERE malzeme_kodu = '$kod'";
+                        $cost_result = $connection->query($cost_query);
+                        if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                            $theoretical_cost = floatval($cost_row['alis_fiyati']);
+                        }
+                        break;
+                    case 'urun':
+                        // Check if alis_fiyati column exists in urunler table
+                        $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'urunler' AND COLUMN_NAME = 'alis_fiyati'";
+                        $column_result = $connection->query($check_column_query);
+                        if ($column_result && $column_result->num_rows > 0) {
+                            // alis_fiyati column exists
+                            $cost_query = "SELECT alis_fiyati FROM urunler WHERE urun_kodu = '$kod'";
+                            $cost_result = $connection->query($cost_query);
+                            if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                $theoretical_cost = floatval($cost_row['alis_fiyati']);
+                            }
+                        } else {
+                            // Check if birim_maliyet column exists in urunler table
+                            $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'urunler' AND COLUMN_NAME = 'birim_maliyet'";
+                            $column_result = $connection->query($check_column_query);
+                            if ($column_result && $column_result->num_rows > 0) {
+                                // birim_maliyet column exists
+                                $cost_query = "SELECT birim_maliyet FROM urunler WHERE urun_kodu = '$kod'";
+                                $cost_result = $connection->query($cost_query);
+                                if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                    $theoretical_cost = floatval($cost_row['birim_maliyet']);
+                                }
+                            } else {
+                                // Check if satis_fiyati column exists in urunler table
+                                $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'urunler' AND COLUMN_NAME = 'satis_fiyati'";
+                                $column_result = $connection->query($check_column_query);
+                                if ($column_result && $column_result->num_rows > 0) {
+                                    $cost_query = "SELECT satis_fiyati FROM urunler WHERE urun_kodu = '$kod'";
+                                    $cost_result = $connection->query($cost_query);
+                                    if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                        $theoretical_cost = floatval($cost_row['satis_fiyati']) * 0.7; // Use 70% of sales price as theoretical cost
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case 'esans':
+                        // Check if alis_fiyati column exists in esanslar table
+                        $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'esanslar' AND COLUMN_NAME = 'alis_fiyati'";
+                        $column_result = $connection->query($check_column_query);
+                        if ($column_result && $column_result->num_rows > 0) {
+                            // alis_fiyati column exists
+                            $cost_query = "SELECT alis_fiyati FROM esanslar WHERE esans_kodu = '$kod'";
+                            $cost_result = $connection->query($cost_query);
+                            if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                $theoretical_cost = floatval($cost_row['alis_fiyati']);
+                            }
+                        } else {
+                            // Check if birim_maliyet column exists in esanslar table
+                            $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'esanslar' AND COLUMN_NAME = 'birim_maliyet'";
+                            $column_result = $connection->query($check_column_query);
+                            if ($column_result && $column_result->num_rows > 0) {
+                                // birim_maliyet column exists
+                                $cost_query = "SELECT birim_maliyet FROM esanslar WHERE esans_kodu = '$kod'";
+                                $cost_result = $connection->query($cost_query);
+                                if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                    $theoretical_cost = floatval($cost_row['birim_maliyet']);
+                                }
+                            } else {
+                                // Check if satis_fiyati column exists in esanslar table
+                                $check_column_query = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'esanslar' AND COLUMN_NAME = 'satis_fiyati'";
+                                $column_result = $connection->query($check_column_query);
+                                if ($column_result && $column_result->num_rows > 0) {
+                                    $cost_query = "SELECT satis_fiyati FROM esanslar WHERE esans_kodu = '$kod'";
+                                    $cost_result = $connection->query($cost_query);
+                                    if ($cost_result && $cost_row = $cost_result->fetch_assoc()) {
+                                        $theoretical_cost = floatval($cost_row['satis_fiyati']) * 0.7; // Use 70% of sales price as theoretical cost
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                }
+
+                // Calculate the total cost (miktar * theoretical cost)
+                $total_cost = $miktar * $theoretical_cost;
+
+                if ($total_cost > 0) {
+                    // Update or insert expense record
+                    $expense_description = "Fire kaydı - " . $item_name . " - " . $miktar . " " . $item_unit . " (" . $kod . ")";
+                    $expense_tarih = date('Y-m-d');
+                    $personel_id = intval($_SESSION['user_id']);
+                    $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi']);
+
+                    // Check if there's already an expense record for this fire transaction
+                    $check_expense_query = "SELECT gider_id FROM gider_yonetimi WHERE fatura_no = 'Fire_Kaydi_$hareket_id'";
+                    $check_result = $connection->query($check_expense_query);
+
+                    if ($check_result && $check_result->num_rows > 0) {
+                        // Update existing expense record
+                        $expense_update_query = "UPDATE gider_yonetimi SET tarih = '$expense_tarih', tutar = $total_cost, kategori = 'Malzeme Gideri', aciklama = '$expense_description', kaydeden_personel_id = $personel_id, kaydeden_personel_ismi = '$personel_adi' WHERE fatura_no = 'Fire_Kaydi_$hareket_id'";
+                        $connection->query($expense_update_query);
+                    } else {
+                        // Insert new expense record
+                        $expense_insert_query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$expense_tarih', $total_cost, 'Malzeme Gideri', '$expense_description', $personel_id, '$personel_adi', 'Fire_Kaydi_$hareket_id', 'Diğer', 'İç Gider')";
+                        $connection->query($expense_insert_query);
+                    }
+
+                    echo json_encode(['status' => 'success', 'message' => 'Stok hareketi ve ilgili gider kaydı başarıyla güncellendi.']);
+                } else {
+                    echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
+                }
+            } else {
+                echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
+            }
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Stok hareketi güncellenirken hata oluştu: ' . $connection->error]);
         }
-        $movement_stmt->close();
         break;
 
     case 'delete_movement':
@@ -462,67 +659,61 @@ switch ($action) {
         $connection->autocommit(FALSE); // Start transaction
 
         try {
+            $hareket_id = intval($hareket_id);
+
             // 1. Get all necessary data BEFORE making any changes
-            $movement_query = "SELECT * FROM stok_hareket_kayitlari WHERE hareket_id = ?";
-            $movement_stmt = $connection->prepare($movement_query);
-            $movement_stmt->bind_param('i', $hareket_id);
-            $movement_stmt->execute();
-            $movement_result = $movement_stmt->get_result();
-            if ($movement_result->num_rows === 0) {
+            $movement_query = "SELECT * FROM stok_hareket_kayitlari WHERE hareket_id = $hareket_id";
+            $movement_result = $connection->query($movement_query);
+            if (!$movement_result || $movement_result->num_rows === 0) {
                 throw new Exception('Stok hareketi bulunamadı.');
             }
             $movement = $movement_result->fetch_assoc();
-            $movement_stmt->close();
 
             $malzeme_kodu = $movement['kod'];
             $is_mal_kabul = ($movement['stok_turu'] === 'malzeme' && $movement['hareket_turu'] === 'mal_kabul');
-            
+
             $deleted_miktar = (float)$movement['miktar'];
             $deleted_birim_fiyat = 0;
             $mevcut_stok = 0;
             $mevcut_alis_fiyati = 0;
 
             if ($is_mal_kabul) {
-                $contract_details_query = "SELECT birim_fiyat FROM stok_hareketleri_sozlesmeler WHERE hareket_id = ?";
-                $contract_stmt = $connection->prepare($contract_details_query);
-                $contract_stmt->bind_param('i', $hareket_id);
-                $contract_stmt->execute();
-                $contract_result = $contract_stmt->get_result();
-                if ($contract_result->num_rows > 0) {
+                $contract_details_query = "SELECT birim_fiyat FROM stok_hareketleri_sozlesmeler WHERE hareket_id = $hareket_id";
+                $contract_result = $connection->query($contract_details_query);
+                if ($contract_result && $contract_result->num_rows > 0) {
                     $contract_details = $contract_result->fetch_assoc();
                     $deleted_birim_fiyat = (float)$contract_details['birim_fiyat'];
                 }
-                $contract_stmt->close();
 
-                $material_query = "SELECT stok_miktari, alis_fiyati FROM malzemeler WHERE malzeme_kodu = ?";
-                $material_stmt = $connection->prepare($material_query);
-                $material_stmt->bind_param('s', $malzeme_kodu);
-                $material_stmt->execute();
-                $material_result = $material_stmt->get_result();
+                $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
+                $material_query = "SELECT stok_miktari, alis_fiyati FROM malzemeler WHERE malzeme_kodu = '$escaped_malzeme_kodu'";
+                $material_result = $connection->query($material_query);
                 $material_data = $material_result->fetch_assoc();
                 $mevcut_stok = (float)$material_data['stok_miktari'];
                 $mevcut_alis_fiyati = (float)$material_data['alis_fiyati'];
-                $material_stmt->close();
             }
 
             // 2. Perform all database writes
             // Delete from child table first
-            $contract_delete_query = "DELETE FROM stok_hareketleri_sozlesmeler WHERE hareket_id = ?";
-            $contract_delete_stmt = $connection->prepare($contract_delete_query);
-            $contract_delete_stmt->bind_param('i', $hareket_id);
-            if (!$contract_delete_stmt->execute()) {
-                throw new Exception('Sözleşme bağlantısı silinirken hata oluştu: ' . $contract_delete_stmt->error);
+            $contract_delete_query = "DELETE FROM stok_hareketleri_sozlesmeler WHERE hareket_id = $hareket_id";
+            if (!$connection->query($contract_delete_query)) {
+                throw new Exception('Sözleşme bağlantısı silinirken hata oluştu: ' . $connection->error);
             }
-            $contract_delete_stmt->close();
+
+            // Check if this is a fire or sayım eksigi movement to handle expense deletion
+            $is_fire_or_shortage = (($movement['hareket_turu'] === 'fire' || $movement['hareket_turu'] === 'sayim_eksigi') && $movement['yon'] === 'cikis');
 
             // Delete from main movement table
-            $delete_query = "DELETE FROM stok_hareket_kayitlari WHERE hareket_id = ?";
-            $delete_stmt = $connection->prepare($delete_query);
-            $delete_stmt->bind_param('i', $hareket_id);
-            if (!$delete_stmt->execute()) {
-                throw new Exception('Stok hareketi silinirken hata oluştu: ' . $delete_stmt->error);
+            $delete_query = "DELETE FROM stok_hareket_kayitlari WHERE hareket_id = $hareket_id";
+            if (!$connection->query($delete_query)) {
+                throw new Exception('Stok hareketi silinirken hata oluştu: ' . $connection->error);
             }
-            $delete_stmt->close();
+
+            // If this was a fire or sayım eksigi movement, delete the associated expense record
+            if ($is_fire_or_shortage) {
+                $expense_delete_query = "DELETE FROM gider_yonetimi WHERE fatura_no = 'Fire_Kaydi_$hareket_id'";
+                $connection->query($expense_delete_query);
+            }
 
             // 3. Update material stock and cost
             if ($is_mal_kabul) {
@@ -535,23 +726,19 @@ switch ($action) {
                 }
 
                 $maliyet_manuel_girildi_yeni = false;
-                $update_cost_query = "UPDATE malzemeler SET stok_miktari = ?, alis_fiyati = ?, maliyet_manuel_girildi = ? WHERE malzeme_kodu = ?";
-                $update_cost_stmt = $connection->prepare($update_cost_query);
-                $update_cost_stmt->bind_param('ddis', $yeni_stok, $yeni_agirlikli_ortalama, $maliyet_manuel_girildi_yeni, $malzeme_kodu);
-                if (!$update_cost_stmt->execute()) {
-                    throw new Exception('Malzeme maliyeti güncellenirken hata oluştu: ' . $update_cost_stmt->error);
+                $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
+                $update_cost_query = "UPDATE malzemeler SET stok_miktari = $yeni_stok, alis_fiyati = $yeni_agirlikli_ortalama, maliyet_manuel_girildi = " . ($maliyet_manuel_girildi_yeni ? 1 : 0) . " WHERE malzeme_kodu = '$escaped_malzeme_kodu'";
+                if (!$connection->query($update_cost_query)) {
+                    throw new Exception('Malzeme maliyeti güncellenirken hata oluştu: ' . $connection->error);
                 }
-                $update_cost_stmt->close();
             } else {
                 // If not a mal_kabul, just reverse the stock quantity
                 $direction = ($movement['yon'] === 'giris') ? -$deleted_miktar : $deleted_miktar;
-                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ? WHERE malzeme_kodu = ?";
-                $stock_stmt = $connection->prepare($stock_query);
-                $stock_stmt->bind_param('ds', $direction, $malzeme_kodu);
-                if (!$stock_stmt->execute()) {
-                    throw new Exception('Stok geri yüklenirken hata oluştu: ' . $stock_stmt->error);
+                $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
+                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + $direction WHERE malzeme_kodu = '$escaped_malzeme_kodu'";
+                if (!$connection->query($stock_query)) {
+                    throw new Exception('Stok geri yüklenirken hata oluştu: ' . $connection->error);
                 }
-                $stock_stmt->close();
             }
 
             // 4. If all successful, commit
@@ -710,38 +897,52 @@ switch ($action) {
             $dest_description = $aciklama . ' - Kaynak: ' . $kaynak_depo . '/' . $kaynak_raf . ' -> Hedef: ' . $hedef_depo . '/' . $hedef_raf;
 
             // Step 1: Create the source (outgoing) stock movement
-            $source_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $source_movement_stmt = $connection->prepare($source_movement_query);
+            $stok_turu_escaped = $connection->real_escape_string($stok_turu);
+            $kod_escaped = $connection->real_escape_string($kod);
+            $item_name_escaped = $connection->real_escape_string($item_name);
+            $item_unit_escaped = $connection->real_escape_string($item_unit);
+            $miktar_val = floatval($miktar);
+            $yon_cikis_escaped = $connection->real_escape_string($yon_cikis);
+            $hareket_turu_transfer_escaped = $connection->real_escape_string($hareket_turu_transfer);
+            $kaynak_depo_escaped = $connection->real_escape_string($kaynak_depo);
+            $kaynak_raf_escaped = $connection->real_escape_string($kaynak_raf);
+            $tank_kodu_escaped = $connection->real_escape_string($tank_kodu);
+            $ilgili_belge_no_escaped = $connection->real_escape_string($ilgili_belge_no);
+            $source_description_escaped = $connection->real_escape_string($source_description);
+            $user_id_val = intval($_SESSION['user_id']);
+            $kullanici_adi_escaped = $connection->real_escape_string($_SESSION['kullanici_adi']);
 
             // For essence transfers, we use tank_kodu in the movements, for materials/products we use depot/raf
             if ($stok_turu === 'esans') {
-                $source_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_cikis, $hareket_turu_transfer, $kaynak_depo, $kaynak_raf, $tank_kodu, $ilgili_belge_no, $source_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+                $source_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_cikis_escaped', '$hareket_turu_transfer_escaped', '$kaynak_depo_escaped', '$kaynak_raf_escaped', '$tank_kodu_escaped', '$ilgili_belge_no_escaped', '$source_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
             } else {
-                $source_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_cikis, $hareket_turu_transfer, $kaynak_depo, $kaynak_raf, $null1, $ilgili_belge_no, $source_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+                $null1_escaped = $connection->real_escape_string($null1);
+                $source_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_cikis_escaped', '$hareket_turu_transfer_escaped', '$kaynak_depo_escaped', '$kaynak_raf_escaped', '$null1_escaped', '$ilgili_belge_no_escaped', '$source_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
             }
 
-            if (!$source_movement_stmt->execute()) {
+            if (!$connection->query($source_movement_query)) {
                 throw new Exception('Kaynak hareket kaydı oluşturulamadı: ' . $connection->error);
             }
-            $source_movement_id = $source_movement_stmt->insert_id;
-            $source_movement_stmt->close();
+            $source_movement_id = $connection->insert_id;
 
             // Step 2: Create the destination (incoming) stock movement
-            $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $dest_movement_stmt = $connection->prepare($dest_movement_query);
+            $hedef_depo_escaped = $connection->real_escape_string($hedef_depo);
+            $hedef_raf_escaped = $connection->real_escape_string($hedef_raf);
+            $dest_description_escaped = $connection->real_escape_string($dest_description);
+            $yon_giris_escaped = $connection->real_escape_string($yon_giris);
 
             // For essence transfers, we use tank_kodu in the movements, for materials/products we use depot/raf
             if ($stok_turu === 'esans') {
-                $dest_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_giris, $hareket_turu_transfer, $hedef_depo, $hedef_raf, $tank_kodu, $ilgili_belge_no, $dest_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+                $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_giris_escaped', '$hareket_turu_transfer_escaped', '$hedef_depo_escaped', '$hedef_raf_escaped', '$tank_kodu_escaped', '$ilgili_belge_no_escaped', '$dest_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
             } else {
-                $dest_movement_stmt->bind_param('ssssdsssssssis', $stok_turu, $kod, $item_name, $item_unit, $miktar, $yon_giris, $hareket_turu_transfer, $hedef_depo, $hedef_raf, $null1, $ilgili_belge_no, $dest_description, $_SESSION['user_id'], $_SESSION['kullanici_adi']);
+                $null1_escaped = $connection->real_escape_string($null1);
+                $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_giris_escaped', '$hareket_turu_transfer_escaped', '$hedef_depo_escaped', '$hedef_raf_escaped', '$null1_escaped', '$ilgili_belge_no_escaped', '$dest_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
             }
 
-            if (!$dest_movement_stmt->execute()) {
+            if (!$connection->query($dest_movement_query)) {
                 throw new Exception('Hedef hareket kaydı oluşturulamadı: ' . $connection->error);
             }
-            $dest_movement_id = $dest_movement_stmt->insert_id;
-            $dest_movement_stmt->close();
+            $dest_movement_id = $connection->insert_id;
 
             // Commit transaction
             $connection->commit();
@@ -1042,18 +1243,28 @@ switch ($action) {
             $yeni_gelen_toplam_miktar += $contract_amount;
 
             $contract_specific_aciklama = $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']';
-            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            $movement_stmt = $connection->prepare($movement_query);
-            $movement_stmt->bind_param('ssssdssssssissi', $stok_turu, $kod, $item_name, $item_unit, $contract_amount, $yon, $hareket_turu, $depo, $raf, $ilgili_belge_no, $contract_specific_aciklama, $_SESSION['user_id'], $_SESSION['kullanici_adi'], $tedarikci_ismi, $tedarikci_id);
+            $stok_turu_escaped = $connection->real_escape_string($stok_turu);
+            $kod_escaped = $connection->real_escape_string($kod);
+            $item_name_escaped = $connection->real_escape_string($item_name);
+            $item_unit_escaped = $connection->real_escape_string($item_unit);
+            $depo_escaped = $connection->real_escape_string($depo);
+            $raf_escaped = $connection->real_escape_string($raf);
+            $ilgili_belge_no_escaped = $connection->real_escape_string($ilgili_belge_no);
+            $contract_specific_aciklama_escaped = $connection->real_escape_string($contract_specific_aciklama);
+            $tedarikci_ismi_escaped = $connection->real_escape_string($tedarikci_ismi);
+            $user_id_val = intval($_SESSION['user_id']);
+            $kullanici_adi_escaped = $connection->real_escape_string($_SESSION['kullanici_adi']);
+            $tedarikci_id_val = intval($tedarikci_id);
 
-            if (!$movement_stmt->execute()) {
+            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $contract_amount, '$yon', '$hareket_turu', '$depo_escaped', '$raf_escaped', '$ilgili_belge_no_escaped', '$contract_specific_aciklama_escaped', $user_id_val, '$kullanici_adi_escaped', '$tedarikci_ismi_escaped', $tedarikci_id_val)";
+
+            if (!$connection->query($movement_query)) {
                 $error_occured = true;
-                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $movement_stmt->error]);
+                echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedilirken hata olustu: ' . $connection->error]);
                 break;
             }
-            
+
             $hareket_id = $connection->insert_id;
-            $movement_stmt->close();
             
             $contract_id = $contract['sozlesme_id'];
             $birim_fiyat = $contract['birim_fiyat'];
@@ -1093,24 +1304,21 @@ switch ($action) {
 
                 // After calculation, the price is no longer manually set.
                 $maliyet_manuel_girildi_yeni = false;
+                $escaped_kod = $connection->real_escape_string($kod);
 
-                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + ?, alis_fiyati = ?, para_birimi = ?, maliyet_manuel_girildi = ? WHERE malzeme_kodu = ?";
-                $stock_stmt = $connection->prepare($stock_query);
-                $stock_stmt->bind_param('ddsis', $total_updated_stock, $yeni_agirlikli_ortalama, $son_para_birimi, $maliyet_manuel_girildi_yeni, $kod);
+                $stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + $total_updated_stock, alis_fiyati = $yeni_agirlikli_ortalama, para_birimi = '$son_para_birimi', maliyet_manuel_girildi = " . ($maliyet_manuel_girildi_yeni ? 1 : 0) . " WHERE malzeme_kodu = '$escaped_kod'";
 
-                if ($stock_stmt->execute()) {
+                if ($connection->query($stock_query)) {
                     if ($depo && $raf) {
-                        $location_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
-                        $location_stmt = $connection->prepare($location_query);
-                        $location_stmt->bind_param('sss', $depo, $raf, $kod);
-                        $location_stmt->execute();
-                        $location_stmt->close();
+                        $escaped_depo = $connection->real_escape_string($depo);
+                        $escaped_raf = $connection->real_escape_string($raf);
+                        $location_query = "UPDATE malzemeler SET depo = '$escaped_depo', raf = '$escaped_raf' WHERE malzeme_kodu = '$escaped_kod'";
+                        $connection->query($location_query);
                     }
                     echo json_encode(['status' => 'success', 'message' => 'Mal kabul islemi basariyla kaydedildi ve stok guncellendi.']);
                 } else {
-                    echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $stock_stmt->error]);
+                    echo json_encode(['status' => 'error', 'message' => 'Mal kabul islemi kaydedildi ama stok guncellenirken hata olustu: ' . $connection->error]);
                 }
-                $stock_stmt->close();
             } else {
                  echo json_encode(['status' => 'error', 'message' => 'Miktar dagitimi sirasinda hata olustu.']);
             }
