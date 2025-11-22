@@ -45,6 +45,36 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/montaj_is_emirleri.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+    @media (min-width: 1200px) {
+        .modal-xl {
+            max-width: 100vw !important; /* Yatayda tam ekran */
+            width: 100vw !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
+        .modal-content {
+            height: auto !important; /* Yüksekliği içeriğe göre ayarla */
+            max-height: 100vh !important; /* Maksimum yüksekliği viewport yüksekliği kadar olsun */
+            border-radius: 0 !important;
+            border: none !important;
+            overflow-y: auto !important; /* İçerik taşarsa kaydırma çubuğu çıksın */
+        }
+        .modal-dialog {
+            /* Bootstrap'in modal-dialog'u dikeyde ortalamak için transform kullanır.
+               margin-top: auto ve margin-bottom: auto kullanarak en üste yaslayabiliriz. */
+            display: flex !important;
+            align-items: flex-start !important; /* Modalı dikeyde en üste hizala */
+            min-height: calc(100% - (0.5rem * 2)) !important; /* Bootstrap varsayılan modal margin'ini hesaba kat */
+        }
+        .modal.fade .modal-dialog {
+            transition: transform .3s ease-out !important;
+            transform: translate(0,0) !important; /* Dikeyde ortalama transform'ını sıfırla */
+        }
+    }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -789,21 +819,15 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
                                             <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
-                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
+                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi">
                                         </div>
                                     </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
                                         <div class="form-group mb-3">
-                                            <label for="planlanan_bitis_tarihi">Planlanan Bitis Tarihi</label>
-                                            <input type="date" class="form-control" v-model="selectedWorkOrder.planlanan_bitis_tarihi" readonly>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-group mb-3">
                                             <label for="durum">Durum</label>        
-                                            <select class="form-control" v-model="selectedWorkOrder.durum" :disabled="selectedWorkOrder.is_emri_numarasi">
+                                            <select class="form-control" v-model="selectedWorkOrder.durum" disabled>
                                                 <option value="olusturuldu">Olusturuldu</option>
                                                 <option value="uretimde">Uretimde</option>
                                                 <option value="tamamlandi">Tamamlandi</option>

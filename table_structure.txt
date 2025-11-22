@@ -1,0 +1,7 @@
+Columns in montaj_is_emirleri_eksik_miktar_kayitlari:
+is_emri_numarasi (int(11))
+eksik_miktar (decimal(10,2))
+eksik_kalma_nedeni (varchar(50))
+malzeme_kodu (int(11))
+malzeme_ismi (varchar(255))
+malzeme_turu (varchar(100))

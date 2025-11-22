@@ -531,10 +531,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                             <div class="icon"><i class="fas fa-chart-pie"></i></div>
                             <div class="card-content"><span class="title">Raporlar</span><p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p></div>
                         </a>
-                        <a href="montaj_is_emri_raporu.php" class="module-card">
-                            <div class="icon"><i class="fas fa-industry"></i></div>
-                            <div class="card-content"><span class="title">Montaj İş Emri Raporu</span><p class="description">Montaj iş emirlerinin durumunu ve malzeme ihtiyaçlarını analiz edin.</p></div>
-                        </a>
+
                     </div>
                 </div>
 

@@ -623,7 +623,7 @@ function startWorkOrder() {
 
             // 3b. Log stock movement
             $stock_out_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
-                                VALUES ('Bileşen', 
+                                VALUES ('" . $connection->real_escape_string($component['malzeme_turu']) . "', 
                                         '" . $connection->real_escape_string($component['malzeme_kodu']) . "', 
                                         '" . $connection->real_escape_string($component['malzeme_ismi']) . "', 
                                         '" . $connection->real_escape_string($component['birim']) . "', 
@@ -706,7 +706,7 @@ function revertWorkOrder() {
 
             // 3b. Log stock movement
             $stock_in_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
-                               VALUES ('Bileşen', 
+                               VALUES ('" . $connection->real_escape_string($component['malzeme_turu']) . "', 
                                        '" . $connection->real_escape_string($component['malzeme_kodu']) . "', 
                                        '" . $connection->real_escape_string($component['malzeme_ismi']) . "', 
                                        '" . $connection->real_escape_string($component['birim']) . "', 
