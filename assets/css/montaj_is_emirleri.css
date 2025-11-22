@@ -47,6 +47,10 @@ body {
     margin-bottom: 25px;
     overflow: hidden;
 }
+
+#app > div > div > div.card {
+    min-height: 200px;
+}
 .card-header {
     padding: 18px 20px;
     border-bottom: 1px solid var(--border-color);
@@ -135,6 +139,7 @@ body {
     color: var(--text-secondary);
     white-space: nowrap;
 }
+
 
 .actions {
     display: flex;

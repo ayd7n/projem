@@ -156,6 +156,7 @@ app = new Vue({
             if (product) {
                 this.productUnit = product.birim;
                 this.selectedWorkOrder.birim = product.birim;
+                this.selectedWorkOrder.urun_ismi = product.urun_ismi;
             }
 
             // Calculate components based on selected product
@@ -263,6 +264,14 @@ app = new Vue({
                 // For assembly work orders, end date is the same as start date
                 let startDate = new Date(this.selectedWorkOrder.planlanan_baslangic_tarihi);
                 this.selectedWorkOrder.planlanan_bitis_tarihi = startDate.toISOString().split('T')[0];
+
+                // If urun_ismi is missing, try to get it from products array
+                if (!this.selectedWorkOrder.urun_ismi && this.selectedWorkOrder.urun_kodu) {
+                    const product = this.products.find(p => p.urun_kodu === this.selectedWorkOrder.urun_kodu);
+                    if (product) {
+                        this.selectedWorkOrder.urun_ismi = product.urun_ismi;
+                    }
+                }
 
                 // Determine action based on whether we're creating or updating
                 const isUpdate = !!this.selectedWorkOrder.is_emri_numarasi;

@@ -465,7 +465,7 @@ function calculateComponents() {
         $query = "SELECT bilesen_kodu, bilesen_ismi, bilesenin_malzeme_turu, bilesen_miktari 
                   FROM urun_agaci 
                   WHERE urun_kodu = '" . $connection->real_escape_string($product_code) . "' 
-                  AND agac_turu = 'montaj'";
+                  AND agac_turu = 'urun'";
         
         $result = $connection->query($query);
         

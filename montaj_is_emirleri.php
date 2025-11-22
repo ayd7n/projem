@@ -544,7 +544,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                     <h2><i class="fas fa-list"></i> Montaj Is Emirleri Listesi</h2> 
                 </div>
                 <div class="card-body">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="min-height: 400px;">
                         <table class="table table-hover">
                             <thead>
                                 <tr>
@@ -961,7 +961,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 
 <!-- Include the Vue.js application -->
-<script src="assets/js/montaj_is_emirleri.js"></script>
+<script src="assets/js/montaj_is_emirleri.js?v=<?php echo time(); ?>"></script>
 
 <script>
     // Define user info for the Vue app

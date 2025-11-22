@@ -134,6 +134,7 @@ function get_all_permissions() {
             'action:raporlar:view_sales' => 'Satış Raporlarını Görüntüleme',
             'action:raporlar:view_cost' => 'Maliyet Raporlarını Görüntüleme',
             'action:raporlar:view_production' => 'Üretim Raporlarını Görüntüleme',
+            'page:view:montaj_is_emri_raporu' => 'Montaj İş Emri Raporu',
         ],
         'Ayarlar' => [
             'action:ayarlar:maintenance_mode' => 'Bakım Modunu Değiştirme',
