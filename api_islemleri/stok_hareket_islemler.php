@@ -195,6 +195,25 @@ switch ($action) {
 
         if ($result->num_rows > 0) {
             $movement = $result->fetch_assoc();
+            // Normalize the 'yon' field to ensure consistent values
+            // Handle Turkish specific variations: 'Giriş' stays as 'Giriş', 'Çıkış' stays as 'Çıkış'
+            $yon_value = $movement['yon'];
+            // Convert to lowercase for comparison but preserve original case for display
+            $yon_lower = mb_strtolower($yon_value, 'UTF-8');
+
+            // If lowercase contains 'giris' or 'giriş', set as 'Giriş'
+            if ($yon_lower === 'giris' || $yon_lower === 'giriş') {
+                $movement['yon'] = 'Giriş';
+            }
+            // If lowercase contains 'cikis' or 'çıkış', set as 'Çıkış'
+            elseif ($yon_lower === 'cikis' || $yon_lower === 'çıkış') {
+                $movement['yon'] = 'Çıkış';
+            }
+            // Otherwise, keep original value
+            else {
+                $movement['yon'] = $yon_value;
+            }
+
             echo json_encode(['status' => 'success', 'data' => $movement]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Stok hareketi bulunamadı.']);
@@ -245,6 +264,25 @@ switch ($action) {
         $movements = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
+                // Normalize the 'yon' field to ensure consistent values
+                // Handle Turkish specific variations: 'Giriş' stays as 'Giriş', 'Çıkış' stays as 'Çıkış'
+                $yon_value = $row['yon'];
+                // Convert to lowercase for comparison but preserve original case for display
+                $yon_lower = mb_strtolower($yon_value, 'UTF-8');
+
+                // If lowercase contains 'giris' or 'giriş', set as 'Giriş'
+                if ($yon_lower === 'giris' || $yon_lower === 'giriş') {
+                    $row['yon'] = 'Giriş';
+                }
+                // If lowercase contains 'cikis' or 'çıkış', set as 'Çıkış'
+                elseif ($yon_lower === 'cikis' || $yon_lower === 'çıkış') {
+                    $row['yon'] = 'Çıkış';
+                }
+                // Otherwise, keep original value
+                else {
+                    $row['yon'] = $yon_value;
+                }
+
                 $movements[] = $row;
             }
         }

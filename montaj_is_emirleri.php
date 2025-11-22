@@ -14,7 +14,7 @@ if ($_SESSION['taraf'] !== 'personel') {
 }
 
 // Fetch all assembly work orders
-$work_orders_query = "SELECT * FROM montaj_is_emirleri ORDER BY olusturulma_tarihi DESC";
+$work_orders_query = "SELECT * FROM montaj_is_emirleri ORDER BY is_emri_numarasi DESC";
 $work_orders_result = $connection->query($work_orders_query);
 
 // Calculate total work orders

@@ -223,6 +223,17 @@ if (!yetkisi_var('page:view:raporlar')) {
                     </div>
                 </a>
             </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="montaj_detay_raporu.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-chart-bar icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Montaj Detay ve Erişim</h5>
+                            <p class="card-text mb-0">Detaylı montaj analizleri ve sistem erişim bilgileri.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
 
     </div>

@@ -96,27 +96,27 @@ function getWorkOrders() {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
         $offset = ($page - 1) * $limit;
         
-        // Count total records for the last 1000 by creation date
+        // Count total records for the last 1000 by work order number
         $count_query = "SELECT COUNT(*) as total FROM (
-            SELECT is_emri_numarasi FROM montaj_is_emirleri 
-            ORDER BY olusturulma_tarihi DESC 
+            SELECT is_emri_numarasi FROM montaj_is_emirleri
+            ORDER BY is_emri_numarasi DESC
             LIMIT 1000
         ) AS subquery";
         $count_result = $connection->query($count_query);
         $total_records = $count_result->fetch_assoc()['total'];
-        
-        // Fetch last 1000 records by creation date with pagination
+
+        // Fetch last 1000 records by work order number with pagination
         // Join with is_merkezleri to get the work center name
-        $query = "SELECT m.*, 
-                         COALESCE(im.isim, '') as montaj_alani_ismi, 
+        $query = "SELECT m.*,
+                         COALESCE(im.isim, '') as montaj_alani_ismi,
                          COALESCE(im.isim, '') as montaj_alani_kodu
                   FROM (
-                      SELECT * FROM montaj_is_emirleri 
-                      ORDER BY olusturulma_tarihi DESC 
+                      SELECT * FROM montaj_is_emirleri
+                      ORDER BY is_emri_numarasi DESC
                       LIMIT 1000
                   ) AS m
                   LEFT JOIN is_merkezleri im ON m.is_merkezi_id = im.is_merkezi_id
-                  ORDER BY m.olusturulma_tarihi DESC 
+                  ORDER BY m.is_emri_numarasi DESC
                   LIMIT $limit OFFSET $offset";
         
         $result = $connection->query($query);
@@ -281,26 +281,29 @@ function createWorkOrder() {
         
         // Set planlanan_bitis_tarihi same as planlanan_baslangic_tarihi for assembly orders
         $work_order['planlanan_bitis_tarihi'] = $work_order['planlanan_baslangic_tarihi'];
-        
+
+        // Calculate eksik_miktar_toplami as planned amount when creating
+        $work_order['eksik_miktar_toplami'] = $work_order['planlanan_miktar'];
+
         // Begin transaction
         $connection->begin_transaction();
-        
+
         // Insert work order
-        $query = "INSERT INTO montaj_is_emirleri (olusturulma_tarihi, olusturan, urun_kodu, urun_ismi, 
-                  planlanan_miktar, birim, planlanan_baslangic_tarihi, planlanan_bitis_tarihi, 
-                  aciklama, durum, tamamlanan_miktar, eksik_miktar_toplami, is_merkezi_id) 
-                  VALUES ('" . $connection->real_escape_string($work_order['olusturulma_tarihi']) . "', 
-                  '" . $connection->real_escape_string($user) . "', 
-                  '" . $connection->real_escape_string($work_order['urun_kodu']) . "', 
-                  '" . $connection->real_escape_string($work_order['urun_ismi']) . "', 
-                  '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "', 
-                  '" . $connection->real_escape_string($work_order['birim']) . "', 
-                  '" . $connection->real_escape_string($work_order['planlanan_baslangic_tarihi']) . "', 
-                  '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "', 
-                  '" . $connection->real_escape_string($work_order['aciklama']) . "', 
-                  '" . $connection->real_escape_string($work_order['durum']) . "', 
-                  '" . $connection->real_escape_string($work_order['tamamlanan_miktar']) . "', 
-                  '" . $connection->real_escape_string($work_order['eksik_miktar_toplami']) . "', 
+        $query = "INSERT INTO montaj_is_emirleri (olusturulma_tarihi, olusturan, urun_kodu, urun_ismi,
+                  planlanan_miktar, birim, planlanan_baslangic_tarihi, planlanan_bitis_tarihi,
+                  aciklama, durum, tamamlanan_miktar, eksik_miktar_toplami, is_merkezi_id)
+                  VALUES ('" . $connection->real_escape_string($work_order['olusturulma_tarihi']) . "',
+                  '" . $connection->real_escape_string($user) . "',
+                  '" . $connection->real_escape_string($work_order['urun_kodu']) . "',
+                  '" . $connection->real_escape_string($work_order['urun_ismi']) . "',
+                  '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "',
+                  '" . $connection->real_escape_string($work_order['birim']) . "',
+                  '" . $connection->real_escape_string($work_order['planlanan_baslangic_tarihi']) . "',
+                  '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "',
+                  '" . $connection->real_escape_string($work_order['aciklama']) . "',
+                  '" . $connection->real_escape_string($work_order['durum']) . "',
+                  '" . $connection->real_escape_string($work_order['tamamlanan_miktar']) . "',
+                  '" . $connection->real_escape_string($work_order['eksik_miktar_toplami']) . "',
                   '" . $connection->real_escape_string($work_order['is_merkezi_id'] ?? $work_order['montaj_alani_kodu']) . "')";
         
         if ($connection->query($query)) {
@@ -350,18 +353,24 @@ function updateWorkOrder() {
         
         // Begin transaction
         $connection->begin_transaction();
-        
-        // Update work order
-        $query = "UPDATE montaj_is_emirleri 
-                  SET olusturan = '" . $connection->real_escape_string($user) . "', 
-                      urun_kodu = '" . $connection->real_escape_string($work_order['urun_kodu']) . "', 
-                      urun_ismi = '" . $connection->real_escape_string($work_order['urun_ismi']) . "', 
-                      planlanan_miktar = '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "', 
-                      birim = '" . $connection->real_escape_string($work_order['birim']) . "', 
-                      planlanan_baslangic_tarihi = '" . $connection->real_escape_string($work_order['planlanan_baslangic_tarihi']) . "', 
-                      planlanan_bitis_tarihi = '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "', 
-                      aciklama = '" . $connection->real_escape_string($work_order['aciklama'] ?? '') . "', 
+
+        // Update work order - calculate eksik_miktar_toplami based on current status
+        // If status is 'olusturuldu' or 'uretimde', eksik_miktar_toplami should be the planned amount minus completed amount
+        // If status is 'tamamlandi', it should have been set during completion
+        $query = "UPDATE montaj_is_emirleri
+                  SET olusturan = '" . $connection->real_escape_string($user) . "',
+                      urun_kodu = '" . $connection->real_escape_string($work_order['urun_kodu']) . "',
+                      urun_ismi = '" . $connection->real_escape_string($work_order['urun_ismi']) . "',
+                      planlanan_miktar = '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "',
+                      birim = '" . $connection->real_escape_string($work_order['birim']) . "',
+                      planlanan_baslangic_tarihi = '" . $connection->real_escape_string($work_order['planlanan_baslangic_tarihi']) . "',
+                      planlanan_bitis_tarihi = '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "',
+                      aciklama = '" . $connection->real_escape_string($work_order['aciklama'] ?? '') . "',
                       durum = '" . $connection->real_escape_string($work_order['durum']) . "',
+                      eksik_miktar_toplami = CASE
+                          WHEN durum = 'tamamlandi' THEN '" . $connection->real_escape_string($work_order['eksik_miktar_toplami']) . "'
+                          ELSE planlanan_miktar - tamamlanan_miktar
+                      END,
                       is_merkezi_id = '" . $connection->real_escape_string($work_order['is_merkezi_id'] ?? $work_order['montaj_alani_kodu']) . "'
                   WHERE is_emri_numarasi = '" . $connection->real_escape_string($work_order['is_emri_numarasi']) . "'";
         
@@ -582,9 +591,10 @@ function startWorkOrder() {
 
         // 1. Update work order status
         $today = date('Y-m-d');
-        $update_wo_query = "UPDATE montaj_is_emirleri 
-                            SET durum = 'uretimde', 
-                                gerceklesen_baslangic_tarihi = '$today'
+        $update_wo_query = "UPDATE montaj_is_emirleri
+                            SET durum = 'uretimde',
+                                gerceklesen_baslangic_tarihi = '$today',
+                                eksik_miktar_toplami = planlanan_miktar  -- When starting, all planned amount is missing until completion
                             WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
                             AND durum = 'olusturuldu'";
         
@@ -666,9 +676,10 @@ function revertWorkOrder() {
         $connection->begin_transaction();
 
         // 1. Update work order status
-        $update_wo_query = "UPDATE montaj_is_emirleri 
-                            SET durum = 'olusturuldu', 
-                                gerceklesen_baslangic_tarihi = NULL
+        $update_wo_query = "UPDATE montaj_is_emirleri
+                            SET durum = 'olusturuldu',
+                                gerceklesen_baslangic_tarihi = NULL,
+                                eksik_miktar_toplami = planlanan_miktar  -- When reverted back to 'olusturuldu', all planned amount is missing again
                             WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
                             AND durum = 'uretimde'";
         
@@ -733,14 +744,15 @@ function revertWorkOrder() {
 
 function completeWorkOrder() {
     global $connection;
-    
+
     $input = json_decode(file_get_contents('php://input'), true);
-    
+
     $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
     $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
+    $eksik_miktar_toplami = $input['eksik_miktar_toplami'] ?? 0;
     $aciklama = $input['aciklama'] ?? '';
-    
-    if (!$is_emri_numarasi || $tamamlanan_miktar <= 0) {
+
+    if (!$is_emri_numarasi || $tamamlanan_miktar < 0) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz veri. İş emri numarası ve tamamlanan miktar gereklidir.']);
         return;
     }
@@ -757,12 +769,16 @@ function completeWorkOrder() {
         }
         $work_order = $work_order_result->fetch_assoc();
 
-        // 2. Update work order status
+        // 2. Update work order status - calculate eksik_miktar_toplami if not provided
         $today = date('Y-m-d');
-        $update_wo_query = "UPDATE montaj_is_emirleri SET 
-                            durum = 'tamamlandi', 
-                            tamamlanan_miktar = '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
-                            gerceklesen_bitis_tarihi = '$today', 
+        if ($eksik_miktar_toplami === null || $eksik_miktar_toplami < 0) {
+            $eksik_miktar_toplami = max(0, floatval($work_order['planlanan_miktar']) - floatval($tamamlanan_miktar));
+        }
+        $update_wo_query = "UPDATE montaj_is_emirleri SET
+                            durum = 'tamamlandi',
+                            tamamlanan_miktar = '" . $connection->real_escape_string($tamamlanan_miktar) . "',
+                            eksik_miktar_toplami = '" . $connection->real_escape_string($eksik_miktar_toplami) . "',
+                            gerceklesen_bitis_tarihi = '$today',
                             aciklama = CONCAT(aciklama, ' " . $connection->real_escape_string($aciklama) . "')
                           WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
         if (!$connection->query($update_wo_query)) {
@@ -864,9 +880,10 @@ function revertCompletion() {
         }
 
         // 4. Update work order status
-        $update_wo_query = "UPDATE montaj_is_emirleri SET 
-                            durum = 'uretimde', 
+        $update_wo_query = "UPDATE montaj_is_emirleri SET
+                            durum = 'uretimde',
                             tamamlanan_miktar = 0,
+                            eksik_miktar_toplami = '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "',
                             gerceklesen_bitis_tarihi = NULL
                           WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
         if (!$connection->query($update_wo_query)) {
