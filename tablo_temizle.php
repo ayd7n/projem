@@ -109,6 +109,24 @@ if ($_SESSION['taraf'] !== 'personel') {
         .badge-count {
             font-size: 0.75rem;
         }
+        .modal-fullscreen {
+            width: 100%;
+            max-width: none;
+            height: 100%;
+            margin: 0;
+        }
+        .modal-fullscreen .modal-content {
+            height: 100%;
+            border: 0;
+            border-radius: 0;
+        }
+        .modal-fullscreen .modal-body {
+            overflow-y: auto;
+            max-height: calc(100vh - 120px) !important; /* Adjust for header/footer */
+        }
+        #dataTable th, #dataTable td {
+            white-space: nowrap;
+        }
     </style>
 </head>
 <body>
@@ -170,13 +188,13 @@ if ($_SESSION['taraf'] !== 'personel') {
     </div>
 
     <!-- View Data Modal -->
-    <div class="modal fade" id="viewDataModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-xl" role="document"><div class="modal-content">
+    <div class="modal fade" id="viewDataModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-fullscreen" role="document"><div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="viewDataModalTitle">Tablo Verileri</h5>
                 <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
             </div>
-            <div class="modal-body p-0" id="viewDataContent" style="max-height: 70vh; overflow-y: auto;">
+            <div class="modal-body p-0" id="viewDataContent">
                 <!-- Content will be loaded here -->
             </div>
             <div class="modal-footer">
