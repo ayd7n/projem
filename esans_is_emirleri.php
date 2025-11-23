@@ -654,7 +654,7 @@ $tanks_result = $connection->query($tanks_query);
                             <tr v-else v-for="workOrder in workOrders" :key="workOrder.is_emri_numarasi">
                                 <td class="actions">
                                     <div class="dropdown">
-                                        <button class="btn btn-sm dropdown-toggle btn-gradient" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        <button class="btn btn-sm dropdown-toggle btn-danger" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                             <i class="fas fa-cogs"></i> Islemler
                                         </button>
                                         <div class="dropdown-menu">

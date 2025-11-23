@@ -1,4 +1,5 @@
 <?php
+date_default_timezone_set('Europe/Istanbul');
 // Database configuration
 if (!defined('DB_HOST')) {
     define('DB_HOST', 'localhost');

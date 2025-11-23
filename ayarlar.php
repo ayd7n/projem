@@ -200,8 +200,20 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                 </a>
             </div>
             <?php endif; ?>
-            
-            <!-- Maintenance Mode Card -->
+            <?php if (yetkisi_var('action:ayarlar:backup')): ?>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="tablo_temizle.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-eraser icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Tablo Temizle</h5>
+                            <p class="card-text mb-0">Veritabanı tablolarını seçerek temizleyin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <?php endif; ?>
+
             <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): ?>
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="settings-form-card">
