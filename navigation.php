@@ -161,13 +161,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         main {
-            padding: 4rem 0;
+            padding: 2rem 0;
             flex-grow: 1;
         }
 
         .page-header {
             text-align: center;
-            margin-bottom: 4rem;
+            margin-bottom: 2rem;
             position: relative;
         }
 
@@ -191,7 +191,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-category {
-            margin-bottom: 4rem;
+            margin-bottom: 2rem;
             animation: fadeIn 0.6s ease-out forwards;
             opacity: 0;
         }
@@ -205,31 +205,31 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         .module-category:nth-child(7) { animation-delay: 0.7s; }
 
         .module-category h3 {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            margin-bottom: 2rem;
-            padding-left: 1rem;
-            border-left: 5px solid var(--accent);
+            margin-bottom: 1.2rem;
+            padding-left: 0.8rem;
+            border-left: 4px solid var(--accent);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 0.8rem;
             color: var(--primary);
             background: linear-gradient(to right, rgba(74, 14, 99, 0.05), transparent);
-            padding: 1rem;
-            border-radius: 0 12px 12px 0;
+            padding: 0.7rem 0.8rem;
+            border-radius: 0 8px 8px 0;
         }
 
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 1.2rem;
         }
 
         .module-card {
             background: var(--card-bg);
             border: none;
-            border-radius: 20px;
-            padding: 2rem;
+            border-radius: 14px;
+            padding: 1.2rem;
             text-decoration: none;
             color: var(--text-primary);
             text-align: left;
@@ -237,7 +237,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             box-shadow: var(--shadow-sm);
             display: flex;
             align-items: flex-start;
-            gap: 1.5rem;
+            gap: 1rem;
             position: relative;
             overflow: hidden;
             z-index: 1;
@@ -266,18 +266,18 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-card .icon {
-            font-size: 1.8rem;
+            font-size: 1.3rem;
             color: white;
             background: var(--gradient-primary);
-            border-radius: 16px;
-            width: 64px;
-            height: 64px;
+            border-radius: 10px;
+            width: 44px;
+            height: 44px;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             transition: var(--transition);
-            box-shadow: 0 8px 16px rgba(74, 14, 99, 0.2);
+            box-shadow: 0 4px 8px rgba(74, 14, 99, 0.2);
         }
 
         .module-card:hover .icon {
@@ -290,17 +290,17 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-card .card-content .title {
-            font-size: 1.2rem;
+            font-size: 0.95rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             color: var(--primary);
             display: block;
         }
 
         .module-card .card-content .description {
-            font-size: 0.95rem;
+            font-size: 0.8rem;
             color: var(--text-secondary);
-            line-height: 1.6;
+            line-height: 1.5;
             margin: 0;
         }
 

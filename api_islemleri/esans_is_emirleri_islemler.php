@@ -147,7 +147,13 @@ function getEssences() {
     global $connection;
     
     try {
-        $query = "SELECT esans_kodu, esans_ismi, birim, demlenme_suresi_gun FROM esanslar ORDER BY esans_ismi";
+        // Sadece urun_agaci tablosunda agac_turu = "esans" olarak tanımlı esansları getir
+        // urun_agaci.urun_kodu = esanslar.esans_id eşleşmesi
+        $query = "SELECT DISTINCT e.esans_kodu, e.esans_ismi, e.birim, e.demlenme_suresi_gun 
+                  FROM esanslar e 
+                  INNER JOIN urun_agaci ua ON e.esans_id = ua.urun_kodu 
+                  WHERE ua.agac_turu = 'esans' 
+                  ORDER BY e.esans_ismi";
         $result = $connection->query($query);
         
         $essences = [];

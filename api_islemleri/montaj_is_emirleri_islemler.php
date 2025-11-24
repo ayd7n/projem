@@ -175,7 +175,12 @@ function getProducts() {
     global $connection;
     
     try {
-        $query = "SELECT urun_kodu, urun_ismi, birim FROM urunler ORDER BY urun_ismi";
+        // Sadece urun_agaci tablosunda agac_turu = "urun" olarak tanımlı ürünleri getir
+        $query = "SELECT DISTINCT u.urun_kodu, u.urun_ismi, u.birim 
+                  FROM urunler u 
+                  INNER JOIN urun_agaci ua ON u.urun_kodu = ua.urun_kodu 
+                  WHERE ua.agac_turu = 'urun' 
+                  ORDER BY u.urun_ismi";
         $result = $connection->query($query);
         
         $products = [];

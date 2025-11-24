@@ -187,7 +187,8 @@ app = new Vue({
                             malzeme_ismi: component.bilesen_ismi,
                             malzeme_turu: component.bilesenin_malzeme_turu,
                             miktar: calculatedAmount.toFixed(2),
-                            birim: this.essenceUnit // Use the essence unit instead of work order unit
+                            birim: this.essenceUnit, // Use the essence unit instead of work order unit
+                            bilesim_orani: component.bilesen_miktari // Bileşim oranı (formül oranı)
                         };
                     });
 

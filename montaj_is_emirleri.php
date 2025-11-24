@@ -781,6 +781,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     {{ product.urun_kodu }} - {{ product.urun_ismi }}
                                                 </option>
                                             </select>
+                                            <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Sadece ürün ağacında tanımlı ürünler gösterilmektedir</small>
                                         </div>
                                     </div>
                                     <div class="col-md-6">
@@ -864,8 +865,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                         <td>{{ component.malzeme_kodu }}</td>
                                                         <td>{{ component.malzeme_ismi }}</td>
                                                         <td>{{ component.malzeme_turu }}</td>
-                                                        <td>{{ component.miktar }}</td>
-                                                        <td>{{ component.birim }}</td>
+                                                        <td>{{ component.miktar }} {{ component.birim }}</td>
+                                                        <td>{{ component.bilesim_orani || (component.miktar / selectedWorkOrder.planlanan_miktar).toFixed(4) }}</td>
                                                     </tr>
                                                 </tbody>
                                             </table>

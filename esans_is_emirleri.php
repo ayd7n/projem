@@ -50,6 +50,33 @@ $tanks_result = $connection->query($tanks_query);
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+    @media (min-width: 1200px) {
+        .modal-xl {
+            max-width: 100vw !important;
+            width: 100vw !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .modal-xl .modal-content {
+            height: auto !important;
+            max-height: 100vh !important;
+            border-radius: 0 !important;
+            border: none !important;
+            overflow-y: auto !important;
+        }
+        .modal-xl .modal-dialog {
+            display: flex !important;
+            align-items: flex-start !important;
+            min-height: calc(100% - (0.5rem * 2)) !important;
+            margin: 0 !important;
+        }
+        .modal.fade .modal-dialog.modal-xl {
+            transition: transform .3s ease-out !important;
+            transform: translate(0,0) !important;
+        }
+    }
+    </style>
 </head>
 <body>
     <!-- Navbar -->
@@ -617,7 +644,7 @@ $tanks_result = $connection->query($tanks_query);
                 <h2><i class="fas fa-list"></i> Esans Is Emirleri Listesi</h2>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="table-responsive" style="min-height: 300px;">
                     <table class="table table-hover">
                         <thead>
                             <tr>
@@ -813,6 +840,7 @@ $tanks_result = $connection->query($tanks_query);
                     </button>
                 </div>
                 <div class="modal-body">
+                    <form id="workOrderForm" @submit.prevent="saveWorkOrder">
                     <div class="row">
                         <div class="col-lg-7">
                             <div class="row">
@@ -825,12 +853,13 @@ $tanks_result = $connection->query($tanks_query);
                                                 {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
                                             </option>
                                         </select>
+                                        <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Sadece ürün ağacında tanımlı esanslar gösterilmektedir</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label for="planlanan_miktar">Planlanan Miktar *</label>
-                                        <input type="number" step="0.01" class="form-control" v-model.number="selectedWorkOrder.planlanan_miktar" @input="calculateComponents" required>
+                                        <input type="number" step="0.01" min="0.01" class="form-control" v-model.number="selectedWorkOrder.planlanan_miktar" @input="calculateComponents" required>
                                     </div>
                                 </div>
                             </div>
@@ -877,11 +906,8 @@ $tanks_result = $connection->query($tanks_query);
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label for="durum">Durum</label>
-                                        <select class="form-control" v-model="selectedWorkOrder.durum" :disabled="selectedWorkOrder.is_emri_numarasi">
+                                        <select class="form-control" v-model="selectedWorkOrder.durum" disabled>
                                             <option value="olusturuldu">Olusturuldu</option>
-                                            <option value="uretimde">Uretimde</option>
-                                            <option value="tamamlandi">Tamamlandi</option>
-                                            <option value="iptal">Iptal</option>
                                         </select>
                                     </div>
                                 </div>
@@ -914,8 +940,8 @@ $tanks_result = $connection->query($tanks_query);
                                                     <td>{{ component.malzeme_kodu }}</td>
                                                     <td>{{ component.malzeme_ismi }}</td>
                                                     <td>{{ component.malzeme_turu }}</td>
-                                                    <td>{{ component.miktar }}</td>
-                                                    <td>{{ component.birim }}</td>
+                                                    <td>{{ component.miktar }} {{ component.birim }}</td>
+                                                    <td>{{ component.bilesim_orani || (component.miktar / selectedWorkOrder.planlanan_miktar).toFixed(4) }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -927,10 +953,11 @@ $tanks_result = $connection->query($tanks_query);
                             </div>
                         </div>
                     </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> Iptal</button>
-                    <button type="button" class="btn btn-primary" @click="saveWorkOrder"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                    <button type="submit" form="workOrderForm" class="btn btn-primary"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
                 </div>
             </div>
         </div>
