@@ -207,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $urun_ismi = mysqli_real_escape_string($connection, $item['urun_ismi']);
                     $birim = mysqli_real_escape_string($connection, $item['birim']);
                     $adet = floatval($item['adet']); // decimal/miktar için
-                    $yon = mysqli_real_escape_string($connection, 'giriş');
+                    $yon = mysqli_real_escape_string($connection, 'giris');
                     $hareket_turu = mysqli_real_escape_string($connection, 'iptal_cikis');
                     $order_id = intval($siparis_id); // integer olarak - using a different variable to avoid overwriting
                     $aciklama = mysqli_real_escape_string($connection, 'Satış İptali - Müşteri siparişi');

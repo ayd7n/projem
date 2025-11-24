@@ -51,9 +51,8 @@ if ($_SESSION['taraf'] !== 'personel') {
             font-weight: 700;
         }
         .main-container {
-            max-width: 960px;
-            margin: 2rem auto;
-            padding: 0 15px;
+            margin: 2rem 0;
+            padding: 0 2rem;
         }
         .page-header {
             margin-bottom: 2rem;
@@ -83,7 +82,7 @@ if ($_SESSION['taraf'] !== 'personel') {
         }
         .table-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 0.5rem;
         }
         .table-item {
@@ -134,25 +133,25 @@ if ($_SESSION['taraf'] !== 'personel') {
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
-                <span class="navbar-toggler-icon"></span>
-            </button>
-            <div class="collapse navbar-collapse" id="navbarNavDropdown">
-                <ul class="navbar-nav ml-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="navigation.php">Ana Sayfa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="ayarlar.php">Ayarlar</a></li>
-                    <li class="nav-item"><a class="nav-link" href="change_password.php">Parolamı Değiştir</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
-                        </a>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                            <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNavDropdown">
+            <ul class="navbar-nav ml-auto align-items-center">
+                <li class="nav-item"><a class="nav-link" href="navigation.php">Ana Sayfa</a></li>
+                <li class="nav-item"><a class="nav-link" href="ayarlar.php">Ayarlar</a></li>
+                <li class="nav-item"><a class="nav-link" href="change_password.php">Parolamı Değiştir</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                    </a>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
+                        <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                    </div>
+                </li>
+            </ul>
         </div>
+    </div>
     </nav>
 
     <div class="main-container">
@@ -192,7 +191,12 @@ if ($_SESSION['taraf'] !== 'personel') {
         <div class="modal-dialog modal-fullscreen" role="document"><div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="viewDataModalTitle">Tablo Verileri</h5>
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mr-2" id="refreshTableBtn">
+                        <i class="fas fa-sync-alt"></i> Yenile
+                    </button>
+                    <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span></button>
+                </div>
             </div>
             <div class="modal-body p-0" id="viewDataContent">
                 <!-- Content will be loaded here -->
@@ -261,12 +265,14 @@ if ($_SESSION['taraf'] !== 'personel') {
                                             <input type="checkbox" class="custom-control-input table-checkbox" id="tbl_${table.name}" name="tables[]" value="${table.name}">
                                             <label class="custom-control-label" for="tbl_${table.name}">
                                                 <span class="text-truncate" title="${table.name}">${table.name}</span>
-                                                <span class="badge ${badgeClass} badge-count ml-2">${badgeText}</span>
                                             </label>
                                         </div>
-                                        <button type="button" class="btn btn-sm btn-link text-info view-data-btn p-0 ml-2" data-table="${table.name}" title="Verileri Gör">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
+                                        <div class="d-flex align-items-center">
+                                            <span class="badge badge-secondary badge-count mr-2">${table.rows}</span>
+                                            <button type="button" class="btn btn-sm btn-link text-info view-data-btn p-0" data-table="${table.name}" title="Verileri Gör">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>`;
                         });
@@ -311,13 +317,9 @@ if ($_SESSION['taraf'] !== 'personel') {
             });
         });
 
-        // View Data Logic
-        $(document).on('click', '.view-data-btn', function(e) {
-            e.preventDefault();
-            const tableName = $(this).data('table');
-            $('#viewDataModalTitle').text(tableName + ' - İlk 50 Kayıt');
+        // Function to load table data
+        function loadTableData(tableName) {
             $('#viewDataContent').html('<div class="text-center p-5"><i class="fas fa-spinner fa-spin fa-3x"></i><br>Veriler yükleniyor...</div>');
-            $('#viewDataModal').modal('show');
 
             $.ajax({
                 url: 'api_islemleri/tablo_temizle_islemler.php',
@@ -332,7 +334,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                         }
 
                         let tableHtml = '<div class="table-responsive p-3"><table id="dataTable" class="table table-sm table-bordered table-striped table-hover mb-0" style="width:100%"><thead class="thead-light"><tr>';
-                        
+
                         // Headers
                         response.columns.forEach(function(col) {
                             tableHtml += `<th>${col}</th>`;
@@ -351,7 +353,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                             tableHtml += '</tr>';
                         });
                         tableHtml += '</tbody></table></div>';
-                        
+
                         $('#viewDataContent').html(tableHtml);
 
                         // Initialize DataTables
@@ -372,6 +374,22 @@ if ($_SESSION['taraf'] !== 'personel') {
                     $('#viewDataContent').html('<div class="alert alert-danger m-3">Veriler yüklenirken bir hata oluştu.</div>');
                 }
             });
+        }
+
+        // View Data Logic
+        $(document).on('click', '.view-data-btn', function(e) {
+            e.preventDefault();
+            const tableName = $(this).data('table');
+            $('#viewDataModalTitle').text(tableName + ' - İlk 50 Kayıt');
+            $('#viewDataModal').modal('show');
+            loadTableData(tableName);
+        });
+
+        // Refresh Button
+        $(document).on('click', '#refreshTableBtn', function(e) {
+            e.preventDefault();
+            const tableName = $('#viewDataModalTitle').text().split(' - ')[0];
+            loadTableData(tableName);
         });
 
         // Modal Logic
