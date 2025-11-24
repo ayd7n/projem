@@ -72,17 +72,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error = "Only cancelled orders can be deleted.";
         }
-    }
-    elseif (isset($_POST['update'])) {
+    } elseif (isset($_POST['update'])) {
         // Debug logging for form submission
         error_log("DEBUG - Form submission initiated");
-        
+
         // Update order status
         $siparis_id = $_POST['siparis_id'];
         $durum = $_POST['durum'];
-        
+
         // More detailed debug logging for form submission
-        error_log("DEBUG - Form submission: siparis_id=$siparis_id, durum=$durum, user_id=".$_SESSION['user_id']);
+        error_log("DEBUG - Form submission: siparis_id=$siparis_id, durum=$durum, user_id=" . $_SESSION['user_id']);
         error_log("DEBUG - POST data: " . print_r($_POST, true));
 
         // Get the current status before update
@@ -133,7 +132,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $musteri_id = intval($order['musteri_id']);
                 $musteri_adi = mysqli_real_escape_string($connection, $order['musteri_adi']);
                 $order_stmt->close();
-                
+
                 // Get order items
                 $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
                 $items_stmt = $connection->prepare($items_query);
@@ -166,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
                         VALUES 
                         ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $order_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
-                    
+
                     if (!$connection->query($movement_query)) {
                         error_log("Failed to insert stock movement: " . $connection->error);
                     }
@@ -185,7 +184,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $musteri_id = intval($order['musteri_id']);
                 $musteri_adi = mysqli_real_escape_string($connection, $order['musteri_adi']);
                 $order_stmt->close();
-                
+
                 // Get order items
                 $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
                 $items_stmt = $connection->prepare($items_query);
@@ -218,7 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
                         VALUES 
                         ('$stok_turu', '$urun_kodu', '$urun_ismi', '$birim', $adet, '$yon', '$hareket_turu', $order_id, $musteri_id, '$musteri_adi', '$aciklama', $user_id, '$user_name')";
-                    
+
                     if (!$connection->query($movement_query)) {
                         error_log("Failed to insert reverse stock movement: " . $connection->error);
                     }
@@ -244,10 +243,22 @@ $filter = isset($_GET['filter']) ? $_GET['filter'] : 'beklemede';
 if ($filter !== 'tum') {
     $where_clauses[] = "durum = ?";
     switch ($filter) {
-        case 'beklemede': $params[] = 'beklemede'; $param_types .= 's'; break;
-        case 'onaylandi': $params[] = 'onaylandi'; $param_types .= 's'; break;
-        case 'iptal_edildi': $params[] = 'iptal_edildi'; $param_types .= 's'; break;
-        case 'tamamlandi': $params[] = 'tamamlandi'; $param_types .= 's'; break;
+        case 'beklemede':
+            $params[] = 'beklemede';
+            $param_types .= 's';
+            break;
+        case 'onaylandi':
+            $params[] = 'onaylandi';
+            $param_types .= 's';
+            break;
+        case 'iptal_edildi':
+            $params[] = 'iptal_edildi';
+            $param_types .= 's';
+            break;
+        case 'tamamlandi':
+            $params[] = 'tamamlandi';
+            $param_types .= 's';
+            break;
     }
 }
 
@@ -384,6 +395,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -397,46 +409,64 @@ if ($orders_result && $orders_result->num_rows > 0) {
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <style>
         :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
+            --primary: #4a0e63;
+            /* Deep Purple */
+            --secondary: #7c2a99;
+            /* Lighter Purple */
+            --accent: #d4af37;
+            /* Gold */
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
             --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
+            --bg-color: #fdf8f5;
+            /* Soft Cream */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
+            --text-primary: #111827;
+            /* Dark Gray/Black */
+            --text-secondary: #6b7280;
+            /* Medium Gray */
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         html {
             font-size: 15px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
         }
+
         .main-content {
             padding: 20px;
         }
+
         .page-header {
             margin-bottom: 25px;
         }
+
         .page-header h1 {
             font-size: 1.7rem;
             font-weight: 700;
             margin-bottom: 5px;
             color: var(--text-primary);
         }
+
         .page-header p {
             color: var(--text-secondary);
             font-size: 1rem;
         }
+
         .card {
             background: var(--card-bg);
             border-radius: 10px;
@@ -445,6 +475,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             margin-bottom: 25px;
             overflow: hidden;
         }
+
         .card-header {
             padding: 18px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -452,11 +483,13 @@ if ($orders_result && $orders_result->num_rows > 0) {
             align-items: center;
             justify-content: space-between;
         }
+
         .card-header h2 {
             font-size: 1.1rem;
             font-weight: 700;
             margin: 0;
         }
+
         .btn {
             padding: 8px 14px;
             border: none;
@@ -471,17 +504,21 @@ if ($orders_result && $orders_result->num_rows > 0) {
             font-size: 0.825rem;
             white-space: nowrap;
         }
+
         .btn:hover {
-             transform: translateY(-2px);
+            transform: translateY(-2px);
         }
+
         .btn-primary {
             background-color: var(--primary);
             color: white;
         }
+
         .btn-primary:hover {
             background-color: var(--secondary);
             box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
         }
+
         .add-btn {
             width: 40px;
             height: 40px;
@@ -492,14 +529,17 @@ if ($orders_result && $orders_result->num_rows > 0) {
             justify-content: center;
             gap: 0;
         }
+
         .btn-success {
             background-color: var(--success);
             color: white;
         }
+
         .btn-danger {
             background-color: var(--danger);
             color: white;
         }
+
         .alert {
             padding: 1rem;
             margin-bottom: 1.5rem;
@@ -507,16 +547,19 @@ if ($orders_result && $orders_result->num_rows > 0) {
             font-size: 0.9rem;
             border-left: 5px solid;
         }
+
         .alert-danger {
             background-color: #fff5f5;
             color: #c53030;
             border-color: #f56565;
         }
+
         .alert-success {
             background-color: #f0fff4;
             color: #2f855a;
             border-color: #48bb78;
         }
+
         .product-item {
             padding: 15px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -524,19 +567,23 @@ if ($orders_result && $orders_result->num_rows > 0) {
             justify-content: space-between;
             align-items: center;
         }
+
         .product-item:last-child {
             border-bottom: none;
         }
+
         .product-name {
             font-weight: 500;
             font-size: 1.05rem;
             color: var(--primary);
         }
+
         .add-to-cart-form {
             display: flex;
             gap: 10px;
             align-items: center;
         }
+
         .quantity-input {
             width: 70px;
             padding: 0.6rem 1rem;
@@ -546,11 +593,13 @@ if ($orders_result && $orders_result->num_rows > 0) {
             text-align: center;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
+
         .quantity-input:focus {
             outline: none;
             border-color: var(--accent);
             box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
         }
+
         .cart-item {
             padding: 15px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -558,16 +607,20 @@ if ($orders_result && $orders_result->num_rows > 0) {
             justify-content: space-between;
             align-items: center;
         }
+
         .cart-item:last-child {
             border-bottom: none;
         }
+
         .item-info h4 {
             margin-bottom: 5px;
         }
+
         .item-quantity {
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
+
         /* Cart panel that slides from right */
         #sepet {
             position: fixed;
@@ -577,36 +630,37 @@ if ($orders_result && $orders_result->num_rows > 0) {
             height: 100%;
             z-index: 1050;
             border-radius: 0;
-            box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
             transform: translateX(100%);
             transition: transform 0.3s ease;
             overflow-y: auto;
         }
-        
+
         #sepet.show {
             transform: translateX(0);
         }
-        
+
         .cart-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0,0,0,0.5);
+            background-color: rgba(0, 0, 0, 0.5);
             z-index: 1040;
             display: none;
         }
-        
+
         .cart-overlay.show {
             display: block;
         }
-        
+
         .empty-cart {
             text-align: center;
             padding: 30px 0;
             color: var(--text-secondary);
         }
+
         .empty-cart i {
             font-size: 3rem;
             margin-bottom: 15px;
@@ -614,44 +668,46 @@ if ($orders_result && $orders_result->num_rows > 0) {
             color: var(--primary);
             opacity: 0.3;
         }
+
         .cart-total {
             padding: 20px 20px;
             border-top: 2px solid var(--border-color);
             font-size: 1.3rem;
             font-weight: 700;
             text-align: right;
-            display: none; /* Hide total since we're hiding pricing */
+            display: none;
+            /* Hide total since we're hiding pricing */
         }
-        
+
         .order-filters {
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
         }
-        
+
         .order-filters .btn {
             padding: 8px 12px;
             font-size: 0.85rem;
             border-radius: 20px;
         }
-        
+
         .table th {
             border-top: none;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
         }
-        
+
         .table th i {
             margin-right: 6px;
         }
-        
+
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
         }
-        
+
         .actions {
             display: flex;
             flex-direction: column;
@@ -659,7 +715,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             justify-content: center;
             align-items: center;
         }
-        
+
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
@@ -667,13 +723,13 @@ if ($orders_result && $orders_result->num_rows > 0) {
             overflow: hidden;
             text-overflow: ellipsis;
         }
-        
+
         @media (min-width: 768px) {
             .actions {
                 flex-direction: row;
             }
         }
-        
+
         .no-orders-container {
             display: flex;
             flex-direction: column;
@@ -682,13 +738,13 @@ if ($orders_result && $orders_result->num_rows > 0) {
             padding: 40px 20px;
             text-align: center;
         }
-        
+
         .card-footer {
             padding: 1.5rem 1.25rem;
             background-color: #f8f9fa;
             border-top: 1px solid var(--border-color);
         }
-        
+
         .status-badge {
             padding: 6px 12px;
             border-radius: 20px;
@@ -696,14 +752,14 @@ if ($orders_result && $orders_result->num_rows > 0) {
             font-weight: 500;
             white-space: nowrap;
         }
-        
+
         .order-item {
             display: flex;
             justify-content: space-between;
             padding: 12px 0;
             border-bottom: 1px solid var(--border-color);
         }
-        
+
         .order-item:last-child {
             border-bottom: none;
         }
@@ -730,10 +786,12 @@ if ($orders_result && $orders_result->num_rows > 0) {
                 right: 0;
                 width: 320px;
                 height: 100%;
-                z-index: 1050; /* Higher than navbar */
+                z-index: 1050;
+                /* Higher than navbar */
                 border-radius: 0;
-                box-shadow: -5px 0 20px rgba(0,0,0,0.15);
+                box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
             }
+
             #sepet .card-body {
                 overflow-y: auto;
                 height: 100%;
@@ -741,6 +799,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
@@ -775,7 +834,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
     <!-- Main Content -->
     <div class="main-content">
         <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
+
         <div class="page-header d-flex justify-content-between align-items-center">
             <div>
                 <h1>Müşteri Siparişleri</h1>
@@ -883,22 +942,42 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                         <td><?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?></td>
                                         <td>
                                             <span class="status-badge 
-                                                <?php 
-                                                switch($order['durum']) {
-                                                    case 'beklemede': echo 'badge-warning bg-warning text-dark'; break;
-                                                    case 'onaylandi': echo 'badge-success bg-success'; break;
-                                                    case 'iptal_edildi': echo 'badge-danger bg-danger'; break;
-                                                    case 'tamamlandi': echo 'badge-info bg-info'; break;
-                                                    default: echo 'badge-secondary bg-secondary'; break;
+                                                <?php
+                                                switch ($order['durum']) {
+                                                    case 'beklemede':
+                                                        echo 'badge-warning bg-warning text-dark';
+                                                        break;
+                                                    case 'onaylandi':
+                                                        echo 'badge-success bg-success';
+                                                        break;
+                                                    case 'iptal_edildi':
+                                                        echo 'badge-danger bg-danger';
+                                                        break;
+                                                    case 'tamamlandi':
+                                                        echo 'badge-info bg-info';
+                                                        break;
+                                                    default:
+                                                        echo 'badge-secondary bg-secondary';
+                                                        break;
                                                 }
                                                 ?>">
                                                 <?php
-                                                switch($order['durum']) {
-                                                    case 'beklemede': echo '📋 Beklemede'; break;
-                                                    case 'onaylandi': echo '✅ Onaylandı'; break;
-                                                    case 'iptal_edildi': echo '❌ İptal Edildi'; break;
-                                                    case 'tamamlandi': echo '🏁 Tamamlandı'; break;
-                                                    default: echo $order['durum']; break;
+                                                switch ($order['durum']) {
+                                                    case 'beklemede':
+                                                        echo '📋 Beklemede';
+                                                        break;
+                                                    case 'onaylandi':
+                                                        echo '✅ Onaylandı';
+                                                        break;
+                                                    case 'iptal_edildi':
+                                                        echo '❌ İptal Edildi';
+                                                        break;
+                                                    case 'tamamlandi':
+                                                        echo '🏁 Tamamlandı';
+                                                        break;
+                                                    default:
+                                                        echo $order['durum'];
+                                                        break;
                                                 }
                                                 ?>
                                             </span>
@@ -920,35 +999,35 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                         <td><?php echo htmlspecialchars($order['olusturan_musteri']); ?></td>
                                         <td><?php echo htmlspecialchars($order['onaylayan_personel_adi'] ?: '-'); ?></td>
                                         <td><?php echo htmlspecialchars($order['aciklama'] ?: '-'); ?></td>
-                                                                                 <td>
-                                                                                    <div class="actions">
-                                                                                        <?php if (yetkisi_var('action:musteri_siparisleri:view')): ?>
-                                                                                            <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm">
-                                                                                                <i class="fas fa-eye"></i> Görüntüle
-                                                                                            </a>
-                                                                                        <?php endif; ?>
-                                        
-                                                                                                                                        <?php if ($order['durum'] === 'beklemede'): ?>
-                                        
-                                                                                                                                            <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
-                                        
-                                                                                                                                                <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-                                        
-                                                                                                                                                    <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-                                        
-                                                                                                                                                    <input type="hidden" name="durum" value="onaylandi">
-                                        
-                                                                                                                                                    <input type="hidden" name="update" value="1">
-                                        
-                                                                                                                                                    <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                        
-                                                                                                                                                        <i class="fas fa-check"></i> Onayla
-                                        
-                                                                                                                                                    </button>
-                                        
-                                                                                                                                                </form>
-                                        
-                                                                                                                                            <?php endif; ?>
+                                        <td>
+                                            <div class="actions">
+                                                <?php if (yetkisi_var('action:musteri_siparisleri:view')): ?>
+                                                    <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm">
+                                                        <i class="fas fa-eye"></i> Görüntüle
+                                                    </a>
+                                                <?php endif; ?>
+
+                                                <?php if ($order['durum'] === 'beklemede'): ?>
+
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
+
+                                                        <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+
+                                                            <input type="hidden" name="durum" value="onaylandi">
+
+                                                            <input type="hidden" name="update" value="1">
+
+                                                            <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+
+                                                                <i class="fas fa-check"></i> Onayla
+
+                                                            </button>
+
+                                                        </form>
+
+                                                    <?php endif; ?>
 
                                                     <?php if (yetkisi_var('action:musteri_siparisleri:cancel')): ?>
                                                         <form method="POST" class="d-inline cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
@@ -1017,111 +1096,111 @@ if ($orders_result && $orders_result->num_rows > 0) {
                 <?php endif; ?>
             </div>
         </div>
-        
+
         <!-- Pagination -->
         <?php if ($total_pages > 1 && $orders_result && $orders_result->num_rows > 0): ?>
-        <div class="card-footer">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center">
-                <div class="mb-2 mb-lg-0">
-                    <div class="d-flex align-items-center">
-                        <span class="text-muted mr-2">Sayfa başına:</span>
-                        <select id="itemsPerPage" class="form-control form-control-sm mr-3" style="width: auto;">
-                            <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
-                            <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
-                            <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
-                            <option value="50" <?php echo $limit == 50 ? 'selected' : ''; ?>>50</option>
-                        </select>
-                        <span class="text-muted ml-3">
-                            <?php
-                            $start_record = ($page - 1) * $limit + 1;
-                            $end_record = min($page * $limit, $total_rows);
-                            echo "Gösterilen: $start_record - $end_record / Toplam: $total_rows sipariş";
-                            ?>
-                        </span>
+            <div class="card-footer">
+                <div class="d-flex flex-column flex-lg-row justify-content-between align-items-center">
+                    <div class="mb-2 mb-lg-0">
+                        <div class="d-flex align-items-center">
+                            <span class="text-muted mr-2">Sayfa başına:</span>
+                            <select id="itemsPerPage" class="form-control form-control-sm mr-3" style="width: auto;">
+                                <option value="5" <?php echo $limit == 5 ? 'selected' : ''; ?>>5</option>
+                                <option value="10" <?php echo $limit == 10 ? 'selected' : ''; ?>>10</option>
+                                <option value="20" <?php echo $limit == 20 ? 'selected' : ''; ?>>20</option>
+                                <option value="50" <?php echo $limit == 50 ? 'selected' : ''; ?>>50</option>
+                            </select>
+                            <span class="text-muted ml-3">
+                                <?php
+                                $start_record = ($page - 1) * $limit + 1;
+                                $end_record = min($page * $limit, $total_rows);
+                                echo "Gösterilen: $start_record - $end_record / Toplam: $total_rows sipariş";
+                                ?>
+                            </span>
+                        </div>
+                    </div>
+                    <div>
+                        <nav aria-label="Order pagination">
+                            <ul class="pagination pagination-sm mb-0">
+                                <?php
+                                // Sanitize and get only the parameters we want to preserve in pagination
+                                $base_params = [];
+                                if (isset($_GET['filter']) && !empty($_GET['filter'])) {
+                                    $base_params['filter'] = htmlspecialchars($_GET['filter'], ENT_QUOTES, 'UTF-8');
+                                }
+                                if (isset($_GET['search']) && !empty($_GET['search'])) {
+                                    $base_params['search'] = htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8');
+                                }
+                                if (isset($_GET['date_from']) && !empty($_GET['date_from'])) {
+                                    $base_params['date_from'] = htmlspecialchars($_GET['date_from'], ENT_QUOTES, 'UTF-8');
+                                }
+                                if (isset($_GET['date_to']) && !empty($_GET['date_to'])) {
+                                    $base_params['date_to'] = htmlspecialchars($_GET['date_to'], ENT_QUOTES, 'UTF-8');
+                                }
+                                if (isset($_GET['limit']) && !empty($_GET['limit'])) {
+                                    $base_params['limit'] = (int)$_GET['limit'];
+                                }
+
+                                // Previous button
+                                $prev_disabled = ($page <= 1) ? 'disabled' : '';
+                                $prev_page = ($page > 1) ? $page - 1 : 1;
+                                $prev_url_params = http_build_query(array_merge($base_params, ['page' => $prev_page]));
+                                echo "<li class='page-item $prev_disabled'>";
+                                echo "<a class='page-link' href='?" . htmlspecialchars($prev_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Previous'>";
+                                echo "<span aria-hidden='true'>&laquo;</span>";
+                                echo "</a>";
+                                echo "</li>";
+
+                                // Page numbers with ellipsis logic
+                                $max_visible_pages = 5;
+                                $start_page = max(1, $page - floor($max_visible_pages / 2));
+                                $end_page = min($total_pages, $start_page + $max_visible_pages - 1);
+
+                                // Adjust start page if we're near the end
+                                if ($end_page - $start_page + 1 < $max_visible_pages) {
+                                    $start_page = max(1, $end_page - $max_visible_pages + 1);
+                                }
+
+                                // First page + ellipsis if needed
+                                if ($start_page > 1) {
+                                    $first_url_params = http_build_query(array_merge($base_params, ['page' => 1]));
+                                    echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($first_url_params, ENT_QUOTES, 'UTF-8') . "'>1</a></li>";
+                                    if ($start_page > 2) {
+                                        echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
+                                    }
+                                }
+
+                                // Page numbers
+                                for ($i = $start_page; $i <= $end_page; $i++) {
+                                    $active = ($i == $page) ? 'active' : '';
+                                    $page_url_params = http_build_query(array_merge($base_params, ['page' => $i]));
+                                    echo "<li class='page-item $active'><a class='page-link' href='?" . htmlspecialchars($page_url_params, ENT_QUOTES, 'UTF-8') . "'>$i</a></li>";
+                                }
+
+                                // Last page + ellipsis if needed
+                                if ($end_page < $total_pages) {
+                                    if ($end_page < $total_pages - 1) {
+                                        echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
+                                    }
+                                    $last_url_params = http_build_query(array_merge($base_params, ['page' => $total_pages]));
+                                    echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($last_url_params, ENT_QUOTES, 'UTF-8') . "'>$total_pages</a></li>";
+                                }
+
+                                // Next button
+                                $next_disabled = ($page >= $total_pages) ? 'disabled' : '';
+                                $next_page = ($page < $total_pages) ? $page + 1 : $total_pages;
+                                $next_url_params = http_build_query(array_merge($base_params, ['page' => $next_page]));
+                                echo "<li class='page-item $next_disabled'>";
+                                echo "<a class='page-link' href='?" . htmlspecialchars($next_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Next'>";
+                                echo "<span aria-hidden='true'>&raquo;</span>";
+                                echo "</a>";
+                                echo "</li>";
+                                ?>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
-                <div>
-                    <nav aria-label="Order pagination">
-                        <ul class="pagination pagination-sm mb-0">
-                            <?php
-                                    // Sanitize and get only the parameters we want to preserve in pagination
-                                    $base_params = [];
-                                    if (isset($_GET['filter']) && !empty($_GET['filter'])) {
-                                        $base_params['filter'] = htmlspecialchars($_GET['filter'], ENT_QUOTES, 'UTF-8');
-                                    }
-                                    if (isset($_GET['search']) && !empty($_GET['search'])) {
-                                        $base_params['search'] = htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8');
-                                    }
-                                    if (isset($_GET['date_from']) && !empty($_GET['date_from'])) {
-                                        $base_params['date_from'] = htmlspecialchars($_GET['date_from'], ENT_QUOTES, 'UTF-8');
-                                    }
-                                    if (isset($_GET['date_to']) && !empty($_GET['date_to'])) {
-                                        $base_params['date_to'] = htmlspecialchars($_GET['date_to'], ENT_QUOTES, 'UTF-8');
-                                    }
-                                    if (isset($_GET['limit']) && !empty($_GET['limit'])) {
-                                        $base_params['limit'] = (int)$_GET['limit'];
-                                    }
-                                    
-                                    // Previous button
-                                    $prev_disabled = ($page <= 1) ? 'disabled' : '';
-                                    $prev_page = ($page > 1) ? $page - 1 : 1;
-                                    $prev_url_params = http_build_query(array_merge($base_params, ['page' => $prev_page]));
-                                    echo "<li class='page-item $prev_disabled'>";
-                                    echo "<a class='page-link' href='?" . htmlspecialchars($prev_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Previous'>";
-                                    echo "<span aria-hidden='true'>&laquo;</span>";
-                                    echo "</a>";
-                                    echo "</li>";
-                                    
-                                    // Page numbers with ellipsis logic
-                                    $max_visible_pages = 5;
-                                    $start_page = max(1, $page - floor($max_visible_pages / 2));
-                                    $end_page = min($total_pages, $start_page + $max_visible_pages - 1);
-                                    
-                                    // Adjust start page if we're near the end
-                                    if ($end_page - $start_page + 1 < $max_visible_pages) {
-                                        $start_page = max(1, $end_page - $max_visible_pages + 1);
-                                    }
-                                    
-                                    // First page + ellipsis if needed
-                                    if ($start_page > 1) {
-                                        $first_url_params = http_build_query(array_merge($base_params, ['page' => 1]));
-                                        echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($first_url_params, ENT_QUOTES, 'UTF-8') . "'>1</a></li>";
-                                        if ($start_page > 2) {
-                                            echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
-                                        }
-                                    }
-                                    
-                                    // Page numbers
-                                    for ($i = $start_page; $i <= $end_page; $i++) {
-                                        $active = ($i == $page) ? 'active' : '';
-                                        $page_url_params = http_build_query(array_merge($base_params, ['page' => $i]));
-                                        echo "<li class='page-item $active'><a class='page-link' href='?" . htmlspecialchars($page_url_params, ENT_QUOTES, 'UTF-8') . "'>$i</a></li>";
-                                    }
-                                    
-                                    // Last page + ellipsis if needed
-                                    if ($end_page < $total_pages) {
-                                        if ($end_page < $total_pages - 1) {
-                                            echo "<li class='page-item disabled'><span class='page-link'>...</span></li>";
-                                        }
-                                        $last_url_params = http_build_query(array_merge($base_params, ['page' => $total_pages]));
-                                        echo "<li class='page-item'><a class='page-link' href='?" . htmlspecialchars($last_url_params, ENT_QUOTES, 'UTF-8') . "'>$total_pages</a></li>";
-                                    }
-                                    
-                                    // Next button
-                                    $next_disabled = ($page >= $total_pages) ? 'disabled' : '';
-                                    $next_page = ($page < $total_pages) ? $page + 1 : $total_pages;
-                                    $next_url_params = http_build_query(array_merge($base_params, ['page' => $next_page]));
-                                    echo "<li class='page-item $next_disabled'>";
-                                    echo "<a class='page-link' href='?" . htmlspecialchars($next_url_params, ENT_QUOTES, 'UTF-8') . "' aria-label='Next'>";
-                                    echo "<span aria-hidden='true'>&raquo;</span>";
-                                    echo "</a>";
-                                    echo "</li>";
-                            ?>
-                        </ul>
-                    </nav>
-                </div>
             </div>
-        </div>
         <?php endif; ?>
     </div>
 
@@ -1131,168 +1210,168 @@ if ($orders_result && $orders_result->num_rows > 0) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
-    $(document).ready(function() {
-        // Mobile menu toggle
-        const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-        const sidebar = document.querySelector('.sidebar');
-        
-        if (mobileMenuBtn) {
-            mobileMenuBtn.addEventListener('click', function() {
-                sidebar.classList.toggle('active');
+        $(document).ready(function() {
+            // Mobile menu toggle
+            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+            const sidebar = document.querySelector('.sidebar');
+
+            if (mobileMenuBtn) {
+                mobileMenuBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('active');
+                });
+            }
+
+            // Highlight active nav link
+            const currentPage = window.location.pathname.split('/').pop();
+            const navLinks = document.querySelectorAll('.nav-links a');
+
+            navLinks.forEach(link => {
+                const linkPage = link.getAttribute('href').split('/').pop();
+                if (currentPage === linkPage || (currentPage === '' && linkPage === 'index.php') || (currentPage === 'navigation.php' && linkPage === 'navigation.php')) {
+                    link.classList.add('active');
+                }
+            });
+        });
+
+        function confirmOnayla(siparis_id) {
+            console.log('confirmOnayla called with siparis_id:', siparis_id);
+            Swal.fire({
+                title: 'Siparişi Onaylamak İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Onaylayan personel bilgileri kaydedilecektir.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Onayla',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    console.log('Confirmation accepted for approval, trying to find form for siparis_id:', siparis_id);
+                    // Use data attribute selector which is more reliable
+                    var form = document.querySelector('form.approve-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        console.log('Approve form found, submitting...');
+                        form.submit();
+                    } else {
+                        console.error('Approve form not found for siparis_id: ' + siparis_id);
+                    }
+                }
             });
         }
 
-        // Highlight active nav link
-        const currentPage = window.location.pathname.split('/').pop();
-        const navLinks = document.querySelectorAll('.nav-links a');
-
-        navLinks.forEach(link => {
-            const linkPage = link.getAttribute('href').split('/').pop();
-            if (currentPage === linkPage || (currentPage === '' && linkPage === 'index.php') || (currentPage === 'navigation.php' && linkPage === 'navigation.php')) {
-                link.classList.add('active');
-            }
-        });
-    });
-
-    function confirmOnayla(siparis_id) {
-        console.log('confirmOnayla called with siparis_id:', siparis_id);
-        Swal.fire({
-            title: 'Siparişi Onaylamak İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Onaylayan personel bilgileri kaydedilecektir.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, Onayla',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                console.log('Confirmation accepted for approval, trying to find form for siparis_id:', siparis_id);
-                // Use data attribute selector which is more reliable
-                var form = document.querySelector('form.approve-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    console.log('Approve form found, submitting...');
-                    form.submit();
-                } else {
-                    console.error('Approve form not found for siparis_id: ' + siparis_id);
+        function confirmIptal(siparis_id) {
+            Swal.fire({
+                title: 'Siparişi İptal Etmek İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "İptal Edildi" olarak değiştirilecektir.<br>Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, İptal Et',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Use data attribute selector which is more reliable
+                    var form = document.querySelector('form.cancel-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        console.error('Form not found for siparis_id: ' + siparis_id);
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function confirmIptal(siparis_id) {
-        Swal.fire({
-            title: 'Siparişi İptal Etmek İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "İptal Edildi" olarak değiştirilecektir.<br>Bu işlem geri alınamaz!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, İptal Et',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Use data attribute selector which is more reliable
-                var form = document.querySelector('form.cancel-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    form.submit();
-                } else {
-                    console.error('Form not found for siparis_id: ' + siparis_id);
+        function confirmTamamla(siparis_id) {
+            Swal.fire({
+                title: 'Siparişi Tamamlamak İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Tamamlandı" olarak değiştirilecektir.<br>Stok hareketi oluşturulacak ve ürünler stoktan düşülecektir.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Tamamla',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Use data attribute selector which is more reliable
+                    var form = document.querySelector('form.complete-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        console.error('Form not found for siparis_id: ' + siparis_id);
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function confirmTamamla(siparis_id) {
-        Swal.fire({
-            title: 'Siparişi Tamamlamak İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Tamamlandı" olarak değiştirilecektir.<br>Stok hareketi oluşturulacak ve ürünler stoktan düşülecektir.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, Tamamla',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Use data attribute selector which is more reliable
-                var form = document.querySelector('form.complete-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    form.submit();
-                } else {
-                    console.error('Form not found for siparis_id: ' + siparis_id);
+        function confirmGeriAl(siparis_id) {
+            Swal.fire({
+                title: 'Tamamlanmış Siparişi Geri Almak İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Stok hareketleri geri alınacak ve ürünler tekrar stoğa eklenecektir.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Geri Al',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    // Use data attribute selector which is more reliable
+                    var form = document.querySelector('form.revert-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        console.error('Form not found for siparis_id: ' + siparis_id);
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function confirmGeriAl(siparis_id) {
-        Swal.fire({
-            title: 'Tamamlanmış Siparişi Geri Almak İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Onaylandı" olarak değiştirilecektir.<br>Stok hareketleri geri alınacak ve ürünler tekrar stoğa eklenecektir.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, Geri Al',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Use data attribute selector which is more reliable
-                var form = document.querySelector('form.revert-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    form.submit();
+        function confirmBeklemeyeAl(siparis_id) {
+            console.log('confirmBeklemeyeAl called with siparis_id:', siparis_id);
+            Swal.fire({
+                title: 'Onaylanmış Siparişi Beklemeye Almak İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Beklemede" olarak değiştirilecektir.<br>Onaylayan personel bilgileri sıfırlanacaktır.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Beklemeye Al',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    console.log('Confirmation accepted, trying to find form for siparis_id:', siparis_id);
+                    // Use data attribute selector which is more reliable
+                    var form = document.querySelector('form.revert-approval-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        console.log('Form found, submitting...');
+                        form.submit();
+                    } else {
+                        console.error('Form not found for siparis_id: ' + siparis_id);
+                    }
                 } else {
-                    console.error('Form not found for siparis_id: ' + siparis_id);
+                    console.log('User cancelled the action');
                 }
-            }
-        });
-    }
+            });
+        }
 
-    function confirmBeklemeyeAl(siparis_id) {
-        console.log('confirmBeklemeyeAl called with siparis_id:', siparis_id);
-        Swal.fire({
-            title: 'Onaylanmış Siparişi Beklemeye Almak İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>Sipariş durumu "Beklemede" olarak değiştirilecektir.<br>Onaylayan personel bilgileri sıfırlanacaktır.',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, Beklemeye Al',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                console.log('Confirmation accepted, trying to find form for siparis_id:', siparis_id);
-                // Use data attribute selector which is more reliable
-                var form = document.querySelector('form.revert-approval-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    console.log('Form found, submitting...');
-                    form.submit();
-                } else {
-                    console.error('Form not found for siparis_id: ' + siparis_id);
+        function confirmSil(siparis_id) {
+            Swal.fire({
+                title: 'Siparişi Silmek İstediğinize Emin Misiniz?',
+                html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>İptal edilmiş sipariş silinecektir.<br>Bu işlem geri alınamaz!',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Evet, Sil',
+                cancelButtonText: 'İptal',
+                reverseButtons: true
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var form = document.querySelector('form.delete-form[data-siparis-id="' + siparis_id + '"]');
+                    if (form) {
+                        form.submit();
+                    } else {
+                        console.error('Delete form not found for siparis_id: ' + siparis_id);
+                    }
                 }
-            } else {
-                console.log('User cancelled the action');
-            }
-        });
-    }
+            });
+        }
 
-    function confirmSil(siparis_id) {
-        Swal.fire({
-            title: 'Siparişi Silmek İstediğinize Emin Misiniz?',
-            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>İptal edilmiş sipariş silinecektir.<br>Bu işlem geri alınamaz!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonText: 'Evet, Sil',
-            cancelButtonText: 'İptal',
-            reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed) {
-                var form = document.querySelector('form.delete-form[data-siparis-id="' + siparis_id + '"]');
-                if (form) {
-                    form.submit();
-                } else {
-                    console.error('Delete form not found for siparis_id: ' + siparis_id);
-                }
-            }
-        });
-    }
-    
         // Handle items per page change
         document.addEventListener('DOMContentLoaded', function() {
             const itemsPerPageSelect = document.getElementById('itemsPerPage');
@@ -1308,4 +1387,5 @@ if ($orders_result && $orders_result->num_rows > 0) {
         });
     </script>
 </body>
+
 </html>
