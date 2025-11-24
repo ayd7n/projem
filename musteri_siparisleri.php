@@ -37,7 +37,43 @@ $error = '';
 
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (isset($_POST['update'])) {
+    if (isset($_POST['delete'])) {
+        $siparis_id = $_POST['siparis_id'];
+
+        // Check status to ensure only cancelled orders can be deleted
+        $check_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
+        $check_stmt = $connection->prepare($check_query);
+        $check_stmt->bind_param('i', $siparis_id);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+        $check_row = $check_result->fetch_assoc();
+        $check_stmt->close();
+
+        if ($check_row && $check_row['durum'] === 'iptal_edildi') {
+            // Delete order items first
+            $delete_items_query = "DELETE FROM siparis_kalemleri WHERE siparis_id = ?";
+            $delete_items_stmt = $connection->prepare($delete_items_query);
+            $delete_items_stmt->bind_param('i', $siparis_id);
+            $delete_items_stmt->execute();
+            $delete_items_stmt->close();
+
+            // Then delete the order
+            $delete_order_query = "DELETE FROM siparisler WHERE siparis_id = ?";
+            $delete_order_stmt = $connection->prepare($delete_order_query);
+            $delete_order_stmt->bind_param('i', $siparis_id);
+            if ($delete_order_stmt->execute()) {
+                $message = "Sipariş başarıyla silindi.";
+            } else {
+                $error = "Sipariş silinirken hata oluştu: " . $connection->error;
+            }
+            $delete_order_stmt->close();
+
+            error_log("DEBUG - Order deleted successfully: siparis_id=$siparis_id");
+        } else {
+            $error = "Only cancelled orders can be deleted.";
+        }
+    }
+    elseif (isset($_POST['update'])) {
         // Debug logging for form submission
         error_log("DEBUG - Form submission initiated");
         
@@ -280,6 +316,33 @@ if ($stmt) {
     $error = "SQL sorgusu prepare edilemedi: " . $connection->error;
     $orders_result = false;
 }
+
+// Get filter counts
+$beklemede_count_query = "SELECT COUNT(*) as count FROM siparisler WHERE durum = 'beklemede'";
+$beklemede_stmt = $connection->prepare($beklemede_count_query);
+$beklemede_stmt->execute();
+$beklemede_count = $beklemede_stmt->get_result()->fetch_assoc()['count'];
+$beklemede_stmt->close();
+
+$onaylandi_count_query = "SELECT COUNT(*) as count FROM siparisler WHERE durum = 'onaylandi'";
+$onaylandi_stmt = $connection->prepare($onaylandi_count_query);
+$onaylandi_stmt->execute();
+$onaylandi_count = $onaylandi_stmt->get_result()->fetch_assoc()['count'];
+$onaylandi_stmt->close();
+
+$iptal_edildi_count_query = "SELECT COUNT(*) as count FROM siparisler WHERE durum = 'iptal_edildi'";
+$iptal_edildi_stmt = $connection->prepare($iptal_edildi_count_query);
+$iptal_edildi_stmt->execute();
+$iptal_edildi_count = $iptal_edildi_stmt->get_result()->fetch_assoc()['count'];
+$iptal_edildi_stmt->close();
+
+$tamamlandi_count_query = "SELECT COUNT(*) as count FROM siparisler WHERE durum = 'tamamlandi'";
+$tamamlandi_stmt = $connection->prepare($tamamlandi_count_query);
+$tamamlandi_stmt->execute();
+$tamamlandi_count = $tamamlandi_stmt->get_result()->fetch_assoc()['count'];
+$tamamlandi_stmt->close();
+
+$total_count = $beklemede_count + $onaylandi_count + $iptal_edildi_count + $tamamlandi_count;
 
 // Fetch order items for display
 $orders_with_items = [];
@@ -751,25 +814,22 @@ if ($orders_result && $orders_result->num_rows > 0) {
 
         <!-- Status Filters -->
         <div class="card mb-4">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-filter"></i> Filtreler</h2>
-            </div>
             <div class="card-body">
                 <div class="order-filters mb-3">
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'beklemede']))); ?>" class="btn <?php echo $filter === 'beklemede' ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                        <i class="fas fa-clock"></i> Bekleyenler
+                        <i class="fas fa-clock"></i> Bekleyenler (<?php echo $beklemede_count; ?>)
                     </a>
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'onaylandi']))); ?>" class="btn <?php echo $filter === 'onaylandi' ? 'btn-success' : 'btn-outline-success'; ?>">
-                        <i class="fas fa-check"></i> Onaylanmış
+                        <i class="fas fa-check"></i> Onaylanmış (<?php echo $onaylandi_count; ?>)
                     </a>
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'iptal_edildi']))); ?>" class="btn <?php echo $filter === 'iptal_edildi' ? 'btn-danger' : 'btn-outline-danger'; ?>">
-                        <i class="fas fa-times"></i> İptal Edilmiş
+                        <i class="fas fa-times"></i> İptal Edilmiş (<?php echo $iptal_edildi_count; ?>)
                     </a>
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tamamlandi']))); ?>" class="btn <?php echo $filter === 'tamamlandi' ? 'btn-info' : 'btn-outline-info'; ?>">
-                        <i class="fas fa-check-double"></i> Tamamlanmış
+                        <i class="fas fa-check-double"></i> Tamamlanmış (<?php echo $tamamlandi_count; ?>)
                     </a>
                     <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tum']))); ?>" class="btn <?php echo !$filter || $filter === 'tum' ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                        <i class="fas fa-list"></i> Tümü
+                        <i class="fas fa-list"></i> Tümü (<?php echo $total_count; ?>)
                     </a>
                 </div>
 
@@ -934,6 +994,14 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                             </button>
                                                         </form>
                                                     <?php endif; ?>
+                                                <?php elseif ($order['durum'] === 'iptal_edildi'): ?>
+                                                    <form method="POST" class="d-inline delete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                        <input type="hidden" name="delete" value="1">
+                                                        <button type="button" name="delete" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmSil(<?php echo json_encode((int)$order['siparis_id']); ?>)">
+                                                            <i class="fas fa-trash"></i> Sil
+                                                        </button>
+                                                    </form>
                                                 <?php endif; ?>
                                             </div>
                                         </td>
@@ -1202,6 +1270,27 @@ if ($orders_result && $orders_result->num_rows > 0) {
                 }
             } else {
                 console.log('User cancelled the action');
+            }
+        });
+    }
+
+    function confirmSil(siparis_id) {
+        Swal.fire({
+            title: 'Siparişi Silmek İstediğinize Emin Misiniz?',
+            html: 'Sipariş ID: <strong>' + siparis_id + '</strong><br>İptal edilmiş sipariş silinecektir.<br>Bu işlem geri alınamaz!',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Evet, Sil',
+            cancelButtonText: 'İptal',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                var form = document.querySelector('form.delete-form[data-siparis-id="' + siparis_id + '"]');
+                if (form) {
+                    form.submit();
+                } else {
+                    console.error('Delete form not found for siparis_id: ' + siparis_id);
+                }
             }
         });
     }
