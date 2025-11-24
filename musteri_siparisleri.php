@@ -779,7 +779,6 @@ if ($orders_result && $orders_result->num_rows > 0) {
         <div class="page-header d-flex justify-content-between align-items-center">
             <div>
                 <h1>Müşteri Siparişleri</h1>
-                <p>Bu panel üzerinden müşteri siparişlerini yönetebilir, durumlarını güncelleyebilir ve takip edebilirsiniz.</p>
             </div>
             <a href="yeni_musteri_siparisi.php" class="btn btn-success">
                 <i class="fas fa-plus-circle"></i> Yeni Sipariş Oluştur
@@ -857,7 +856,6 @@ if ($orders_result && $orders_result->num_rows > 0) {
         <!-- Orders Table -->
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-table"></i> Sipariş Listesi</h2>
             </div>
             <div class="card-body">
                 <?php if ($orders_result && $orders_result->num_rows > 0): ?>

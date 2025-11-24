@@ -370,9 +370,9 @@ $chartData = getChartData();
                     radius: '50%',
                     data: [
                         <?php foreach($chartData['directions'] as $item): ?>
-                        { 
-                            value: <?php echo $item['count']; ?>, 
-                            name: <?php echo $item['yon'] === 'giris' ? '"Giriş"' : '"Çıkış"'; ?> 
+                        {
+                            value: <?php echo $item['count']; ?>,
+                            name: '<?php echo ($item['yon'] === 'giris') ? 'Giriş' : 'Çıkış'; ?>'
                         },
                         <?php endforeach; ?>
                     ],
