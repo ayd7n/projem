@@ -172,8 +172,8 @@ if (!yetkisi_var('page:view:manuel_stok_hareket')) {
                                     <td class="font-weight-bold">{{ formatNumber(movement.miktar) }}</td>
                                     <td>
                                         <span class="badge" 
-                                            :class="movement.yon === 'Giriş' ? 'badge-success' : 'badge-danger'">
-                                            {{ movement.yon === 'Giriş' ? 'Giriş' : 'Çıkış' }}
+                                            :class="movement.yon === 'giris' ? 'badge-success' : 'badge-danger'">
+                                            {{ movement.yon === 'giris' ? 'Giriş' : 'Çıkış' }}
                                         </span>
                                     </td>
                                     <td>{{ movement.hareket_turu }}</td>

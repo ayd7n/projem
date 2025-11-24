@@ -157,6 +157,7 @@ app = new Vue({
             // Find the essence details
             const essence = this.essences.find(e => e.esans_kodu === this.selectedWorkOrder.esans_kodu);
             if (essence) {
+                this.selectedWorkOrder.esans_ismi = essence.esans_ismi;
                 this.essenceUnit = essence.birim;
                 this.selectedWorkOrder.birim = essence.birim;
                 this.selectedWorkOrder.demlenme_suresi_gun = essence.demlenme_suresi_gun || 0;

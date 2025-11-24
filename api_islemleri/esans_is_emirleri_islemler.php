@@ -78,22 +78,22 @@ function getWorkOrders() {
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
         $offset = ($page - 1) * $limit;
         
-        // Count total records for the last 1000 by creation date
+        // Count total records for the last 1000 by ID
         $count_query = "SELECT COUNT(*) as total FROM (
             SELECT is_emri_numarasi FROM esans_is_emirleri 
-            ORDER BY olusturulma_tarihi DESC 
+            ORDER BY is_emri_numarasi DESC 
             LIMIT 1000
         ) AS subquery";
         $count_result = $connection->query($count_query);
         $total_records = $count_result->fetch_assoc()['total'];
         
-        // Fetch last 1000 records by creation date with pagination
+        // Fetch last 1000 records by ID with pagination
         $query = "SELECT * FROM (
             SELECT * FROM esans_is_emirleri 
-            ORDER BY olusturulma_tarihi DESC 
+            ORDER BY is_emri_numarasi DESC 
             LIMIT 1000
         ) AS subquery 
-        ORDER BY olusturulma_tarihi DESC 
+        ORDER BY is_emri_numarasi DESC 
         LIMIT $limit OFFSET $offset";
         
         $result = $connection->query($query);
@@ -225,6 +225,17 @@ function createWorkOrder() {
         // Begin transaction
         $connection->begin_transaction();
         
+        // Fetch essence name from the database to ensure data integrity
+        $esans_kodu = $connection->real_escape_string($work_order['esans_kodu']);
+        $esans_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = '$esans_kodu'";
+        $esans_result = $connection->query($esans_query);
+        if ($esans_result && $esans_row = $esans_result->fetch_assoc()) {
+            $esans_ismi = $esans_row['esans_ismi'];
+        } else {
+            // If not found, use the one from input as a fallback, though it might be empty
+            $esans_ismi = $work_order['esans_ismi'] ?? '';
+        }
+
         // Insert work order
         $query = "INSERT INTO esans_is_emirleri (olusturulma_tarihi, olusturan, esans_kodu, esans_ismi, tank_kodu, tank_ismi, 
                   planlanan_miktar, birim, planlanan_baslangic_tarihi, demlenme_suresi_gun, planlanan_bitis_tarihi, 
@@ -232,7 +243,7 @@ function createWorkOrder() {
                   VALUES ('" . $connection->real_escape_string($work_order['olusturulma_tarihi']) . "', 
                   '" . $connection->real_escape_string($user) . "', 
                   '" . $connection->real_escape_string($work_order['esans_kodu']) . "', 
-                  '" . $connection->real_escape_string($work_order['esans_ismi']) . "', 
+                  '" . $connection->real_escape_string($esans_ismi) . "', 
                   '" . $connection->real_escape_string($work_order['tank_kodu']) . "', 
                   '" . $connection->real_escape_string($work_order['tank_ismi']) . "', 
                   '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "', 
@@ -703,6 +714,7 @@ function completeWorkOrder() {
     
     $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
     $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
+    $eksik_miktar_toplami = $input['eksik_miktar_toplami'] ?? 0;
     $aciklama = $input['aciklama'] ?? '';
     
     if (!$is_emri_numarasi || $tamamlanan_miktar <= 0) {
@@ -727,6 +739,7 @@ function completeWorkOrder() {
         $update_wo_query = "UPDATE esans_is_emirleri SET 
                             durum = 'tamamlandi', 
                             tamamlanan_miktar = '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
+                            eksik_miktar_toplami = '" . $connection->real_escape_string($eksik_miktar_toplami) . "',
                             gerceklesen_bitis_tarihi = '$today', 
                             aciklama = CONCAT(aciklama, ' " . $connection->real_escape_string($aciklama) . "')
                           WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
