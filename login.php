@@ -47,7 +47,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['id'] = $customer['user_id'];
                 $_SESSION['kullanici_adi'] = $customer['kullanici_adi'];
                 $_SESSION['rol'] = 'musteri';
-                
+
+                // Log customer login
+                log_islem($connection, $customer['kullanici_adi'], "Müşteri giriş yaptı (E-posta/Telefon: $username)", 'Giriş Yapıldı');
+
                 header('Location: customer_panel.php');
                 exit;
             }
@@ -94,7 +97,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['izinler'] = $izinler;
                     $izin_stmt->close();
                 }
-                
+
+                // Log staff login
+                log_islem($connection, $staff['kullanici_adi'], "Personel giriş yaptı (E-posta/Telefon: $username)", 'Giriş Yapıldı');
+
                 header('Location: navigation.php');
                 exit;
             } else {
