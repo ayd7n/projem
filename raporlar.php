@@ -246,6 +246,17 @@ if (!yetkisi_var('page:view:raporlar')) {
                 </a>
             </div>
             <div class="col-md-6 col-lg-4 mb-4">
+                <a href="musteri_satis_raporu.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-chart-line icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Müşteri Satış Raporu</h5>
+                            <p class="card-text mb-0">Müşteri bazlı satış ve karlılık analizi.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
                 <a href="tedarikci_odeme_raporu.php" class="settings-card">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-money-bill-wave icon"></i>
