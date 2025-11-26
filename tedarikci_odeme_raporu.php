@@ -34,199 +34,169 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <!-- Apache ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
-    <link rel="stylesheet" href="assets/css/stil.css">
     <style>
-        .chart-container {
-            width: 100%;
-            height: 500px;
-            margin-bottom: 2rem;
+        :root {
+            --primary: #4a0e63;
+            --secondary: #7c2a99;
+            --accent: #d4af37;
+            --bg-color: #fdf8f5;
+            --card-bg: #ffffff;
+            --border-color: #e9ecef;
+            --text-primary: #111827;
+            --text-secondary: #6b7280;
+            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
+            --transition: all 0.3s ease;
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-size: 0.9rem;
+        }
+
+        .main-content {
+            padding: 1.5rem;
+        }
+
+        .page-header {
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .page-header h1 {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.5rem;
+            margin: 0;
         }
         
+        .exchange-rates {
+            font-size: 0.85rem;
+            background: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
         .stat-card {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border-radius: 10px;
-            padding: 1.5rem;
-            margin-bottom: 2rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
             box-shadow: var(--shadow);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            height: 100%;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
         }
         
+        .stat-card .icon-wrapper {
+            background-color: rgba(255, 255, 255, 0.2);
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.2rem;
+        }
+
         .stat-card h3 {
-            font-size: 2.5rem;
+            font-size: 1.5rem;
             margin: 0;
             font-weight: 700;
         }
-        
+
         .stat-card p {
             margin: 0;
             opacity: 0.9;
-            font-size: 1rem;
-        }
-        
-        .table-container {
-            max-height: 600px;
-            overflow-y: auto;
-        }
-        
-        .currency-badge {
-            display: inline-block;
-            padding: 0.25rem 0.5rem;
-            border-radius: 4px;
             font-size: 0.85rem;
-            font-weight: 600;
         }
-        
-        .badge-tl {
-            background-color: #17a2b8;
-            color: white;
-        }
-        
-        .badge-usd {
-            background-color: #28a745;
-            color: white;
-        }
-        
-        .badge-eur {
-            background-color: #ffc107;
-            color: #333;
-        }
-        
-        /* Disable word wrap for table cells */
-        table th,
-        table td {
-            white-space: nowrap;
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border-color);
+            margin-bottom: 1.5rem;
             overflow: hidden;
-            text-overflow: ellipsis;
+        }
+
+        .card-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            background-color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 350px;
+        }
+
+        .table th {
+            border-top: none;
+            border-bottom: 2px solid var(--border-color);
+            font-weight: 700;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            padding: 0.75rem;
+        }
+
+        .table td {
+            vertical-align: middle;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 0.5rem 0.75rem;
         }
         
-        /* Pagination styles */
+        .badge-currency {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+        }
+        
+        .badge-tl { background-color: #e3f2fd; color: #0d47a1; }
+        .badge-usd { background-color: #e8f5e9; color: #1b5e20; }
+        .badge-eur { background-color: #fff3e0; color: #e65100; }
+
         .pagination-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 1rem;
-            padding: 0.5rem 0;
-            flex-wrap: wrap;
-            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            font-size: 0.85rem;
         }
         
-        .pagination {
-            margin: 0;
+        .pagination .page-link {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.85rem;
+            color: var(--primary);
         }
         
-        .page-info {
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-        
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            .chart-container {
-                height: 350px;
-            }
-            
-            .stat-card h3 {
-                font-size: 1.8rem;
-            }
-            
-            .stat-card p {
-                font-size: 0.9rem;
-            }
-            
-            .stat-card {
-                padding: 1rem;
-            }
-            
-            .page-header h1 {
-                font-size: 1.5rem;
-            }
-            
-            .page-header p {
-                font-size: 0.9rem;
-            }
-            
-            .card-header h2 {
-                font-size: 1.2rem;
-            }
-            
-            .table-responsive {
-                overflow-x: auto;
-                -webkit-overflow-scrolling: touch;
-            }
-            
-            table {
-                font-size: 0.85rem;
-            }
-            
-            table th,
-            table td {
-                padding: 0.5rem;
-            }
-            
-            .pagination-container {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            
-            .pagination {
-                width: 100%;
-                justify-content: center;
-            }
-            
-            .page-info {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 0.5rem;
-            }
-            
-            .search-container {
-                margin-top: 0.5rem;
-            }
-            
-            .alert {
-                font-size: 0.9rem;
-            }
-            
-            .alert h5 {
-                font-size: 1rem;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .chart-container {
-                height: 300px;
-            }
-            
-            .stat-card h3 {
-                font-size: 1.5rem;
-            }
-            
-            .stat-card {
-                padding: 0.75rem;
-            }
-            
-            .page-header h1 {
-                font-size: 1.3rem;
-            }
-            
-            table {
-                font-size: 0.75rem;
-            }
-            
-            table th,
-            table td {
-                padding: 0.4rem;
-            }
-            
-            .pagination .page-link {
-                padding: 0.4rem 0.6rem;
-                font-size: 0.85rem;
-            }
-            
-            .currency-badge {
-                font-size: 0.75rem;
-                padding: 0.2rem 0.4rem;
-            }
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary);
+            border-color: var(--primary);
+            color: white;
         }
     </style>
 </head>
@@ -246,9 +216,6 @@ if (!yetkisi_var('page:view:raporlar')) {
                     <li class="nav-item">
                         <a class="nav-link" href="raporlar.php">Raporlar</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
-                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
@@ -262,205 +229,160 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
     </nav>
 
-    <!-- Main Content -->
     <div class="main-content">
         <div class="page-header">
-            <div>
-                <h1><i class="fas fa-money-bill-wave"></i> Tedarikçi Ödeme Raporu</h1>
-                <p>Tedarikçilere yapılan ödemeleri TL bazında analiz edin</p>
+            <h1><i class="fas fa-file-invoice-dollar"></i> Tedarikçi Ödeme Raporu</h1>
+            <div class="exchange-rates">
+                <i class="fas fa-exchange-alt text-muted mr-2"></i>
+                <strong>USD:</strong> <span id="usdRate">-</span> ₺ &nbsp;|&nbsp;
+                <strong>EUR:</strong> <span id="eurRate">-</span> ₺
             </div>
-        </div>
-
-        <!-- Rapor Açıklaması -->
-        <div class="alert alert-info" role="alert">
-            <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Rapor Hakkında</h5>
-            <p class="mb-0">
-                Bu rapor, çerçeve sözleşmeler kapsamında tedarikçilere yapılan tüm ödemeleri gösterir. 
-                Farklı para birimlerindeki (TL, USD, EUR) ödemeler, güncel döviz kurları kullanılarak Türk Lirası'na çevrilir ve tedarikçi bazında toplanır. 
-                Böylece hangi tedarikçiye toplam ne kadar ödeme yapıldığını kolayca görebilir ve karşılaştırabilirsiniz.
-            </p>
         </div>
 
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-4 mb-3">
                 <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="mr-3">
-                            <i class="fas fa-building" style="font-size: 3rem; opacity: 0.8;"></i>
-                        </div>
-                        <div>
-                            <h3 id="totalSuppliers">-</h3>
-                            <p>Toplam Tedarikçi</p>
-                        </div>
+                    <div class="icon-wrapper">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div>
+                        <h3 id="totalSuppliers">-</h3>
+                        <p>Toplam Tedarikçi</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="mr-3">
-                            <i class="fas fa-lira-sign" style="font-size: 3rem; opacity: 0.8;"></i>
-                        </div>
-                        <div>
-                            <h3 id="totalPayments">-</h3>
-                            <p>Toplam Ödeme (TL)</p>
-                        </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #28a745, #20c997);">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-lira-sign"></i>
+                    </div>
+                    <div>
+                        <h3 id="totalPayments">-</h3>
+                        <p>Toplam Ödeme (TL)</p>
                     </div>
                 </div>
             </div>
-            <div class="col-md-4">
-                <div class="stat-card">
-                    <div class="d-flex align-items-center">
-                        <div class="mr-3">
-                            <i class="fas fa-receipt" style="font-size: 3rem; opacity: 0.8;"></i>
-                        </div>
-                        <div>
-                            <h3 id="totalTransactions">-</h3>
-                            <p>Toplam İşlem Sayısı</p>
-                        </div>
+            <div class="col-md-4 mb-3">
+                <div class="stat-card" style="background: linear-gradient(135deg, #17a2b8, #117a8b);">
+                    <div class="icon-wrapper">
+                        <i class="fas fa-receipt"></i>
+                    </div>
+                    <div>
+                        <h3 id="totalTransactions">-</h3>
+                        <p>Toplam İşlem</p>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Exchange Rates Info -->
-        <div class="alert alert-info" role="alert">
-            <h5 class="alert-heading"><i class="fas fa-info-circle"></i> Döviz Kurları</h5>
-            <p class="mb-0">
-                <strong>USD:</strong> <span id="usdRate">-</span> TL &nbsp;|&nbsp;
-                <strong>EUR:</strong> <span id="eurRate">-</span> TL
-            </p>
-        </div>
+        <div class="row">
 
-        <!-- Chart Section -->
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-chart-pie"></i> Tedarikçi Bazında Ödeme Dağılımı</h2>
-            </div>
-            <div class="card-body">
-                <div id="paymentsChart" class="chart-container"></div>
-            </div>
-        </div>
-
-        <!-- Supplier Totals Table -->
-        <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-building"></i> Tedarikçi Bazında Toplam Ödemeler</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        </div>
-                        <input type="text" class="form-control" id="searchSupplier" placeholder="Tedarikçi ara...">
+            <!-- Chart Section -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-pie"></i> Ödeme Dağılımı (İlk 10 Tedarikçi)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="paymentsChart" class="chart-container"></div>
                     </div>
                 </div>
             </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-hashtag"></i> Sıra</th>
-                                <th><i class="fas fa-building"></i> Tedarikçi Adı</th>
-                                <th><i class="fas fa-lira-sign"></i> Toplam Ödeme (TL)</th>
-                                <th><i class="fas fa-receipt"></i> İşlem Sayısı</th>
-                            </tr>
-                        </thead>
-                        <tbody id="supplierTotalsTable">
-                            <tr>
-                                <td colspan="4" class="text-center p-4">
-                                    <i class="fas fa-spinner fa-spin"></i> Yükleniyor...
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+
+            <!-- Transaction Count Chart -->
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2><i class="fas fa-receipt"></i> En Çok İşlem Yapılan Tedarikçiler</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="transactionCountChart" class="chart-container"></div>
+                    </div>
                 </div>
-                <div class="pagination-container">
-                    <div class="page-info" id="supplierPageInfo">-</div>
-                    <nav>
-                        <ul class="pagination" id="supplierPagination"></ul>
-                    </nav>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2><i class="fas fa-coins"></i> Para Birimi Bazlı Ödeme Dağılımı</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="currencyChart" class="chart-container"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header">
+                        <h2><i class="fas fa-boxes"></i> En Çok Harcama Yapılan Malzemeler (İlk 10)</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="materialChart" class="chart-container"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Detailed Payments Table -->
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Detaylı Ödeme Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
-                        <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
-                        </div>
-                        <input type="text" class="form-control" id="searchPayment" placeholder="Ara...">
-                    </div>
-                </div>
+            <div class="card-header">
+                <h2><i class="fas fa-table"></i> Detaylı Ödeme Listesi</h2>
+                <input type="text" id="searchPayment" class="form-control form-control-sm w-25" placeholder="Detaylı Ara...">
             </div>
-            <div class="card-body">
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="thead-light">
                             <tr>
-                                <th><i class="fas fa-building"></i> Tedarikçi</th>
-                                <th><i class="fas fa-box"></i> Malzeme</th>
-                                <th><i class="fas fa-coins"></i> Para Birimi</th>
-                                <th><i class="fas fa-tag"></i> Birim Fiyat</th>
-                                <th><i class="fas fa-cubes"></i> Ödenen Miktar</th>
-                                <th><i class="fas fa-money-bill"></i> Toplam (Orijinal)</th>
-                                <th><i class="fas fa-lira-sign"></i> Toplam (TL)</th>
+                                <th>Tedarikçi</th>
+                                <th>Malzeme</th>
+                                <th>Para Birimi</th>
+                                <th>Birim Fiyat</th>
+                                <th>Miktar</th>
+                                <th>Toplam (Orijinal)</th>
+                                <th>Toplam (TL)</th>
                             </tr>
                         </thead>
                         <tbody id="paymentsTable">
-                            <tr>
-                                <td colspan="7" class="text-center p-4">
-                                    <i class="fas fa-spinner fa-spin"></i> Yükleniyor...
-                                </td>
-                            </tr>
+                            <!-- Populated by JS -->
                         </tbody>
                     </table>
                 </div>
                 <div class="pagination-container">
-                    <div class="page-info" id="paymentPageInfo">-</div>
+                    <div id="paymentPageInfo" class="text-muted"></div>
                     <nav>
-                        <ul class="pagination" id="paymentPagination"></ul>
+                        <ul class="pagination justify-content-end mb-0" id="paymentPagination"></ul>
                     </nav>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Bootstrap JS -->
+    <!-- Scripts -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    
     <script>
         let allPayments = [];
         let allSupplierTotals = [];
-        let filteredSuppliers = [];
         let filteredPayments = [];
-        let chart = null;
-        
-        // Pagination settings
         const ITEMS_PER_PAGE = 10;
-        let currentSupplierPage = 1;
         let currentPaymentPage = 1;
 
-        // Load data on page load
         $(document).ready(function() {
             loadData();
             
-            // Search functionality for suppliers
-            $('#searchSupplier').on('keyup', function() {
-                currentSupplierPage = 1;
-                filterSupplierTable($(this).val().toLowerCase());
-            });
-            
-            // Search functionality for payments
             $('#searchPayment').on('keyup', function() {
+                let value = $(this).val().toLowerCase();
+                filteredPayments = allPayments.filter(item => 
+                    item.tedarikci_adi.toLowerCase().includes(value) || 
+                    (item.malzeme_ismi && item.malzeme_ismi.toLowerCase().includes(value))
+                );
                 currentPaymentPage = 1;
-                filterPaymentTable($(this).val().toLowerCase());
+                renderPaymentsTable();
             });
         });
 
@@ -473,30 +395,256 @@ if (!yetkisi_var('page:view:raporlar')) {
                     if (response.status === 'success') {
                         allPayments = response.data.payments;
                         allSupplierTotals = response.data.supplier_totals;
+                        filteredPayments = [...allPayments];
                         
                         updateStats(response.data);
                         updateExchangeRates(response.data.exchange_rates);
                         renderChart(response.data.supplier_totals);
-                        renderSupplierTotalsTable(response.data.supplier_totals);
-                        renderPaymentsTable(response.data.payments);
+                        renderTransactionCountChart(response.data.supplier_totals);
+                        renderCurrencyChart(response.data.payments);
+                        renderMaterialChart(response.data.payments);
+                        renderPaymentsTable();
                     } else {
-                        showError('Veri yüklenirken hata oluştu: ' + response.message);
+                        alert('Hata: ' + response.message);
                     }
                 },
-                error: function(xhr, status, error) {
-                    showError('Sunucu hatası: ' + error);
+                error: function() {
+                    alert('Sunucu hatası.');
                 }
             });
         }
 
+        // ... (updateStats, updateExchangeRates, renderChart remain same) ...
+
+        function renderTransactionCountChart(supplierTotals) {
+            // Sort by transaction count
+            const top10 = [...supplierTotals].sort((a, b) => b.odeme_sayisi - a.odeme_sayisi).slice(0, 10);
+            
+            const chartDom = document.getElementById('transactionCountChart');
+            const chart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#eee',
+                    borderWidth: 1,
+                    textStyle: { color: '#333' }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLabel: { formatter: '{value}' },
+                    splitLine: { lineStyle: { type: 'dashed', color: '#eee' } }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: top10.map(s => s.tedarikci_adi),
+                    inverse: true,
+                    axisLabel: {
+                        color: '#333',
+                        fontWeight: 'bold',
+                        formatter: function(value) {
+                            return value.length > 15 ? value.substring(0, 15) + '...' : value;
+                        }
+                    },
+                    axisLine: { show: false },
+                    axisTick: { show: false }
+                },
+                series: [{
+                    name: 'İşlem Sayısı',
+                    type: 'bar',
+                    data: top10.map(s => s.odeme_sayisi),
+                    barWidth: '60%',
+                    itemStyle: {
+                        borderRadius: [0, 20, 20, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#ff9966' },
+                            { offset: 1, color: '#ff5e62' }
+                        ]),
+                        shadowColor: 'rgba(0, 0, 0, 0.2)',
+                        shadowBlur: 10
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        color: '#666',
+                        fontWeight: 'bold'
+                    }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        // ... (existing functions) ...
+
+        function renderCurrencyChart(payments) {
+            let currencyTotals = { 'TL': 0, 'USD': 0, 'EUR': 0 };
+            payments.forEach(p => {
+                if (currencyTotals.hasOwnProperty(p.para_birimi)) {
+                    currencyTotals[p.para_birimi] += p.toplam_odeme_tl;
+                }
+            });
+
+            let chartData = Object.keys(currencyTotals)
+                .filter(key => currencyTotals[key] > 0)
+                .map(key => ({ value: currencyTotals[key], name: key }));
+
+            const chartDom = document.getElementById('currencyChart');
+            const chart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'item',
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#eee',
+                    borderWidth: 1,
+                    textStyle: { color: '#333' },
+                    formatter: function(params) {
+                        return `<strong>${params.name}</strong><br/>
+                                Tutar: ${params.value.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺<br/>
+                                Oran: ${params.percent}%`;
+                    }
+                },
+                legend: {
+                    top: '5%',
+                    left: 'center'
+                },
+                series: [
+                    {
+                        name: 'Para Birimi',
+                        type: 'pie',
+                        radius: ['40%', '70%'],
+                        avoidLabelOverlap: false,
+                        itemStyle: {
+                            borderRadius: 10,
+                            borderColor: '#fff',
+                            borderWidth: 2
+                        },
+                        label: {
+                            show: false,
+                            position: 'center'
+                        },
+                        emphasis: {
+                            label: {
+                                show: true,
+                                fontSize: 20,
+                                fontWeight: 'bold'
+                            }
+                        },
+                        labelLine: {
+                            show: false
+                        },
+                        data: chartData,
+                        color: ['#17a2b8', '#28a745', '#ffc107'] // TL (Blue), USD (Green), EUR (Yellow)
+                    }
+                ]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
+        function renderMaterialChart(payments) {
+            let materialTotals = {};
+            payments.forEach(p => {
+                let name = p.malzeme_ismi || 'Bilinmeyen Malzeme';
+                if (!materialTotals[name]) materialTotals[name] = 0;
+                materialTotals[name] += p.toplam_odeme_tl;
+            });
+
+            let sortedMaterials = Object.keys(materialTotals)
+                .map(key => ({ name: key, value: materialTotals[key] }))
+                .sort((a, b) => b.value - a.value)
+                .slice(0, 10);
+
+            const chartDom = document.getElementById('materialChart');
+            const chart = echarts.init(chartDom);
+            
+            const option = {
+                tooltip: {
+                    trigger: 'axis',
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#eee',
+                    borderWidth: 1,
+                    textStyle: { color: '#333' },
+                    formatter: function(params) {
+                        let val = params[0].value;
+                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺`;
+                    }
+                },
+                grid: {
+                    left: '3%',
+                    right: '4%',
+                    bottom: '3%',
+                    containLabel: true
+                },
+                xAxis: {
+                    type: 'value',
+                    axisLabel: { 
+                        formatter: function(value) {
+                            if (value >= 1000) return (value / 1000).toFixed(0) + 'k ₺';
+                            return value + ' ₺';
+                        },
+                        color: '#666'
+                    },
+                    splitLine: { lineStyle: { type: 'dashed', color: '#eee' } }
+                },
+                yAxis: {
+                    type: 'category',
+                    data: sortedMaterials.map(m => m.name),
+                    inverse: true,
+                    axisLabel: {
+                        color: '#333',
+                        fontWeight: 'bold',
+                        formatter: function(value) {
+                            return value.length > 15 ? value.substring(0, 15) + '...' : value;
+                        }
+                    },
+                    axisLine: { show: false },
+                    axisTick: { show: false }
+                },
+                series: [{
+                    name: 'Harcama',
+                    type: 'bar',
+                    data: sortedMaterials.map(m => m.value),
+                    barWidth: '60%',
+                    itemStyle: {
+                        borderRadius: [0, 20, 20, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#e83e8c' },
+                            { offset: 1, color: '#6610f2' }
+                        ]),
+                        shadowColor: 'rgba(0, 0, 0, 0.2)',
+                        shadowBlur: 10
+                    },
+                    label: {
+                        show: true,
+                        position: 'right',
+                        formatter: function(params) {
+                            return params.value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + ' ₺';
+                        },
+                        color: '#666',
+                        fontWeight: 'bold'
+                    }
+                }]
+            };
+            chart.setOption(option);
+            window.addEventListener('resize', () => chart.resize());
+        }
+
         function updateStats(data) {
             $('#totalSuppliers').text(data.supplier_totals.length);
-            
-            let totalPayments = data.supplier_totals.reduce((sum, supplier) => sum + supplier.toplam_tl, 0);
-            $('#totalPayments').text(totalPayments.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}));
-            
-            let totalTransactions = data.payments.length;
-            $('#totalTransactions').text(totalTransactions.toLocaleString('tr-TR'));
+            let totalPayments = data.supplier_totals.reduce((sum, s) => sum + s.toplam_tl, 0);
+            $('#totalPayments').text(totalPayments.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ₺');
+            $('#totalTransactions').text(data.payments.length);
         }
 
         function updateExchangeRates(rates) {
@@ -505,357 +653,171 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
 
         function renderChart(supplierTotals) {
-            // Get top 10 suppliers
             const top10 = supplierTotals.slice(0, 10);
-            
-            // Initialize chart
             const chartDom = document.getElementById('paymentsChart');
-            chart = echarts.init(chartDom);
-            
-            // Define vibrant color palette
-            const colorPalette = [
-                ['#FF6B6B', '#EE5A6F'],  // Coral Red
-                ['#4ECDC4', '#44A08D'],  // Turquoise
-                ['#FFD93D', '#F6C90E'],  // Golden Yellow
-                ['#A8E6CF', '#56C596'],  // Mint Green
-                ['#FF8B94', '#FF6B9D'],  // Pink
-                ['#C7CEEA', '#9FA8DA'],  // Lavender
-                ['#FFDAC1', '#FFB88C'],  // Peach
-                ['#B4F8C8', '#7FD8BE'],  // Light Green
-                ['#FBE7C6', '#F4D06F'],  // Cream
-                ['#A0E7E5', '#74D3D0']   // Aqua
-            ];
+            const chart = echarts.init(chartDom);
             
             const option = {
-                backgroundColor: 'transparent',
                 tooltip: {
                     trigger: 'axis',
-                    axisPointer: {
-                        type: 'shadow',
-                        shadowStyle: {
-                            color: 'rgba(74, 14, 99, 0.1)'
-                        }
-                    },
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    borderColor: '#4a0e63',
-                    borderWidth: 2,
-                    textStyle: {
-                        color: '#333',
-                        fontSize: 14
-                    },
+                    axisPointer: { type: 'shadow' },
+                    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                    borderColor: '#eee',
+                    borderWidth: 1,
+                    textStyle: { color: '#333' },
                     formatter: function(params) {
-                        const item = params[0];
-                        return `<div style="padding: 5px;">
-                            <strong style="font-size: 16px; color: #4a0e63;">${item.name}</strong><br/>
-                            <div style="margin-top: 8px;">
-                                <span style="color: #666;">Toplam Ödeme:</span> 
-                                <strong style="color: #4a0e63; font-size: 15px;">${item.value.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</strong>
-                            </div>
-                            <div style="margin-top: 4px; color: #888; font-size: 12px;">
-                                İşlem Sayısı: ${top10[item.dataIndex].odeme_sayisi}
-                            </div>
-                        </div>`;
+                        let val = params[0].value;
+                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺`;
                     }
                 },
                 grid: {
                     left: '3%',
-                    right: '8%',
+                    right: '4%',
                     bottom: '3%',
-                    top: '3%',
                     containLabel: true
                 },
                 xAxis: {
                     type: 'value',
-                    name: 'Toplam Ödeme (TL)',
-                    nameTextStyle: {
-                        fontSize: 13,
-                        fontWeight: 'bold',
+                    axisLabel: { 
+                        formatter: function(value) {
+                            if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M ₺';
+                            if (value >= 1000) return (value / 1000).toFixed(0) + 'k ₺';
+                            return value + ' ₺';
+                        },
                         color: '#666'
                     },
-                    axisLine: {
-                        lineStyle: {
-                            color: '#ddd'
-                        }
-                    },
-                    axisLabel: {
-                        color: '#666',
-                        fontSize: 12,
-                        formatter: function(value) {
-                            return value.toLocaleString('tr-TR');
-                        }
-                    },
-                    splitLine: {
-                        lineStyle: {
-                            color: '#f0f0f0',
-                            type: 'dashed'
-                        }
-                    }
+                    splitLine: { lineStyle: { type: 'dashed', color: '#eee' } }
                 },
                 yAxis: {
                     type: 'category',
                     data: top10.map(s => s.tedarikci_adi),
                     inverse: true,
-                    axisLine: {
-                        show: false
-                    },
-                    axisTick: {
-                        show: false
-                    },
                     axisLabel: {
-                        interval: 0,
                         color: '#333',
-                        fontSize: 13,
-                        fontWeight: 500,
+                        fontWeight: 'bold',
                         formatter: function(value) {
-                            return value.length > 25 ? value.substring(0, 25) + '...' : value;
+                            return value.length > 15 ? value.substring(0, 15) + '...' : value;
                         }
-                    }
+                    },
+                    axisLine: { show: false },
+                    axisTick: { show: false }
                 },
                 series: [{
                     name: 'Ödeme',
                     type: 'bar',
-                    data: top10.map((s, index) => ({
-                        value: s.toplam_tl,
-                        itemStyle: {
-                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                                { offset: 0, color: colorPalette[index][0] },
-                                { offset: 1, color: colorPalette[index][1] }
-                            ]),
-                            borderRadius: [0, 8, 8, 0],
-                            shadowColor: 'rgba(0, 0, 0, 0.15)',
-                            shadowBlur: 10,
-                            shadowOffsetX: 3,
-                            shadowOffsetY: 3
-                        }
-                    })),
-                    barWidth: '70%',
+                    data: top10.map(s => s.toplam_tl),
+                    barWidth: '60%',
+                    itemStyle: {
+                        borderRadius: [0, 20, 20, 0],
+                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                            { offset: 0, color: '#4a0e63' },
+                            { offset: 1, color: '#7c2a99' }
+                        ]),
+                        shadowColor: 'rgba(0, 0, 0, 0.2)',
+                        shadowBlur: 10
+                    },
                     label: {
                         show: true,
                         position: 'right',
-                        distance: 10,
-                        color: '#333',
-                        fontSize: 13,
-                        fontWeight: 'bold',
                         formatter: function(params) {
-                            return params.value.toLocaleString('tr-TR', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + ' ₺';
-                        }
-                    },
-                    emphasis: {
-                        itemStyle: {
-                            shadowBlur: 20,
-                            shadowColor: 'rgba(0, 0, 0, 0.3)'
-                        }
-                    },
-                    animationDuration: 1500,
-                    animationEasing: 'elasticOut'
+                            return params.value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + ' ₺';
+                        },
+                        color: '#666',
+                        fontWeight: 'bold'
+                    }
                 }]
             };
-            
             chart.setOption(option);
-            
-            // Make chart responsive
-            window.addEventListener('resize', function() {
-                chart.resize();
-            });
+            window.addEventListener('resize', () => chart.resize());
         }
 
-        function renderSupplierTotalsTable(supplierTotals) {
-            const tbody = $('#supplierTotalsTable');
-            tbody.empty();
-            
-            if (supplierTotals.length === 0) {
-                tbody.html('<tr><td colspan="4" class="text-center p-4">Henüz ödeme verisi bulunmuyor.</td></tr>');
-                $('#supplierPageInfo').text('-');
-                $('#supplierPagination').empty();
-                return;
-            }
-            
-            // Calculate pagination
-            const totalPages = Math.ceil(supplierTotals.length / ITEMS_PER_PAGE);
-            const startIndex = (currentSupplierPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, supplierTotals.length);
-            const pageData = supplierTotals.slice(startIndex, endIndex);
-            
-            // Render rows
-            pageData.forEach((supplier, index) => {
-                const actualIndex = startIndex + index + 1;
-                const row = `
+        function renderSupplierTotalsTable(data) {
+            let html = '';
+            data.forEach(item => {
+                html += `
                     <tr>
-                        <td><strong>${actualIndex}</strong></td>
-                        <td><strong>${supplier.tedarikci_adi}</strong></td>
-                        <td><strong>${supplier.toplam_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</strong></td>
-                        <td>${supplier.odeme_sayisi}</td>
+                        <td>${item.tedarikci_adi}</td>
+                        <td class="text-right"><strong>${item.toplam_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</strong></td>
+                        <td class="text-center"><span class="badge badge-light">${item.odeme_sayisi}</span></td>
                     </tr>
                 `;
-                tbody.append(row);
             });
-            
-            // Update page info
-            $('#supplierPageInfo').text(`${startIndex + 1}-${endIndex} / ${supplierTotals.length} kayıt`);
-            
-            // Render pagination
-            renderPagination('supplier', totalPages, currentSupplierPage);
+            $('#supplierTotalsTable').html(html);
         }
 
-        function renderPaymentsTable(payments) {
-            const tbody = $('#paymentsTable');
-            tbody.empty();
-            
-            if (payments.length === 0) {
-                tbody.html('<tr><td colspan="7" class="text-center p-4">Henüz ödeme verisi bulunmuyor.</td></tr>');
-                $('#paymentPageInfo').text('-');
-                $('#paymentPagination').empty();
-                return;
+        function renderPaymentsTable() {
+            const totalPages = Math.ceil(filteredPayments.length / ITEMS_PER_PAGE);
+            if (currentPaymentPage > totalPages) currentPaymentPage = totalPages || 1;
+            if (currentPaymentPage < 1) currentPaymentPage = 1;
+
+            const start = (currentPaymentPage - 1) * ITEMS_PER_PAGE;
+            const end = start + ITEMS_PER_PAGE;
+            const pageData = filteredPayments.slice(start, end);
+
+            let html = '';
+            if (pageData.length === 0) {
+                html = '<tr><td colspan="7" class="text-center text-muted py-3">Kayıt bulunamadı.</td></tr>';
+            } else {
+                pageData.forEach(item => {
+                    let badgeClass = 'badge-tl';
+                    if (item.para_birimi === 'USD') badgeClass = 'badge-usd';
+                    if (item.para_birimi === 'EUR') badgeClass = 'badge-eur';
+
+                    html += `
+                        <tr>
+                            <td>${item.tedarikci_adi}</td>
+                            <td><small>${item.malzeme_kodu} - ${item.malzeme_ismi || '-'}</small></td>
+                            <td><span class="badge-currency ${badgeClass}">${item.para_birimi}</span></td>
+                            <td>${item.birim_fiyat.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                            <td>${item.odenen_miktar.toLocaleString('tr-TR')}</td>
+                            <td>${item.toplam_odeme_orijinal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                            <td><strong>${item.toplam_odeme_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</strong></td>
+                        </tr>
+                    `;
+                });
             }
+            $('#paymentsTable').html(html);
             
-            // Calculate pagination
-            const totalPages = Math.ceil(payments.length / ITEMS_PER_PAGE);
-            const startIndex = (currentPaymentPage - 1) * ITEMS_PER_PAGE;
-            const endIndex = Math.min(startIndex + ITEMS_PER_PAGE, payments.length);
-            const pageData = payments.slice(startIndex, endIndex);
-            
-            // Render rows
-            pageData.forEach((payment) => {
-                let currencyBadge = '';
-                if (payment.para_birimi === 'TL') {
-                    currencyBadge = '<span class="currency-badge badge-tl">₺ TRY</span>';
-                } else if (payment.para_birimi === 'USD') {
-                    currencyBadge = '<span class="currency-badge badge-usd">$ USD</span>';
-                } else if (payment.para_birimi === 'EUR') {
-                    currencyBadge = '<span class="currency-badge badge-eur">€ EUR</span>';
-                }
-                
-                const row = `
-                    <tr>
-                        <td>${payment.tedarikci_adi}</td>
-                        <td>${payment.malzeme_kodu} - ${payment.malzeme_ismi || '-'}</td>
-                        <td>${currencyBadge}</td>
-                        <td>${payment.birim_fiyat.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                        <td>${payment.odenen_miktar.toLocaleString('tr-TR')}</td>
-                        <td><strong>${payment.toplam_odeme_orijinal.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
-                        <td><strong>${payment.toplam_odeme_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</strong></td>
-                    </tr>
-                `;
-                tbody.append(row);
-            });
-            
-            // Update page info
-            $('#paymentPageInfo').text(`${startIndex + 1}-${endIndex} / ${payments.length} kayıt`);
-            
-            // Render pagination
-            renderPagination('payment', totalPages, currentPaymentPage);
+            $('#paymentPageInfo').text(filteredPayments.length > 0 ? `${start + 1}-${Math.min(end, filteredPayments.length)} / ${filteredPayments.length}` : '');
+            renderPagination(totalPages);
         }
-        
-        function renderPagination(type, totalPages, currentPage) {
-            const paginationId = type === 'supplier' ? '#supplierPagination' : '#paymentPagination';
-            const pagination = $(paginationId);
-            pagination.empty();
+
+        function renderPagination(totalPages) {
+            let html = '';
             
-            if (totalPages <= 1) return;
-            
-            // Previous button
-            const prevDisabled = currentPage === 1 ? 'disabled' : '';
-            pagination.append(`
-                <li class="page-item ${prevDisabled}">
-                    <a class="page-link" href="#" data-page="${currentPage - 1}" data-type="${type}">Önceki</a>
-                </li>
-            `);
-            
-            // Page numbers
-            const maxVisible = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
-            
-            if (endPage - startPage < maxVisible - 1) {
-                startPage = Math.max(1, endPage - maxVisible + 1);
-            }
-            
+            html += `<li class="page-item ${currentPaymentPage === 1 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${currentPaymentPage - 1}); return false;">Önceki</a>
+                     </li>`;
+
+            let startPage = Math.max(1, currentPaymentPage - 2);
+            let endPage = Math.min(totalPages, currentPaymentPage + 2);
+
             if (startPage > 1) {
-                pagination.append(`
-                    <li class="page-item">
-                        <a class="page-link" href="#" data-page="1" data-type="${type}">1</a>
-                    </li>
-                `);
-                if (startPage > 2) {
-                    pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
-                }
+                 html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
+                 if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
-            
+
             for (let i = startPage; i <= endPage; i++) {
-                const active = i === currentPage ? 'active' : '';
-                pagination.append(`
-                    <li class="page-item ${active}">
-                        <a class="page-link" href="#" data-page="${i}" data-type="${type}">${i}</a>
-                    </li>
-                `);
+                html += `<li class="page-item ${i === currentPaymentPage ? 'active' : ''}">
+                            <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                         </li>`;
             }
-            
+
             if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    pagination.append('<li class="page-item disabled"><span class="page-link">...</span></li>');
-                }
-                pagination.append(`
-                    <li class="page-item">
-                        <a class="page-link" href="#" data-page="${totalPages}" data-type="${type}">${totalPages}</a>
-                    </li>
-                `);
+                if (endPage < totalPages - 1) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(${totalPages}); return false;">${totalPages}</a></li>`;
             }
-            
-            // Next button
-            const nextDisabled = currentPage === totalPages ? 'disabled' : '';
-            pagination.append(`
-                <li class="page-item ${nextDisabled}">
-                    <a class="page-link" href="#" data-page="${currentPage + 1}" data-type="${type}">Sonraki</a>
-                </li>
-            `);
-            
-            // Attach click handlers
-            pagination.find('a.page-link').on('click', function(e) {
-                e.preventDefault();
-                const page = parseInt($(this).data('page'));
-                const tableType = $(this).data('type');
-                
-                if (tableType === 'supplier') {
-                    currentSupplierPage = page;
-                    renderSupplierTotalsTable(filteredSuppliers.length > 0 ? filteredSuppliers : allSupplierTotals);
-                } else {
-                    currentPaymentPage = page;
-                    renderPaymentsTable(filteredPayments.length > 0 ? filteredPayments : allPayments);
-                }
-            });
+
+            html += `<li class="page-item ${currentPaymentPage === totalPages || totalPages === 0 ? 'disabled' : ''}">
+                        <a class="page-link" href="#" onclick="changePage(${currentPaymentPage + 1}); return false;">Sonraki</a>
+                     </li>`;
+
+            $('#paymentPagination').html(html);
         }
 
-        function filterSupplierTable(searchTerm) {
-            filteredSuppliers = allSupplierTotals.filter(supplier => 
-                supplier.tedarikci_adi.toLowerCase().includes(searchTerm)
-            );
-            renderSupplierTotalsTable(filteredSuppliers.length > 0 || searchTerm ? filteredSuppliers : allSupplierTotals);
-        }
-
-        function filterPaymentTable(searchTerm) {
-            filteredPayments = allPayments.filter(payment => 
-                payment.tedarikci_adi.toLowerCase().includes(searchTerm) ||
-                payment.malzeme_kodu.toLowerCase().includes(searchTerm) ||
-                (payment.malzeme_ismi && payment.malzeme_ismi.toLowerCase().includes(searchTerm))
-            );
-            renderPaymentsTable(filteredPayments.length > 0 || searchTerm ? filteredPayments : allPayments);
-        }
-
-        function showError(message) {
-            $('#supplierTotalsTable').html(`
-                <tr>
-                    <td colspan="4" class="text-center p-4 text-danger">
-                        <i class="fas fa-exclamation-triangle"></i> ${message}
-                    </td>
-                </tr>
-            `);
-            $('#paymentsTable').html(`
-                <tr>
-                    <td colspan="7" class="text-center p-4 text-danger">
-                        <i class="fas fa-exclamation-triangle"></i> ${message}
-                    </td>
-                </tr>
-            `);
+        function changePage(page) {
+            currentPaymentPage = page;
+            renderPaymentsTable();
         }
     </script>
 </body>

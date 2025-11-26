@@ -35,6 +35,17 @@ error_log("DEBUG - user_id: $user_id, user_info: " . print_r($user_info, true) .
 $message = '';
 $error = '';
 
+// Durum değerlerini Türkçe'ye çeviren fonksiyon
+function get_durum_adi($durum) {
+    $durum_map = [
+        'beklemede' => 'Beklemede',
+        'onaylandi' => 'Onaylandı',
+        'tamamlandi' => 'Tamamlandı',
+        'iptal_edildi' => 'İptal Edildi'
+    ];
+    return $durum_map[$durum] ?? ucfirst($durum);
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete'])) {
@@ -58,13 +69,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $delete_items_stmt->close();
 
             // Silinen sipariş bilgilerini al
-            $deleted_order_query = "SELECT siparis_numarasi, musteri_adi FROM siparisler WHERE siparis_id = ?";
+            $deleted_order_query = "SELECT siparis_id, musteri_adi FROM siparisler WHERE siparis_id = ?";
             $deleted_order_stmt = $connection->prepare($deleted_order_query);
             $deleted_order_stmt->bind_param('i', $siparis_id);
             $deleted_order_stmt->execute();
             $deleted_order_result = $deleted_order_stmt->get_result();
             $deleted_order = $deleted_order_result->fetch_assoc();
-            $deleted_order_num = $deleted_order['siparis_numarasi'] ?? 'Bilinmeyen numara';
+            $deleted_order_num = $deleted_order['siparis_id'] ?? 'Bilinmeyen numara';
             $deleted_customer_name = $deleted_order['musteri_adi'] ?? 'Bilinmeyen müşteri';
             $deleted_order_stmt->close();
 
@@ -129,20 +140,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         if ($stmt->execute()) {
-            // Eski sipariş bilgilerini al
-            $old_order_query = "SELECT siparis_numarasi, musteri_adi, durum as eski_durum FROM siparisler WHERE siparis_id = ?";
-            $old_order_stmt = $connection->prepare($old_order_query);
-            $old_order_stmt->bind_param('i', $siparis_id);
-            $old_order_stmt->execute();
-            $old_order_result = $old_order_stmt->get_result();
-            $old_order = $old_order_result->fetch_assoc();
-            $old_status = $old_order['eski_durum'] ?? 'Bilinmeyen durum';
-            $order_num = $old_order['siparis_numarasi'] ?? 'Bilinmeyen numara';
-            $customer_name = $old_order['musteri_adi'] ?? 'Bilinmeyen müşteri';
-            $old_order_stmt->close();
+            // Sipariş bilgilerini al
+            $order_query = "SELECT siparis_id, musteri_adi FROM siparisler WHERE siparis_id = ?";
+            $order_stmt = $connection->prepare($order_query);
+            $order_stmt->bind_param('i', $siparis_id);
+            $order_stmt->execute();
+            $order_result = $order_stmt->get_result();
+            $order = $order_result->fetch_assoc();
+            $order_num = $order['siparis_id'] ?? 'Bilinmeyen numara';
+            $customer_name = $order['musteri_adi'] ?? 'Bilinmeyen müşteri';
+            $order_stmt->close();
 
-            // Log ekleme
-            log_islem($connection, $_SESSION['kullanici_adi'], "$customer_name müşterisine ait $order_num nolu sipariş $old_status durumundan $durum durumuna güncellendi", 'UPDATE');
+            // Log ekleme - Yeni format: "Siparişin yeni durumu: xxx"
+            $durum_adi = get_durum_adi($durum);
+            log_islem($connection, $_SESSION['kullanici_adi'], "$customer_name müşterisine ait $order_num nolu siparişin yeni durumu: $durum_adi", 'UPDATE');
 
             $message = "Sipariş başarıyla güncellendi.";
             error_log("DEBUG - Database update successful for siparis_id: $siparis_id, new status: $durum");
