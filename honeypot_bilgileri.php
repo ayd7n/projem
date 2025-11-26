@@ -48,13 +48,24 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
             background-color: var(--bg-color);
         }
         .main-content {
-            padding: 2rem;
+            padding: 1rem;
+        }
+        @media (min-width: 768px) {
+            .main-content {
+                padding: 2rem;
+            }
         }
         .page-header {
             margin-bottom: 2rem;
         }
         .page-header h1 {
             font-weight: 700;
+            font-size: 1.75rem;
+        }
+        @media (min-width: 768px) {
+            .page-header h1 {
+                font-size: 2.5rem;
+            }
         }
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
@@ -86,9 +97,14 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
         .info-card {
             background: white;
             border-radius: 12px;
-            padding: 2rem;
+            padding: 1rem;
             box-shadow: var(--shadow);
             margin-bottom: 1.5rem;
+        }
+        @media (min-width: 768px) {
+            .info-card {
+                padding: 2rem;
+            }
         }
         .info-card h3 {
             color: var(--primary);
@@ -97,6 +113,12 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
             display: flex;
             align-items: center;
             gap: 10px;
+            font-size: 1.25rem;
+        }
+        @media (min-width: 768px) {
+            .info-card h3 {
+                font-size: 1.5rem;
+            }
         }
         .credential-box {
             background: #f8f9fa;
@@ -124,22 +146,36 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
             padding: 10px 15px;
             border-radius: 6px;
             font-family: 'Courier New', monospace;
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-primary);
             border: 1px solid #dee2e6;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        @media (min-width: 768px) {
+            .credential-value {
+                font-size: 16px;
+                flex-wrap: nowrap;
+            }
         }
         .copy-btn {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 5px 12px;
+            padding: 8px 15px;
             border-radius: 4px;
             font-size: 12px;
             cursor: pointer;
             transition: var(--transition);
+            white-space: nowrap;
+        }
+        @media (min-width: 768px) {
+            .copy-btn {
+                padding: 5px 12px;
+            }
         }
         .copy-btn:hover {
             background: var(--secondary);
@@ -161,6 +197,22 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
         .back-btn:hover {
             color: var(--secondary);
             text-decoration: none;
+        }
+        .navbar-brand {
+            font-size: 1rem;
+        }
+        @media (min-width: 768px) {
+            .navbar-brand {
+                font-size: 1.25rem;
+            }
+        }
+        .credential-value span {
+            word-break: break-all;
+        }
+        @media (min-width: 768px) {
+            .credential-value span {
+                word-break: normal;
+            }
         }
     </style>
 </head>
@@ -208,7 +260,7 @@ if (!yetkisi_var('action:ayarlar:maintenance_mode')) {
         </div>
 
         <div class="row">
-            <div class="col-lg-8">
+            <div class="col-12 col-lg-8">
                 <div class="info-card">
                     <h3><i class="fas fa-key"></i> Giriş Bilgileri</h3>
                     
