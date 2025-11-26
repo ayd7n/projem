@@ -129,6 +129,8 @@ function addLocation() {
     $stmt->bind_param('ss', $depo_ismi, $raf);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$depo_ismi deposuna $raf rafı eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'Lokasyon başarıyla oluşturuldu.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Lokasyon oluşturulurken hata oluştu: ' . $connection->error]);
@@ -149,11 +151,24 @@ function updateLocation() {
         return;
     }
 
+    // Eski lokasyon bilgilerini al
+    $old_location_query = "SELECT depo_ismi, raf FROM lokasyonlar WHERE lokasyon_id = ?";
+    $old_stmt = $connection->prepare($old_location_query);
+    $old_stmt->bind_param('i', $lokasyon_id);
+    $old_stmt->execute();
+    $old_result = $old_stmt->get_result();
+    $old_location = $old_result->fetch_assoc();
+    $old_depo = $old_location['depo_ismi'] ?? 'Bilinmeyen Depo';
+    $old_raf = $old_location['raf'] ?? 'Bilinmeyen Raf';
+    $old_stmt->close();
+
     $query = "UPDATE lokasyonlar SET depo_ismi = ?, raf = ? WHERE lokasyon_id = ?";
     $stmt = $connection->prepare($query);
     $stmt->bind_param('ssi', $depo_ismi, $raf, $lokasyon_id);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_depo deposundaki $old_raf rafı $depo_ismi deposuna ve $raf olarak güncellendi", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Lokasyon başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Lokasyon güncellenirken hata oluştu: ' . $connection->error]);
@@ -171,11 +186,24 @@ function deleteLocation() {
         return;
     }
 
+    // Silinen lokasyon bilgilerini al
+    $old_location_query = "SELECT depo_ismi, raf FROM lokasyonlar WHERE lokasyon_id = ?";
+    $old_stmt = $connection->prepare($old_location_query);
+    $old_stmt->bind_param('i', $lokasyon_id);
+    $old_stmt->execute();
+    $old_result = $old_stmt->get_result();
+    $old_location = $old_result->fetch_assoc();
+    $deleted_depo = $old_location['depo_ismi'] ?? 'Bilinmeyen Depo';
+    $deleted_raf = $old_location['raf'] ?? 'Bilinmeyen Raf';
+    $old_stmt->close();
+
     $query = "DELETE FROM lokasyonlar WHERE lokasyon_id = ?";
     $stmt = $connection->prepare($query);
     $stmt->bind_param('i', $lokasyon_id);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_depo deposundaki $deleted_raf rafı silindi", 'DELETE');
         echo json_encode(['status' => 'success', 'message' => 'Lokasyon başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Lokasyon silinirken hata oluştu: ' . $connection->error]);

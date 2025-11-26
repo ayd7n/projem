@@ -102,18 +102,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $update_order_stmt->bind_param('ii', $toplam_adet, $siparis_id);
         $update_order_stmt->execute();
         
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$musteri_adi müşterisi için yeni sipariş oluşturuldu (ID: $siparis_id)", 'CREATE');
+
         $connection->commit();
-        
+
+        // Get order items for Telegram message
+        $order_items_query = "SELECT urun_ismi, adet, birim FROM siparis_kalemleri WHERE siparis_id = ?";
+        $order_items_stmt = $connection->prepare($order_items_query);
+        $order_items_stmt->bind_param('i', $siparis_id);
+        $order_items_stmt->execute();
+        $order_items_result = $order_items_stmt->get_result();
+
+        $order_items_text = "SİPARİŞ KALEMLERİ:\n";
+        while ($item = $order_items_result->fetch_assoc()) {
+            $order_items_text .= "- {$item['urun_ismi']} ({$item['adet']} {$item['birim']})\n";
+        }
+        $order_items_stmt->close();
+
+        // Send Telegram notification
+        $telegram_message = "🆕 YENİ MÜŞTERİ SİPARİŞİ\n\n";
+        $telegram_message .= "Sipariş No: #$siparis_id\n";
+        $telegram_message .= "Müşteri: $musteri_adi\n";
+        $telegram_message .= "Oluşturan: {$_SESSION['kullanici_adi']}\n";
+        $telegram_message .= "Tarih: " . date('d.m.Y H:i') . "\n\n";
+        $telegram_message .= $order_items_text;
+
+        telegram_gonder($telegram_message);
+
         echo json_encode([
-            'status' => 'success', 
+            'status' => 'success',
             'message' => 'Sipariş başarıyla oluşturuldu!',
             'siparis_id' => $siparis_id
         ]);
-        
+
     } catch (Exception $e) {
         $connection->rollback();
         echo json_encode([
-            'status' => 'error', 
+            'status' => 'error',
             'message' => 'Hata: ' . $e->getMessage()
         ]);
     }

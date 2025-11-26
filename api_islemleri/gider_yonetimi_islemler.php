@@ -195,6 +195,8 @@ function addExpense() {
     $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi', '$odeme_yapilan_firma')";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar TL tutarında gider eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla eklendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider eklenirken hata oluştu: ' . $connection->error]);
@@ -218,9 +220,18 @@ function updateExpense() {
         return;
     }
 
+    // Eski gider bilgilerini al
+    $old_expense_query = "SELECT kategori, tutar FROM gider_yonetimi WHERE gider_id = $gider_id";
+    $old_expense_result = $connection->query($old_expense_query);
+    $old_expense = $old_expense_result->fetch_assoc();
+    $old_category = $old_expense['kategori'] ?? 'Bilinmeyen Kategori';
+    $old_amount = $old_expense['tutar'] ?? 0;
+
     $query = "UPDATE gider_yonetimi SET tarih = '$tarih', tutar = $tutar, kategori = '$kategori', aciklama = '$aciklama', fatura_no = '$fatura_no', odeme_tipi = '$odeme_tipi', odeme_yapilan_firma = '$odeme_yapilan_firma' WHERE gider_id = $gider_id";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_category kategorisindeki $old_amount TL tutarlı gider güncellendi", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider güncellenirken hata oluştu: ' . $connection->error]);
@@ -236,9 +247,18 @@ function deleteExpense() {
         return;
     }
 
+    // Silinen gider bilgilerini al
+    $old_expense_query = "SELECT kategori, tutar FROM gider_yonetimi WHERE gider_id = $gider_id";
+    $old_expense_result = $connection->query($old_expense_query);
+    $old_expense = $old_expense_result->fetch_assoc();
+    $deleted_category = $old_expense['kategori'] ?? 'Bilinmeyen Kategori';
+    $deleted_amount = $old_expense['tutar'] ?? 0;
+
     $query = "DELETE FROM gider_yonetimi WHERE gider_id = $gider_id";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_category kategorisindeki $deleted_amount TL tutarlı gider silindi", 'DELETE');
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gider silinirken hata oluştu: ' . $connection->error]);

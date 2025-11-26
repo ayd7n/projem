@@ -95,6 +95,8 @@ function cancelOrder() {
     $update_stmt->bind_param('ii', $siparis_id, $musteri_id);
     
     if ($update_stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "Sipariş iptal edildi (ID: $siparis_id)", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Sipariş başarıyla iptal edildi!']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Sipariş iptal edilirken bir hata oluştu!']);
@@ -134,6 +136,8 @@ function updateOrder() {
     $update_stmt->bind_param('sii', $aciklama, $siparis_id, $musteri_id);
     
     if ($update_stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "Sipariş güncellendi (ID: $siparis_id)", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Sipariş başarıyla güncellendi!']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Sipariş güncellenirken bir hata oluştu!']);

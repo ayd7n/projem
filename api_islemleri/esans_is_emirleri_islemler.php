@@ -275,9 +275,12 @@ function createWorkOrder() {
                 }
             }
             
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı için iş emri oluşturuldu", 'CREATE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Esans iş emri başarıyla oluşturuldu']);
         } else {
             throw new Exception("Work order insertion failed: " . $connection->error);
@@ -341,9 +344,12 @@ function updateWorkOrder() {
                 }
             }
             
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$work_order[esans_ismi] esansı için iş emri güncellendi", 'UPDATE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Esans iş emri başarıyla güncellendi']);
         } else {
             throw new Exception("Work order update failed: " . $connection->error);
@@ -379,10 +385,21 @@ function deleteWorkOrder() {
         // Then delete work order
         $delete_work_order_query = "DELETE FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         
+        // Silinen iş emrinin esans ismini al
+        $get_esans_query = "SELECT esans_ismi FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
+        $get_esans_result = $connection->query($get_esans_query);
+        $esans_ismi = "Bilinmeyen Esans";
+        if ($get_esans_result && $row = $get_esans_result->fetch_assoc()) {
+            $esans_ismi = $row['esans_ismi'];
+        }
+
         if ($connection->query($delete_work_order_query)) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı için iş emri silindi", 'DELETE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Esans iş emri başarıyla silindi']);
         } else {
             throw new Exception("Work order deletion failed: " . $connection->error);

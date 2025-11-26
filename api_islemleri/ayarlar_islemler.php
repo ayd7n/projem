@@ -53,6 +53,8 @@ if (isset($_POST['action'])) {
             $stmt_euro->close();
 
             if ($dolar_success && $euro_success) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "Dolar ve Euro kuru ayarları güncellendi", 'UPDATE');
                 $response = ['status' => 'success', 'message' => 'Ayarlar başarıyla güncellendi.'];
             } else {
                 $response['message'] = 'Ayarlar güncellenirken bir hata oluştu.';
@@ -70,12 +72,42 @@ if (isset($_POST['action'])) {
                 // Use the shared update_setting function
                 if (update_setting($connection, 'maintenance_mode', $mode)) {
                     $status_text = $mode === 'on' ? 'aktif' : 'devre dışı';
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "Bakım modu $status_text olarak değiştirildi", 'UPDATE');
                     $response = ['status' => 'success', 'message' => "Bakım modu başarıyla {$status_text} bırakıldı."];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Bakım modu ayarı güncellenirken bir veritabanı hatası oluştu.'];
                 }
             } else {
                 $response = ['status' => 'error', 'message' => 'Geçersiz mod değeri.'];
+            }
+        } else {
+            $response['message'] = 'Eksik parametreler.';
+        }
+    }
+
+    if ($_POST['action'] == 'update_telegram_settings') {
+        if (isset($_POST['telegram_bot_token']) && isset($_POST['telegram_chat_id'])) {
+            $bot_token = $_POST['telegram_bot_token'];
+            $chat_id = $_POST['telegram_chat_id'];
+
+            // Telegram Bot Token ve Chat ID'yi ayarlar tablosuna kaydet
+            $stmt_token = $connection->prepare("INSERT INTO ayarlar (ayar_anahtar, ayar_deger) VALUES ('telegram_bot_token', ?) ON DUPLICATE KEY UPDATE ayar_deger = VALUES(ayar_deger)");
+            $stmt_token->bind_param('s', $bot_token);
+            $token_success = $stmt_token->execute();
+            $stmt_token->close();
+
+            $stmt_chat = $connection->prepare("INSERT INTO ayarlar (ayar_anahtar, ayar_deger) VALUES ('telegram_chat_id', ?) ON DUPLICATE KEY UPDATE ayar_deger = VALUES(ayar_deger)");
+            $stmt_chat->bind_param('s', $chat_id);
+            $chat_success = $stmt_chat->execute();
+            $stmt_chat->close();
+
+            if ($token_success && $chat_success) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "Telegram ayarları güncellendi", 'UPDATE');
+                $response = ['status' => 'success', 'message' => 'Telegram ayarları başarıyla güncellendi.'];
+            } else {
+                $response['message'] = 'Telegram ayarları güncellenirken bir hata oluştu.';
             }
         } else {
             $response['message'] = 'Eksik parametreler.';

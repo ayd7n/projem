@@ -150,6 +150,8 @@ if (isset($_GET['action'])) {
             $stmt->bind_param('sssdsdissii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi);
 
             if ($stmt->execute()) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$malzeme_ismi malzemesi sisteme eklendi", 'CREATE');
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla eklendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
@@ -183,7 +185,19 @@ if (isset($_GET['action'])) {
             $stmt = $connection->prepare($query);
             $stmt->bind_param('sssdsdsisssii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $maliyet_manuel_girildi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi, $malzeme_kodu);
 
+            // Eski malzeme bilgilerini al
+            $old_material_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
+            $old_stmt = $connection->prepare($old_material_query);
+            $old_stmt->bind_param('i', $malzeme_kodu);
+            $old_stmt->execute();
+            $old_result = $old_stmt->get_result();
+            $old_material = $old_result->fetch_assoc();
+            $old_name = $old_material['malzeme_ismi'] ?? 'Bilinmeyen Malzeme';
+            $old_stmt->close();
+
             if ($stmt->execute()) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$old_name malzemesi $malzeme_ismi olarak güncellendi", 'UPDATE');
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla güncellendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
@@ -198,9 +212,21 @@ if (isset($_GET['action'])) {
         $malzeme_kodu = (int)$_POST['malzeme_kodu'];
         
         $query = "DELETE FROM malzemeler WHERE malzeme_kodu = ?";
+        // Silinen malzeme bilgilerini al
+        $old_material_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
+        $old_stmt = $connection->prepare($old_material_query);
+        $old_stmt->bind_param('i', $malzeme_kodu);
+        $old_stmt->execute();
+        $old_result = $old_stmt->get_result();
+        $old_material = $old_result->fetch_assoc();
+        $deleted_name = $old_material['malzeme_ismi'] ?? 'Bilinmeyen Malzeme';
+        $old_stmt->close();
+
         $stmt = $connection->prepare($query);
         $stmt->bind_param('i', $malzeme_kodu);
         if ($stmt->execute()) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name malzemesi sistemden silindi", 'DELETE');
             $response = ['status' => 'success', 'message' => 'Malzeme başarıyla silindi.'];
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];

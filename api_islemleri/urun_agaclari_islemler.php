@@ -343,6 +343,8 @@ elseif ($request_method === 'POST') {
             $query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) VALUES ('$urun_kodu', '$urun_ismi', '$bilesenin_malzeme_turu', '$bilesen_kodu', '$bilesen_ismi', '$bilesen_miktari', '$agac_turu')";
 
             if ($connection->query($query)) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürün ağacına $bilesen_ismi bileşeni eklendi", 'CREATE');
                 $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla eklendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
@@ -368,9 +370,18 @@ elseif ($request_method === 'POST') {
             $bilesen_ismi = $connection->real_escape_string($bilesen_ismi);
             $agac_turu = $connection->real_escape_string($agac_turu);
             
+            // Eski ürün ağacı bilgilerini al
+            $old_tree_query = "SELECT urun_ismi, bilesen_ismi FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
+            $old_tree_result = $connection->query($old_tree_query);
+            $old_tree = $old_tree_result->fetch_assoc();
+            $old_product_name = $old_tree['urun_ismi'] ?? 'Bilinmeyen Ürün';
+            $old_component_name = $old_tree['bilesen_ismi'] ?? 'Bilinmeyen Bileşen';
+
             $query = "UPDATE urun_agaci SET urun_kodu = '$urun_kodu', urun_ismi = '$urun_ismi', bilesenin_malzeme_turu = '$bilesenin_malzeme_turu', bilesen_kodu = '$bilesen_kodu', bilesen_ismi = '$bilesen_ismi', bilesen_miktari = '$bilesen_miktari', agac_turu = '$agac_turu' WHERE urun_agaci_id = $urun_agaci_id";
 
             if ($connection->query($query)) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$old_product_name ürün ağacındaki $old_component_name bileşeni $bilesen_ismi olarak güncellendi", 'UPDATE');
                 $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla güncellendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
@@ -389,8 +400,17 @@ elseif ($request_method === 'POST') {
         }
         
         if ($urun_agaci_id) {
+            // Silinen ürün ağacı bilgilerini al
+            $deleted_tree_query = "SELECT urun_ismi, bilesen_ismi FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
+            $deleted_tree_result = $connection->query($deleted_tree_query);
+            $deleted_tree = $deleted_tree_result->fetch_assoc();
+            $deleted_product_name = $deleted_tree['urun_ismi'] ?? 'Bilinmeyen Ürün';
+            $deleted_component_name = $deleted_tree['bilesen_ismi'] ?? 'Bilinmeyen Bileşen';
+
             $query = "DELETE FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
             if ($connection->query($query)) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_product_name ürün ağacından $deleted_component_name bileşeni silindi", 'DELETE');
                 $response = ['status' => 'success', 'message' => 'Ürün ağacı başarıyla silindi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];

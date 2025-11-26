@@ -85,6 +85,8 @@ if (isset($_GET['action'])) {
                 $query = "INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, adres, notlar, sistem_sifresi) VALUES ('$ad_soyad', '$tc_kimlik_no', '$dogum_tarihi', '$ise_giris_tarihi', '$pozisyon', '$departman', '$e_posta', '$telefon', '$adres', '$notlar', '$escaped_hashed_password')";
 
                 if ($connection->query($query)) {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "$ad_soyad personeli sisteme eklendi", 'CREATE');
                     $response = ['status' => 'success', 'message' => 'Personel başarıyla eklendi.'];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
@@ -135,7 +137,15 @@ if (isset($_GET['action'])) {
 
                 $query = "UPDATE personeller SET $update_fields WHERE personel_id = $personel_id";
 
+                // Eski personel bilgilerini al
+                $old_employee_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
+                $old_employee_result = $connection->query($old_employee_query);
+                $old_employee = $old_employee_result->fetch_assoc();
+                $old_name = $old_employee['ad_soyad'] ?? 'Bilinmeyen Personel';
+
                 if ($connection->query($query)) {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "$old_name personelinin bilgileri güncellendi", 'UPDATE');
                     $response = ['status' => 'success', 'message' => 'Personel başarıyla güncellendi.'];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
@@ -159,8 +169,16 @@ if (isset($_GET['action'])) {
         }
 
         try {
+            // Silinen personel bilgilerini al
+            $deleted_employee_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
+            $deleted_employee_result = $connection->query($deleted_employee_query);
+            $deleted_employee = $deleted_employee_result->fetch_assoc();
+            $deleted_name = $deleted_employee['ad_soyad'] ?? 'Bilinmeyen Personel';
+
             $query = "DELETE FROM personeller WHERE personel_id = $personel_id";
             if ($connection->query($query)) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name personeli sistemden silindi", 'DELETE');
                 $response = ['status' => 'success', 'message' => 'Personel başarıyla silindi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];

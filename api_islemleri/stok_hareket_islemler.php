@@ -467,15 +467,23 @@ switch ($action) {
                         $expense_query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$expense_tarih', $total_cost, 'Fire Gideri', '$expense_description', $personel_id, '$personel_adi', 'Fire_Kaydi_$hareket_id', 'Diğer', 'İç Gider')";
 
                         if ($connection->query($expense_query)) {
+                            // Log ekleme
+                            log_islem($connection, $_SESSION['kullanici_adi'], "$item_name için $miktar $item_unit stok hareketi ve ilgili gider kaydı eklendi", 'CREATE');
                             echo json_encode(['status' => 'success', 'message' => 'Stok hareketi ve ilgili gider kaydı başarıyla kaydedildi.']);
                         } else {
+                            // Log ekleme
+                            log_islem($connection, $_SESSION['kullanici_adi'], "$item_name için $miktar $item_unit stok hareketi eklendi", 'CREATE');
                             // If expense creation fails, still indicate success for the stock movement
                             echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi ancak gider kaydı oluşturulurken hata oluştu: ' . $connection->error]);
                         }
                     } else {
+                        // Log ekleme
+                        log_islem($connection, $_SESSION['kullanici_adi'], "$item_name için $miktar $item_unit stok hareketi eklendi", 'CREATE');
                         echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi. (Maliyet 0 hesaplandı)']);
                     }
                 } else {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "$item_name için $miktar $item_unit stok hareketi eklendi", 'CREATE');
                     echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla kaydedildi.']);
                 }
             } else {
@@ -674,11 +682,17 @@ switch ($action) {
                         $connection->query($expense_insert_query);
                     }
 
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "Stok hareketi güncellendi: $item_name - $miktar $item_unit (gider kaydı ile)", 'UPDATE');
                     echo json_encode(['status' => 'success', 'message' => 'Stok hareketi ve ilgili gider kaydı başarıyla güncellendi.']);
                 } else {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "Stok hareketi güncellendi: $item_name - $miktar $item_unit", 'UPDATE');
                     echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
                 }
             } else {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "Stok hareketi güncellendi: $item_name - $miktar $item_unit", 'UPDATE');
                 echo json_encode(['status' => 'success', 'message' => 'Stok hareketi başarıyla güncellendi.']);
             }
         } else {
@@ -778,6 +792,9 @@ switch ($action) {
                     throw new Exception('Stok geri yüklenirken hata oluştu: ' . $connection->error);
                 }
             }
+
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$movement[isim] ürünü için stok hareketi silindi (ID: $hareket_id)", 'DELETE');
 
             // 4. If all successful, commit
             $connection->commit();

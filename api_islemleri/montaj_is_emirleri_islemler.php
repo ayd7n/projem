@@ -330,9 +330,12 @@ function createWorkOrder() {
                 }
             }
             
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$work_order[urun_ismi] ürünü için montaj iş emri oluşturuldu", 'CREATE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Montaj iş emri başarıyla oluşturuldu']);
         } else {
             throw new Exception("Work order insertion failed: " . $connection->error);
@@ -400,9 +403,12 @@ function updateWorkOrder() {
                 }
             }
             
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$work_order[urun_ismi] ürünü için montaj iş emri güncellendi", 'UPDATE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Montaj iş emri başarıyla güncellendi']);
         } else {
             throw new Exception("Work order update failed: " . $connection->error);
@@ -438,10 +444,21 @@ function deleteWorkOrder() {
         // Then delete work order
         $delete_work_order_query = "DELETE FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         
+        // Silinen iş emrinin ürün ismini al
+        $get_product_query = "SELECT urun_ismi FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
+        $get_product_result = $connection->query($get_product_query);
+        $product_ismi = "Bilinmeyen Ürün";
+        if ($get_product_result && $row = $get_product_result->fetch_assoc()) {
+            $product_ismi = $row['urun_ismi'];
+        }
+
         if ($connection->query($delete_work_order_query)) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$product_ismi ürünü için montaj iş emri silindi", 'DELETE');
+
             // Commit transaction
             $connection->commit();
-            
+
             echo json_encode(['status' => 'success', 'message' => 'Montaj iş emri başarıyla silindi']);
         } else {
             throw new Exception("Work order deletion failed: " . $connection->error);

@@ -150,6 +150,8 @@ function addCustomer() {
         $result = $connection->query($query);
 
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$musteri_adi müşterisi sisteme eklendi", 'CREATE');
             echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla oluşturuldu.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Müşteri oluşturulurken hata oluştu: ' . $connection->error]);
@@ -198,9 +200,17 @@ function updateCustomer() {
             $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
         }
 
+        // Eski müşteri adını almak için sorgu
+        $old_customer_query = "SELECT musteri_adi FROM musteriler WHERE musteri_id = $musteri_id";
+        $old_customer_result = $connection->query($old_customer_query);
+        $old_customer = $old_customer_result->fetch_assoc();
+        $old_customer_name = $old_customer['musteri_adi'] ?? 'Bilinmeyen Müşteri';
+
         $result = $connection->query($query);
 
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$old_customer_name müşterisi $musteri_adi olarak güncellendi", 'UPDATE');
             echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla güncellendi.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Müşteri güncellenirken hata oluştu: ' . $connection->error]);
@@ -225,10 +235,18 @@ function deleteCustomer() {
     }
 
     try {
+        // Silinen müşteri adını almak için sorgu
+        $old_customer_query = "SELECT musteri_adi FROM musteriler WHERE musteri_id = $musteri_id";
+        $old_customer_result = $connection->query($old_customer_query);
+        $old_customer = $old_customer_result->fetch_assoc();
+        $deleted_customer_name = $old_customer['musteri_adi'] ?? 'Bilinmeyen Müşteri';
+
         $query = "DELETE FROM musteriler WHERE musteri_id = $musteri_id";
         $result = $connection->query($query);
 
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_customer_name müşterisi sistemden silindi", 'DELETE');
             echo json_encode(['status' => 'success', 'message' => 'Müşteri başarıyla silindi.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Müşteri silinirken hata oluştu: ' . $connection->error]);

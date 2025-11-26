@@ -104,6 +104,8 @@ function addWorkCenter() {
     $query = "INSERT INTO is_merkezleri (isim, aciklama) VALUES ('$isim', '$aciklama')";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$isim iş merkezi eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla oluşturuldu.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi oluşturulurken hata oluştu: ' . $connection->error]);
@@ -122,9 +124,17 @@ function updateWorkCenter() {
         return;
     }
 
+    // Eski iş merkezi bilgilerini al
+    $old_center_query = "SELECT isim FROM is_merkezleri WHERE is_merkezi_id = $is_merkezi_id";
+    $old_center_result = $connection->query($old_center_query);
+    $old_center = $old_center_result->fetch_assoc();
+    $old_name = $old_center['isim'] ?? 'Bilinmeyen İş Merkezi';
+
     $query = "UPDATE is_merkezleri SET isim = '$isim', aciklama = '$aciklama' WHERE is_merkezi_id = $is_merkezi_id";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_name iş merkezi $isim olarak güncellendi", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi güncellenirken hata oluştu: ' . $connection->error]);
@@ -140,9 +150,17 @@ function deleteWorkCenter() {
         return;
     }
 
+    // Silinen iş merkezi bilgilerini al
+    $old_center_query = "SELECT isim FROM is_merkezleri WHERE is_merkezi_id = $is_merkezi_id";
+    $old_center_result = $connection->query($old_center_query);
+    $old_center = $old_center_result->fetch_assoc();
+    $deleted_name = $old_center['isim'] ?? 'Bilinmeyen İş Merkezi';
+
     $query = "DELETE FROM is_merkezleri WHERE is_merkezi_id = $is_merkezi_id";
 
     if ($connection->query($query)) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name iş merkezi silindi", 'DELETE');
         echo json_encode(['status' => 'success', 'message' => 'İş merkezi başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'İş merkezi silinirken hata oluştu: ' . $connection->error]);

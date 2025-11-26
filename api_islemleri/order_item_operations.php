@@ -93,12 +93,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $return_ismi = $urun_ismi_check;
                 $return_birim = $birim_check;
                 $return_fiyat = $fiyat_check;
-                
+
                 // Ensure we don't have null/empty values
                 $return_ismi = !empty($return_ismi) ? $return_ismi : 'Bilinmeyen Ürün';
                 $return_birim = !empty($return_birim) ? $return_birim : 'adet';
                 $return_fiyat = !empty($return_fiyat) ? floatval($return_fiyat) : 0;
-                
+
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "Siparişe $return_ismi ürünü eklendi (ID: $siparis_id)", 'CREATE');
+
                 // Return the inserted item data for immediate display
                 echo json_encode([
                     'status' => 'success',
@@ -187,8 +190,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                     $update_total_stmt->execute();
                     
+                    // Eski ürün bilgilerini al
+                    $old_product_query = "SELECT urun_ismi FROM siparis_kalemleri WHERE siparis_id = ? AND urun_kodu = ?";
+                    $old_product_stmt = $connection->prepare($old_product_query);
+                    $old_product_stmt->bind_param('ii', $siparis_id, $old_urun_kodu);
+                    $old_product_stmt->execute();
+                    $old_product_result = $old_product_stmt->get_result();
+                    $old_product = $old_product_result->fetch_assoc();
+                    $old_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
+                    $old_product_stmt->close();
+
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "Sipariş kalemi güncellendi: $old_product_name ürünü $product[urun_ismi] olarak değiştirildi (ID: $siparis_id)", 'UPDATE');
+
                     echo json_encode([
-                        'status' => 'success', 
+                        'status' => 'success',
                         'message' => 'Sipariş kalemi başarıyla güncellendi.',
                         'item_data' => [
                             'siparis_id' => $siparis_id,
@@ -250,8 +266,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                     $update_total_stmt->execute();
                     
+                    // Silinen ürün bilgilerini al
+                    $deleted_product_query = "SELECT urun_ismi FROM siparis_kalemleri WHERE siparis_id = ? AND urun_kodu = ?";
+                    $deleted_product_stmt = $connection->prepare($deleted_product_query);
+                    $deleted_product_stmt->bind_param('ii', $siparis_id, $urun_kodu);
+                    $deleted_product_stmt->execute();
+                    $deleted_product_result = $deleted_product_stmt->get_result();
+                    $deleted_product = $deleted_product_result->fetch_assoc();
+                    $deleted_product_name = $deleted_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
+                    $deleted_product_stmt->close();
+
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "Siparişten $deleted_product_name ürünü silindi (ID: $siparis_id)", 'DELETE');
+
                     echo json_encode([
-                        'status' => 'success', 
+                        'status' => 'success',
                         'message' => 'Sipariş kalemi başarıyla silindi.',
                         'urun_kodu' => $urun_kodu
                     ]);

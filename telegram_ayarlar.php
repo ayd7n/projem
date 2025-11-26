@@ -18,9 +18,12 @@ if (!yetkisi_var('page:view:ayarlar')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
-// Fetch current maintenance mode status
-$maintenance_mode_status = get_setting($connection, 'maintenance_mode');
+// Fetch current Telegram settings
+$telegram_result = $connection->query("SELECT ayar_deger FROM ayarlar WHERE ayar_anahtar = 'telegram_bot_token'");
+$telegram_bot_token = $telegram_result->fetch_assoc()['ayar_deger'] ?? '';
 
+$chat_result = $connection->query("SELECT ayar_deger FROM ayarlar WHERE ayar_anahtar = 'telegram_chat_id'");
+$telegram_chat_id = $chat_result->fetch_assoc()['ayar_deger'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -28,7 +31,7 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ayarlar - Parfüm ERP</title>
+    <title>Telegram Ayarları - Parfüm ERP</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -87,10 +90,7 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
             background-color: var(--bg-color);
             color: var(--primary);
         }
-        .settings-card, .settings-form-card {
-            display: block;
-            text-decoration: none;
-            color: var(--text-primary);
+        .settings-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
@@ -104,20 +104,16 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
             box-shadow: var(--shadow);
             color: var(--primary);
         }
-        .settings-card .card-title, .settings-form-card .card-title {
+        .settings-card .card-title {
             font-weight: 700;
         }
-        .settings-card .card-text, .settings-form-card .card-text {
+        .settings-card .card-text {
             color: var(--text-secondary);
         }
-        .settings-card .icon, .settings-form-card .icon {
+        .settings-card .icon {
             font-size: 1.5rem;
             margin-right: 1rem;
             color: var(--primary);
-        }
-        .custom-control-label::before,
-        .custom-control-label::after {
-            cursor: pointer;
         }
     </style>
 </head>
@@ -154,114 +150,31 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
 
     <div class="main-content">
         <div class="page-header">
-            <h1><i class="fas fa-cog"></i> Ayarlar</h1>
-            <p class="text-muted">Sistem ayarlarını ve yapılandırmalarını bu sayfadan yönetin.</p>
+            <h1><i class="fas fa-paper-plane"></i> Telegram Ayarları</h1>
+            <p class="text-muted">Log kayıtlarının gönderileceği Telegram bot ayarlarını yönetin.</p>
         </div>
 
         <div id="alert-container"></div>
 
         <div class="row">
-            <?php if (yetkisi_var('action:ayarlar:currency')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="doviz_kurlari.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-dollar-sign icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Döviz Kurları</h5>
-                            <p class="card-text mb-0">Maliyet hesapları için döviz kurlarını yönetin.</p>
+            <div class="col-md-8 mx-auto">
+                <div class="settings-card">
+                    <form id="telegram-settings-form">
+                        <div class="form-group">
+                            <label for="telegram_bot_token">Telegram Bot Token:</label>
+                            <input type="text" class="form-control" id="telegram_bot_token" name="telegram_bot_token" value="<?php echo htmlspecialchars($telegram_bot_token); ?>" placeholder="Telegram bot token">
+                            <small class="form-text text-muted">Telegram @BotFather'dan oluşturduğunuz botun token'ı</small>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-            <?php if (yetkisi_var('action:ayarlar:backup')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="yedekleme.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-database icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Yedekleme</h5>
-                            <p class="card-text mb-0">Veritabanı yedeği alın ve geri yükleyin.</p>
+                        <div class="form-group">
+                            <label for="telegram_chat_id">Telegram Chat ID'leri:</label>
+                            <textarea class="form-control" id="telegram_chat_id" name="telegram_chat_id" rows="3" placeholder="Her satıra bir Chat ID girin"><?php echo htmlspecialchars($telegram_chat_id); ?></textarea>
+                            <small class="form-text text-muted">Her satıra bir Chat ID girin. Mesajlar tüm belirtilen sohbetlere gönderilecektir.</small>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-            <?php if (yetkisi_var('action:ayarlar:export')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="excele_aktar.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-file-excel icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Excel'e Aktar</h5>
-                            <p class="card-text mb-0">Tablo verilerini CSV olarak dışa aktarın.</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-            <?php if (yetkisi_var('action:ayarlar:backup')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="tablo_temizle.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-eraser icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Tablo Temizle</h5>
-                            <p class="card-text mb-0">Veritabanı tablolarını seçerek temizleyin.</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-
-            <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <div class="settings-form-card">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="fas fa-person-digging icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Bakım Modu</h5>
-                            <p class="card-text mb-0">Siteyi yönetici harici erişime kapatın.</p>
-                        </div>
-                    </div>
-                    <form id="maintenance-form">
-                        <div class="custom-control custom-switch">
-                            <input type="checkbox" class="custom-control-input" id="maintenance-switch" name="maintenance_mode" <?php echo ($maintenance_mode_status === 'on') ? 'checked' : ''; ?>>
-                            <label class="custom-control-label" for="maintenance-switch">Bakım Modunu Aktifleştir</label>
-                        </div>
+                        <button type="submit" class="btn btn-primary">Ayarları Kaydet</button>
+                        <a href="ayarlar.php" class="btn btn-secondary">Geri Dön</a>
                     </form>
                 </div>
             </div>
-            <?php endif; ?>
-
-            <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="honeypot_bilgileri.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-user-secret icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Honeypot Kullanıcı</h5>
-                            <p class="card-text mb-0">Güvenlik için fake kullanıcı bilgileri.</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-
-            <?php if (yetkisi_var('action:ayarlar:telegram')): ?>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="telegram_ayarlar.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-paper-plane icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Telegram Bildirimleri</h5>
-                            <p class="card-text mb-0">Log kayıtlarını Telegram'da bildir.</p>
-                        </div>
-                    </div>
-                </a>
-            </div>
-            <?php endif; ?>
-
         </div>
     </div>
 
@@ -271,15 +184,16 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script>
     $(document).ready(function() {
-        $('#maintenance-switch').on('change', function() {
-            var mode = $(this).is(':checked') ? 'on' : 'off';
+        $('#telegram-settings-form').on('submit', function(e) {
+            e.preventDefault();
 
             $.ajax({
                 url: 'api_islemleri/ayarlar_islemler.php',
                 type: 'POST',
                 data: {
-                    action: 'update_maintenance_mode',
-                    mode: mode
+                    action: 'update_telegram_settings',
+                    telegram_bot_token: $('#telegram_bot_token').val(),
+                    telegram_chat_id: $('#telegram_chat_id').val()
                 },
                 dataType: 'json',
                 success: function(response) {
@@ -299,7 +213,6 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
                 }
             });
         });
-
     });
     </script>
 </body>

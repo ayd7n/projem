@@ -62,6 +62,10 @@ if (isset($_POST['action']) && $_POST['action'] == 'clear_tables') {
         }
     }
 
+    // Log ekleme
+    $tables_list = implode(", ", $tablesToClear);
+    log_islem($connection, $_SESSION['kullanici_adi'], "$tables_list tabloları temizlendi", 'DELETE');
+
     // Re-enable foreign key checks
     $connection->query("SET FOREIGN_KEY_CHECKS = 1");
 

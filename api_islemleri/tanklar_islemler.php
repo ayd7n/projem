@@ -85,6 +85,8 @@ function addTank() {
         $result = $connection->query($query);
 
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$tank_ismi adlı tank sisteme eklendi", 'CREATE');
             echo json_encode(['status' => 'success', 'message' => 'Tank başarıyla oluşturuldu.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Tank oluşturulurken hata oluştu: ' . $connection->error]);
@@ -112,7 +114,15 @@ function updateTank() {
         $query = "UPDATE tanklar SET tank_kodu = '$tank_kodu', tank_ismi = '$tank_ismi', kapasite = $kapasite, not_bilgisi = '$not_bilgisi' WHERE tank_id = $tank_id";
         $result = $connection->query($query);
 
+        // Eski tank bilgilerini al
+        $old_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
+        $old_tank_result = $connection->query($old_tank_query);
+        $old_tank = $old_tank_result->fetch_assoc();
+        $old_name = $old_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
+
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$old_name adlı tank $tank_ismi olarak güncellendi", 'UPDATE');
             echo json_encode(['status' => 'success', 'message' => 'Tank başarıyla güncellendi.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Tank güncellenirken hata oluştu: ' . $connection->error]);
@@ -135,7 +145,15 @@ function deleteTank() {
         $query = "DELETE FROM tanklar WHERE tank_id = $tank_id";
         $result = $connection->query($query);
 
+        // Silinen tank bilgilerini al
+        $deleted_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
+        $deleted_tank_result = $connection->query($deleted_tank_query);
+        $deleted_tank = $deleted_tank_result->fetch_assoc();
+        $deleted_name = $deleted_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
+
         if ($result) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name adlı tank silindi", 'DELETE');
             echo json_encode(['status' => 'success', 'message' => 'Tank başarıyla silindi.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Tank silinirken hata oluştu: ' . $connection->error]);

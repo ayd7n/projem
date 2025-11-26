@@ -177,6 +177,8 @@ if (isset($_GET['action'])) {
             $stmt->bind_param('ssisdiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf);
 
             if ($stmt->execute()) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürünü sisteme eklendi", 'CREATE');
                 $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
@@ -192,11 +194,23 @@ if (isset($_GET['action'])) {
         if (empty($urun_ismi)) {
              $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
         } else {
+            // Eski ürün adını almak için sorgu
+            $old_product_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
+            $old_stmt = $connection->prepare($old_product_query);
+            $old_stmt->bind_param('i', $urun_kodu);
+            $old_stmt->execute();
+            $old_result = $old_stmt->get_result();
+            $old_product = $old_result->fetch_assoc();
+            $old_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
+            $old_stmt->close();
+
             $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ? WHERE urun_kodu = ?";
             $stmt = $connection->prepare($query);
             $stmt->bind_param('ssisdissi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_kodu);
 
             if ($stmt->execute()) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$old_product_name ürünü $urun_ismi olarak güncellendi", 'UPDATE');
                 $response = ['status' => 'success', 'message' => 'Ürün başarıyla güncellendi.'];
             } else {
                 $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
@@ -209,10 +223,22 @@ if (isset($_GET['action'])) {
             exit;
         }
         $urun_kodu = (int)$_POST['urun_kodu'];
+        // Silinen ürün adını almak için sorgu
+        $old_product_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
+        $old_stmt = $connection->prepare($old_product_query);
+        $old_stmt->bind_param('i', $urun_kodu);
+        $old_stmt->execute();
+        $old_result = $old_stmt->get_result();
+        $old_product = $old_result->fetch_assoc();
+        $deleted_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
+        $old_stmt->close();
+
         $query = "DELETE FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
         $stmt->bind_param('i', $urun_kodu);
         if ($stmt->execute()) {
+            // Log ekleme
+            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_product_name ürünü sistemden silindi", 'DELETE');
             $response = ['status' => 'success', 'message' => 'Ürün başarıyla silindi.'];
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];

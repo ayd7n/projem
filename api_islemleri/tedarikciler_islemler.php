@@ -139,6 +139,8 @@ function addSupplier() {
     $stmt->bind_param('sssssss', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $yetkili_kisi, $aciklama_notlar);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$tedarikci_adi tedarikçisi sisteme eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'Tedarikçi başarıyla oluşturuldu.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi oluşturulurken hata oluştu: ' . $connection->error]);
@@ -169,11 +171,23 @@ function updateSupplier() {
         return;
     }
 
+    // Eski tedarikçi adını almak için sorgu
+    $old_supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
+    $old_stmt = $connection->prepare($old_supplier_query);
+    $old_stmt->bind_param('i', $tedarikci_id);
+    $old_stmt->execute();
+    $old_result = $old_stmt->get_result();
+    $old_supplier = $old_result->fetch_assoc();
+    $old_supplier_name = $old_supplier['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
+    $old_stmt->close();
+
     $query = "UPDATE tedarikciler SET tedarikci_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, e_posta = ?, yetkili_kisi = ?, aciklama_notlar = ? WHERE tedarikci_id = ?";
     $stmt = $connection->prepare($query);
     $stmt->bind_param('sssssssi', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $yetkili_kisi, $aciklama_notlar, $tedarikci_id);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_supplier_name tedarikçisi $tedarikci_adi olarak güncellendi", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Tedarikçi başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi güncellenirken hata oluştu: ' . $connection->error]);
@@ -196,11 +210,23 @@ function deleteSupplier() {
         return;
     }
 
+    // Silinen tedarikçi adını almak için sorgu
+    $old_supplier_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = ?";
+    $old_stmt = $connection->prepare($old_supplier_query);
+    $old_stmt->bind_param('i', $tedarikci_id);
+    $old_stmt->execute();
+    $old_result = $old_stmt->get_result();
+    $old_supplier = $old_result->fetch_assoc();
+    $deleted_supplier_name = $old_supplier['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
+    $old_stmt->close();
+
     $query = "DELETE FROM tedarikciler WHERE tedarikci_id = ?";
     $stmt = $connection->prepare($query);
     $stmt->bind_param('i', $tedarikci_id);
 
     if ($stmt->execute()) {
+        // Log ekleme
+        log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_supplier_name tedarikçisi sistemden silindi", 'DELETE');
         echo json_encode(['status' => 'success', 'message' => 'Tedarikçi başarıyla silindi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi silinirken hata oluştu: ' . $connection->error]);

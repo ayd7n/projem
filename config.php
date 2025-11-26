@@ -73,4 +73,67 @@ try {
 }
 // --- End Automatic Daily Backup Logic ---
 
+// Loglama fonksiyonu
+function log_islem($connection, $kullanici_adi, $log_metni, $islem_turu = 'OTHER') {
+    $stmt = $connection->prepare("INSERT INTO log_tablosu (kullanici_adi, log_metni, islem_turu) VALUES (?, ?, ?)");
+    if ($stmt) {
+        $stmt->bind_param('sss', $kullanici_adi, $log_metni, $islem_turu);
+        $stmt->execute();
+        $stmt->close();
+    }
+
+    // Telegram'a mesaj gönder
+    telegram_gonder($log_metni);
+}
+
+// Telegram mesaj gönderme fonksiyonu
+function telegram_gonder($log_message) {
+    global $connection;
+
+    // Ayarlardan Telegram bot token ve chat id'leri al
+    $result = $connection->query("SELECT ayar_deger FROM ayarlar WHERE ayar_anahtar = 'telegram_bot_token'");
+    $bot_token = $result->fetch_assoc()['ayar_deger'] ?? '';
+
+    $result = $connection->query("SELECT ayar_deger FROM ayarlar WHERE ayar_anahtar = 'telegram_chat_id'");
+    $chat_ids_raw = $result->fetch_assoc()['ayar_deger'] ?? '';
+
+    // Eğer bot token yoksa işlem yapma
+    if (empty($bot_token)) {
+        return;
+    }
+
+    // Chat ID'leri satır satır böl ve boş olanları temizle
+    $chat_ids = array_filter(array_map('trim', explode("\n", $chat_ids_raw)), function($id) {
+        return !empty($id);
+    });
+
+    // Eğer herhangi bir chat ID yoksa işlem yapma
+    if (empty($chat_ids)) {
+        return;
+    }
+
+    // Her bir chat ID'ye mesaj gönder
+    foreach ($chat_ids as $chat_id) {
+        // Telegram API'ye mesaj gönder
+        $telegram_url = "https://api.telegram.org/bot" . $bot_token . "/sendMessage";
+        $data = array(
+            'chat_id' => $chat_id,
+            'text' => $log_message
+        );
+
+        $options = array(
+            'http' => array(
+                'header' => "Content-Type: application/json\r\n",
+                'method' => "POST",
+                'content' => json_encode($data),
+            ),
+        );
+
+        $context = stream_context_create($options);
+        $result = file_get_contents($telegram_url, false, $context);
+    }
+
+    // Hata durumunda sadece pas geç
+}
+
 ?>

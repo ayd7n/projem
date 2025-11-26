@@ -111,6 +111,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->bind_param("ssdsssss", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi);
             
             if ($stmt->execute()) {
+                // Log ekleme
+                log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı sisteme eklendi", 'CREATE');
                 echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla eklendi']);
             } else {
                 echo json_encode(['status' => 'error', 'error_code' => 'ES008', 'message' => 'Esans eklenirken bir hata oluştu']);
@@ -149,6 +151,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt->bind_param("ssdsssssi", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi, $esans_id);
                 
                 if ($stmt->execute()) {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı güncellendi", 'UPDATE');
                     echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla güncellendi']);
                 } else {
                     echo json_encode(['status' => 'error', 'error_code' => 'ES010', 'message' => 'Esans güncellenirken bir hata oluştu']);
@@ -169,7 +173,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $connection->prepare("DELETE FROM esanslar WHERE esans_id = ?");
                 $stmt->bind_param("i", $esans_id);
                 
+                // Silinen esans bilgilerini al
+                $get_esans_query = "SELECT esans_ismi FROM esanslar WHERE esans_id = ?";
+                $get_stmt = $connection->prepare($get_esans_query);
+                $get_stmt->bind_param("i", $esans_id);
+                $get_stmt->execute();
+                $get_result = $get_stmt->get_result();
+                $esans_ismi = "Bilinmeyen Esans";
+                if ($get_result && $row = $get_result->fetch_assoc()) {
+                    $esans_ismi = $row['esans_ismi'];
+                }
+
                 if ($stmt->execute()) {
+                    // Log ekleme
+                    log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı sistemden silindi", 'DELETE');
                     echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla silindi']);
                 } else {
                     echo json_encode(['status' => 'error', 'error_code' => 'ES012', 'message' => 'Esans silinirken bir hata oluştu']);

@@ -57,6 +57,9 @@ $update_stmt = $connection->prepare($update_query);
 $update_stmt->bind_param('si', $hashed_password, $_SESSION['user_id']);
 
 if ($update_stmt->execute()) {
+    // Log ekleme
+    $log_message = $user_type === 'musteri' ? "Müşteri şifresi değiştirildi" : "Personel şifresi değiştirildi";
+    log_islem($connection, $_SESSION['kullanici_adi'], $log_message, 'UPDATE');
     echo json_encode(['status' => 'success', 'message' => 'Şifreniz başarıyla değiştirildi.']);
 } else {
     echo json_encode(['status' => 'error', 'message' => 'Şifre değiştirme işlemi sırasında hata oluştu.']);
