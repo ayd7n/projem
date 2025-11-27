@@ -1,6 +1,7 @@
 <?php
 include '../config.php';
 require_once '../includes/backup_functions.php'; // Include the new shared functions
+require_once '../includes/telegram_functions.php'; // For sending notifications
 
 header('Content-Type: application/json');
 
@@ -56,9 +57,34 @@ if (isset($_POST['action'])) {
         $result = perform_automatic_backup($connection);
         // We adjust the message for manual action
         if ($result['status'] === 'success') {
-            $result['message'] = 'Manuel veritabanı yedeği başarıyla oluşturuldu.';
+             $result['message'] = 'Manuel veritabanı yedeği başarıyla oluşturuldu ve Telegram\'a gönderildi.';
         }
         $response = $result;
+    }
+
+    if ($action == 'send_telegram') {
+        if (isset($_POST['filename'])) {
+            $filename = basename($_POST['filename']);
+            $filepath = $backup_dir . $filename;
+
+            if (file_exists($filepath)) {
+                $telegram_settings = get_telegram_settings($connection);
+                if (!empty($telegram_settings['bot_token']) && !empty($telegram_settings['chat_id'])) {
+                    $caption = "Manuel olarak gönderilen veritabanı yedeği: " . $filename;
+                    if (sendTelegramFile($filepath, $caption, $telegram_settings['bot_token'], $telegram_settings['chat_id'])) {
+                        $response = ['status' => 'success', 'message' => 'Yedek dosyası başarıyla Telegram\'a gönderildi.'];
+                    } else {
+                        $response = ['status' => 'error', 'message' => 'Yedek dosyası Telegram\'a gönderilirken bir hata oluştu.'];
+                    }
+                } else {
+                    $response = ['status' => 'error', 'message' => 'Telegram ayarları eksik. Lütfen bot token ve chat ID\'yi kontrol edin.'];
+                }
+            } else {
+                $response = ['status' => 'error', 'message' => 'Yedek dosyası bulunamadı.'];
+            }
+        } else {
+            $response = ['status' => 'error', 'message' => 'Dosya adı belirtilmedi.'];
+        }
     }
 
     if ($action == 'upload_and_restore') {

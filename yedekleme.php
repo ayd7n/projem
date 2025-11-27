@@ -230,6 +230,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                         <small class="text-muted">Tarih: ${backup.created_at} | Boyut: ${formatBytes(backup.size)}</small>
                                     </div>
                                     <div class="backup-controls">
+                                        <button class="btn btn-sm btn-info telegram-btn" data-filename="${backup.filename}"><i class="fab fa-telegram-plane"></i> Gönder</button>
                                         <a href="yedekler/${backup.filename}" class="btn btn-sm btn-success" download><i class="fas fa-download"></i> İndir</a>
                                         <button class="btn btn-sm btn-warning restore-btn" data-filename="${backup.filename}"><i class="fas fa-undo"></i> Geri Yükle</button>
                                         <button class="btn btn-sm btn-danger delete-btn" data-filename="${backup.filename}"><i class="fas fa-trash"></i> Sil</button>
@@ -262,6 +263,29 @@ if ($_SESSION['taraf'] !== 'personel') {
                 },
                 error: function() { showAlert('Yedekleme sırasında bir sunucu hatası oluştu.', 'danger'); },
                 complete: function() { btn.prop('disabled', false).html('<i class="fas fa-plus-circle"></i> Yeni Yedek Oluştur'); }
+            });
+        });
+        
+        // Send to Telegram
+        $(document).on('click', '.telegram-btn', function() {
+            const btn = $(this);
+            const filename = btn.data('filename');
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+            $.ajax({
+                url: 'api_islemleri/yedekleme_islemler.php',
+                type: 'POST',
+                data: { action: 'send_telegram', filename: filename },
+                dataType: 'json',
+                success: function(response) {
+                    showAlert(response.message, response.status);
+                },
+                error: function() {
+                    showAlert('Telegram\'a gönderilirken bir sunucu hatası oluştu.', 'danger');
+                },
+                complete: function() {
+                    btn.prop('disabled', false).html('<i class="fab fa-telegram-plane"></i> Gönder');
+                }
             });
         });
 

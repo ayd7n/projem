@@ -1,5 +1,6 @@
 <?php
 // includes/backup_functions.php
+require_once __DIR__ . '/telegram_functions.php'; // For sending notifications
 
 /**
  * 'yedekler' klasöründeki en son oluşturulmuş .sql yedek dosyasını bulur.
@@ -84,7 +85,7 @@ function restore_database($connection, $backup_path) {
 }
 
 /**
- * Performs an automatic database backup using mysqldump.
+ * Performs an automatic database backup using mysqldump and sends it to Telegram.
  * DİKKAT: sunucuda 'mysqldump' komutunun çalıştırılabilir olması ve
  * PHP'nin 'shell_exec' fonksiyonunu kullanma izni olması gerekir.
  *
@@ -104,7 +105,8 @@ function perform_automatic_backup($connection) {
         }
     }
 
-    $backup_file = $backup_dir . '/backup_' . date('Y-m-d_H-i-s') . '.sql';
+    $backup_file_name = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
+    $backup_file_path = $backup_dir . '/' . $backup_file_name;
     
     // shell_exec'in kullanılabilir olup olmadığını kontrol et
     if (!function_exists('shell_exec')) {
@@ -112,7 +114,6 @@ function perform_automatic_backup($connection) {
     }
     
     // mysqldump komutunu oluştur
-    // Şifre boşsa -p parametresini kullanma, doluysa kullan
     $password_arg = DB_PASS ? sprintf('-p%s', escapeshellarg(DB_PASS)) : '';
     $command = sprintf(
         'mysqldump -h %s -u %s %s %s > %s',
@@ -120,22 +121,29 @@ function perform_automatic_backup($connection) {
         escapeshellarg(DB_USER),
         $password_arg,
         escapeshellarg(DB_NAME),
-        escapeshellarg($backup_file)
+        escapeshellarg($backup_file_path)
     );
 
     // Komutu çalıştır ve çıktıyı yakala (hata ayıklama için)
     $output = shell_exec($command . ' 2>&1');
 
     // Yedekleme işleminin başarılı olup olmadığını kontrol et
-    if (file_exists($backup_file) && filesize($backup_file) > 0) {
+    if (file_exists($backup_file_path) && filesize($backup_file_path) > 0) {
         // Yedekleme başarılı, veritabanındaki son yedekleme tarihini güncelle
-        // update_setting fonksiyonu, includes/auth_functions.php içinde tanımlıdır.
         if (function_exists('update_setting')) {
             update_setting($connection, 'son_otomatik_yedek_tarihi', date('Y-m-d H:i:s'));
         } else {
             error_log("perform_automatic_backup: update_setting fonksiyonu bulunamadı. son_otomatik_yedek_tarihi güncellenemedi.");
         }
-        return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi: {$backup_file}"];
+
+        // Send backup to Telegram
+        $telegram_settings = get_telegram_settings($connection);
+        if (!empty($telegram_settings['bot_token']) && !empty($telegram_settings['chat_id'])) {
+            $caption = "Veritabanı yedeği oluşturuldu: " . $backup_file_name;
+            sendTelegramFile($backup_file_path, $caption, $telegram_settings['bot_token'], $telegram_settings['chat_id']);
+        }
+
+        return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi ve Telegram'a gönderildi: " . basename($backup_file_path)];
     } else {
         // Yedekleme başarısız oldu
         $error_message = "mysqldump ile yedekleme başarısız oldu.";
@@ -143,8 +151,8 @@ function perform_automatic_backup($connection) {
             $error_message .= " Çıktı: " . $output;
         }
         // Başarısız yedek dosyasını sil
-        if (file_exists($backup_file)) {
-            unlink($backup_file);
+        if (file_exists($backup_file_path)) {
+            unlink($backup_file_path);
         }
         return ['status' => 'error', 'message' => $error_message];
     }
