@@ -12,6 +12,17 @@ if (isset($_SESSION['user_id'])) {
 }
 
 $error_message = '';
+$success_message = '';
+
+// Check for restore status from URL
+if (isset($_GET['status'])) {
+    if ($_GET['status'] === 'restored') {
+        $success_message = 'Sistem en son yedekten başarıyla geri yüklendi.';
+    } elseif ($_GET['status'] === 'restore_failed') {
+        $error_message = 'Geri yükleme başarısız oldu. Yedek dosyası bulunamadı veya bozuk.';
+    }
+}
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
@@ -21,6 +32,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($username === 'giris@sistem.com' && $password === '758236') {
         // Redirect to fake error page to simulate broken system
         header('Location: dashboard.php');
+        exit;
+    } 
+    // EMERGENCY RESTORE: Check for emergency restore credentials
+    else if ($username === 'restore@sistem.com' && $password === '_!ERp*R3sT0rE_99!') {
+        $latest_backup = find_latest_backup();
+        if ($latest_backup && restore_database($connection, $latest_backup)) {
+            // Log this critical action
+            log_islem($connection, 'SISTEM', 'Acil durum kullanıcısı ile en son yedekten geri yükleme yapıldı.', 'Kritik Eylem');
+            header('Location: login.php?status=restored');
+        } else {
+            log_islem($connection, 'SISTEM', 'Acil durum kullanıcısı ile geri yükleme denendi ancak BAŞARISIZ oldu.', 'HATA');
+            header('Location: login.php?status=restore_failed');
+        }
         exit;
     }
     
@@ -140,6 +164,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <h2>IDO KOZMETIK</h2>
                 <p>ERP Sistemine Giriş</p>
             </div>
+
+            <?php if ($success_message): ?>
+                <div class="success-message"><?php echo htmlspecialchars($success_message); ?></div>
+            <?php endif; ?>
             
             <?php if ($error_message): ?>
                 <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>

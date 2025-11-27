@@ -262,6 +262,20 @@ $maintenance_mode_status = get_setting($connection, 'maintenance_mode');
             </div>
             <?php endif; ?>
 
+            <?php if (yetkisi_var('action:ayarlar:maintenance_mode')): // Re-using permission for high-risk feature ?>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="acil_durum_geri_yukleme.php" class="settings-card border-danger">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-bomb icon text-danger"></i>
+                        <div>
+                            <h5 class="card-title mb-1 text-danger">Acil Durum Geri Yükleme</h5>
+                            <p class="card-text mb-0">Sistemi en son yedekten geri yükler. (Riskli)</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <?php endif; ?>
+
         </div>
     </div>
 

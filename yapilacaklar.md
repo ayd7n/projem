@@ -7,4 +7,4 @@ Ne kadar kullanıcı , tank , sipariş vs gösteren özet liste. --Çözüldü
 Montaj için olan raporları netleştir iki tane var hangisi doğru diye.
 Esans iş emirleri için rapor var mı diye bak.
 
-DB replace için süper admin olayını hazırla
+DB replace için süper admin olayını hazırla --Çözüldü

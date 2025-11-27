@@ -42,4 +42,40 @@ function reload_permissions($user_id, $connection) {
     $stmt->close();
     $_SESSION['izinler'] = $izinler;
 }
+
+/**
+ * Retrieves a specific setting value from the 'ayarlar' table.
+ *
+ * @param mysqli $connection The database connection object.
+ * @param string $key The key of the setting to retrieve.
+ * @return string|null The value of the setting, or null if not found.
+ */
+function get_setting($connection, $key) {
+    $stmt = $connection->prepare("SELECT ayar_deger FROM ayarlar WHERE ayar_anahtar = ?");
+    if (!$stmt) return null;
+    
+    $stmt->bind_param('s', $key);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $row = $result->fetch_assoc();
+    $stmt->close();
+    
+    return $row ? $row['ayar_deger'] : null;
+}
+
+/**
+ * Creates or updates a specific setting in the 'ayarlar' table.
+ *
+ * @param mysqli $connection The database connection object.
+ * @param string $key The key of the setting.
+ * @param string $value The value to set for the key.
+ */
+function update_setting($connection, $key, $value) {
+    $stmt = $connection->prepare("INSERT INTO ayarlar (ayar_anahtar, ayar_deger) VALUES (?, ?) ON DUPLICATE KEY UPDATE ayar_deger = VALUES(ayar_deger)");
+    if ($stmt) {
+        $stmt->bind_param('ss', $key, $value);
+        $stmt->execute();
+        $stmt->close();
+    }
+}
 ?>
