@@ -1,4 +1,9 @@
 
+/* Universal Box-Sizing */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
 :root {
     --primary: #4a0e63;
     --secondary: #7c2a99;
@@ -100,7 +105,6 @@ body {
 
 form {
     width: 100%;
-    display: flex;
 }
 
 .form-group {
