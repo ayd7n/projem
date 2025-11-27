@@ -22,8 +22,8 @@ if (isset($_GET['action'])) {
             exit;
         }
         try {
-            $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-            $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+            $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+            $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
             $search = isset($_GET['search']) ? $_GET['search'] : '';
             $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
             $offset = ($page - 1) * $limit;
@@ -99,7 +99,7 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Ürün görüntüleme yetkiniz yok.']);
             exit;
         }
-        $urun_kodu = (int)$_GET['id'];
+        $urun_kodu = (int) $_GET['id'];
         $query = "SELECT * FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
         $stmt->bind_param('i', $urun_kodu);
@@ -139,9 +139,15 @@ if (isset($_GET['action'])) {
         $stmt->close();
         $response = ['status' => 'success', 'data' => $raflar];
     } elseif ($action == 'get_all_products') {
-        $query = "SELECT * FROM urunler ORDER BY urun_ismi";
+        $can_view_cost = yetkisi_var('action:urunler:view_cost');
+        $cost_column = $can_view_cost ? ", COALESCE(vum.teorik_maliyet, 0) as teorik_maliyet" : "";
+
+        $query = "SELECT u.* {$cost_column} 
+                  FROM urunler u 
+                  " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
+                  ORDER BY u.urun_ismi";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $products = [];
             while ($row = $result->fetch_assoc()) {
@@ -157,10 +163,10 @@ if (isset($_GET['action'])) {
 
     $urun_ismi = $_POST['urun_ismi'] ?? null;
     $not_bilgisi = $_POST['not_bilgisi'] ?? '';
-    $stok_miktari = isset($_POST['stok_miktari']) ? (int)$_POST['stok_miktari'] : 0;
+    $stok_miktari = isset($_POST['stok_miktari']) ? (int) $_POST['stok_miktari'] : 0;
     $birim = $_POST['birim'] ?? 'adet';
-    $satis_fiyati = isset($_POST['satis_fiyati']) ? (float)$_POST['satis_fiyati'] : 0.0;
-    $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int)$_POST['kritik_stok_seviyesi'] : 0;
+    $satis_fiyati = isset($_POST['satis_fiyati']) ? (float) $_POST['satis_fiyati'] : 0.0;
+    $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
 
@@ -170,7 +176,7 @@ if (isset($_GET['action'])) {
             exit;
         }
         if (empty($urun_ismi)) {
-             $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
+            $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
         } else {
             $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
@@ -190,9 +196,9 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Ürün düzenleme yetkiniz yok.']);
             exit;
         }
-        $urun_kodu = (int)$_POST['urun_kodu'];
+        $urun_kodu = (int) $_POST['urun_kodu'];
         if (empty($urun_ismi)) {
-             $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
+            $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
         } else {
             // Eski ürün adını almak için sorgu
             $old_product_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
@@ -222,7 +228,7 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Ürün silme yetkiniz yok.']);
             exit;
         }
-        $urun_kodu = (int)$_POST['urun_kodu'];
+        $urun_kodu = (int) $_POST['urun_kodu'];
         // Silinen ürün adını almak için sorgu
         $old_product_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
         $old_stmt = $connection->prepare($old_product_query);
@@ -255,7 +261,7 @@ if (isset($_GET['action'])) {
 
         if ($result) {
             $row = $result->fetch_assoc();
-            echo json_encode(['status' => 'success', 'total' => (int)$row['total']]);
+            echo json_encode(['status' => 'success', 'total' => (int) $row['total']]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error]);
         }

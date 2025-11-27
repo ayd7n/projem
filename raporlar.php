@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #4a0e63;
@@ -43,47 +45,60 @@ if (!yetkisi_var('page:view:raporlar')) {
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
         }
+
         .main-content {
             padding: 2rem;
         }
+
         .page-header {
             margin-bottom: 2rem;
         }
+
         .page-header h1 {
             font-weight: 700;
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
-        .settings-card, .settings-form-card {
+
+        .settings-card,
+        .settings-form-card {
             display: block;
             text-decoration: none;
             color: var(--text-primary);
@@ -92,38 +107,48 @@ if (!yetkisi_var('page:view:raporlar')) {
             border-radius: 8px;
             padding: 1.5rem;
             transition: var(--transition);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             height: 100%;
         }
+
         .settings-card:hover {
             transform: translateY(-5px);
             box-shadow: var(--shadow);
             color: var(--primary);
         }
-        .settings-card .card-title, .settings-form-card .card-title {
+
+        .settings-card .card-title,
+        .settings-form-card .card-title {
             font-weight: 700;
         }
-        .settings-card .card-text, .settings-form-card .card-text {
+
+        .settings-card .card-text,
+        .settings-form-card .card-text {
             color: var(--text-secondary);
         }
-        .settings-card .icon, .settings-form-card .icon {
+
+        .settings-card .icon,
+        .settings-form-card .icon {
             font-size: 1.5rem;
             margin-right: 1rem;
             color: var(--primary);
         }
+
         .custom-control-label::before,
         .custom-control-label::after {
             cursor: pointer;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -136,8 +161,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -183,7 +210,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <i class="fas fa-sitemap icon"></i>
                         <div>
                             <h5 class="card-title mb-1">Eksik Bileşen Raporu</h5>
-                            <p class="card-text mb-0">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri analiz edin.</p>
+                            <p class="card-text mb-0">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri
+                                analiz edin.</p>
                         </div>
                     </div>
                 </a>
@@ -218,7 +246,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <i class="fas fa-industry icon"></i>
                         <div>
                             <h5 class="card-title mb-1">Montaj Raporu</h5>
-                            <p class="card-text mb-0">Montaj hattı performansı, iş emri durumları ve üretim analizinin kapsamlı görünümü.</p>
+                            <p class="card-text mb-0">Montaj hattı performansı, iş emri durumları ve üretim analizinin
+                                kapsamlı görünümü.</p>
                         </div>
                     </div>
                 </a>
@@ -229,7 +258,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <i class="fas fa-trophy icon"></i>
                         <div>
                             <h5 class="card-title mb-1">En Çok Satan Ürünler</h5>
-                            <p class="card-text mb-0">Tamamlanmış siparişlere göre en çok satan ürünleri analiz edin.</p>
+                            <p class="card-text mb-0">Tamamlanmış siparişlere göre en çok satan ürünleri analiz edin.
+                            </p>
                         </div>
                     </div>
                 </a>
@@ -262,7 +292,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <i class="fas fa-hourglass-half icon"></i>
                         <div>
                             <h5 class="card-title mb-1">Tedarikçiye Yapılacak Ödemeler</h5>
-                            <p class="card-text mb-0">Sözleşmelere göre bekleyen ödemeleri tedarikçi bazında görüntüleyin.</p>
+                            <p class="card-text mb-0">Sözleşmelere göre bekleyen ödemeleri tedarikçi bazında
+                                görüntüleyin.</p>
                         </div>
                     </div>
                 </a>
@@ -289,6 +320,17 @@ if (!yetkisi_var('page:view:raporlar')) {
                     </div>
                 </a>
             </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="isletme_maliyeti_raporu.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calculator icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">İşletme Maliyeti Analizi</h5>
+                            <p class="card-text mb-0">İşletme maliyetlerini ve ürün kârlılığını analiz edin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
         </div>
 
     </div>
@@ -298,4 +340,5 @@ if (!yetkisi_var('page:view:raporlar')) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>
