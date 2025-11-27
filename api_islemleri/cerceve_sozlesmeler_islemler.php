@@ -204,21 +204,44 @@ switch ($action) {
             break;
         }
 
-        // Silinen sözleşme bilgilerini al
-        $contract_query = "SELECT tedarikci_adi, malzeme_ismi FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
-        $contract_result = $connection->query($contract_query);
-        $contract = $contract_result->fetch_assoc();
-        $tedarikci_adi = $contract['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
-        $malzeme_ismi = $contract['malzeme_ismi'] ?? 'Bilinmeyen Malzeme';
+        // Start transaction for atomic deletion
+        $connection->begin_transaction();
 
-        $query = "DELETE FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
+        try {
+            // Get contract info for logging before deleting
+            $contract_query = "SELECT tedarikci_adi, malzeme_ismi FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
+            $contract_result = $connection->query($contract_query);
+            if (!$contract_result || $contract_result->num_rows === 0) {
+                throw new Exception("Silinecek sözleşme bulunamadı.");
+            }
+            $contract = $contract_result->fetch_assoc();
+            $tedarikci_adi = $contract['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
+            $malzeme_ismi = $contract['malzeme_ismi'] ?? 'Bilinmeyen Malzeme';
 
-        if ($connection->query($query)) {
-            // Log ekleme
-            log_islem($connection, $_SESSION['kullanici_adi'], "$tedarikci_adi tedarikçisine ait $malzeme_ismi malzemesi için çerçeve sözleşme silindi", 'DELETE');
-            echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme başarıyla silindi.']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Çerçeve sözleşme silinirken hata oluştu: ' . $connection->error]);
+            // 1. Delete related records from stok_hareketleri_sozlesmeler
+            $delete_related_query = "DELETE FROM stok_hareketleri_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
+            if (!$connection->query($delete_related_query)) {
+                throw new Exception("İlişkili stok hareketleri silinirken bir hata oluştu: " . $connection->error);
+            }
+
+            // 2. Delete the main contract
+            $delete_main_query = "DELETE FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id";
+            if (!$connection->query($delete_main_query)) {
+                throw new Exception("Çerçeve sözleşme silinirken hata oluştu: " . $connection->error);
+            }
+
+            // If all queries succeed, commit the transaction
+            $connection->commit();
+
+            // Log the operation
+            log_islem($connection, $_SESSION['kullanici_adi'], "$tedarikci_adi tedarikçisine ait $malzeme_ismi malzemesi için çerçeve sözleşme ve ilişkili stok hareketleri silindi", 'DELETE');
+            
+            echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme ve ilişkili tüm kayıtlar başarıyla silindi.']);
+
+        } catch (Exception $e) {
+            // If any query fails, roll back the transaction
+            $connection->rollback();
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
         break;
 
@@ -240,13 +263,14 @@ switch ($action) {
         }
 
         // Get related stock movements
-        $movements_query = "SELECT shk.hareket_id, shk.miktar,
-                           COALESCE(DATE_FORMAT(shk.tarih, '%d.%m.%Y %H:%i'), '-') as tarih,
-                           COALESCE(shk.aciklama, '-') as aciklama
-                           FROM stok_hareket_kayitlari shk
-                           JOIN stok_hareketleri_sozlesmeler shs ON shk.hareket_id = shs.hareket_id
-                           WHERE shs.sozlesme_id = $sozlesme_id AND shk.hareket_turu = 'mal_kabul'
-                           ORDER BY shk.tarih DESC, shk.hareket_id DESC";
+        $movements_query = "SELECT shs.hareket_id, shs.kullanilan_miktar as miktar,
+                           COALESCE(DATE_FORMAT(shs.tarih, '%d.%m.%Y %H:%i'), '-') as tarih,
+                           CONCAT('Mal Kabul - ', shs.malzeme_kodu, ' (', 
+                                  FORMAT(shs.kullanilan_miktar, 2), ' adet x ', 
+                                  FORMAT(shs.birim_fiyat, 2), ' ', shs.para_birimi, ')') as aciklama
+                           FROM stok_hareketleri_sozlesmeler shs
+                           WHERE shs.sozlesme_id = $sozlesme_id
+                           ORDER BY shs.tarih DESC, shs.hareket_id DESC";
 
         $movements_result = $connection->query($movements_query);
 

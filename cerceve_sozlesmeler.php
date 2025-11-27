@@ -837,6 +837,14 @@ function display_date($date_string) {
                         
                         if (response.movements && response.movements.length > 0) {
                             tableHtml = `
+                                <div class="table-responsive">
+                                    <table class="table table-striped table-bordered">
+                                        <thead>
+                                            <tr>
+                                                <th>Hareket ID</th>
+                                                <th>Miktar</th>
+                                                <th>Tarih</th>
+                                                <th>Açıklama</th>
                                             </tr>
                                         </thead>
                                         <tbody>

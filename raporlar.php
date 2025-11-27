@@ -268,12 +268,34 @@ if (!yetkisi_var('page:view:raporlar')) {
                 </a>
             </div>
             <div class="col-md-6 col-lg-4 mb-4">
+                <a href="tedarikciye_yapilacak_odemeler_raporu.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-hourglass-half icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Tedarikçiye Yapılacak Ödemeler</h5>
+                            <p class="card-text mb-0">Sözleşmelere göre bekleyen ödemeleri tedarikçi bazında görüntüleyin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
                 <a href="log_raporlari.php" class="settings-card">
                     <div class="d-flex align-items-center">
                         <i class="fas fa-list-alt icon"></i>
                         <div>
                             <h5 class="card-title mb-1">Sistem İşlem Logları</h5>
                             <p class="card-text mb-0">Sistemde yapılan tüm işlemleri analiz edin.</p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-4 mb-4">
+                <a href="sayisal_ozet.php" class="settings-card">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-list-ol icon"></i>
+                        <div>
+                            <h5 class="card-title mb-1">Sayısal Özet</h5>
+                            <p class="card-text mb-0">Sistemdeki verilerin sayısal özetini görüntüleyin.</p>
                         </div>
                     </div>
                 </a>

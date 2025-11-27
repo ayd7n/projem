@@ -1072,24 +1072,19 @@ switch ($action) {
         }
         
         $contract_query = "SELECT c.sozlesme_id, c.limit_miktar, 
-                          COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
-                          (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar,
+                          COALESCE(shs.toplam_kullanilan, 0) as toplam_mal_kabul_miktari,
+                          (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) as kalan_miktar,
                           c.oncelik
                           FROM cerceve_sozlesmeler c
                           LEFT JOIN (
-                              SELECT 
-                                  tedarikci_id,
-                                  kod as malzeme_kodu,
-                                  SUM(miktar) as toplam_mal_kabul
-                              FROM stok_hareket_kayitlari
-                              WHERE hareket_turu = 'mal_kabul'
-                              GROUP BY tedarikci_id, kod
-                          ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
-                          AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                              SELECT sozlesme_id, SUM(kullanilan_miktar) as toplam_kullanilan
+                              FROM stok_hareketleri_sozlesmeler
+                              GROUP BY sozlesme_id
+                          ) shs ON c.sozlesme_id = shs.sozlesme_id
                           WHERE c.tedarikci_id = ? 
                           AND c.malzeme_kodu = ?
                           AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                          AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                          AND (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) > 0
                           ORDER BY c.oncelik ASC, kalan_miktar DESC";
         
         $contract_stmt = $connection->prepare($contract_query);
@@ -1130,23 +1125,18 @@ switch ($action) {
         
         // Check if there is a valid framework contract for this supplier and material
         $contract_check_query = "SELECT c.sozlesme_id, c.limit_miktar, 
-                                COALESCE(kullanilan.toplam_mal_kabul, 0) as toplam_mal_kabul_miktari,
-                                (c.limit_miktar - COALESCE(kullanilan.toplam_mal_kabul, 0)) as kalan_miktar
+                                COALESCE(shs.toplam_kullanilan, 0) as toplam_mal_kabul_miktari,
+                                (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) as kalan_miktar
                                 FROM cerceve_sozlesmeler c
                                 LEFT JOIN (
-                                    SELECT 
-                                        tedarikci_id,
-                                        kod as malzeme_kodu,
-                                        SUM(miktar) as toplam_mal_kabul
-                                    FROM stok_hareket_kayitlari
-                                    WHERE hareket_turu = 'mal_kabul'
-                                    GROUP BY tedarikci_id, kod
-                                ) kullanilan ON c.tedarikci_id = kullanilan.tedarikci_id 
-                                AND c.malzeme_kodu = kullanilan.malzeme_kodu
+                                    SELECT sozlesme_id, SUM(kullanilan_miktar) as toplam_kullanilan
+                                    FROM stok_hareketleri_sozlesmeler
+                                    GROUP BY sozlesme_id
+                                ) shs ON c.sozlesme_id = shs.sozlesme_id
                                 WHERE c.tedarikci_id = ? 
                                 AND c.malzeme_kodu = ?
                                 AND (c.bitis_tarihi >= CURDATE() OR c.bitis_tarihi IS NULL)
-                                AND COALESCE(kullanilan.toplam_mal_kabul, 0) < c.limit_miktar
+                                AND (c.limit_miktar - COALESCE(shs.toplam_kullanilan, 0)) > 0
                                 ORDER BY c.oncelik ASC, kalan_miktar DESC";
         $contract_check_stmt = $connection->prepare($contract_check_query);
         $contract_check_stmt->bind_param('is', $tedarikci_id, $material_kodu);
