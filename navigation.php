@@ -24,6 +24,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 ?>
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -79,7 +80,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             z-index: 1000;
             backdrop-filter: blur(10px);
         }
-        
+
         .top-bar {
             display: flex;
             justify-content: space-between;
@@ -99,12 +100,12 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             align-items: center;
             gap: 0.8rem;
             letter-spacing: -0.5px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .logo .fa-spa {
             color: var(--accent);
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
         }
 
         .user-controls {
@@ -196,13 +197,33 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             opacity: 0;
         }
 
-        .module-category:nth-child(1) { animation-delay: 0.1s; }
-        .module-category:nth-child(2) { animation-delay: 0.2s; }
-        .module-category:nth-child(3) { animation-delay: 0.3s; }
-        .module-category:nth-child(4) { animation-delay: 0.4s; }
-        .module-category:nth-child(5) { animation-delay: 0.5s; }
-        .module-category:nth-child(6) { animation-delay: 0.6s; }
-        .module-category:nth-child(7) { animation-delay: 0.7s; }
+        .module-category:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+
+        .module-category:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .module-category:nth-child(3) {
+            animation-delay: 0.3s;
+        }
+
+        .module-category:nth-child(4) {
+            animation-delay: 0.4s;
+        }
+
+        .module-category:nth-child(5) {
+            animation-delay: 0.5s;
+        }
+
+        .module-category:nth-child(6) {
+            animation-delay: 0.6s;
+        }
+
+        .module-category:nth-child(7) {
+            animation-delay: 0.7s;
+        }
 
         .module-category h3 {
             font-size: 1.1rem;
@@ -319,6 +340,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 opacity: 0;
                 transform: translateY(20px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -329,19 +351,19 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             .user-controls {
                 display: none;
                 position: absolute;
-                top: 80px;
-                right: 1rem;
+                top: 70px;
+                right: 0.5rem;
                 background: white;
                 color: var(--text-primary);
                 flex-direction: column;
                 min-width: 250px;
-                border-radius: 16px;
+                border-radius: 12px;
                 box-shadow: var(--shadow);
                 gap: 0;
                 border: 1px solid var(--border-color);
-                padding: 0.5rem;
+                padding: 0.25rem;
             }
-            
+
             .hamburger-menu {
                 display: block;
             }
@@ -352,7 +374,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .user-controls .user-info {
-                padding: 1rem;
+                padding: 0.75rem 0.5rem;
                 border-bottom: 1px solid var(--border-color);
                 color: var(--text-primary);
                 font-weight: 700;
@@ -363,16 +385,16 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             .user-controls a {
                 color: var(--text-secondary);
-                font-size: 1rem;
-                padding: 1rem;
+                font-size: 0.95rem;
+                padding: 0.75rem 0.5rem;
                 display: flex;
                 align-items: center;
-                gap: 1rem;
+                gap: 0.75rem;
                 border-radius: 8px;
                 width: 100%;
                 box-sizing: border-box;
             }
-            
+
             .user-controls a:hover {
                 background-color: rgba(74, 14, 99, 0.05);
                 color: var(--primary);
@@ -387,39 +409,134 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
         @media (max-width: 768px) {
             .container {
-                padding: 0 1.5rem;
+                padding: 0 0.75rem;
             }
+
             .top-bar-wrapper {
-                padding: 1rem;
+                padding: 0.6rem 0.75rem;
             }
+
             .module-card {
-                padding: 1.5rem;
+                padding: 0.8rem;
             }
+
             .page-header h1 {
-                font-size: 2.2rem;
+                font-size: 1.7rem;
+            }
+
+            .page-header {
+                margin-bottom: 1rem;
+            }
+
+            .page-header p {
+                font-size: 0.95rem;
+            }
+
+            main {
+                padding: 1rem 0;
             }
         }
-        
+
         @media (max-width: 576px) {
-            .logo h1 {
-                font-size: 1.3rem;
+            .container {
+                padding: 0 0.4rem;
             }
+
+            .logo h1 {
+                font-size: 1.1rem;
+                gap: 0.4rem;
+            }
+
+            .module-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.3rem;
+            }
+
             .module-card {
                 flex-direction: column;
                 text-align: center;
                 align-items: center;
-                gap: 1rem;
+                gap: 0.15rem;
+                padding: 0.3rem 0.25rem;
+                min-height: 80px;
+                justify-content: center;
+                border-radius: 8px;
             }
+
+            .module-card .icon {
+                width: 28px;
+                height: 28px;
+                font-size: 0.85rem;
+                margin-bottom: 0;
+                border-radius: 7px;
+                flex-shrink: 0;
+            }
+
+            .module-card .card-content {
+                width: 100%;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .module-card .card-content .title {
+                font-size: 0.72rem;
+                margin-bottom: 0;
+                line-height: 1.2;
+                font-weight: 600;
+                width: 100%;
+            }
+
+            .module-card .card-content .description {
+                display: none;
+            }
+
+            .module-category {
+                margin-bottom: 0.8rem;
+            }
+
             .module-category h3 {
                 justify-content: center;
                 border-left: none;
-                border-bottom: 3px solid var(--accent);
+                border-bottom: 2px solid var(--accent);
                 border-radius: 0;
-                padding-left: 0;
+                padding: 0.35rem 0.25rem;
+                font-size: 0.82rem;
+                margin-bottom: 0.4rem;
+                gap: 0.4rem;
+            }
+
+            .page-header {
+                margin-bottom: 0.6rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+                margin-bottom: 0.3rem;
+            }
+
+            .page-header p {
+                font-size: 0.82rem;
+                line-height: 1.3;
+            }
+
+            main {
+                padding: 0.6rem 0;
+            }
+
+            .top-bar-wrapper {
+                padding: 0.45rem;
+            }
+
+            footer {
+                padding: 0.8rem;
+                font-size: 0.78rem;
             }
         }
     </style>
 </head>
+
 <body>
     <header class="top-bar-wrapper">
         <div class="top-bar">
@@ -431,8 +548,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             </button>
             <nav class="user-controls">
                 <span class="user-info">Hoş geldin, <strong><?php echo $kullanici_adi; ?></strong></span>
-                <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key fa-fw"></i><span class="link-text">Şifre Değiştir</span></a>
-                <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt fa-fw"></i><span class="link-text">Çıkış Yap</span></a>
+                <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key fa-fw"></i><span
+                        class="link-text">Şifre Değiştir</span></a>
+                <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt fa-fw"></i><span
+                        class="link-text">Çıkış Yap</span></a>
             </nav>
         </div>
     </header>
@@ -450,15 +569,21 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="musteriler.php" class="module-card">
                             <div class="icon"><i class="fas fa-users"></i></div>
-                            <div class="card-content"><span class="title">Müşteriler</span><p class="description">Müşteri kayıtlarını ve bilgilerini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Müşteriler</span>
+                                <p class="description">Müşteri kayıtlarını ve bilgilerini yönetin.</p>
+                            </div>
                         </a>
                         <a href="personeller.php" class="module-card">
                             <div class="icon"><i class="fas fa-id-card"></i></div>
-                            <div class="card-content"><span class="title">Personeller</span><p class="description">Şirket personellerini görüntüleyin ve yönetin.</p></div>
+                            <div class="card-content"><span class="title">Personeller</span>
+                                <p class="description">Şirket personellerini görüntüleyin ve yönetin.</p>
+                            </div>
                         </a>
                         <a href="tedarikciler.php" class="module-card">
                             <div class="icon"><i class="fas fa-truck"></i></div>
-                            <div class="card-content"><span class="title">Tedarikçiler</span><p class="description">Tedarikçi firmaları ve işlemlerini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Tedarikçiler</span>
+                                <p class="description">Tedarikçi firmaları ve işlemlerini yönetin.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -468,19 +593,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="urunler.php" class="module-card">
                             <div class="icon"><i class="fas fa-box"></i></div>
-                            <div class="card-content"><span class="title">Ürünler</span><p class="description">Ürün kataloğunu ve stok durumunu yönetin.</p></div>
+                            <div class="card-content"><span class="title">Ürünler</span>
+                                <p class="description">Ürün kataloğunu ve stok durumunu yönetin.</p>
+                            </div>
                         </a>
                         <a href="esanslar.php" class="module-card">
                             <div class="icon"><i class="fas fa-vial"></i></div>
-                            <div class="card-content"><span class="title">Esanslar</span><p class="description">Esans reçetelerini ve üretimini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Esanslar</span>
+                                <p class="description">Esans reçetelerini ve üretimini yönetin.</p>
+                            </div>
                         </a>
                         <a href="malzemeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-cubes"></i></div>
-                            <div class="card-content"><span class="title">Malzemeler</span><p class="description">Üretim ve diğer malzemeleri takip edin.</p></div>
+                            <div class="card-content"><span class="title">Malzemeler</span>
+                                <p class="description">Üretim ve diğer malzemeleri takip edin.</p>
+                            </div>
                         </a>
                         <a href="urun_agaclari.php" class="module-card">
                             <div class="icon"><i class="fas fa-sitemap"></i></div>
-                            <div class="card-content"><span class="title">Ürün Ağaçları</span><p class="description">Ürün reçetelerini ve bileşenlerini oluşturun.</p></div>
+                            <div class="card-content"><span class="title">Ürün Ağaçları</span>
+                                <p class="description">Ürün reçetelerini ve bileşenlerini oluşturun.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -490,19 +623,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="musteri_siparisleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-shopping-cart"></i></div>
-                            <div class="card-content"><span class="title">Müşteri Siparişleri</span><p class="description">Yeni siparişleri görüntüleyin ve yönetin.</p></div>
+                            <div class="card-content"><span class="title">Müşteri Siparişleri</span>
+                                <p class="description">Yeni siparişleri görüntüleyin ve yönetin.</p>
+                            </div>
                         </a>
                         <a href="esans_is_emirleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-flask"></i></div>
-                            <div class="card-content"><span class="title">Esans İş Emirleri</span><p class="description">Üretimdeki esans iş emirlerini takip edin.</p></div>
+                            <div class="card-content"><span class="title">Esans İş Emirleri</span>
+                                <p class="description">Üretimdeki esans iş emirlerini takip edin.</p>
+                            </div>
                         </a>
                         <a href="montaj_is_emirleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-industry"></i></div>
-                            <div class="card-content"><span class="title">Montaj İş Emirleri</span><p class="description">Montaj ve dolum iş emirlerini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Montaj İş Emirleri</span>
+                                <p class="description">Montaj ve dolum iş emirlerini yönetin.</p>
+                            </div>
                         </a>
                         <a href="manuel_stok_hareket.php" class="module-card">
                             <div class="icon"><i class="fas fa-exchange-alt"></i></div>
-                            <div class="card-content"><span class="title">Stok Hareketleri</span><p class="description">Manuel stok giriş/çıkış işlemleri yapın.</p></div>
+                            <div class="card-content"><span class="title">Stok Hareketleri</span>
+                                <p class="description">Manuel stok giriş/çıkış işlemleri yapın.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -511,25 +652,33 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="lokasyonlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
-                            <div class="card-content"><span class="title">Lokasyonlar</span><p class="description">Depo ve üretim lokasyonlarını tanımlayın.</p></div>
+                            <div class="card-content"><span class="title">Lokasyonlar</span>
+                                <p class="description">Depo ve üretim lokasyonlarını tanımlayın.</p>
+                            </div>
                         </a>
                         <a href="tanklar.php" class="module-card">
                             <div class="icon"><i class="fas fa-database"></i></div>
-                            <div class="card-content"><span class="title">Tanklar</span><p class="description">Üretim tanklarını ve kapasitelerini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Tanklar</span>
+                                <p class="description">Üretim tanklarını ve kapasitelerini yönetin.</p>
+                            </div>
                         </a>
                         <a href="is_merkezleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-warehouse"></i></div>
-                            <div class="card-content"><span class="title">İş Merkezleri</span><p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p></div>
+                            <div class="card-content"><span class="title">İş Merkezleri</span>
+                                <p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="module-category">
                     <h3><i class="fas fa-chart-pie"></i> Raporlama</h3>
                     <div class="module-grid">
                         <a href="raporlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-chart-pie"></i></div>
-                            <div class="card-content"><span class="title">Raporlar</span><p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p></div>
+                            <div class="card-content"><span class="title">Raporlar</span>
+                                <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
+                            </div>
                         </a>
 
                     </div>
@@ -540,21 +689,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="ayarlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-cog"></i></div>
-                            <div class="card-content"><span class="title">Ayarlar</span><p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p></div>
+                            <div class="card-content"><span class="title">Ayarlar</span>
+                                <p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
-                
+
                 <div class="module-category">
                     <h3><i class="fas fa-file-invoice-dollar"></i> Finans</h3>
                     <div class="module-grid">
                         <a href="gider_yonetimi.php" class="module-card">
                             <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                            <div class="card-content"><span class="title">Gider Yönetimi</span><p class="description">Şirket giderlerini takip edin ve raporlayın.</p></div>
+                            <div class="card-content"><span class="title">Gider Yönetimi</span>
+                                <p class="description">Şirket giderlerini takip edin ve raporlayın.</p>
+                            </div>
                         </a>
                         <a href="cerceve_sozlesmeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-file-contract"></i></div>
-                            <div class="card-content"><span class="title">Sözleşmeler</span><p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p></div>
+                            <div class="card-content"><span class="title">Sözleşmeler</span>
+                                <p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -564,7 +719,9 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     <div class="module-grid">
                         <a href="rehber.php" class="module-card">
                             <div class="icon"><i class="fas fa-book-reader"></i></div>
-                            <div class="card-content"><span class="title">Kullanım Rehberi</span><p class="description">Sistemin nasıl çalıştığını ve süreçleri öğrenin.</p></div>
+                            <div class="card-content"><span class="title">Kullanım Rehberi</span>
+                                <p class="description">Sistemin nasıl çalıştığını ve süreçleri öğrenin.</p>
+                            </div>
                         </a>
                     </div>
                 </div>
@@ -577,11 +734,11 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     </footer>
 
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const hamburger = document.querySelector('.hamburger-menu');
             const userControls = document.querySelector('.user-controls');
-            
-            if(hamburger && userControls) {
+
+            if (hamburger && userControls) {
                 hamburger.addEventListener('click', (e) => {
                     e.stopPropagation();
                     userControls.classList.toggle('menu-open');
@@ -596,4 +753,5 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         });
     </script>
 </body>
+
 </html>

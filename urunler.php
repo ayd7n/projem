@@ -207,6 +207,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
         }
 
         .table th i {
@@ -350,7 +351,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <th>Teorik Maliyet (₺)</th>
-                                    <th>Kârlılık (Tahmini)</th>
+
                                 <?php endif; ?>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
                                 <th><i class="fas fa-cube"></i> Raf</th>
@@ -387,7 +388,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <td>{{ formatCurrency(product.satis_fiyati) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <td>{{ formatCurrency(product.teorik_maliyet || 0) }}</td>
-                                    <td v-html="calculateProfitability(product)"></td>
+
                                 <?php endif; ?>
                                 <td>{{ product.depo }}</td>
                                 <td>{{ product.raf }}</td>

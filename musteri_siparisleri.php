@@ -736,6 +736,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
         }
 
         .table th i {

@@ -25,6 +25,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,50 +36,69 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
+            --primary: #4a0e63;
+            /* Deep Purple */
+            --secondary: #7c2a99;
+            /* Lighter Purple */
+            --accent: #d4af37;
+            /* Gold */
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
             --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
+            --bg-color: #fdf8f5;
+            /* Soft Cream */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
+            --text-primary: #111827;
+            /* Dark Gray/Black */
+            --text-secondary: #6b7280;
+            /* Medium Gray */
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         html {
             font-size: 15px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
         }
+
         .main-content {
             padding: 20px;
         }
+
         .page-header {
             margin-bottom: 25px;
         }
+
         .page-header h1 {
             font-size: 1.7rem;
             font-weight: 700;
             margin-bottom: 5px;
             color: var(--text-primary);
         }
+
         .page-header p {
             color: var(--text-secondary);
             font-size: 1rem;
         }
+
         .card {
             background: var(--card-bg);
             border-radius: 10px;
@@ -87,6 +107,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             margin-bottom: 25px;
             overflow: hidden;
         }
+
         .card-header {
             padding: 18px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -94,11 +115,13 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             align-items: center;
             justify-content: space-between;
         }
+
         .card-header h2 {
             font-size: 1.1rem;
             font-weight: 700;
             margin: 0;
         }
+
         .btn {
             padding: 8px 14px;
             border: none;
@@ -112,17 +135,21 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             gap: 8px;
             font-size: 0.825rem;
         }
+
         .btn:hover {
-             transform: translateY(-2px);
+            transform: translateY(-2px);
         }
+
         .btn-primary {
             background-color: var(--primary);
             color: white;
         }
+
         .btn-primary:hover {
             background-color: var(--secondary);
             box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
         }
+
         .add-btn {
             width: 40px;
             height: 40px;
@@ -133,14 +160,17 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             justify-content: center;
             gap: 0;
         }
+
         .btn-success {
             background-color: var(--success);
             color: white;
         }
+
         .btn-danger {
             background-color: var(--danger);
             color: white;
         }
+
         .alert {
             padding: 1rem;
             margin-bottom: 1.5rem;
@@ -148,46 +178,58 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             font-size: 0.9rem;
             border-left: 5px solid;
         }
+
         .alert-danger {
             background-color: #fff5f5;
             color: #c53030;
             border-color: #f56565;
         }
+
         .alert-success {
             background-color: #f0fff4;
             color: #2f855a;
             border-color: #48bb78;
         }
+
         .table th {
             border-top: none;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
         }
+
         .table th i {
             margin-right: 6px;
         }
+
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
         }
+
         .actions {
             display: flex;
             gap: 8px;
             justify-content: center;
         }
+
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -199,8 +241,10 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -227,13 +271,15 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="row">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:tedarikciler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi Ekle</button>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Tedarikçi
+                        Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
                     <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                        <div class="stat-icon"
+                            style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
                             <i class="fas fa-truck"></i>
                         </div>
                         <div class="stat-info">
@@ -253,7 +299,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadSuppliers(1)" placeholder="Tedarikçi ara...">
+                        <input type="text" class="form-control" v-model="search" @input="loadSuppliers(1)"
+                            placeholder="Tedarikçi ara...">
                     </div>
                 </div>
             </div>
@@ -273,7 +320,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="7" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                <td colspan="7" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                    Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="suppliers.length === 0">
                                 <td colspan="7" class="text-center p-4">Henüz kayıtlı tedarikçi bulunmuyor.</td>
@@ -281,10 +329,12 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                             <tr v-for="supplier in suppliers" :key="supplier.tedarikci_id">
                                 <td class="actions">
                                     <?php if (yetkisi_var('action:tedarikciler:edit')): ?>
-                                        <button @click="openModal(supplier)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                        <button @click="openModal(supplier)" class="btn btn-primary btn-sm"><i
+                                                class="fas fa-edit"></i></button>
                                     <?php endif; ?>
                                     <?php if (yetkisi_var('action:tedarikciler:delete')): ?>
-                                        <button @click="deleteSupplier(supplier.tedarikci_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                        <button @click="deleteSupplier(supplier.tedarikci_id)"
+                                            class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                     <?php endif; ?>
                                 </td>
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
@@ -292,7 +342,9 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ supplier.telefon || '-' }}</td>
                                 <td>{{ supplier.e_posta || '-' }}</td>
                                 <td>{{ supplier.yetkili_kisi || '-' }}</td>
-                                <td>{{ supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ? supplier.aciklama_notlar.substring(0, 20) + '...' : supplier.aciklama_notlar) : '-' }}</td>
+                                <td>{{ supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ?
+                                    supplier.aciklama_notlar.substring(0, 20) + '...' : supplier.aciklama_notlar) : '-'
+                                    }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -300,7 +352,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
                     <div class="records-per-page mb-2 mb-md-0 w-100 w-md-auto">
                         <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
-                        <select v-model="limit" @change="loadSuppliers(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                        <select v-model="limit" @change="loadSuppliers(1)" class="form-control d-inline-block"
+                            style="width: auto; margin-left: 8px;">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -314,7 +367,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                         <nav>
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage - 1)"><i class="fas fa-chevron-left"></i> Previous</a>
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage - 1)"><i
+                                            class="fas fa-chevron-left"></i> Previous</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadSuppliers(1)">1</a>
@@ -322,17 +376,20 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <li v-if="currentPage > 4" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
-                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                <li v-for="page in pageNumbers" :key="page" class="page-item"
+                                    :class="{ active: page === currentPage }">
                                     <a class="page-link" href="#" @click.prevent="loadSuppliers(page)">{{ page }}</a>
                                 </li>
                                 <li v-if="currentPage < totalPages - 3" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
                                 <li v-if="currentPage < totalPages - 2" class_="page-item">
-                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(totalPages)">{{ totalPages }}</a>
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(totalPages)">{{
+                                        totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></a>
+                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage + 1)">Next
+                                        <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
                         </nav>
@@ -346,7 +403,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <form @submit.prevent="saveSupplier">
-                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <div class="modal-header"
+                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
                             <h5 class="modal-title">{{ modal.title }}</h5>
                             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -358,7 +416,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Tedarikçi Adı *</label>
-                                        <input type="text" class="form-control" v-model="modal.data.tedarikci_adi" required>
+                                        <input type="text" class="form-control" v-model="modal.data.tedarikci_adi"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -396,7 +455,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                    class="fas fa-times"></i> İptal</button>
                             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
                         </div>
                     </form>
@@ -502,19 +562,19 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
-                    .then(response => {
-                        if (response.status === 'success') {
-                            this.showAlert(response.message, 'success');
-                            $('#supplierModal').modal('hide');
-                            this.loadSuppliers(this.currentPage);
-                        } else {
-                            this.showAlert(response.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                    });
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                $('#supplierModal').modal('hide');
+                                this.loadSuppliers(this.currentPage);
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                        });
                 },
                 deleteSupplier(id) {
                     Swal.fire({
@@ -536,18 +596,18 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 method: 'POST',
                                 body: formData
                             })
-                            .then(response => response.json())
-                            .then(response => {
-                                if (response.status === 'success') {
-                                    this.showAlert(response.message, 'success');
-                                    this.loadSuppliers(this.currentPage);
-                                } else {
-                                    this.showAlert(response.message, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                            });
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        this.showAlert(response.message, 'success');
+                                        this.loadSuppliers(this.currentPage);
+                                    } else {
+                                        this.showAlert(response.message, 'danger');
+                                    }
+                                })
+                                .catch(error => {
+                                    this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                });
                         }
                     })
                 }
@@ -559,4 +619,5 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
         app.mount('#app');
     </script>
 </body>
+
 </html>
