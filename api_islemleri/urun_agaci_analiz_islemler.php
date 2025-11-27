@@ -39,6 +39,9 @@ switch ($action) {
     case 'count_esans_products':
         countEsansProducts();
         break;
+    case 'count_products':
+        countProducts();
+        break;
     default:
         http_response_code(400);
         header('Content-Type: application/json');
@@ -46,9 +49,10 @@ switch ($action) {
         break;
 }
 
-function getAnalysisData() {
+function getAnalysisData()
+{
     global $connection;
-    
+
     // SQL query to find products from urunler table that are MISSING either 'esans' components OR other component types in urun_agaci
     // This identifies problematic products that don't have both required component types
     $query = "
@@ -65,20 +69,20 @@ function getAnalysisData() {
             SELECT
                 u.urun_kodu,
                 u.urun_ismi,
-                'Esans Bileşeni Yok' as aciklama,
+                'Esans bileşeni eksik (malzemeler mevcut)' as aciklama,
                 1 as siralama
             FROM urunler u
             WHERE u.urun_kodu IN (
                 -- Products that have other components (non-esans) in urun_agaci
                 SELECT DISTINCT urun_kodu
                 FROM urun_agaci
-                WHERE bilesenin_malzeme_turu != 'esans'
+                WHERE agac_turu = 'urun' AND bilesenin_malzeme_turu IS NOT NULL AND bilesenin_malzeme_turu != 'esans'
             )
             AND u.urun_kodu NOT IN (
                 -- But exclude products that already have 'esans' components
                 SELECT DISTINCT urun_kodu
                 FROM urun_agaci
-                WHERE bilesenin_malzeme_turu = 'esans'
+                WHERE agac_turu = 'urun' AND bilesenin_malzeme_turu = 'esans'
             )
 
             UNION ALL
@@ -87,20 +91,20 @@ function getAnalysisData() {
             SELECT
                 u.urun_kodu,
                 u.urun_ismi,
-                'Diğer Bileşen Türleri Yok' as aciklama,
+                'Malzeme bileşenleri eksik (esans mevcut)' as aciklama,
                 2 as siralama
             FROM urunler u
             WHERE u.urun_kodu IN (
                 -- Products that have 'esans' components in urun_agaci
                 SELECT DISTINCT urun_kodu
                 FROM urun_agaci
-                WHERE bilesenin_malzeme_turu = 'esans'
+                WHERE agac_turu = 'urun' AND bilesenin_malzeme_turu = 'esans'
             )
             AND u.urun_kodu NOT IN (
                 -- But exclude products that have other component types
                 SELECT DISTINCT urun_kodu
                 FROM urun_agaci
-                WHERE bilesenin_malzeme_turu != 'esans'
+                WHERE agac_turu = 'urun' AND bilesenin_malzeme_turu IS NOT NULL AND bilesenin_malzeme_turu != 'esans'
             )
 
             UNION ALL
@@ -109,13 +113,14 @@ function getAnalysisData() {
             SELECT
                 u.urun_kodu,
                 u.urun_ismi,
-                'Bileşen Yok' as aciklama,
+                'Hiçbir bileşen yok (hem esans hem malzeme eksik)' as aciklama,
                 3 as siralama
             FROM urunler u
             WHERE u.urun_kodu NOT IN (
                 -- Exclude products that have any components in urun_agaci
                 SELECT DISTINCT urun_kodu
                 FROM urun_agaci
+                WHERE agac_turu = 'urun'
             )
         ) as eksik_urunler
         ORDER BY siralama, urun_ismi
@@ -147,7 +152,8 @@ function getAnalysisData() {
     }
 }
 
-function countEsansProducts() {
+function countEsansProducts()
+{
     global $connection;
 
     $query = "SELECT COUNT(*) as total FROM esanslar";
@@ -163,6 +169,26 @@ function countEsansProducts() {
     $row = $result->fetch_assoc();
 
     header('Content-Type: application/json');
-    echo json_encode(['status' => 'success', 'total' => (int)$row['total']]);
+    echo json_encode(['status' => 'success', 'total' => (int) $row['total']]);
+}
+
+function countProducts()
+{
+    global $connection;
+
+    $query = "SELECT COUNT(*) as total FROM urunler";
+    $result = $connection->query($query);
+
+    if (!$result) {
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Sorgu hatası: ' . $connection->error]);
+        exit;
+    }
+
+    $row = $result->fetch_assoc();
+
+    header('Content-Type: application/json');
+    echo json_encode(['status' => 'success', 'total' => (int) $row['total']]);
 }
 ?>

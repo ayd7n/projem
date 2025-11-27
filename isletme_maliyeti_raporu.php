@@ -59,7 +59,7 @@ $endDate = date('d.m.Y');
         .main-content {
             padding: 1rem;
         }
-        
+
         @media (min-width: 768px) {
             .main-content {
                 padding: 2rem;
@@ -74,7 +74,7 @@ $endDate = date('d.m.Y');
             font-weight: 700;
             font-size: 1.5rem;
         }
-        
+
         @media (min-width: 768px) {
             .page-header h1 {
                 font-size: 2rem;
@@ -108,11 +108,12 @@ $endDate = date('d.m.Y');
             font-weight: 700;
             margin-bottom: 0;
         }
-        
+
         @media (min-width: 768px) {
             .stat-card h3 {
                 font-size: 1.5rem;
             }
+
             .stat-card .icon {
                 font-size: 2rem;
             }
@@ -124,7 +125,7 @@ $endDate = date('d.m.Y');
             color: var(--text-secondary);
             font-size: 0.9rem;
         }
-        
+
         .table td {
             font-size: 0.9rem;
             vertical-align: middle;
@@ -143,7 +144,7 @@ $endDate = date('d.m.Y');
             font-weight: 600;
             padding: 0.5em 0.8em;
         }
-        
+
         .explanation-list li {
             margin-bottom: 0.5rem;
         }
@@ -155,8 +156,8 @@ $endDate = date('d.m.Y');
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
         style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700; font-size: 1.2rem;" href="navigation.php"><i
-                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700; font-size: 1.2rem;"
+                href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
                 aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -174,32 +175,41 @@ $endDate = date('d.m.Y');
         </div>
     </nav>
 
-    <div id="app" class="main-content">
+    <div id="app" class="container-fluid main-content">
         <div class="page-header">
             <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mb-3">
                 <div class="mb-3 mb-md-0">
                     <h1><i class="fas fa-calculator"></i> İşletme Maliyeti Analizi</h1>
-                    <p class="text-muted mb-0 small">Son 1 aylık verilere göre işletme maliyeti ve ürün kârlılık analizi.</p>
+                    <p class="text-muted mb-0 small">Son 1 aylık verilere göre işletme maliyeti ve ürün kârlılık
+                        analizi.</p>
                 </div>
-                <button @click="refreshData" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i> Yenile</button>
+                <button @click="refreshData" class="btn btn-sm btn-outline-primary"><i class="fas fa-sync-alt"></i>
+                    Yenile</button>
             </div>
-            
+
             <!-- Calculation Logic Info -->
             <div class="alert alert-info border-0 shadow-sm">
-                <h6 class="alert-heading font-weight-bold small"><i class="fas fa-info-circle"></i> Hesaplama Mantığı ve Detaylar</h6>
+                <h6 class="alert-heading font-weight-bold small"><i class="fas fa-info-circle"></i> Hesaplama Mantığı ve
+                    Detaylar</h6>
                 <hr class="my-2">
                 <div class="row small">
                     <div class="col-md-6">
                         <ul class="mb-0 pl-3 explanation-list">
-                            <li><strong>Analiz Dönemi (Son 1 Ay):</strong> <span class="text-dark font-weight-bold"><?php echo $startDate; ?> - <?php echo $endDate; ?></span> tarihleri arası.</li>
-                            <li><strong>Toplam İşletme Gideri:</strong> Bu tarih aralığındaki, "Malzeme Gideri" kategorisi <u>hariç</u> tüm giderlerin toplamıdır.</li>
-                            <li><strong>Toplam Üretim:</strong> Bu tarih aralığındaki <u>montajı tamamlanan (biten)</u> toplam ürün adedidir.</li>
+                            <li><strong>Analiz Dönemi (Son 1 Ay):</strong> <span
+                                    class="text-dark font-weight-bold"><?php echo $startDate; ?> -
+                                    <?php echo $endDate; ?></span> tarihleri arası.</li>
+                            <li><strong>Toplam İşletme Gideri:</strong> Bu tarih aralığındaki, "Malzeme Gideri"
+                                kategorisi <u>hariç</u> tüm giderlerin toplamıdır.</li>
+                            <li><strong>Toplam Üretim:</strong> Bu tarih aralığındaki <u>montajı tamamlanan (biten)</u>
+                                toplam ürün adedidir.</li>
                         </ul>
                     </div>
                     <div class="col-md-6">
                         <ul class="mb-0 pl-3 explanation-list">
-                            <li><strong>Birim İşletme Maliyeti:</strong> (Toplam İşletme Gideri / Toplam Üretim) formülü ile hesaplanır.</li>
-                            <li><strong>Toplam Tahmini Maliyet:</strong> Ürünün reçetesindeki malzeme maliyeti (Teorik) + Birim İşletme Maliyeti.</li>
+                            <li><strong>Birim İşletme Maliyeti:</strong> (Toplam İşletme Gideri / Toplam Üretim) formülü
+                                ile hesaplanır.</li>
+                            <li><strong>Toplam Tahmini Maliyet:</strong> Ürünün reçetesindeki malzeme maliyeti (Teorik)
+                                + Birim İşletme Maliyeti.</li>
                             <li><strong>Tahmini Kâr/Zarar:</strong> Satış Fiyatı - Toplam Tahmini Maliyet.</li>
                         </ul>
                     </div>

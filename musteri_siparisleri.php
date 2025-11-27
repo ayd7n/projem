@@ -749,25 +749,29 @@ if ($orders_result && $orders_result->num_rows > 0) {
         }
 
         .actions {
-            display: flex;
-            flex-direction: column;
+            display: flex !important;
+            flex-direction: row !important;
             gap: 5px;
             justify-content: center;
             align-items: center;
+            flex-wrap: wrap;
         }
 
+        .actions form {
+            display: inline-flex !important;
+            margin: 0 !important;
+        }
+
+        .actions a,
+        .actions button,
         .actions .btn {
+            display: inline-flex !important;
             padding: 6px 10px;
             border-radius: 18px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }
-
-        @media (min-width: 768px) {
-            .actions {
-                flex-direction: row;
-            }
+            margin: 0 !important;
         }
 
         .no-orders-container {
@@ -791,6 +795,18 @@ if ($orders_result && $orders_result->num_rows > 0) {
             font-size: 0.85rem;
             font-weight: 500;
             white-space: nowrap;
+        }
+
+        @media (max-width: 768px) {
+            .page-header {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                gap: 1rem;
+            }
+
+            .page-header .btn {
+                width: 100%;
+            }
         }
 
         .order-item {

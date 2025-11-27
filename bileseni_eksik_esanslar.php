@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #4a0e63;
@@ -43,58 +45,72 @@ if (!yetkisi_var('page:view:raporlar')) {
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
         }
+
         .main-content {
             padding: 2rem;
         }
+
         .page-header {
             margin-bottom: 2rem;
         }
+
         .page-header h1 {
             font-weight: 700;
             color: var(--primary);
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
+
         .card {
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
+
         .card-header {
             background-color: var(--primary);
             color: white;
             border-radius: 8px 8px 0 0 !important;
             font-weight: 500;
         }
+
         .search-box {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -102,6 +118,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             padding: 1rem;
             margin-bottom: 1.5rem;
         }
+
         .chart-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -112,6 +129,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             height: 250px;
             position: relative;
         }
+
         .table-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -119,19 +137,28 @@ if (!yetkisi_var('page:view:raporlar')) {
             padding: 0.5rem;
             overflow-x: auto;
         }
+
         .table th {
             border-top: none;
             background-color: var(--primary);
             color: white;
+            white-space: nowrap;
         }
+
+        .table td {
+            white-space: nowrap;
+        }
+
         .table-striped tbody tr:nth-of-type(odd) {
             background-color: rgba(124, 42, 153, 0.03);
         }
+
         .btn-custom {
             background-color: var(--primary);
             border-color: var(--primary);
             color: white;
         }
+
         .btn-custom:hover {
             background-color: var(--secondary);
             border-color: var(--secondary);
@@ -139,13 +166,15 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -161,8 +190,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -173,7 +204,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header" style="margin-bottom: 0.5rem;">
             <h1><i class="fas fa-wine-bottle"></i> Ağaçları Olmayan Esanslar</h1>
             <p class="text-muted">Kendi üretim ağaçları olmayan esansları analiz edin.</p>
@@ -181,9 +212,11 @@ if (!yetkisi_var('page:view:raporlar')) {
 
         <div class="alert alert-info" style="margin: 20px 0 15px 0; padding: 12px;">
             <p style="margin: 0; font-size: 0.9rem;">
-                <strong>Nasıl Okunur:</strong> Bu rapor, kendi üretim ağaçları olmayan (yani ürün ağacında yer almayan) esansları listeler.
+                <strong>Nasıl Okunur:</strong> Bu rapor, kendi üretim ağaçları olmayan (yani ürün ağacında yer almayan)
+                esansları listeler.
                 Grafik ise toplam esans envanteri içinde bu ağaçları olmayan esansların oranını sunar.
-                'Bileşeni Eksik' dilimi, ağaçları olmayan esansları, 'Bileşeni Tam' dilimi ise ağaçları olan esansları temsil eder.
+                'Bileşeni Eksik' dilimi, ağaçları olmayan esansları, 'Bileşeni Tam' dilimi ise ağaçları olan esansları
+                temsil eder.
             </p>
         </div>
 
@@ -306,7 +339,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                             const totalResponse = await fetch('api_islemleri/urun_agaci_analiz_islemler.php?action=count_esans_products');
                             if (totalResponse.ok) {
                                 const totalData = await totalResponse.json();
-                                if(totalData.status === 'success') {
+                                if (totalData.status === 'success') {
                                     this.totalEsansProducts = totalData.total || 0;
                                 } else {
                                     // If the API returns error, use fallback
@@ -341,4 +374,5 @@ if (!yetkisi_var('page:view:raporlar')) {
         });
     </script>
 </body>
+
 </html>

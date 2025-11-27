@@ -1,4 +1,4 @@
-Giderlerin ürünlere yedirilmesi olayı...
+Giderlerin ürünlere yedirilmesi olayı... --- Çözüldü
 En çok satan ürünler listesi. --- Çözüldü
 Telegram entegrasyonu. --Çözüldü
 Hangi tedarikçiye ne kadar ödeme yapılmış, ne kadar borç var toplu liste. --Çözüldü

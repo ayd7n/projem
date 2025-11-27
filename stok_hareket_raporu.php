@@ -19,7 +19,8 @@ if (!yetkisi_var('page:view:stok_hareket_raporu')) {
 }
 
 // Fetch data for charts
-function getChartData() {
+function getChartData()
+{
     global $connection;
 
     $data = [];
@@ -44,9 +45,18 @@ function getChartData() {
 
     // Chart 3: Direction (Giriş/Çıkış) Distribution
     $stmt = $connection->prepare("
-        SELECT yon, COUNT(*) as count
+        SELECT 
+            CASE 
+                WHEN yon LIKE 'gir%' THEN 'Giriş' 
+                ELSE 'Çıkış' 
+            END as yon_label, 
+            COUNT(*) as count
         FROM stok_hareket_kayitlari
-        GROUP BY yon
+        GROUP BY 
+            CASE 
+                WHEN yon LIKE 'gir%' THEN 'Giriş' 
+                ELSE 'Çıkış' 
+            END
     ");
     $stmt->execute();
     $data['directions'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
@@ -80,7 +90,7 @@ function getChartData() {
     ");
     $stmt->execute();
     $data['top_products'] = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
-    
+
     return $data;
 }
 
@@ -89,6 +99,7 @@ $chartData = getChartData();
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -97,7 +108,8 @@ $chartData = getChartData();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         :root {
@@ -112,85 +124,103 @@ $chartData = getChartData();
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
             margin: 0;
             padding: 0;
         }
+
         .main-content {
             padding: 2rem;
         }
+
         .page-header {
             margin-bottom: 2rem;
         }
+
         .page-header h1 {
             font-weight: 700;
             color: var(--primary);
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
+
         .chart-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
             margin-bottom: 2rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             height: 400px;
         }
+
         .chart-title {
             font-weight: 700;
             color: var(--primary);
             margin-bottom: 1rem;
             font-size: 1.2rem;
         }
+
         .container-fluid {
             padding-left: 0;
             padding-right: 0;
         }
+
         .row {
             margin-left: 0;
             margin-right: 0;
         }
+
         .col-md-6 {
             padding-left: 0.75rem;
             padding-right: 0.75rem;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -203,8 +233,10 @@ $chartData = getChartData();
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -278,7 +310,7 @@ $chartData = getChartData();
 
     <script>
         // Initialize charts after page load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Chart 1: Movement Type Distribution (Pie Chart)
             var movementTypeChart = echarts.init(document.getElementById('movementTypeChart'));
             var movementTypeOption = {
@@ -299,8 +331,8 @@ $chartData = getChartData();
                     type: 'pie',
                     radius: '50%',
                     data: [
-                        <?php foreach($chartData['movement_types'] as $item): ?>
-                        { value: <?php echo $item['count']; ?>, name: '<?php echo $item['hareket_turu']; ?>' },
+                        <?php foreach ($chartData['movement_types'] as $item): ?>
+                            { value: <?php echo $item['count']; ?>, name: '<?php echo $item['hareket_turu']; ?>' },
                         <?php endforeach; ?>
                     ],
                     emphasis: {
@@ -334,8 +366,8 @@ $chartData = getChartData();
                     type: 'pie',
                     radius: '50%',
                     data: [
-                        <?php foreach($chartData['stock_types'] as $item): ?>
-                        { value: <?php echo $item['count']; ?>, name: '<?php echo $item['stok_turu']; ?>' },
+                        <?php foreach ($chartData['stock_types'] as $item): ?>
+                            { value: <?php echo $item['count']; ?>, name: '<?php echo $item['stok_turu']; ?>' },
                         <?php endforeach; ?>
                     ],
                     emphasis: {
@@ -369,11 +401,11 @@ $chartData = getChartData();
                     type: 'pie',
                     radius: '50%',
                     data: [
-                        <?php foreach($chartData['directions'] as $item): ?>
-                        {
-                            value: <?php echo $item['count']; ?>,
-                            name: '<?php echo ($item['yon'] === 'giris') ? 'Giriş' : 'Çıkış'; ?>'
-                        },
+                        <?php foreach ($chartData['directions'] as $item): ?>
+                            {
+                                value: <?php echo $item['count']; ?>,
+                                name: '<?php echo $item['yon_label']; ?>'
+                            },
                         <?php endforeach; ?>
                     ],
                     emphasis: {
@@ -400,8 +432,8 @@ $chartData = getChartData();
                 xAxis: {
                     type: 'category',
                     data: [
-                        <?php foreach($chartData['monthly_trends'] as $item): ?>
-                        '<?php echo $item['month']; ?>',
+                        <?php foreach ($chartData['monthly_trends'] as $item): ?>
+                            '<?php echo $item['month']; ?>',
                         <?php endforeach; ?>
                     ]
                 },
@@ -410,8 +442,8 @@ $chartData = getChartData();
                 },
                 series: [{
                     data: [
-                        <?php foreach($chartData['monthly_trends'] as $item): ?>
-                        <?php echo $item['count']; ?>,
+                        <?php foreach ($chartData['monthly_trends'] as $item): ?>
+                            <?php echo $item['count']; ?>,
                         <?php endforeach; ?>
                     ],
                     type: 'line',
@@ -439,8 +471,8 @@ $chartData = getChartData();
                 xAxis: {
                     type: 'category',
                     data: [
-                        <?php foreach($chartData['volume_by_type'] as $item): ?>
-                        '<?php echo $item['stok_turu']; ?>',
+                        <?php foreach ($chartData['volume_by_type'] as $item): ?>
+                            '<?php echo $item['stok_turu']; ?>',
                         <?php endforeach; ?>
                     ]
                 },
@@ -449,8 +481,8 @@ $chartData = getChartData();
                 },
                 series: [{
                     data: [
-                        <?php foreach($chartData['volume_by_type'] as $item): ?>
-                        <?php echo $item['total_volume']; ?>,
+                        <?php foreach ($chartData['volume_by_type'] as $item): ?>
+                            <?php echo $item['total_volume']; ?>,
                         <?php endforeach; ?>
                     ],
                     type: 'bar',
@@ -483,8 +515,8 @@ $chartData = getChartData();
                 xAxis: {
                     type: 'category',
                     data: [
-                        <?php foreach($chartData['top_products'] as $item): ?>
-                        '<?php echo addslashes($item['isim']); ?>',
+                        <?php foreach ($chartData['top_products'] as $item): ?>
+                            '<?php echo addslashes($item['isim']); ?>',
                         <?php endforeach; ?>
                     ],
                     axisLabel: {
@@ -499,8 +531,8 @@ $chartData = getChartData();
                     name: 'Hareket Sayısı',
                     type: 'bar',
                     data: [
-                        <?php foreach($chartData['top_products'] as $item): ?>
-                        <?php echo $item['count']; ?>,
+                        <?php foreach ($chartData['top_products'] as $item): ?>
+                            <?php echo $item['count']; ?>,
                         <?php endforeach; ?>
                     ],
                     itemStyle: {
@@ -511,7 +543,7 @@ $chartData = getChartData();
             topProductsChart.setOption(topProductsOption);
 
             // Make charts responsive
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 movementTypeChart.resize();
                 stockTypeChart.resize();
                 directionChart.resize();
@@ -522,4 +554,5 @@ $chartData = getChartData();
         });
     </script>
 </body>
+
 </html>

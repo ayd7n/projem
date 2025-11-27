@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +32,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!-- Apache ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
@@ -93,7 +95,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             opacity: 0.9;
             font-size: 1rem;
         }
-        
+
         .stat-card .icon-wrapper {
             background-color: rgba(255, 255, 255, 0.2);
             width: 60px;
@@ -143,7 +145,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             vertical-align: middle;
             color: var(--text-secondary);
         }
-        
+
         .badge-profit {
             background-color: #d4edda;
             color: #155724;
@@ -151,7 +153,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             border-radius: 20px;
             font-weight: 600;
         }
-        
+
         .badge-loss {
             background-color: #f8d7da;
             color: #721c24;
@@ -168,12 +170,16 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -185,8 +191,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="raporlar.php">Raporlar</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -197,7 +205,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header">
             <h1><i class="fas fa-chart-line"></i> Müşteri Satış Raporu</h1>
             <p class="text-muted">Müşteri bazlı satış, ürün dağılımı ve karlılık analizi.</p>
@@ -237,7 +245,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                             <i class="fas fa-crown" style="font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <h3 id="topCustomer" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">-</h3>
+                            <h3 id="topCustomer"
+                                style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
+                                -</h3>
                             <p>En İyi Müşteri</p>
                         </div>
                     </div>
@@ -250,7 +260,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                             <i class="fas fa-box-open" style="font-size: 1.5rem;"></i>
                         </div>
                         <div>
-                            <h3 id="topProduct" style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">-</h3>
+                            <h3 id="topProduct"
+                                style="font-size: 1.2rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
+                                -</h3>
                             <p>En Çok Satan Ürün</p>
                         </div>
                     </div>
@@ -371,27 +383,27 @@ if (!yetkisi_var('page:view:raporlar')) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+
     <script>
         let allDetailData = [];
         let filteredDetailData = [];
         let currentPage = 1;
         const itemsPerPage = 10;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadReportData();
 
-            $('#searchCustomer').on('keyup', function() {
+            $('#searchCustomer').on('keyup', function () {
                 var value = $(this).val().toLowerCase();
-                $("#customerTable tbody tr").filter(function() {
+                $("#customerTable tbody tr").filter(function () {
                     $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
                 });
             });
 
-            $('#searchDetail').on('keyup', function() {
+            $('#searchDetail').on('keyup', function () {
                 var value = $(this).val().toLowerCase();
-                filteredDetailData = allDetailData.filter(item => 
-                    item.musteri_adi.toLowerCase().includes(value) || 
+                filteredDetailData = allDetailData.filter(item =>
+                    item.musteri_adi.toLowerCase().includes(value) ||
                     item.urun_ismi.toLowerCase().includes(value) ||
                     item.urun_kodu.toString().includes(value)
                 );
@@ -410,11 +422,11 @@ if (!yetkisi_var('page:view:raporlar')) {
                 type: 'GET',
                 data: { action: 'get_report_data' },
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         allDetailData = response.data;
                         filteredDetailData = [...allDetailData];
-                        
+
                         updateStats(response);
                         renderCustomerTable(response.customer_totals);
                         renderDetailTable();
@@ -426,7 +438,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                         alert('Veri yüklenirken hata oluştu: ' + response.message);
                     }
                 },
-                error: function() {
+                error: function () {
                     alert('Sunucu hatası.');
                 }
             });
@@ -438,10 +450,10 @@ if (!yetkisi_var('page:view:raporlar')) {
             if (!data || data.length === 0) return;
 
             let sortedData = [...data].sort((a, b) => parseFloat(b.toplam_siparis_sayisi) - parseFloat(a.toplam_siparis_sayisi)).slice(0, 10);
-            
+
             let chartDom = document.getElementById('orderCountChart');
             if (!chartDom) return;
-            
+
             let myChart = echarts.init(chartDom);
             let option = {
                 tooltip: {
@@ -509,8 +521,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 ]
             };
             myChart.setOption(option);
-            
-            window.addEventListener('resize', function() {
+
+            window.addEventListener('resize', function () {
                 myChart.resize();
             });
         }
@@ -565,7 +577,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                     axisLabel: {
                         color: '#333',
                         fontWeight: 'bold',
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.length > 15 ? value.substring(0, 15) + '...' : value;
                         }
                     },
@@ -602,20 +614,20 @@ if (!yetkisi_var('page:view:raporlar')) {
                 ]
             };
             myChart.setOption(option);
-            
-            window.addEventListener('resize', function() {
+
+            window.addEventListener('resize', function () {
                 myChart.resize();
             });
         }
 
         function updateStats(data) {
             $('#totalCustomers').text(data.customer_totals.length);
-            
+
             let totalSales = data.customer_totals.reduce((sum, item) => sum + item.toplam_satis, 0);
             $('#totalSales').text(formatCurrency(totalSales));
 
             // Find top customer
-            let topCustomer = data.customer_totals.reduce((prev, current) => (prev.toplam_satis > current.toplam_satis) ? prev : current, {musteri_adi: '-', toplam_satis: 0});
+            let topCustomer = data.customer_totals.reduce((prev, current) => (prev.toplam_satis > current.toplam_satis) ? prev : current, { musteri_adi: '-', toplam_satis: 0 });
             $('#topCustomer').text(topCustomer.musteri_adi);
             $('#topCustomer').attr('title', topCustomer.musteri_adi + ' (' + formatCurrency(topCustomer.toplam_satis) + ')');
 
@@ -628,8 +640,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 }
                 productTotals[item.urun_kodu].total_sales += item.toplam_satis;
             });
-            
-            let topProduct = Object.values(productTotals).reduce((prev, current) => (prev.total_sales > current.total_sales) ? prev : current, {name: '-', total_sales: 0});
+
+            let topProduct = Object.values(productTotals).reduce((prev, current) => (prev.total_sales > current.total_sales) ? prev : current, { name: '-', total_sales: 0 });
             $('#topProduct').text(topProduct.name);
             $('#topProduct').attr('title', topProduct.name + ' (' + formatCurrency(topProduct.total_sales) + ')');
         }
@@ -653,7 +665,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
         function renderDetailTable() {
             let totalPages = Math.ceil(filteredDetailData.length / itemsPerPage);
-            
+
             // Adjust current page if out of bounds
             if (currentPage > totalPages) currentPage = totalPages || 1;
             if (currentPage < 1) currentPage = 1;
@@ -694,7 +706,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
         function renderPaginationControls(totalPages) {
             let html = '';
-            
+
             // Previous
             html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
                         <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Önceki</a>
@@ -706,8 +718,8 @@ if (!yetkisi_var('page:view:raporlar')) {
             let endPage = Math.min(totalPages, currentPage + 2);
 
             if (startPage > 1) {
-                 html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
-                 if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
+                if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
 
             for (let i = startPage; i <= endPage; i++) {
@@ -736,7 +748,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
         function renderProfitChart(data) {
             let sortedData = [...data].sort((a, b) => b.toplam_kar - a.toplam_kar).slice(0, 10);
-            
+
             let chartDom = document.getElementById('profitChart');
             let myChart = echarts.init(chartDom);
             let option = {
@@ -747,9 +759,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                     borderColor: '#eee',
                     borderWidth: 1,
                     textStyle: { color: '#333' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         let val = params[0].value;
-                        return `<strong>${params[0].name}</strong><br/>Kar: ${val.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺`;
+                        return `<strong>${params[0].name}</strong><br/>Kar: ${val.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
                     }
                 },
                 grid: {
@@ -760,8 +772,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 },
                 xAxis: {
                     type: 'value',
-                    axisLabel: { 
-                        formatter: function(value) {
+                    axisLabel: {
+                        formatter: function (value) {
                             if (value >= 1000) return (value / 1000).toFixed(1) + 'k ₺';
                             return value + ' ₺';
                         },
@@ -803,8 +815,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                         label: {
                             show: true,
                             position: 'right',
-                            formatter: function(params) {
-                                return params.value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + ' ₺';
+                            formatter: function (params) {
+                                return params.value.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺';
                             },
                             color: '#666',
                             fontWeight: 'bold'
@@ -818,8 +830,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 ]
             };
             myChart.setOption(option);
-            
-            window.addEventListener('resize', function() {
+
+            window.addEventListener('resize', function () {
                 myChart.resize();
             });
         }
@@ -840,7 +852,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             let myChart = echarts.init(chartDom);
             let option = {
                 color: [
-                    '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de', 
+                    '#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de',
                     '#3ba272', '#fc8452', '#9a60b4', '#ea7ccc', '#2f4554'
                 ],
                 tooltip: {
@@ -849,9 +861,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                     borderColor: '#eee',
                     borderWidth: 1,
                     textStyle: { color: '#333' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         return `<strong>${params.name}</strong><br/>
-                                Gelir: ${params.value.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺<br/>
+                                Gelir: ${params.value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺<br/>
                                 Oran: ${params.percent}%`;
                     }
                 },
@@ -908,11 +920,12 @@ if (!yetkisi_var('page:view:raporlar')) {
                 ]
             };
             myChart.setOption(option);
-            
-            window.addEventListener('resize', function() {
+
+            window.addEventListener('resize', function () {
                 myChart.resize();
             });
         }
     </script>
 </body>
+
 </html>

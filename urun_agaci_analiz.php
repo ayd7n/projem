@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -29,7 +30,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #4a0e63;
@@ -43,58 +45,72 @@ if (!yetkisi_var('page:view:raporlar')) {
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
         }
+
         .main-content {
             padding: 2rem;
         }
+
         .page-header {
             margin-bottom: 2rem;
         }
+
         .page-header h1 {
             font-weight: 700;
             color: var(--primary);
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
+
         .card {
             border: 1px solid var(--border-color);
             border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
         }
+
         .card-header {
             background-color: var(--primary);
             color: white;
             border-radius: 8px 8px 0 0 !important;
             font-weight: 500;
         }
+
         .search-box {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -102,6 +118,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             padding: 1rem;
             margin-bottom: 1.5rem;
         }
+
         .chart-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -111,6 +128,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             height: 250px;
             position: relative;
         }
+
         .table-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -118,6 +136,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             padding: 0.5rem;
             overflow-x: auto;
         }
+
         .chart-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
@@ -126,33 +145,50 @@ if (!yetkisi_var('page:view:raporlar')) {
             margin-bottom: 2rem;
             height: 500px;
         }
+
         .table th {
             border-top: none;
             background-color: var(--primary);
             color: white;
+            white-space: nowrap;
         }
+
+        .table td {
+            white-space: nowrap;
+        }
+
         .table-striped tbody tr:nth-of-type(odd) {
             background-color: rgba(124, 42, 153, 0.03);
         }
+
         .btn-custom {
             background-color: var(--primary);
             border-color: var(--primary);
             color: white;
         }
+
         .btn-custom:hover {
             background-color: var(--secondary);
             border-color: var(--secondary);
             color: white;
         }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                margin-top: 1.5rem;
+            }
+        }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -168,8 +204,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -180,17 +218,33 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header" style="margin-bottom: 0.5rem;">
             <h1><i class="fas fa-sitemap"></i> Eksik Bileşen Raporu</h1>
             <p class="text-muted">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri analiz edin.</p>
         </div>
 
         <div class="alert alert-info" style="margin: 10px 0; padding: 10px;">
+            <p style="margin: 0 0 8px 0; font-size: 0.9rem;">
+                <strong>Bileşen Durumu Açıklaması:</strong>
+            </p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.85rem;">
+                <li><strong>Esans bileşeni eksik (malzemeler mevcut):</strong> Ürünün malzeme bileşenleri (etiket,
+                    kapak, vb.) tanımlı ancak esans bileşeni eksik</li>
+                <li><strong>Malzeme bileşenleri eksik (esans mevcut):</strong> Ürünün esans bileşeni tanımlı ancak
+                    malzeme bileşenleri (etiket, kapak, vb.) eksik</li>
+                <li><strong>Hiçbir bileşen yok (hem esans hem malzeme eksik):</strong> Ürünün hiçbir bileşeni
+                    tanımlanmamış</li>
+            </ul>
+        </div>
+
+        <div class="alert alert-info" style="margin: 10px 0; padding: 10px;">
             <p style="margin: 0; font-size: 0.9rem;">
-                <strong>Nasıl Okunur:</strong> Bu rapor, hem esans hem de diğer bileşen türlerine (etiket, kapak, vb.) sahip OLMAYAN ürünleri listeler.
+                <strong>Nasıl Okunur:</strong> Bu rapor, hem esans hem de diğer bileşen türlerine (etiket, kapak, vb.)
+                sahip OLMAYAN ürünleri listeler.
                 Grafik ise toplam ürün envanteri içinde bu eksiklikleri gösteren ürün oranını sunar.
-                'Bileşeni Eksik' dilimi, eksik olan ürünleri, 'Bileşeni Tam' dilimi ise eksik olmayan ürünleri temsil eder.
+                'Bileşeni Eksik' dilimi, eksik olan ürünleri, 'Bileşeni Tam' dilimi ise eksik olmayan ürünleri temsil
+                eder.
             </p>
         </div>
 
@@ -232,7 +286,7 @@ if (!yetkisi_var('page:view:raporlar')) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+
     <script>
         new Vue({
             el: '#app',
@@ -251,7 +305,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 pages() {
                     const pages = [];
                     const totalPages = this.totalPages;
-                    
+
                     if (totalPages <= 5) {
                         for (let i = 1; i <= totalPages; i++) {
                             pages.push(i);
@@ -279,14 +333,14 @@ if (!yetkisi_var('page:view:raporlar')) {
                             pages.push(totalPages);
                         }
                     }
-                    
+
                     return pages;
                 }
             },
             mounted() {
                 this.fetchData();
                 this.initChart();
-                
+
                 // Set up search functionality
                 const searchInput = document.getElementById('searchInput');
                 searchInput.addEventListener('input', (e) => {
@@ -379,11 +433,11 @@ if (!yetkisi_var('page:view:raporlar')) {
                             this.items = await response.json();
                             this.missingComponentProducts = this.items.length;
 
-                            // Get total product count
-                            const totalResponse = await fetch('api_islemleri/urunler_islemler.php?action=count_products');
+                            // Get total product count from urunler table
+                            const totalResponse = await fetch('api_islemleri/urun_agaci_analiz_islemler.php?action=count_products');
                             if (totalResponse.ok) {
                                 const totalData = await totalResponse.json();
-                                if(totalData.status === 'success') {
+                                if (totalData.status === 'success') {
                                     this.totalProducts = totalData.total || 0;
                                 } else {
                                     // If the API returns error, use fallback
@@ -418,4 +472,5 @@ if (!yetkisi_var('page:view:raporlar')) {
         });
     </script>
 </body>
+
 </html>

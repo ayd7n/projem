@@ -197,6 +197,7 @@ try {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -205,7 +206,8 @@ try {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <style>
         :root {
             --primary: #4a0e63;
@@ -219,85 +221,103 @@ try {
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
         }
+
         .main-content {
             padding: 2rem;
         }
+
         .page-header {
             margin-bottom: 2rem;
         }
+
         .page-header h1 {
             font-weight: 700;
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
+
         .summary-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1.5rem;
             transition: var(--transition);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             height: 100%;
             text-align: center;
         }
+
         .summary-number {
             font-size: 2.5rem;
             font-weight: 700;
             color: var(--primary);
             margin: 1rem 0;
         }
+
         .summary-label {
             font-size: 1rem;
             color: var(--text-secondary);
             font-weight: 500;
         }
+
         .summary-icon {
             font-size: 2rem;
             color: var(--secondary);
             margin-bottom: 0.5rem;
         }
+
         .table th {
             background-color: var(--primary);
             color: white;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -310,8 +330,10 @@ try {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -322,7 +344,7 @@ try {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header">
             <h1><i class="fas fa-list-ol"></i> Sayısal Özet</h1>
             <p class="text-muted">Sistemdeki verilerin sayısal özetini görüntüleyin.</p>
@@ -355,7 +377,8 @@ try {
                             <tr>
                                 <td>2</td>
                                 <td><i class="fas fa-sign-in-alt text-primary"></i> Müşteri Sistem Girişi </td>
-                                <td class="font-weight-bold"><?php echo number_format($musteri_sistem_giris_yetkisi_count); ?></td>
+                                <td class="font-weight-bold">
+                                    <?php echo number_format($musteri_sistem_giris_yetkisi_count); ?></td>
                                 <td>Sistem erişim yetkisine sahip müşteri sayısı</td>
                             </tr>
                             <tr>
@@ -367,7 +390,8 @@ try {
                             <tr>
                                 <td>4</td>
                                 <td><i class="fas fa-sign-in-alt text-success"></i> Personel Sistem Girişi </td>
-                                <td class="font-weight-bold"><?php echo number_format($personel_sistem_giris_yetkisi_count); ?></td>
+                                <td class="font-weight-bold">
+                                    <?php echo number_format($personel_sistem_giris_yetkisi_count); ?></td>
                                 <td>Sisteme erişim yetkisine sahip personel sayısı</td>
                             </tr>
 
@@ -410,7 +434,7 @@ try {
                                 <td class="font-weight-bold"><?php echo number_format($esans_count); ?></td>
                                 <td>Toplam esans çeşidi sayısı</td>
                             </tr>
-                             <tr>
+                            <tr>
                                 <td>11</td>
                                 <td><i class="fas fa-boxes text-success"></i> Toplam Ürün Stoğu </td>
                                 <td class="font-weight-bold"><?php echo number_format($toplam_urun_stogu); ?></td>
@@ -457,7 +481,8 @@ try {
                             <tr>
                                 <td>18</td>
                                 <td><i class="fas fa-cogs text-secondary"></i> Ürün Ağaçlarında Bileşen </td>
-                                <td class="font-weight-bold"><?php echo number_format($urun_agaci_bilesen_count); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($urun_agaci_bilesen_count); ?>
+                                </td>
                                 <td>Ürün ağaçlarında kullanılan farklı bileşen sayısı</td>
                             </tr>
                             <tr>
@@ -483,25 +508,29 @@ try {
                             <tr>
                                 <td>22</td>
                                 <td><i class="fas fa-file-alt text-warning"></i> Oluşturulan Sipariş </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_olusturulan_count); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_olusturulan_count); ?>
+                                </td>
                                 <td>Toplam oluşturulan sipariş sayısı (beklemede)</td>
                             </tr>
                             <tr>
                                 <td>23</td>
                                 <td><i class="fas fa-clock text-primary"></i> Onay Bekleyen Sipariş </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_onay_bekleyen_count); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_onay_bekleyen_count); ?>
+                                </td>
                                 <td>Onay bekleyen sipariş sayısı</td>
                             </tr>
                             <tr>
                                 <td>24</td>
                                 <td><i class="fas fa-check-circle text-success"></i> Teslim Edilen Sipariş </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_teslim_edilen_count); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_teslim_edilen_count); ?>
+                                </td>
                                 <td>Teslim edilen (tamamlanan) sipariş sayısı</td>
                             </tr>
                             <tr>
                                 <td>25</td>
                                 <td><i class="fas fa-times-circle text-danger"></i> İptal Edilen Sipariş </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_iptal_edilen_count); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_iptal_edilen_count); ?>
+                                </td>
                                 <td>İptal edilen sipariş sayısı</td>
                             </tr>
                             <tr>
@@ -513,19 +542,22 @@ try {
                             <tr>
                                 <td>27</td>
                                 <td><i class="fas fa-box-open text-info"></i> Toplam Sipariş Adedi </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_edilen_toplam_adet); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_edilen_toplam_adet); ?>
+                                </td>
                                 <td>Sistemdeki sipariş kalemlerinde toplam adet</td>
                             </tr>
                             <tr>
                                 <td>28</td>
                                 <td><i class="fas fa-box text-info"></i> Ortalama Sipariş Adedi </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_ortalama_adet, 2); ?></td>
+                                <td class="font-weight-bold"><?php echo number_format($siparis_ortalama_adet, 2); ?>
+                                </td>
                                 <td>Bir sipariş kalemindeki ortalama adet</td>
                             </tr>
                             <tr>
                                 <td>29</td>
                                 <td><i class="fas fa-percentage text-info"></i> Ortalama Sipariş Değeri </td>
-                                <td class="font-weight-bold"><?php echo number_format($siparis_kalemi_ortalama_tutar, 2); ?></td>
+                                <td class="font-weight-bold">
+                                    <?php echo number_format($siparis_kalemi_ortalama_tutar, 2); ?></td>
                                 <td>Bir sipariş kaleminin ortalama değeri (₺)</td>
                             </tr>
 
@@ -545,13 +577,15 @@ try {
                             <tr>
                                 <td>32</td>
                                 <td><i class="fas fa-file-contract text-success"></i> Aktif Çerçeve Sözleşmeleri </td>
-                                <td class="font-weight-bold"><?php echo number_format($cerceve_sozlesme_gecerli_count); ?></td>
+                                <td class="font-weight-bold">
+                                    <?php echo number_format($cerceve_sozlesme_gecerli_count); ?></td>
                                 <td>Sistemdeki toplam geçerli çerçeve sözleşme sayısı</td>
                             </tr>
                             <tr>
                                 <td>33</td>
                                 <td><i class="fas fa-file-contract text-danger"></i> Süresi Dolmuş Sözleşmeler </td>
-                                <td class="font-weight-bold"><?php echo number_format($cerceve_sozlesme_dolmus_count); ?></td>
+                                <td class="font-weight-bold">
+                                    <?php echo number_format($cerceve_sozlesme_dolmus_count); ?></td>
                                 <td>Sistemdeki toplam süresi dolmuş sözleşme sayısı</td>
                             </tr>
 
@@ -582,4 +616,5 @@ try {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

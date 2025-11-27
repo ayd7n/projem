@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +32,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!-- Apache ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <link rel="stylesheet" href="assets/css/stil.css">
@@ -41,13 +43,13 @@ if (!yetkisi_var('page:view:raporlar')) {
             height: 500px;
             margin-bottom: 2rem;
         }
-        
+
         @media (max-width: 768px) {
             .chart-container {
                 height: 400px;
             }
         }
-        
+
         .stat-card {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
@@ -56,24 +58,24 @@ if (!yetkisi_var('page:view:raporlar')) {
             margin-bottom: 2rem;
             box-shadow: var(--shadow);
         }
-        
+
         .stat-card h3 {
             font-size: 2.5rem;
             margin: 0;
             font-weight: 700;
         }
-        
+
         .stat-card p {
             margin: 0;
             opacity: 0.9;
             font-size: 1rem;
         }
-        
+
         .table-container {
             max-height: 600px;
             overflow-y: auto;
         }
-        
+
         .rank-badge {
             display: inline-flex;
             align-items: center;
@@ -84,22 +86,22 @@ if (!yetkisi_var('page:view:raporlar')) {
             font-weight: 700;
             font-size: 0.9rem;
         }
-        
+
         .rank-1 {
             background: linear-gradient(135deg, #FFD700, #FFA500);
             color: white;
         }
-        
+
         .rank-2 {
             background: linear-gradient(135deg, #C0C0C0, #A8A8A8);
             color: white;
         }
-        
+
         .rank-3 {
             background: linear-gradient(135deg, #CD7F32, #B8860B);
             color: white;
         }
-        
+
         .rank-other {
             background: var(--bg-color);
             color: var(--text-primary);
@@ -107,12 +109,16 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -127,8 +133,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -140,7 +148,7 @@ if (!yetkisi_var('page:view:raporlar')) {
     </nav>
 
     <!-- Main Content -->
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header">
             <div>
                 <h1><i class="fas fa-trophy"></i> En Çok Satan Ürünler</h1>
@@ -249,11 +257,11 @@ if (!yetkisi_var('page:view:raporlar')) {
         let chart = null;
 
         // Load data on page load
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadData();
-            
+
             // Search functionality
-            $('#searchInput').on('keyup', function() {
+            $('#searchInput').on('keyup', function () {
                 filterTable($(this).val().toLowerCase());
             });
         });
@@ -263,7 +271,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 url: 'api_islemleri/en_cok_satan_urunler.php',
                 method: 'GET',
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         allProducts = response.data;
                         updateStats(response.data);
@@ -273,7 +281,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                         showError('Veri yüklenirken hata oluştu: ' + response.message);
                     }
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     showError('Sunucu hatası: ' + error);
                 }
             });
@@ -281,10 +289,10 @@ if (!yetkisi_var('page:view:raporlar')) {
 
         function updateStats(data) {
             $('#totalProducts').text(data.length);
-            
+
             let totalSales = data.reduce((sum, product) => sum + product.toplam_satis, 0);
             $('#totalSales').text(totalSales.toLocaleString('tr-TR'));
-            
+
             let totalOrders = data.reduce((sum, product) => sum + product.siparis_sayisi, 0);
             $('#totalOrders').text(totalOrders.toLocaleString('tr-TR'));
         }
@@ -292,11 +300,11 @@ if (!yetkisi_var('page:view:raporlar')) {
         function renderChart(data) {
             // Get top 10 products
             const top10 = data.slice(0, 10);
-            
+
             // Initialize chart
             const chartDom = document.getElementById('salesChart');
             chart = echarts.init(chartDom);
-            
+
             // Define vibrant color palette
             const colorPalette = [
                 ['#FF6B6B', '#EE5A6F'],  // Coral Red
@@ -310,7 +318,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 ['#FBE7C6', '#F4D06F'],  // Cream
                 ['#A0E7E5', '#74D3D0']   // Aqua
             ];
-            
+
             const option = {
                 backgroundColor: 'transparent',
                 tooltip: {
@@ -328,14 +336,14 @@ if (!yetkisi_var('page:view:raporlar')) {
                         color: '#333',
                         fontSize: 14
                     },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         const item = params[0];
                         const rank = item.dataIndex + 1;
                         let medal = '';
                         if (rank === 1) medal = '🏆';
                         else if (rank === 2) medal = '🥈';
                         else if (rank === 3) medal = '🥉';
-                        
+
                         return `<div style="padding: 5px;">
                             <strong style="font-size: 16px; color: #4a0e63;">${medal} ${item.name}</strong><br/>
                             <div style="margin-top: 8px;">
@@ -372,7 +380,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                     axisLabel: {
                         color: '#666',
                         fontSize: 12,
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.toLocaleString('tr-TR');
                         }
                     },
@@ -398,7 +406,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                         color: '#333',
                         fontSize: 13,
                         fontWeight: 500,
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.length > 35 ? value.substring(0, 35) + '...' : value;
                         },
                         rich: {
@@ -433,7 +441,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                         color: '#333',
                         fontSize: 13,
                         fontWeight: 'bold',
-                        formatter: function(params) {
+                        formatter: function (params) {
                             return params.value.toLocaleString('tr-TR');
                         }
                     },
@@ -447,11 +455,11 @@ if (!yetkisi_var('page:view:raporlar')) {
                     animationEasing: 'elasticOut'
                 }]
             };
-            
+
             chart.setOption(option);
-            
+
             // Make chart responsive
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
                 chart.resize();
             });
         }
@@ -459,16 +467,16 @@ if (!yetkisi_var('page:view:raporlar')) {
         function renderTable(data) {
             const tbody = $('#productsTable');
             tbody.empty();
-            
+
             if (data.length === 0) {
                 tbody.html('<tr><td colspan="6" class="text-center p-4">Henüz satış verisi bulunmuyor.</td></tr>');
                 return;
             }
-            
+
             data.forEach((product, index) => {
                 const rank = index + 1;
                 let rankBadge = '';
-                
+
                 if (rank === 1) {
                     rankBadge = `<span class="rank-badge rank-1"><i class="fas fa-trophy"></i></span>`;
                 } else if (rank === 2) {
@@ -478,7 +486,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 } else {
                     rankBadge = `<span class="rank-badge rank-other">${rank}</span>`;
                 }
-                
+
                 const row = `
                     <tr>
                         <td>${rankBadge}</td>
@@ -494,7 +502,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
 
         function filterTable(searchTerm) {
-            const filtered = allProducts.filter(product => 
+            const filtered = allProducts.filter(product =>
                 product.urun_ismi.toLowerCase().includes(searchTerm) ||
                 product.urun_kodu.toLowerCase().includes(searchTerm)
             );
@@ -512,4 +520,5 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </script>
 </body>
+
 </html>

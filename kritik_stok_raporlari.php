@@ -57,6 +57,7 @@ while ($row = $critical_materials_query->fetch_assoc()) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -65,7 +66,8 @@ while ($row = $critical_materials_query->fetch_assoc()) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
         :root {
@@ -83,93 +85,114 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             --warning: #ffc107;
             --success: #28a745;
         }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
         }
+
         .main-content {
             padding: 1rem;
         }
+
         .page-header {
             margin-bottom: 1rem;
         }
+
         .page-header h1 {
             font-weight: 700;
         }
+
         .navbar {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             box-shadow: var(--shadow);
         }
+
         .navbar-brand {
             color: var(--accent, #d4af37) !important;
             font-weight: 700;
         }
+
         .navbar-nav .nav-link {
             color: rgba(255, 255, 255, 0.85);
             transition: color 0.3s ease;
         }
+
         .navbar-nav .nav-link:hover {
             color: white;
         }
+
         .dropdown-menu {
             border-radius: 0.5rem;
             border: none;
             box-shadow: var(--shadow);
         }
+
         .dropdown-item {
             color: var(--text-primary);
         }
+
         .dropdown-item:hover {
             background-color: var(--bg-color);
             color: var(--primary);
         }
+
         .stats-card {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 0.75rem;
             transition: var(--transition);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             height: 100%;
         }
+
         .chart-container {
             background-color: var(--card-bg);
             border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 0.75rem;
             margin-bottom: 1rem;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
             height: 300px;
         }
+
         .chart-wrapper {
             height: 250px;
             position: relative;
         }
-        .critical-product, .critical-material {
+
+        .critical-product,
+        .critical-material {
             background-color: #fff5f5;
             border-left: 4px solid var(--critical);
         }
+
         .stock-critical {
             color: #dc3545;
             font-weight: bold;
         }
+
         .stock-warning {
             color: #ffc107;
             font-weight: bold;
         }
+
         .stock-normal {
             color: #28a745;
             font-weight: bold;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top">
         <div class="container-fluid">
             <a class="navbar-brand" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -182,8 +205,10 @@ while ($row = $critical_materials_query->fetch_assoc()) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -194,7 +219,7 @@ while ($row = $critical_materials_query->fetch_assoc()) {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header">
             <h1><i class="fas fa-exclamation-triangle"></i> Kritik Stok Raporları</h1>
             <p class="text-muted">Kritik seviyenin altındaki ürün ve malzeme stoğunu analiz edin</p>
@@ -204,7 +229,8 @@ while ($row = $critical_materials_query->fetch_assoc()) {
         <div class="row mb-3">
             <div class="col-md-6 col-lg-3 mb-2">
                 <div class="stats-card text-center">
-                    <div class="stat-icon" style="display: block; font-size: 1.5rem; color: var(--primary); margin-bottom: 0.15rem;">
+                    <div class="stat-icon"
+                        style="display: block; font-size: 1.5rem; color: var(--primary); margin-bottom: 0.15rem;">
                         <i class="fas fa-boxes"></i>
                     </div>
                     <h3 style="font-size: 1.2rem; margin: 0.15rem 0;"><?php echo $total_products; ?></h3>
@@ -213,7 +239,8 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             </div>
             <div class="col-md-6 col-lg-3 mb-2">
                 <div class="stats-card text-center">
-                    <div class="stat-icon" style="display: block; font-size: 1.5rem; color: var(--critical); margin-bottom: 0.15rem;">
+                    <div class="stat-icon"
+                        style="display: block; font-size: 1.5rem; color: var(--critical); margin-bottom: 0.15rem;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <h3 style="font-size: 1.2rem; margin: 0.15rem 0;"><?php echo $critical_products; ?></h3>
@@ -222,7 +249,8 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             </div>
             <div class="col-md-6 col-lg-3 mb-2">
                 <div class="stats-card text-center">
-                    <div class="stat-icon" style="display: block; font-size: 1.5rem; color: var(--primary); margin-bottom: 0.15rem;">
+                    <div class="stat-icon"
+                        style="display: block; font-size: 1.5rem; color: var(--primary); margin-bottom: 0.15rem;">
                         <i class="fas fa-cubes"></i>
                     </div>
                     <h3 style="font-size: 1.2rem; margin: 0.15rem 0;"><?php echo $total_materials; ?></h3>
@@ -231,7 +259,8 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             </div>
             <div class="col-md-6 col-lg-3 mb-2">
                 <div class="stats-card text-center">
-                    <div class="stat-icon" style="display: block; font-size: 1.5rem; color: var(--critical); margin-bottom: 0.15rem;">
+                    <div class="stat-icon"
+                        style="display: block; font-size: 1.5rem; color: var(--critical); margin-bottom: 0.15rem;">
                         <i class="fas fa-exclamation-triangle"></i>
                     </div>
                     <h3 style="font-size: 1.2rem; margin: 0.15rem 0;"><?php echo $critical_materials; ?></h3>
@@ -274,21 +303,21 @@ while ($row = $critical_materials_query->fetch_assoc()) {
                             </thead>
                             <tbody>
                                 <?php foreach ($critical_products_list as $product): ?>
-                                <tr class="critical-product">
-                                    <td><?php echo htmlspecialchars($product['urun_kodu']); ?></td>
-                                    <td><strong><?php echo htmlspecialchars($product['urun_ismi']); ?></strong></td>
-                                    <td><?php echo $product['stok_miktari']; ?></td>
-                                    <td><?php echo $product['kritik_stok_seviyesi']; ?></td>
-                                    <td>
-                                        <?php if ($product['stok_miktari'] <= 0): ?>
-                                            <span class="stock-critical">Stokta Yok</span>
-                                        <?php elseif ($product['stok_miktari'] <= $product['kritik_stok_seviyesi']): ?>
-                                            <span class="stock-critical">Kritik Seviye</span>
-                                        <?php else: ?>
-                                            <span class="stock-normal">Yeterli</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
+                                    <tr class="critical-product">
+                                        <td><?php echo htmlspecialchars($product['urun_kodu']); ?></td>
+                                        <td><strong><?php echo htmlspecialchars($product['urun_ismi']); ?></strong></td>
+                                        <td><?php echo $product['stok_miktari']; ?></td>
+                                        <td><?php echo $product['kritik_stok_seviyesi']; ?></td>
+                                        <td>
+                                            <?php if ($product['stok_miktari'] <= 0): ?>
+                                                <span class="stock-critical">Stokta Yok</span>
+                                            <?php elseif ($product['stok_miktari'] <= $product['kritik_stok_seviyesi']): ?>
+                                                <span class="stock-critical">Kritik Seviye</span>
+                                            <?php else: ?>
+                                                <span class="stock-normal">Yeterli</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -319,21 +348,21 @@ while ($row = $critical_materials_query->fetch_assoc()) {
                             </thead>
                             <tbody>
                                 <?php foreach ($critical_materials_list as $material): ?>
-                                <tr class="critical-material">
-                                    <td><?php echo htmlspecialchars($material['malzeme_kodu']); ?></td>
-                                    <td><strong><?php echo htmlspecialchars($material['malzeme_ismi']); ?></strong></td>
-                                    <td><?php echo $material['stok_miktari']; ?></td>
-                                    <td><?php echo $material['kritik_stok_seviyesi']; ?></td>
-                                    <td>
-                                        <?php if ($material['stok_miktari'] <= 0): ?>
-                                            <span class="stock-critical">Stokta Yok</span>
-                                        <?php elseif ($material['stok_miktari'] <= $material['kritik_stok_seviyesi']): ?>
-                                            <span class="stock-critical">Kritik Seviye</span>
-                                        <?php else: ?>
-                                            <span class="stock-normal">Yeterli</span>
-                                        <?php endif; ?>
-                                    </td>
-                                </tr>
+                                    <tr class="critical-material">
+                                        <td><?php echo htmlspecialchars($material['malzeme_kodu']); ?></td>
+                                        <td><strong><?php echo htmlspecialchars($material['malzeme_ismi']); ?></strong></td>
+                                        <td><?php echo $material['stok_miktari']; ?></td>
+                                        <td><?php echo $material['kritik_stok_seviyesi']; ?></td>
+                                        <td>
+                                            <?php if ($material['stok_miktari'] <= 0): ?>
+                                                <span class="stock-critical">Stokta Yok</span>
+                                            <?php elseif ($material['stok_miktari'] <= $material['kritik_stok_seviyesi']): ?>
+                                                <span class="stock-critical">Kritik Seviye</span>
+                                            <?php else: ?>
+                                                <span class="stock-normal">Yeterli</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
                                 <?php endforeach; ?>
                             </tbody>
                         </table>
@@ -361,7 +390,7 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             },
             tooltip: {
                 trigger: 'item',
-                formatter: function(params) {
+                formatter: function (params) {
                     const total = <?php echo $total_products; ?>;
                     const percentage = total > 0 ? ((params.value / total) * 100).toFixed(1) : 0;
                     return params.name + ': ' + params.value + ' (' + percentage + '%)';
@@ -421,7 +450,7 @@ while ($row = $critical_materials_query->fetch_assoc()) {
             },
             tooltip: {
                 trigger: 'item',
-                formatter: function(params) {
+                formatter: function (params) {
                     const total = <?php echo $total_materials; ?>;
                     const percentage = total > 0 ? ((params.value / total) * 100).toFixed(1) : 0;
                     return params.name + ': ' + params.value + ' (' + percentage + '%)';
@@ -468,7 +497,7 @@ while ($row = $critical_materials_query->fetch_assoc()) {
         materialChart.setOption(materialOption);
 
         // Make charts responsive
-        window.addEventListener('resize', function() {
+        window.addEventListener('resize', function () {
             productChart.resize();
             materialChart.resize();
         });
@@ -479,4 +508,5 @@ while ($row = $critical_materials_query->fetch_assoc()) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>

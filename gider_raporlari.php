@@ -126,12 +126,12 @@ $currentMonth = date('Y-m');
 
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
 
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
 
     <style>
-
         :root {
 
             --primary: #4a0e63;
@@ -246,7 +246,7 @@ $currentMonth = date('Y-m');
 
             padding: 0.75rem;
 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 
             height: 350px;
 
@@ -277,7 +277,6 @@ $currentMonth = date('Y-m');
             position: relative;
 
         }
-
     </style>
 
 </head>
@@ -294,7 +293,8 @@ $currentMonth = date('Y-m');
 
 
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
 
                 <span class="navbar-toggler-icon"></span>
 
@@ -320,9 +320,11 @@ $currentMonth = date('Y-m');
 
                     <li class="nav-item dropdown">
 
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
 
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION["kullanici_adi"] ?? "Kullanıcı"); ?>
 
                         </a>
 
@@ -344,7 +346,7 @@ $currentMonth = date('Y-m');
 
 
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
 
 
 
@@ -426,7 +428,8 @@ $currentMonth = date('Y-m');
 
                         <label for="aySecici" class="form-label">Aylar:</label>
 
-                        <select class="form-control form-control-sm" id="aySecici" style="width: auto; display: inline-block;">
+                        <select class="form-control form-control-sm" id="aySecici"
+                            style="width: auto; display: inline-block;">
 
                             <option value="all">Tümü</option>
 
@@ -486,7 +489,7 @@ $currentMonth = date('Y-m');
 
         </div>
 
-        
+
 
         <div class="row">
 
@@ -582,13 +585,13 @@ $currentMonth = date('Y-m');
 
                 trigger: 'axis',
 
-                formatter: function(params) {
+                formatter: function (params) {
 
                     var param = params[0];
 
                     return param.name + '<br/>' +
 
-                           param.seriesName + ': <strong>' + param.value.toLocaleString('tr-TR', {style: 'currency', currency: 'TRY'}) + '</strong>';
+                        param.seriesName + ': <strong>' + param.value.toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' }) + '</strong>';
 
                 }
 
@@ -626,9 +629,9 @@ $currentMonth = date('Y-m');
 
                 axisLabel: {
 
-                    formatter: function(value) {
+                    formatter: function (value) {
 
-                        return value.toLocaleString('tr-TR', {maximumFractionDigits: 0});
+                        return value.toLocaleString('tr-TR', { maximumFractionDigits: 0 });
 
                     }
 
@@ -700,7 +703,7 @@ $currentMonth = date('Y-m');
 
 
 
-            filtrelenmisGiderler.forEach(function(gider) {
+            filtrelenmisGiderler.forEach(function (gider) {
 
                 var kategori = gider.kategori;
 
@@ -738,9 +741,9 @@ $currentMonth = date('Y-m');
 
             var filtrelenmisGiderler = seciliAy === 'all' ? giderler : giderler.filter(gider => gider.tarih.startsWith(seciliAy));
 
-            
 
-            filtrelenmisGiderler.forEach(function(gider) {
+
+            filtrelenmisGiderler.forEach(function (gider) {
 
                 var firma = gider.odeme_yapilan_firma || 'Diğer';
 
@@ -778,13 +781,13 @@ $currentMonth = date('Y-m');
 
             // Her ay için kategori verilerini topla
 
-            aylar.forEach(function(ay) {
+            aylar.forEach(function (ay) {
 
                 tumAylarKategoriVerileri[ay] = {};
 
                 var ayinGiderleri = giderler.filter(gider => gider.tarih.startsWith(ay));
 
-                ayinGiderleri.forEach(function(gider) {
+                ayinGiderleri.forEach(function (gider) {
 
                     var kategori = gider.kategori;
 
@@ -830,7 +833,7 @@ $currentMonth = date('Y-m');
 
             var tumAylarAnormalKategoriler = {};
 
-            aylar.forEach(function(ay) {
+            aylar.forEach(function (ay) {
 
                 tumAylarAnormalKategoriler[ay] = {};
 
@@ -866,7 +869,7 @@ $currentMonth = date('Y-m');
 
         }
 
-        
+
 
         // Pasta grafik oluşturma fonksiyonu
 
@@ -954,7 +957,7 @@ $currentMonth = date('Y-m');
 
         // Dropdown filtreleme işlevselliği
 
-        $('#aySecici').on('change', function() {
+        $('#aySecici').on('change', function () {
 
             var selectedMonth = $(this).val();
 
@@ -970,9 +973,9 @@ $currentMonth = date('Y-m');
 
         var anormalKategorilerChart;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            setTimeout(function() {
+            setTimeout(function () {
 
                 anormalKategorilerChart = echarts.init(document.getElementById('anormalKategorilerChart'));
 
@@ -994,7 +997,7 @@ $currentMonth = date('Y-m');
 
 
 
-                var seriesData = kategoriList.map(function(kategori) {
+                var seriesData = kategoriList.map(function (kategori) {
 
                     return {
 
@@ -1004,7 +1007,7 @@ $currentMonth = date('Y-m');
 
                         stack: 'anormal',
 
-                        data: aylar.map(function(ay) {
+                        data: aylar.map(function (ay) {
 
                             if (tumAylarAnormalKategoriler[ay] && tumAylarAnormalKategoriler[ay][kategori]) {
 
@@ -1042,11 +1045,11 @@ $currentMonth = date('Y-m');
 
                         axisPointer: { type: 'shadow' },
 
-                        formatter: function(params) {
+                        formatter: function (params) {
 
                             var result = params[0].axisValue + ' ayı<br/>';
 
-                            params.forEach(function(item) {
+                            params.forEach(function (item) {
 
                                 if (item.value > 0) {
 
@@ -1134,9 +1137,9 @@ $currentMonth = date('Y-m');
 
         // Pencerelerin yeniden boyutlandırılmasına uyum sağlamak için
 
-        $(document).ready(function() {
+        $(document).ready(function () {
 
-            window.addEventListener('resize', function() {
+            window.addEventListener('resize', function () {
 
                 aylikGiderlerChart.resize();
 

@@ -21,6 +21,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -31,7 +32,8 @@ if (!yetkisi_var('page:view:raporlar')) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!-- Apache ECharts -->
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
@@ -72,13 +74,13 @@ if (!yetkisi_var('page:view:raporlar')) {
             font-size: 1.5rem;
             margin: 0;
         }
-        
+
         .exchange-rates {
             font-size: 0.85rem;
             background: white;
             padding: 0.5rem 1rem;
             border-radius: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
             border: 1px solid var(--border-color);
         }
 
@@ -98,7 +100,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         .stat-card:hover {
             transform: translateY(-3px);
         }
-        
+
         .stat-card .icon-wrapper {
             background-color: rgba(255, 255, 255, 0.2);
             width: 50px;
@@ -168,16 +170,27 @@ if (!yetkisi_var('page:view:raporlar')) {
             font-size: 0.85rem;
             padding: 0.5rem 0.75rem;
         }
-        
+
         .badge-currency {
             font-size: 0.75rem;
             padding: 0.2rem 0.5rem;
             border-radius: 4px;
         }
-        
-        .badge-tl { background-color: #e3f2fd; color: #0d47a1; }
-        .badge-usd { background-color: #e8f5e9; color: #1b5e20; }
-        .badge-eur { background-color: #fff3e0; color: #e65100; }
+
+        .badge-tl {
+            background-color: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        .badge-usd {
+            background-color: #e8f5e9;
+            color: #1b5e20;
+        }
+
+        .badge-eur {
+            background-color: #fff3e0;
+            color: #e65100;
+        }
 
         .pagination-container {
             display: flex;
@@ -186,13 +199,13 @@ if (!yetkisi_var('page:view:raporlar')) {
             padding: 0.5rem 1rem;
             font-size: 0.85rem;
         }
-        
+
         .pagination .page-link {
             padding: 0.25rem 0.5rem;
             font-size: 0.85rem;
             color: var(--primary);
         }
-        
+
         .pagination .page-item.active .page-link {
             background-color: var(--primary);
             border-color: var(--primary);
@@ -200,12 +213,16 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -217,8 +234,10 @@ if (!yetkisi_var('page:view:raporlar')) {
                         <a class="nav-link" href="raporlar.php">Raporlar</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -229,7 +248,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
     </nav>
 
-    <div class="main-content">
+    <div class="container-fluid main-content">
         <div class="page-header">
             <h1><i class="fas fa-file-invoice-dollar"></i> Tedarikçi Ödeme Raporu</h1>
             <div class="exchange-rates">
@@ -329,7 +348,8 @@ if (!yetkisi_var('page:view:raporlar')) {
         <div class="card">
             <div class="card-header">
                 <h2><i class="fas fa-table"></i> Detaylı Ödeme Listesi</h2>
-                <input type="text" id="searchPayment" class="form-control form-control-sm w-25" placeholder="Detaylı Ara...">
+                <input type="text" id="searchPayment" class="form-control form-control-sm w-25"
+                    placeholder="Detaylı Ara...">
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -364,7 +384,7 @@ if (!yetkisi_var('page:view:raporlar')) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+
     <script>
         let allPayments = [];
         let allSupplierTotals = [];
@@ -372,13 +392,13 @@ if (!yetkisi_var('page:view:raporlar')) {
         const ITEMS_PER_PAGE = 10;
         let currentPaymentPage = 1;
 
-        $(document).ready(function() {
+        $(document).ready(function () {
             loadData();
-            
-            $('#searchPayment').on('keyup', function() {
+
+            $('#searchPayment').on('keyup', function () {
                 let value = $(this).val().toLowerCase();
-                filteredPayments = allPayments.filter(item => 
-                    item.tedarikci_adi.toLowerCase().includes(value) || 
+                filteredPayments = allPayments.filter(item =>
+                    item.tedarikci_adi.toLowerCase().includes(value) ||
                     (item.malzeme_ismi && item.malzeme_ismi.toLowerCase().includes(value))
                 );
                 currentPaymentPage = 1;
@@ -391,12 +411,12 @@ if (!yetkisi_var('page:view:raporlar')) {
                 url: 'api_islemleri/tedarikci_odeme_raporu_islemler.php',
                 method: 'GET',
                 dataType: 'json',
-                success: function(response) {
+                success: function (response) {
                     if (response.status === 'success') {
                         allPayments = response.data.payments;
                         allSupplierTotals = response.data.supplier_totals;
                         filteredPayments = [...allPayments];
-                        
+
                         updateStats(response.data);
                         updateExchangeRates(response.data.exchange_rates);
                         renderChart(response.data.supplier_totals);
@@ -408,7 +428,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                         alert('Hata: ' + response.message);
                     }
                 },
-                error: function() {
+                error: function () {
                     alert('Sunucu hatası.');
                 }
             });
@@ -419,10 +439,10 @@ if (!yetkisi_var('page:view:raporlar')) {
         function renderTransactionCountChart(supplierTotals) {
             // Sort by transaction count
             const top10 = [...supplierTotals].sort((a, b) => b.odeme_sayisi - a.odeme_sayisi).slice(0, 10);
-            
+
             const chartDom = document.getElementById('transactionCountChart');
             const chart = echarts.init(chartDom);
-            
+
             const option = {
                 tooltip: {
                     trigger: 'axis',
@@ -450,7 +470,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                     axisLabel: {
                         color: '#333',
                         fontWeight: 'bold',
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.length > 15 ? value.substring(0, 15) + '...' : value;
                         }
                     },
@@ -499,7 +519,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
             const chartDom = document.getElementById('currencyChart');
             const chart = echarts.init(chartDom);
-            
+
             const option = {
                 tooltip: {
                     trigger: 'item',
@@ -507,9 +527,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                     borderColor: '#eee',
                     borderWidth: 1,
                     textStyle: { color: '#333' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         return `<strong>${params.name}</strong><br/>
-                                Tutar: ${params.value.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺<br/>
+                                Tutar: ${params.value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺<br/>
                                 Oran: ${params.percent}%`;
                     }
                 },
@@ -566,7 +586,7 @@ if (!yetkisi_var('page:view:raporlar')) {
 
             const chartDom = document.getElementById('materialChart');
             const chart = echarts.init(chartDom);
-            
+
             const option = {
                 tooltip: {
                     trigger: 'axis',
@@ -575,9 +595,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                     borderColor: '#eee',
                     borderWidth: 1,
                     textStyle: { color: '#333' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         let val = params[0].value;
-                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺`;
+                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
                     }
                 },
                 grid: {
@@ -588,8 +608,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 },
                 xAxis: {
                     type: 'value',
-                    axisLabel: { 
-                        formatter: function(value) {
+                    axisLabel: {
+                        formatter: function (value) {
                             if (value >= 1000) return (value / 1000).toFixed(0) + 'k ₺';
                             return value + ' ₺';
                         },
@@ -604,7 +624,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                     axisLabel: {
                         color: '#333',
                         fontWeight: 'bold',
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.length > 15 ? value.substring(0, 15) + '...' : value;
                         }
                     },
@@ -628,8 +648,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                     label: {
                         show: true,
                         position: 'right',
-                        formatter: function(params) {
-                            return params.value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + ' ₺';
+                        formatter: function (params) {
+                            return params.value.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺';
                         },
                         color: '#666',
                         fontWeight: 'bold'
@@ -643,7 +663,7 @@ if (!yetkisi_var('page:view:raporlar')) {
         function updateStats(data) {
             $('#totalSuppliers').text(data.supplier_totals.length);
             let totalPayments = data.supplier_totals.reduce((sum, s) => sum + s.toplam_tl, 0);
-            $('#totalPayments').text(totalPayments.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ₺');
+            $('#totalPayments').text(totalPayments.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ₺');
             $('#totalTransactions').text(data.payments.length);
         }
 
@@ -656,7 +676,7 @@ if (!yetkisi_var('page:view:raporlar')) {
             const top10 = supplierTotals.slice(0, 10);
             const chartDom = document.getElementById('paymentsChart');
             const chart = echarts.init(chartDom);
-            
+
             const option = {
                 tooltip: {
                     trigger: 'axis',
@@ -665,9 +685,9 @@ if (!yetkisi_var('page:view:raporlar')) {
                     borderColor: '#eee',
                     borderWidth: 1,
                     textStyle: { color: '#333' },
-                    formatter: function(params) {
+                    formatter: function (params) {
                         let val = params[0].value;
-                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺`;
+                        return `<strong>${params[0].name}</strong><br/>Toplam: ${val.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺`;
                     }
                 },
                 grid: {
@@ -678,8 +698,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                 },
                 xAxis: {
                     type: 'value',
-                    axisLabel: { 
-                        formatter: function(value) {
+                    axisLabel: {
+                        formatter: function (value) {
                             if (value >= 1000000) return (value / 1000000).toFixed(1) + 'M ₺';
                             if (value >= 1000) return (value / 1000).toFixed(0) + 'k ₺';
                             return value + ' ₺';
@@ -695,7 +715,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                     axisLabel: {
                         color: '#333',
                         fontWeight: 'bold',
-                        formatter: function(value) {
+                        formatter: function (value) {
                             return value.length > 15 ? value.substring(0, 15) + '...' : value;
                         }
                     },
@@ -719,8 +739,8 @@ if (!yetkisi_var('page:view:raporlar')) {
                     label: {
                         show: true,
                         position: 'right',
-                        formatter: function(params) {
-                            return params.value.toLocaleString('tr-TR', {maximumFractionDigits: 0}) + ' ₺';
+                        formatter: function (params) {
+                            return params.value.toLocaleString('tr-TR', { maximumFractionDigits: 0 }) + ' ₺';
                         },
                         color: '#666',
                         fontWeight: 'bold'
@@ -737,7 +757,7 @@ if (!yetkisi_var('page:view:raporlar')) {
                 html += `
                     <tr>
                         <td>${item.tedarikci_adi}</td>
-                        <td class="text-right"><strong>${item.toplam_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2})} ₺</strong></td>
+                        <td class="text-right"><strong>${item.toplam_tl.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ₺</strong></td>
                         <td class="text-center"><span class="badge badge-light">${item.odeme_sayisi}</span></td>
                     </tr>
                 `;
@@ -768,23 +788,23 @@ if (!yetkisi_var('page:view:raporlar')) {
                             <td>${item.tedarikci_adi}</td>
                             <td><small>${item.malzeme_kodu} - ${item.malzeme_ismi || '-'}</small></td>
                             <td><span class="badge-currency ${badgeClass}">${item.para_birimi}</span></td>
-                            <td>${item.birim_fiyat.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
+                            <td>${item.birim_fiyat.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
                             <td>${item.odenen_miktar.toLocaleString('tr-TR')}</td>
-                            <td>${item.toplam_odeme_orijinal.toLocaleString('tr-TR', {minimumFractionDigits: 2})}</td>
-                            <td><strong>${item.toplam_odeme_tl.toLocaleString('tr-TR', {minimumFractionDigits: 2})} ₺</strong></td>
+                            <td>${item.toplam_odeme_orijinal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</td>
+                            <td><strong>${item.toplam_odeme_tl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} ₺</strong></td>
                         </tr>
                     `;
                 });
             }
             $('#paymentsTable').html(html);
-            
+
             $('#paymentPageInfo').text(filteredPayments.length > 0 ? `${start + 1}-${Math.min(end, filteredPayments.length)} / ${filteredPayments.length}` : '');
             renderPagination(totalPages);
         }
 
         function renderPagination(totalPages) {
             let html = '';
-            
+
             html += `<li class="page-item ${currentPaymentPage === 1 ? 'disabled' : ''}">
                         <a class="page-link" href="#" onclick="changePage(${currentPaymentPage - 1}); return false;">Önceki</a>
                      </li>`;
@@ -793,8 +813,8 @@ if (!yetkisi_var('page:view:raporlar')) {
             let endPage = Math.min(totalPages, currentPaymentPage + 2);
 
             if (startPage > 1) {
-                 html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
-                 if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                html += `<li class="page-item"><a class="page-link" href="#" onclick="changePage(1); return false;">1</a></li>`;
+                if (startPage > 2) html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
             }
 
             for (let i = startPage; i <= endPage; i++) {
@@ -821,4 +841,5 @@ if (!yetkisi_var('page:view:raporlar')) {
         }
     </script>
 </body>
+
 </html>
