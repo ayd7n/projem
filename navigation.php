@@ -437,6 +437,165 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
         }
 
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 0.6rem 0;
+            z-index: 1000;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.08);
+            justify-content: space-around;
+            align-items: center;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: var(--transition);
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            width: 19%; /* Adjusted to accommodate 5 items */
+            min-width: 55px;
+            text-align: center;
+        }
+
+        .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+        }
+
+        .nav-item .nav-text {
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--secondary);
+            background: rgba(124, 42, 153, 0.05);
+        }
+
+        .module-category {
+            scroll-margin-top: 70px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .module-category.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .module-card {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: opacity 0.4s ease-out, transform 0.4s ease-out, var(--transition);
+        }
+
+        .module-card.animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        @media (max-width: 992px) {
+            .user-controls {
+                display: none;
+                position: absolute;
+                top: 70px;
+                right: 0.5rem;
+                background: white;
+                color: var(--text-primary);
+                flex-direction: column;
+                min-width: 250px;
+                border-radius: 12px;
+                box-shadow: var(--shadow);
+                gap: 0;
+                border: 1px solid var(--border-color);
+                padding: 0.25rem;
+            }
+
+            .hamburger-menu {
+                display: block;
+            }
+
+            .user-controls.menu-open {
+                display: flex;
+                animation: fadeIn 0.2s ease-out;
+            }
+
+            .user-controls .user-info {
+                padding: 0.75rem 0.5rem;
+                border-bottom: 1px solid var(--border-color);
+                color: var(--text-primary);
+                font-weight: 700;
+                text-align: center;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .user-controls a {
+                color: var(--text-secondary);
+                font-size: 0.95rem;
+                padding: 0.75rem 0.5rem;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                border-radius: 8px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .user-controls a:hover {
+                background-color: rgba(74, 14, 99, 0.05);
+                color: var(--primary);
+                transform: none;
+                opacity: 1;
+            }
+
+            .user-controls a .link-text {
+                display: inline;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 0.75rem;
+            }
+
+            .top-bar-wrapper {
+                padding: 0.6rem 0.75rem;
+            }
+
+            .module-card {
+                padding: 0.8rem;
+            }
+
+            .page-header h1 {
+                font-size: 1.7rem;
+            }
+
+            .page-header {
+                margin-bottom: 1rem;
+            }
+
+            .page-header p {
+                font-size: 0.95rem;
+            }
+
+            main {
+                padding: 1rem 0;
+                padding-bottom: 70px; /* Space for bottom nav */
+            }
+        }
+
         @media (max-width: 576px) {
             .container {
                 padding: 0 0.4rem;
@@ -448,90 +607,174 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .module-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 0.3rem;
+                grid-template-columns: 1fr;
+                gap: 0.6rem;
             }
 
             .module-card {
-                flex-direction: column;
-                text-align: center;
+                flex-direction: row;
+                text-align: left;
                 align-items: center;
-                gap: 0.15rem;
-                padding: 0.3rem 0.25rem;
-                min-height: 80px;
-                justify-content: center;
-                border-radius: 8px;
+                gap: 0.8rem;
+                padding: 0.8rem;
+                min-height: auto;
+                justify-content: flex-start;
+                border-radius: 12px;
             }
 
             .module-card .icon {
-                width: 28px;
-                height: 28px;
-                font-size: 0.85rem;
+                width: 40px;
+                height: 40px;
+                font-size: 1rem;
                 margin-bottom: 0;
-                border-radius: 7px;
+                border-radius: 10px;
                 flex-shrink: 0;
             }
 
             .module-card .card-content {
-                width: 100%;
+                width: auto;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
+                align-items: flex-start;
                 justify-content: center;
             }
 
             .module-card .card-content .title {
-                font-size: 0.72rem;
-                margin-bottom: 0;
-                line-height: 1.2;
+                font-size: 0.9rem;
+                margin-bottom: 0.2rem;
+                line-height: 1.3;
                 font-weight: 600;
-                width: 100%;
+                width: auto;
             }
 
             .module-card .card-content .description {
-                display: none;
+                display: block;
+                font-size: 0.75rem;
+            }
+
+            .module-card {
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03);
+                transition: all 0.3s ease;
+                border: 1px solid var(--border-color);
+                overflow: hidden;
+            }
+
+            .module-card:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 15px rgba(0, 0, 0, 0.08);
+            }
+
+            .module-card .icon {
+                background: var(--gradient-primary);
+                box-shadow: 0 4px 10px rgba(74, 14, 99, 0.2);
+            }
+
+            .module-card .card-content .title {
+                color: var(--primary);
+            }
+
+            .module-card .card-content .description {
+                color: var(--text-secondary);
+                opacity: 0.8;
             }
 
             .module-category {
-                margin-bottom: 0.8rem;
+                margin-bottom: 1.2rem;
+                background: var(--card-bg);
+                border-radius: 12px;
+                padding: 0.8rem;
+                box-shadow: var(--shadow-sm);
             }
 
             .module-category h3 {
-                justify-content: center;
-                border-left: none;
-                border-bottom: 2px solid var(--accent);
-                border-radius: 0;
-                padding: 0.35rem 0.25rem;
-                font-size: 0.82rem;
-                margin-bottom: 0.4rem;
-                gap: 0.4rem;
+                justify-content: flex-start;
+                border-left: 3px solid var(--accent);
+                border-bottom: none;
+                border-radius: 0 8px 8px 0;
+                padding: 0.5rem 0.8rem;
+                font-size: 0.9rem;
+                margin: 0 -0.8rem 0.6rem -0.8rem;
+                gap: 0.6rem;
+                background: linear-gradient(to right, rgba(124, 42, 153, 0.05), transparent);
             }
 
             .page-header {
-                margin-bottom: 0.6rem;
+                margin-bottom: 1rem;
             }
 
             .page-header h1 {
-                font-size: 1.4rem;
-                margin-bottom: 0.3rem;
+                font-size: 1.5rem;
+                margin-bottom: 0.4rem;
             }
 
             .page-header p {
-                font-size: 0.82rem;
-                line-height: 1.3;
+                font-size: 0.9rem;
+                line-height: 1.4;
             }
 
             main {
-                padding: 0.6rem 0;
+                padding: 0.8rem 0;
+                padding-bottom: 70px; /* Space for bottom nav */
             }
 
             .top-bar-wrapper {
-                padding: 0.45rem;
+                padding: 0.5rem;
             }
 
             footer {
-                padding: 0.8rem;
-                font-size: 0.78rem;
+                padding: 1rem;
+                font-size: 0.8rem;
+            }
+
+            /* Show mobile bottom nav on small screens */
+            .mobile-bottom-nav {
+                display: flex;
+            }
+
+            .hamburger-menu {
+                position: relative;
+                z-index: 1001;
+            }
+
+            /* Additional mobile optimizations for various screen sizes */
+            .module-card .icon {
+                width: 36px;
+                height: 36px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Extra small devices (phones, 320px and up) */
+        @media (max-width: 320px) {
+            .module-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .module-card .icon {
+                width: 32px;
+                height: 32px;
+                font-size: 0.8rem;
+            }
+
+            .module-card {
+                padding: 0.6rem;
+                gap: 0.6rem;
+            }
+
+            .module-card .card-content .title {
+                font-size: 0.85rem;
+            }
+
+            .module-card .card-content .description {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* Large mobile devices (landscape) */
+        @media (min-width: 577px) and (max-width: 768px) {
+            .module-grid {
+                grid-template-columns: repeat(2, 1fr);
             }
         }
     </style>
@@ -556,6 +799,30 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         </div>
     </header>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="#relations" class="nav-item">
+            <i class="fas fa-users-cog"></i>
+            <span class="nav-text">İlişkiler</span>
+        </a>
+        <a href="#products" class="nav-item">
+            <i class="fas fa-boxes-stacked"></i>
+            <span class="nav-text">Ürünler</span>
+        </a>
+        <a href="#operations" class="nav-item">
+            <i class="fas fa-cogs"></i>
+            <span class="nav-text">İşlemler</span>
+        </a>
+        <a href="#reports" class="nav-item">
+            <i class="fas fa-chart-pie"></i>
+            <span class="nav-text">Raporlar</span>
+        </a>
+        <a href="logout.php" class="nav-item" title="Çıkış Yap">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-text">Çıkış</span>
+        </a>
+    </nav>
+
     <div class="container">
         <main>
             <div class="page-header">
@@ -564,162 +831,181 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             </div>
 
             <div class="module-grid-container">
-                <div class="module-category">
+                <div class="module-category" id="relations">
                     <h3><i class="fas fa-users-cog"></i> İlişkiler</h3>
                     <div class="module-grid">
                         <a href="musteriler.php" class="module-card">
                             <div class="icon"><i class="fas fa-users"></i></div>
-                            <div class="card-content"><span class="title">Müşteriler</span>
+                            <div class="card-content">
+                                <span class="title">Müşteriler</span>
                                 <p class="description">Müşteri kayıtlarını ve bilgilerini yönetin.</p>
                             </div>
                         </a>
                         <a href="personeller.php" class="module-card">
                             <div class="icon"><i class="fas fa-id-card"></i></div>
-                            <div class="card-content"><span class="title">Personeller</span>
+                            <div class="card-content">
+                                <span class="title">Personeller</span>
                                 <p class="description">Şirket personellerini görüntüleyin ve yönetin.</p>
                             </div>
                         </a>
                         <a href="tedarikciler.php" class="module-card">
                             <div class="icon"><i class="fas fa-truck"></i></div>
-                            <div class="card-content"><span class="title">Tedarikçiler</span>
+                            <div class="card-content">
+                                <span class="title">Tedarikçiler</span>
                                 <p class="description">Tedarikçi firmaları ve işlemlerini yönetin.</p>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="products">
                     <h3><i class="fas fa-boxes-stacked"></i> Ürün Yönetimi</h3>
                     <div class="module-grid">
                         <a href="urunler.php" class="module-card">
                             <div class="icon"><i class="fas fa-box"></i></div>
-                            <div class="card-content"><span class="title">Ürünler</span>
+                            <div class="card-content">
+                                <span class="title">Ürünler</span>
                                 <p class="description">Ürün kataloğunu ve stok durumunu yönetin.</p>
                             </div>
                         </a>
                         <a href="esanslar.php" class="module-card">
                             <div class="icon"><i class="fas fa-vial"></i></div>
-                            <div class="card-content"><span class="title">Esanslar</span>
+                            <div class="card-content">
+                                <span class="title">Esanslar</span>
                                 <p class="description">Esans reçetelerini ve üretimini yönetin.</p>
                             </div>
                         </a>
                         <a href="malzemeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-cubes"></i></div>
-                            <div class="card-content"><span class="title">Malzemeler</span>
+                            <div class="card-content">
+                                <span class="title">Malzemeler</span>
                                 <p class="description">Üretim ve diğer malzemeleri takip edin.</p>
                             </div>
                         </a>
                         <a href="urun_agaclari.php" class="module-card">
                             <div class="icon"><i class="fas fa-sitemap"></i></div>
-                            <div class="card-content"><span class="title">Ürün Ağaçları</span>
+                            <div class="card-content">
+                                <span class="title">Ürün Ağaçları</span>
                                 <p class="description">Ürün reçetelerini ve bileşenlerini oluşturun.</p>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="operations">
                     <h3><i class="fas fa-cogs"></i> Operasyonlar</h3>
                     <div class="module-grid">
                         <a href="musteri_siparisleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-shopping-cart"></i></div>
-                            <div class="card-content"><span class="title">Müşteri Siparişleri</span>
+                            <div class="card-content">
+                                <span class="title">Müşteri Siparişleri</span>
                                 <p class="description">Yeni siparişleri görüntüleyin ve yönetin.</p>
                             </div>
                         </a>
                         <a href="esans_is_emirleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-flask"></i></div>
-                            <div class="card-content"><span class="title">Esans İş Emirleri</span>
+                            <div class="card-content">
+                                <span class="title">Esans İş Emirleri</span>
                                 <p class="description">Üretimdeki esans iş emirlerini takip edin.</p>
                             </div>
                         </a>
                         <a href="montaj_is_emirleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-industry"></i></div>
-                            <div class="card-content"><span class="title">Montaj İş Emirleri</span>
+                            <div class="card-content">
+                                <span class="title">Montaj İş Emirleri</span>
                                 <p class="description">Montaj ve dolum iş emirlerini yönetin.</p>
                             </div>
                         </a>
                         <a href="manuel_stok_hareket.php" class="module-card">
                             <div class="icon"><i class="fas fa-exchange-alt"></i></div>
-                            <div class="card-content"><span class="title">Stok Hareketleri</span>
+                            <div class="card-content">
+                                <span class="title">Stok Hareketleri</span>
                                 <p class="description">Manuel stok giriş/çıkış işlemleri yapın.</p>
                             </div>
                         </a>
                     </div>
                 </div>
-                <div class="module-category">
+
+                <div class="module-category" id="infrastructure">
                     <h3><i class="fas fa-building"></i> Altyapı</h3>
                     <div class="module-grid">
                         <a href="lokasyonlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-map-marker-alt"></i></div>
-                            <div class="card-content"><span class="title">Lokasyonlar</span>
+                            <div class="card-content">
+                                <span class="title">Lokasyonlar</span>
                                 <p class="description">Depo ve üretim lokasyonlarını tanımlayın.</p>
                             </div>
                         </a>
                         <a href="tanklar.php" class="module-card">
                             <div class="icon"><i class="fas fa-database"></i></div>
-                            <div class="card-content"><span class="title">Tanklar</span>
+                            <div class="card-content">
+                                <span class="title">Tanklar</span>
                                 <p class="description">Üretim tanklarını ve kapasitelerini yönetin.</p>
                             </div>
                         </a>
                         <a href="is_merkezleri.php" class="module-card">
                             <div class="icon"><i class="fas fa-warehouse"></i></div>
-                            <div class="card-content"><span class="title">İş Merkezleri</span>
+                            <div class="card-content">
+                                <span class="title">İş Merkezleri</span>
                                 <p class="description">Üretim hatlarını ve iş istasyonlarını yönetin.</p>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="reports">
                     <h3><i class="fas fa-chart-pie"></i> Raporlama</h3>
                     <div class="module-grid">
                         <a href="raporlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-chart-pie"></i></div>
-                            <div class="card-content"><span class="title">Raporlar</span>
+                            <div class="card-content">
+                                <span class="title">Raporlar</span>
                                 <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
                             </div>
                         </a>
-
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="system">
                     <h3><i class="fas fa-cogs"></i> Sistem</h3>
                     <div class="module-grid">
                         <a href="ayarlar.php" class="module-card">
                             <div class="icon"><i class="fas fa-cog"></i></div>
-                            <div class="card-content"><span class="title">Ayarlar</span>
+                            <div class="card-content">
+                                <span class="title">Ayarlar</span>
                                 <p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="finance">
                     <h3><i class="fas fa-file-invoice-dollar"></i> Finans</h3>
                     <div class="module-grid">
                         <a href="gider_yonetimi.php" class="module-card">
                             <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
-                            <div class="card-content"><span class="title">Gider Yönetimi</span>
+                            <div class="card-content">
+                                <span class="title">Gider Yönetimi</span>
                                 <p class="description">Şirket giderlerini takip edin ve raporlayın.</p>
                             </div>
                         </a>
                         <a href="cerceve_sozlesmeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-file-contract"></i></div>
-                            <div class="card-content"><span class="title">Sözleşmeler</span>
+                            <div class="card-content">
+                                <span class="title">Sözleşmeler</span>
                                 <p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                <div class="module-category">
+                <div class="module-category" id="help">
                     <h3><i class="fas fa-life-ring"></i> Yardım & Destek</h3>
                     <div class="module-grid">
                         <a href="rehber.php" class="module-card">
                             <div class="icon"><i class="fas fa-book-reader"></i></div>
-                            <div class="card-content"><span class="title">Kullanım Rehberi</span>
+                            <div class="card-content">
+                                <span class="title">Kullanım Rehberi</span>
                                 <p class="description">Sistemin nasıl çalıştığını ve süreçleri öğrenin.</p>
                             </div>
                         </a>
@@ -737,7 +1023,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         document.addEventListener('DOMContentLoaded', function () {
             const hamburger = document.querySelector('.hamburger-menu');
             const userControls = document.querySelector('.user-controls');
+            const navItems = document.querySelectorAll('.nav-item');
+            const moduleCategories = document.querySelectorAll('.module-category');
 
+            // Hamburger menu functionality
             if (hamburger && userControls) {
                 hamburger.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -750,6 +1039,99 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     userControls.classList.remove('menu-open');
                 }
             });
+
+            // Mobile bottom navigation functionality
+            navItems.forEach(item => {
+                // Check if the item is the logout button
+                const isLogoutButton = item.getAttribute('href') === 'logout.php';
+
+                item.addEventListener('click', function(e) {
+                    if (isLogoutButton) {
+                        // For logout button, allow the default behavior
+                        return; // Allow default navigation to logout.php
+                    }
+
+                    e.preventDefault();
+
+                    // Remove active class from all items
+                    navItems.forEach(navItem => navItem.classList.remove('active'));
+
+                    // Add active class to clicked item
+                    this.classList.add('active');
+
+                    // Get the target category ID
+                    const targetId = this.getAttribute('href').substring(1);
+
+                    // Scroll to the corresponding module category
+                    const targetElement = document.getElementById(targetId);
+                    if (targetElement) {
+                        targetElement.scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            // Add animation to module cards on scroll
+            const observerOptions = {
+                root: null,
+                rootMargin: '0px',
+                threshold: 0.1
+            };
+
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('animate-in');
+
+                        // Animate child module cards with a delay
+                        const moduleCards = entry.target.querySelectorAll('.module-card');
+                        moduleCards.forEach((card, index) => {
+                            setTimeout(() => {
+                                card.classList.add('animate-in');
+                            }, 100 * index);
+                        });
+
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, observerOptions);
+
+            // Observe module categories
+            moduleCategories.forEach(category => {
+                observer.observe(category);
+            });
+
+            // Add swipe detection for mobile
+            let touchStartX = 0;
+            let touchEndX = 0;
+
+            document.addEventListener('touchstart', e => {
+                touchStartX = e.changedTouches[0].screenX;
+            });
+
+            document.addEventListener('touchend', e => {
+                touchEndX = e.changedTouches[0].screenX;
+                handleSwipe();
+            });
+
+            function handleSwipe() {
+                const swipeThreshold = 50;
+
+                if (touchStartX - touchEndX > swipeThreshold) {
+                    // Swipe left - next category
+                    const activeIndex = Array.from(navItems).findIndex(item => item.classList.contains('active'));
+                    if (activeIndex < navItems.length - 1) {
+                        navItems[activeIndex + 1].click();
+                    }
+                } else if (touchEndX - touchStartX > swipeThreshold) {
+                    // Swipe right - previous category
+                    const activeIndex = Array.from(navItems).findIndex(item => item.classList.contains('active'));
+                    if (activeIndex > 0) {
+                        navItems[activeIndex - 1].click();
+                    }
+                }
+            }
         });
     </script>
 </body>
