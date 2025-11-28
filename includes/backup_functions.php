@@ -100,7 +100,8 @@ function perform_automatic_backup($connection) {
 
     $backup_dir = __DIR__ . '/../yedekler';
     if (!is_dir($backup_dir)) {
-        if (!mkdir($backup_dir, 0755, true)) {
+        // 0777 permission for wider compatibility
+        if (!mkdir($backup_dir, 0777, true)) {
             return ['status' => 'error', 'message' => "Yedekleme dizini oluşturulamadı: {$backup_dir}"];
         }
     }
@@ -109,14 +110,37 @@ function perform_automatic_backup($connection) {
     $backup_file_path = $backup_dir . '/' . $backup_file_name;
     
     // shell_exec'in kullanılabilir olup olmadığını kontrol et
-    if (!function_exists('shell_exec')) {
-        return ['status' => 'error', 'message' => 'shell_exec fonksiyonu bu sunucuda devre dışı bırakılmış.'];
+    if (!function_exists('exec')) {
+        return ['status' => 'error', 'message' => 'exec fonksiyonu bu sunucuda devre dışı bırakılmış.'];
     }
     
+    // Determine mysqldump path
+    $mysqldump_cmd = 'mysqldump'; // Default for Windows/Standard Linux
+    if (PHP_OS_FAMILY === 'Linux') {
+        // Common paths for mysqldump on Linux
+        $possible_paths = [
+            '/usr/bin/mysqldump',
+            '/usr/local/bin/mysqldump',
+            '/usr/mysql/bin/mysqldump'
+        ];
+        
+        foreach ($possible_paths as $path) {
+            if (file_exists($path) && is_executable($path)) {
+                $mysqldump_cmd = $path;
+                break;
+            }
+        }
+    }
+
     // mysqldump komutunu oluştur
     $password_arg = DB_PASS ? sprintf('-p%s', escapeshellarg(DB_PASS)) : '';
+    
+    // Add --column-statistics=0 for compatibility with newer MySQL versions if needed, 
+    // but standard dump is usually safer without extra flags unless known issue.
+    // We will stick to basic arguments.
     $command = sprintf(
-        'mysqldump -h %s -u %s %s %s > %s',
+        '%s -h %s -u %s %s %s > %s 2>&1',
+        $mysqldump_cmd,
         escapeshellarg(DB_HOST),
         escapeshellarg(DB_USER),
         $password_arg,
@@ -124,16 +148,16 @@ function perform_automatic_backup($connection) {
         escapeshellarg($backup_file_path)
     );
 
-    // Komutu çalıştır ve çıktıyı yakala (hata ayıklama için)
-    $output = shell_exec($command . ' 2>&1');
+    // Komutu çalıştır ve çıktıyı yakala
+    $output = [];
+    $return_var = 0;
+    exec($command, $output, $return_var);
 
     // Yedekleme işleminin başarılı olup olmadığını kontrol et
-    if (file_exists($backup_file_path) && filesize($backup_file_path) > 0) {
+    if ($return_var === 0 && file_exists($backup_file_path) && filesize($backup_file_path) > 0) {
         // Yedekleme başarılı, veritabanındaki son yedekleme tarihini güncelle
         if (function_exists('update_setting')) {
             update_setting($connection, 'son_otomatik_yedek_tarihi', date('Y-m-d H:i:s'));
-        } else {
-            error_log("perform_automatic_backup: update_setting fonksiyonu bulunamadı. son_otomatik_yedek_tarihi güncellenemedi.");
         }
 
         // Send backup to Telegram
@@ -146,10 +170,11 @@ function perform_automatic_backup($connection) {
         return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi ve Telegram'a gönderildi: " . basename($backup_file_path)];
     } else {
         // Yedekleme başarısız oldu
-        $error_message = "mysqldump ile yedekleme başarısız oldu.";
-        if ($output) {
-            $error_message .= " Çıktı: " . $output;
+        $error_message = "mysqldump ile yedekleme başarısız oldu (Hata Kodu: $return_var).";
+        if (!empty($output)) {
+            $error_message .= " Çıktı: " . implode("\n", $output);
         }
+        
         // Başarısız yedek dosyasını sil
         if (file_exists($backup_file_path)) {
             unlink($backup_file_path);

@@ -30,7 +30,7 @@ if (isset($_GET['action'])) {
 
     if ($action == 'list_backups') {
         if (!is_dir($backup_dir)) {
-             $response = ['status' => 'success', 'backups' => []]; // Return empty if dir doesn't exist
+            $response = ['status' => 'success', 'backups' => []]; // Return empty if dir doesn't exist
         } else {
             $files = scandir($backup_dir, SCANDIR_SORT_DESCENDING);
             $backups = [];
@@ -57,7 +57,7 @@ if (isset($_POST['action'])) {
         $result = perform_automatic_backup($connection);
         // We adjust the message for manual action
         if ($result['status'] === 'success') {
-             $result['message'] = 'Manuel veritabanı yedeği başarıyla oluşturuldu ve Telegram\'a gönderildi.';
+            $result['message'] = 'Manuel veritabanı yedeği başarıyla oluşturuldu ve Telegram\'a gönderildi.';
         }
         $response = $result;
     }
@@ -98,27 +98,11 @@ if (isset($_POST['action'])) {
                 $response = ['status' => 'error', 'message' => 'Geçersiz dosya türü. Lütfen bir .sql dosyası yükleyin.'];
             } else {
                 $filepath = $file['tmp_name'];
-                
-                $db_host = DB_HOST;
-                $db_user = DB_USER;
-                $db_pass = DB_PASS;
-                $db_name = DB_NAME;
 
-                $command = sprintf(
-                    'mysql --host=%s --user=%s --password=%s %s < %s',
-                    escapeshellarg($db_host),
-                    escapeshellarg($db_user),
-                    escapeshellarg($db_pass),
-                    escapeshellarg($db_name),
-                    escapeshellarg($filepath)
-                );
-
-                exec($command, $output, $return_var);
-
-                if ($return_var === 0) {
+                if (restore_database($connection, $filepath)) {
                     $response = ['status' => 'success', 'message' => 'Veritabanı yüklenen dosyadan başarıyla geri yüklendi.'];
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Geri yükleme sırasında bir hata oluştu.', 'details' => $output];
+                    $response = ['status' => 'error', 'message' => 'Geri yükleme sırasında bir hata oluştu.'];
                 }
             }
         } else {
@@ -151,26 +135,10 @@ if (isset($_POST['action'])) {
             $filepath = $backup_dir . $file_to_restore;
 
             if (file_exists($filepath) && is_file($filepath)) {
-                $db_host = DB_HOST;
-                $db_user = DB_USER;
-                $db_pass = DB_PASS;
-                $db_name = DB_NAME;
-
-                $command = sprintf(
-                    'mysql --host=%s --user=%s --password=%s %s < %s',
-                    escapeshellarg($db_host),
-                    escapeshellarg($db_user),
-                    escapeshellarg($db_pass),
-                    escapeshellarg($db_name),
-                    escapeshellarg($filepath)
-                );
-
-                exec($command, $output, $return_var);
-
-                if ($return_var === 0) {
+                if (restore_database($connection, $filepath)) {
                     $response = ['status' => 'success', 'message' => 'Veritabanı başarıyla geri yüklendi.'];
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Geri yükleme sırasında bir hata oluştu.', 'details' => $output];
+                    $response = ['status' => 'error', 'message' => 'Geri yükleme sırasında bir hata oluştu.'];
                 }
             } else {
                 $response = ['status' => 'error', 'message' => 'Yedek dosyası bulunamadı.'];
