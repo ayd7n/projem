@@ -229,6 +229,17 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             padding: 6px 10px;
             border-radius: 18px;
         }
+
+        /* Drag & Drop Styles */
+        .dragging {
+            opacity: 0.5;
+            transform: scale(0.95);
+        }
+
+        .drag-over {
+            border: 2px dashed var(--primary) !important;
+            background: rgba(74, 14, 99, 0.05);
+        }
     </style>
 </head>
 
@@ -447,99 +458,242 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
         <!-- Product Modal -->
         <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
-                    <form @submit.prevent="saveProduct">
-                        <div class="modal-header"
-                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                            <h5 class="modal-title">{{ modal.title }}</h5>
-                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                    <div class="modal-header"
+                        style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title">{{ modal.title }}</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Tabs -->
+                        <ul class="nav nav-tabs mb-3" id="productTabs" role="tablist">
+                            <li class="nav-item">
+                                <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">
+                                    <i class="fas fa-info-circle"></i> Ürün Bilgileri
+                                </a>
+                            </li>
+                            <li class="nav-item" v-if="modal.data.urun_kodu">
+                                <a class="nav-link" id="photos-tab" data-toggle="tab" href="#photos" role="tab"
+                                    @click="loadPhotos">
+                                    <i class="fas fa-images"></i> Fotoğraflar ({{ productPhotos.length }})
+                                </a>
+                            </li>
+                        </ul>
+
+                        <!-- Tab Content -->
+                        <div class="tab-content" id="productTabsContent">
+                            <!-- Ürün Bilgileri Tab -->
+                            <div class="tab-pane fade show active" id="info" role="tabpanel">
+                                <form @submit.prevent="saveProduct">
+                                    <input type="hidden" v-model="modal.data.urun_kodu">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Urun Ismi *</label>
+                                                <input type="text" class="form-control" v-model="modal.data.urun_ismi"
+                                                    required>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Stok Miktari</label>
+                                                <input type="number" class="form-control"
+                                                    v-model="modal.data.stok_miktari" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Birim</label>
+                                                <select class="form-control" v-model="modal.data.birim">
+                                                    <option value="adet">Adet</option>
+                                                    <option value="kg">Kg</option>
+                                                    <option value="gr">Gr</option>
+                                                    <option value="lt">Lt</option>
+                                                    <option value="ml">Ml</option>
+                                                    <option value="mt">Mt</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Satis Fiyati (₺)</label>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    v-model="modal.data.satis_fiyati" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Kritik Stok Seviyesi</label>
+                                                <input type="number" class="form-control"
+                                                    v-model="modal.data.kritik_stok_seviyesi" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Depo *</label>
+                                                <select class="form-control" v-model="modal.data.depo"
+                                                    @change="loadRafList(modal.data.depo)" required>
+                                                    <option value="">Depo Secin</option>
+                                                    <option v-for="depo in depoList" :value="depo.depo_ismi">{{
+                                                        depo.depo_ismi
+                                                        }}</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Raf *</label>
+                                                <select class="form-control" v-model="modal.data.raf" required>
+                                                    <option value="">Once Depo Secin</option>
+                                                    <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label>Not Bilgisi</label>
+                                        <textarea class="form-control" v-model="modal.data.not_bilgisi"
+                                            rows="3"></textarea>
+                                    </div>
+                                    <div class="text-right">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                                class="fas fa-times"></i> Iptal</button>
+                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
+                                            Kaydet</button>
+                                    </div>
+                                </form>
+                            </div>
+
+                            <!-- Fotoğraflar Tab -->
+                            <div class="tab-pane fade" id="photos" role="tabpanel">
+                                <div class="photo-upload-section mb-4">
+                                    <h6><i class="fas fa-cloud-upload-alt"></i> Fotoğraf Yükle</h6>
+                                    <div class="upload-area" @dragover.prevent @drop.prevent="handleDrop"
+                                        @click="$refs.photoInput.click()"
+                                        style="border: 2px dashed var(--border-color); border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; background: var(--bg-color); transition: all 0.3s;">
+                                        <i class="fas fa-cloud-upload-alt"
+                                            style="font-size: 3rem; color: var(--primary); margin-bottom: 10px;"></i>
+                                        <p class="mb-0">Fotoğrafları buraya sürükleyin veya tıklayın</p>
+                                        <small class="text-muted">Desteklenen formatlar: JPG, PNG, GIF (Max 5MB)</small>
+                                        <input type="file" ref="photoInput" @change="handlePhotoSelect"
+                                            accept="image/jpeg,image/png,image/gif" multiple style="display: none;">
+                                    </div>
+                                    <div v-if="uploadProgress > 0 && uploadProgress < 100" class="progress mt-3"
+                                        style="height: 25px;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated"
+                                            :style="{width: uploadProgress + '%'}">
+                                            {{ uploadProgress }}%
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="photo-grid-section">
+                                    <h6><i class="fas fa-images"></i> Yüklenen Fotoğraflar</h6>
+                                    <div v-if="loadingPhotos" class="text-center p-4">
+                                        <i class="fas fa-spinner fa-spin"></i> Fotoğraflar yükleniyor...
+                                    </div>
+                                    <div v-else-if="productPhotos.length === 0" class="text-center p-4 text-muted">
+                                        <i class="fas fa-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                                        <p class="mt-2">Henüz fotoğraf yüklenmemiş</p>
+                                    </div>
+                                    <div v-else class="row">
+                                        <div v-for="(photo, index) in productPhotos" :key="photo.fotograf_id"
+                                            class="col-md-3 col-sm-6 mb-3" draggable="true"
+                                            @dragstart="handleDragStart($event, index)"
+                                            @dragover.prevent="handleDragOver($event, index)"
+                                            @drop="handleDrop($event, index)" @dragend="handleDragEnd">
+                                            <div class="photo-card"
+                                                :class="{'dragging': draggedIndex === index, 'drag-over': dragOverIndex === index}"
+                                                style="position: relative; border: 1px solid var(--border-color); border-radius: 8px; overflow: visible; background: white; cursor: move; transition: all 0.2s;">
+
+                                                <!-- Ana Fotoğraf Badge -->
+                                                <div v-if="photo.ana_fotograf == 1" class="primary-badge"
+                                                    style="position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #FFD700, #FFA500); color: white; padding: 4px 12px; border-radius: 12px; font-size: 0.7rem; font-weight: bold; z-index: 10; box-shadow: 0 2px 8px rgba(255,165,0,0.4);">
+                                                    <i class="fas fa-star"></i> ANA FOTOĞRAF
+                                                </div>
+
+                                                <img :src="photo.dosya_yolu" :alt="photo.dosya_adi"
+                                                    @click="openLightbox(index)"
+                                                    style="width: 100%; height: 200px; object-fit: cover; cursor: pointer;">
+
+                                                <!-- Butonlar -->
+                                                <div class="photo-overlay"
+                                                    style="position: absolute; top: 0; right: 0; padding: 8px; display: flex; gap: 5px;">
+                                                    <!-- Yıldız Butonu -->
+                                                    <button @click.stop="setPrimaryPhoto(photo.fotograf_id)"
+                                                        :class="photo.ana_fotograf == 1 ? 'btn-warning' : 'btn-outline-warning'"
+                                                        class="btn btn-sm"
+                                                        :title="photo.ana_fotograf == 1 ? 'Ana Fotoğraf' : 'Ana Fotoğraf Yap'"
+                                                        style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,0.9);">
+                                                        <i :class="photo.ana_fotograf == 1 ? 'fas fa-star' : 'far fa-star'"
+                                                            :style="{color: photo.ana_fotograf == 1 ? '#FFD700' : '#6c757d'}"></i>
+                                                    </button>
+
+                                                    <!-- Silme Butonu -->
+                                                    <button @click.stop="deletePhoto(photo.fotograf_id)"
+                                                        class="btn btn-danger btn-sm" title="Sil"
+                                                        style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+
+                                                <div class="photo-info" style="padding: 10px; background: white;">
+                                                    <small class="text-muted"
+                                                        style="display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                                        <i class="fas fa-grip-vertical"
+                                                            style="opacity: 0.5; margin-right: 5px;"></i>
+                                                        {{ photo.dosya_adi }}
+                                                    </small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="modal-body">
-                            <input type="hidden" v-model="modal.data.urun_kodu">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Urun Ismi *</label>
-                                        <input type="text" class="form-control" v-model="modal.data.urun_ismi" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Stok Miktari</label>
-                                        <input type="number" class="form-control" v-model="modal.data.stok_miktari"
-                                            min="0">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Birim</label>
-                                        <select class="form-control" v-model="modal.data.birim">
-                                            <option value="adet">Adet</option>
-                                            <option value="kg">Kg</option>
-                                            <option value="gr">Gr</option>
-                                            <option value="lt">Lt</option>
-                                            <option value="ml">Ml</option>
-                                            <option value="mt">Mt</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Satis Fiyati (₺)</label>
-                                        <input type="number" step="0.01" class="form-control"
-                                            v-model="modal.data.satis_fiyati" min="0">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Kritik Stok Seviyesi</label>
-                                        <input type="number" class="form-control"
-                                            v-model="modal.data.kritik_stok_seviyesi" min="0">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Depo *</label>
-                                        <select class="form-control" v-model="modal.data.depo"
-                                            @change="loadRafList(modal.data.depo)" required>
-                                            <option value="">Depo Secin</option>
-                                            <option v-for="depo in depoList" :value="depo.depo_ismi">{{ depo.depo_ismi
-                                                }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Raf *</label>
-                                        <select class="form-control" v-model="modal.data.raf" required>
-                                            <option value="">Once Depo Secin</option>
-                                            <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Not Bilgisi</label>
-                                <textarea class="form-control" v-model="modal.data.not_bilgisi" rows="3"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                    class="fas fa-times"></i> Iptal</button>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <!-- Lightbox Modal -->
+        <div v-if="lightbox.show" class="lightbox-overlay" @click="closeLightbox"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+            <button @click="closeLightbox" class="lightbox-close"
+                style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; background: none; border: none; cursor: pointer; z-index: 10000;">
+                <i class="fas fa-times"></i>
+            </button>
+
+            <button v-if="productPhotos.length > 1" @click.stop="previousPhoto" class="lightbox-nav lightbox-prev"
+                style="position: absolute; left: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+
+            <div @click.stop
+                style="max-width: 90%; max-height: 90%; display: flex; flex-direction: column; align-items: center;">
+                <img :src="productPhotos[lightbox.currentIndex]?.dosya_yolu"
+                    :alt="productPhotos[lightbox.currentIndex]?.dosya_adi"
+                    style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
+                <div style="color: white; margin-top: 15px; text-align: center;">
+                    <p style="margin: 5px 0; font-size: 16px;">{{ productPhotos[lightbox.currentIndex]?.dosya_adi }}</p>
+                    <small style="opacity: 0.7;">{{ lightbox.currentIndex + 1 }} / {{ productPhotos.length }}</small>
+                </div>
+            </div>
+
+            <button v-if="productPhotos.length > 1" @click.stop="nextPhoto" class="lightbox-nav lightbox-next"
+                style="position: absolute; right: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
     </div>
 
@@ -565,10 +719,17 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     modal: { title: '', data: {} },
                     depoList: [],
                     rafList: [],
-                    depoList: [],
-                    rafList: [],
                     criticalStockFilterEnabled: false,
-                    operatingCostMetrics: null
+                    operatingCostMetrics: null,
+                    productPhotos: [],
+                    loadingPhotos: false,
+                    uploadProgress: 0,
+                    lightbox: {
+                        show: false,
+                        currentIndex: 0
+                    },
+                    draggedIndex: null,
+                    dragOverIndex: null
                 }
             },
             computed: {
@@ -623,12 +784,17 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                 },
                 openModal(product) {
                     this.rafList = []; // Clear raf list
+                    this.productPhotos = []; // Clear photos
+                    this.uploadProgress = 0; // Reset progress
+
                     if (product) {
                         this.modal.title = 'Urunu Duzenle';
                         this.modal.data = { ...product };
                         if (product.depo) {
                             this.loadRafList(product.depo, product.raf);
                         }
+                        // Fotoğrafları yükle
+                        this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
                         this.modal.data = { birim: 'adet' };
@@ -754,6 +920,246 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             if (response.status === 'success') {
                                 this.operatingCostMetrics = response.data;
                             }
+                        });
+                },
+                loadPhotos() {
+                    if (!this.modal.data.urun_kodu) return;
+
+                    this.loadingPhotos = true;
+                    fetch(`api_islemleri/urun_fotograflari_islemler.php?action=get_photos&urun_kodu=${this.modal.data.urun_kodu}`)
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.productPhotos = response.data;
+                            } else {
+                                this.showAlert('Fotoğraflar yüklenirken hata oluştu.', 'danger');
+                            }
+                            this.loadingPhotos = false;
+                        })
+                        .catch(error => {
+                            this.showAlert('Fotoğraflar yüklenirken bir hata oluştu.', 'danger');
+                            this.loadingPhotos = false;
+                        });
+                },
+                handlePhotoSelect(event) {
+                    const files = event.target.files;
+                    this.uploadPhotos(files);
+                },
+                handleDrop(event) {
+                    const files = event.dataTransfer.files;
+                    this.uploadPhotos(files);
+                },
+                uploadPhotos(files) {
+                    if (!this.modal.data.urun_kodu) {
+                        this.showAlert('Önce ürünü kaydetmelisiniz.', 'warning');
+                        return;
+                    }
+
+                    if (files.length === 0) return;
+
+                    const totalFiles = files.length;
+                    let uploadedFiles = 0;
+
+                    Array.from(files).forEach((file, index) => {
+                        // Dosya boyutu kontrolü (5MB)
+                        if (file.size > 5 * 1024 * 1024) {
+                            this.showAlert(`${file.name} dosyası 5MB'dan büyük.`, 'danger');
+                            return;
+                        }
+
+                        // Dosya formatı kontrolü
+                        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                        if (!allowedTypes.includes(file.type)) {
+                            this.showAlert(`${file.name} desteklenmeyen bir format.`, 'danger');
+                            return;
+                        }
+
+                        const formData = new FormData();
+                        formData.append('action', 'upload_photo');
+                        formData.append('urun_kodu', this.modal.data.urun_kodu);
+                        formData.append('photo', file);
+
+                        fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(response => {
+                                uploadedFiles++;
+                                this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+
+                                if (response.status === 'success') {
+                                    this.productPhotos.push(response.data);
+                                } else {
+                                    this.showAlert(response.message, 'danger');
+                                }
+
+                                if (uploadedFiles === totalFiles) {
+                                    setTimeout(() => {
+                                        this.uploadProgress = 0;
+                                    }, 1000);
+                                }
+                            })
+                            .catch(error => {
+                                this.showAlert('Fotoğraf yüklenirken bir hata oluştu.', 'danger');
+                                uploadedFiles++;
+                                this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+                            });
+                    });
+                },
+                deletePhoto(fotograf_id) {
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: "Bu fotoğrafı silmek istediğinizden emin misiniz?",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Evet, sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const formData = new FormData();
+                            formData.append('action', 'delete_photo');
+                            formData.append('fotograf_id', fotograf_id);
+
+                            fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        this.productPhotos = this.productPhotos.filter(p => p.fotograf_id !== fotograf_id);
+                                        this.showAlert('Fotoğraf başarıyla silindi.', 'success');
+                                    } else {
+                                        this.showAlert(response.message, 'danger');
+                                    }
+                                })
+                                .catch(error => {
+                                    this.showAlert('Fotoğraf silinirken bir hata oluştu.', 'danger');
+                                });
+                        }
+                    });
+                },
+                openLightbox(index) {
+                    this.lightbox.currentIndex = index;
+                    this.lightbox.show = true;
+                    document.body.style.overflow = 'hidden'; // Prevent scrolling
+                    // Add keyboard navigation
+                    document.addEventListener('keydown', this.handleLightboxKeyboard);
+                },
+                closeLightbox() {
+                    this.lightbox.show = false;
+                    document.body.style.overflow = ''; // Restore scrolling
+                    document.removeEventListener('keydown', this.handleLightboxKeyboard);
+                },
+                nextPhoto() {
+                    this.lightbox.currentIndex = (this.lightbox.currentIndex + 1) % this.productPhotos.length;
+                },
+                previousPhoto() {
+                    this.lightbox.currentIndex = (this.lightbox.currentIndex - 1 + this.productPhotos.length) % this.productPhotos.length;
+                },
+                handleLightboxKeyboard(event) {
+                    if (!this.lightbox.show) return;
+
+                    if (event.key === 'Escape') {
+                        this.closeLightbox();
+                    } else if (event.key === 'ArrowRight') {
+                        this.nextPhoto();
+                    } else if (event.key === 'ArrowLeft') {
+                        this.previousPhoto();
+                    }
+                },
+                setPrimaryPhoto(fotograf_id) {
+                    const formData = new FormData();
+                    formData.append('action', 'set_primary_photo');
+                    formData.append('fotograf_id', fotograf_id);
+
+                    fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                // Tüm fotoğrafları normal yap
+                                this.productPhotos.forEach(p => p.ana_fotograf = 0);
+                                // Seçilen fotoğrafı ana yap
+                                const photo = this.productPhotos.find(p => p.fotograf_id === fotograf_id);
+                                if (photo) {
+                                    photo.ana_fotograf = 1;
+                                }
+                                this.showAlert('Ana fotoğraf başarıyla ayarlandı.', 'success');
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('Ana fotoğraf ayarlanırken bir hata oluştu.', 'danger');
+                        });
+                },
+                handleDragStart(event, index) {
+                    this.draggedIndex = index;
+                    event.dataTransfer.effectAllowed = 'move';
+                    event.dataTransfer.setData('text/html', event.target.innerHTML);
+                },
+                handleDragOver(event, index) {
+                    this.dragOverIndex = index;
+                },
+                handleDrop(event, targetIndex) {
+                    event.preventDefault();
+
+                    if (this.draggedIndex === null || this.draggedIndex === targetIndex) {
+                        this.draggedIndex = null;
+                        this.dragOverIndex = null;
+                        return;
+                    }
+
+                    // Fotoğrafları yeniden sırala
+                    const draggedPhoto = this.productPhotos[this.draggedIndex];
+                    const newPhotos = [...this.productPhotos];
+
+                    // Sürüklenen öğeyi çıkar
+                    newPhotos.splice(this.draggedIndex, 1);
+                    // Yeni konuma ekle
+                    newPhotos.splice(targetIndex, 0, draggedPhoto);
+
+                    this.productPhotos = newPhotos;
+
+                    // Sıralamayı backend'e gönder
+                    this.updatePhotoOrder();
+
+                    this.draggedIndex = null;
+                    this.dragOverIndex = null;
+                },
+                handleDragEnd() {
+                    this.draggedIndex = null;
+                    this.dragOverIndex = null;
+                },
+                updatePhotoOrder() {
+                    const photoIds = this.productPhotos.map(p => p.fotograf_id);
+                    const formData = new FormData();
+                    formData.append('action', 'update_order');
+                    formData.append('photos', JSON.stringify(photoIds));
+
+                    fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                // Sıra numaralarını güncelle
+                                this.productPhotos.forEach((photo, index) => {
+                                    photo.sira_no = index + 1;
+                                });
+                            } else {
+                                this.showAlert('Sıralama güncellenirken hata oluştu.', 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('Sıralama güncellenirken bir hata oluştu.', 'danger');
                         });
                 },
                 calculateProfitability(product) {

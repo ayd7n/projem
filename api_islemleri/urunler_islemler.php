@@ -239,6 +239,21 @@ if (isset($_GET['action'])) {
         $deleted_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
         $old_stmt->close();
 
+        // Ürüne ait fotoğrafları al ve fiziksel dosyaları sil
+        $photo_query = "SELECT dosya_yolu FROM urun_fotograflari WHERE urun_kodu = ?";
+        $photo_stmt = $connection->prepare($photo_query);
+        $photo_stmt->bind_param('i', $urun_kodu);
+        $photo_stmt->execute();
+        $photo_result = $photo_stmt->get_result();
+
+        while ($photo = $photo_result->fetch_assoc()) {
+            $file_path = '../' . $photo['dosya_yolu'];
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+        }
+        $photo_stmt->close();
+
         $query = "DELETE FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
         $stmt->bind_param('i', $urun_kodu);
