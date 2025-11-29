@@ -150,36 +150,127 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .main-content {
-            padding: 20px;
+            padding: 15px;
         }
 
         .page-header {
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, rgba(74, 14, 99, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
+            animation: fadeInDown 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .page-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
         }
 
         .page-header h1 {
-            font-size: 1.7rem;
+            font-size: 1.5rem;
             font-weight: 700;
             margin-bottom: 5px;
-            color: var(--text-primary);
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            position: relative;
+            z-index: 1;
+        }
+
+        .page-header h1 i {
+            color: var(--accent);
+            -webkit-text-fill-color: var(--accent);
+            margin-right: 8px;
+            font-size: 1.3rem;
         }
 
         .page-header p {
             color: var(--text-secondary);
-            font-size: 1rem;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 1;
+            line-height: 1.5;
+            margin: 0;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
         }
 
         .card {
             background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
+            border-radius: 12px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
             border: 1px solid var(--border-color);
-            margin-bottom: 25px;
+            margin-bottom: 20px;
             overflow: hidden;
+            transition: all 0.3s ease;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .card:hover {
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .card-header {
-            padding: 18px 20px;
+            padding: 15px 20px;
+            background: linear-gradient(135deg, rgba(74, 14, 99, 0.02) 0%, rgba(212, 175, 55, 0.02) 100%);
             border-bottom: 1px solid var(--border-color);
             display: flex;
             align-items: center;
@@ -187,9 +278,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .card-header h2 {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             margin: 0;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-header h2 i {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        .card-header .badge {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            border-radius: 15px;
         }
 
         .btn {
@@ -221,14 +328,42 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .add-btn {
-            width: 40px;
-            height: 40px;
+            width: 38px;
+            height: 38px;
             border-radius: 50%;
             padding: 0;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            box-shadow: 0 3px 10px rgba(74, 14, 99, 0.25);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .add-btn:hover::before {
+            width: 80px;
+            height: 80px;
+        }
+
+        .add-btn i {
+            position: relative;
+            z-index: 1;
+            font-size: 0.9rem;
         }
 
         .btn-success {
@@ -277,20 +412,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .product-item {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            background: white;
+            border-radius: 10px;
+            padding: 12px 15px;
+            margin-bottom: 10px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 3px;
+            height: 100%;
+            background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .product-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(74, 14, 99, 0.12);
+            border-color: var(--primary);
+        }
+
+        .product-item:hover::before {
+            transform: scaleY(1);
         }
 
         .product-item:last-child {
-            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .product-item-wrapper {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
         }
 
         .product-name {
-            font-weight: 500;
-            font-size: 1.05rem;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-primary);
+            margin-left: 8px;
+            transition: color 0.3s ease;
+        }
+
+        .product-item:hover .product-name {
             color: var(--primary);
         }
 
@@ -301,19 +475,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .quantity-input {
-            width: 70px;
-            padding: 0.6rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 5px;
+            width: 60px;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
             font-size: 0.9rem;
+            font-weight: 600;
             text-align: center;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: all 0.3s ease;
+            background: var(--bg-color);
         }
 
         .quantity-input:focus {
             outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(74, 14, 99, 0.1);
+            background: white;
         }
 
         .cart-item {
@@ -743,8 +920,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .products-container {
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
+            padding: 8px;
+        }
+
+        .products-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .products-container::-webkit-scrollbar-track {
+            background: var(--bg-color);
+            border-radius: 10px;
+        }
+
+        .products-container::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
+            border-radius: 10px;
+        }
+
+        .products-container::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
         }
 
         html {
@@ -909,7 +1105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
         <div class="page-header">
             <div>
-                <h1>Müşteri Paneli</h1>
+                <h1><i class="fas fa-store"></i> Müşteri Paneli</h1>
                 <p>Hoş geldiniz! Buradan stoktaki ürünlerimizi inceleyebilir, sepetinize ekleyebilir ve siparişinizi
                     kolayca oluşturabilirsiniz.</p>
             </div>
@@ -947,43 +1143,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <div id="product-list-container">
             <div class="card">
                 <div class="card-header">
-                    <h2>Stoktaki Ürünler <span class="badge badge-primary ml-2"><?php echo $products_count; ?></span>
+                    <h2><i class="fas fa-box-open"></i> Stoktaki Ürünler <span
+                            class="badge badge-primary ml-2"><?php echo $products_count; ?></span>
                     </h2>
                 </div>
                 <div class="card-body">
-                    <div class="input-group mb-3">
+                    <div class="input-group mb-3" style="position: relative;">
+                        <div
+                            style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); z-index: 10; color: var(--text-secondary);">
+                            <i class="fas fa-search"></i>
+                        </div>
                         <input type="text" class="form-control search-input" name="search"
+                            style="padding-left: 45px; border-radius: 10px; border: 2px solid var(--border-color); font-size: 1rem; padding: 12px 12px 12px 45px; transition: all 0.3s ease;"
                             placeholder="Ürün adıyla ara..."
-                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>"
+                            onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 4px rgba(74, 14, 99, 0.1)';"
+                            onblur="this.style.borderColor='var(--border-color)'; this.style.boxShadow='none';">
                     </div>
                     <div class="products-container" id="product-items-wrapper">
                         <?php if ($products_result->num_rows > 0): ?>
                             <?php while ($product = $products_result->fetch_assoc()): ?>
                                 <div class="product-item"
                                     data-name="<?php echo strtolower(htmlspecialchars($product['urun_ismi'])); ?>">
-                                    <div class="d-flex align-items-center flex-grow-1">
-                                        <?php if ($product['fotograf_id']): ?>
-                                            <!-- Product Photo Thumbnail -->
-                                            <div class="product-photo mr-3" style="cursor: pointer;"
-                                                onclick="openProductGallery(<?php echo $product['urun_kodu']; ?>)">
-                                                <img src="<?php echo htmlspecialchars($product['dosya_yolu']); ?>"
-                                                    alt="<?php echo htmlspecialchars($product['urun_ismi']); ?>"
-                                                    style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color); transition: transform 0.2s, box-shadow 0.2s;"
-                                                    onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.15)';"
-                                                    onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                                            </div>
-                                        <?php endif; ?>
+                                    <div class="product-item-wrapper">
+                                        <div class="d-flex align-items-center flex-grow-1">
+                                            <?php if ($product['fotograf_id']): ?>
+                                                <!-- Product Photo Thumbnail -->
+                                                <div class="product-photo" style="cursor: pointer;"
+                                                    onclick="openProductGallery(<?php echo $product['urun_kodu']; ?>)">
+                                                    <img src="<?php echo htmlspecialchars($product['dosya_yolu']); ?>"
+                                                        alt="<?php echo htmlspecialchars($product['urun_ismi']); ?>"
+                                                        style="width: 55px; height: 55px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color); transition: transform 0.3s, box-shadow 0.3s;"
+                                                        onmouseover="this.style.transform='scale(1.08)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';"
+                                                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                                                </div>
+                                            <?php endif; ?>
 
-                                        <div class="product-name"><?php echo htmlspecialchars($product['urun_ismi']); ?></div>
+                                            <div class="product-name"><?php echo htmlspecialchars($product['urun_ismi']); ?>
+                                            </div>
+                                        </div>
+                                        <form method="POST" class="add-to-cart-form">
+                                            <input type="hidden" name="urun_kodu" value="<?php echo $product['urun_kodu']; ?>">
+                                            <input type="number" class="quantity-input" name="adet" min="1" value="1" required>
+                                            <button type="submit" class="btn btn-primary add-btn" name="add_to_cart"
+                                                title="Sepete Ekle">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </form>
                                     </div>
-                                    <form method="POST" class="add-to-cart-form">
-                                        <input type="hidden" name="urun_kodu" value="<?php echo $product['urun_kodu']; ?>">
-                                        <input type="number" class="quantity-input" name="adet" min="1" value="1" required>
-                                        <button type="submit" class="btn btn-primary add-btn" name="add_to_cart"
-                                            title="Sepete Ekle">
-                                            <i class="fas fa-plus"></i>
-                                        </button>
-                                    </form>
                                 </div>
                             <?php endwhile; ?>
                         <?php else: ?>
@@ -1365,39 +1572,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     return false; // Prevent any form submission
                 });
 
-                // Update filter button active states
-                function updateFilterButtons(status) {
-                    $('.order-filters .btn').removeClass('btn-primary btn-outline-primary btn-warning btn-outline-warning btn-success btn-outline-success btn-danger btn-outline-danger btn-info btn-outline-info');
 
-                    switch (status) {
-                        case 'all':
-                            $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
-                            break;
-                        case 'beklemede':
-                            $('.order-filters .btn[onclick*="filterOrders(\'beklemede\')"]').addClass('btn-warning').removeClass('btn-outline-warning');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'beklemede\')"])').addClass('btn-outline-warning').removeClass('btn-warning');
-                            break;
-                        case 'onaylandi':
-                            $('.order-filters .btn[onclick*="filterOrders(\'onaylandi\')"]').addClass('btn-success').removeClass('btn-outline-success');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'onaylandi\')"])').addClass('btn-outline-success').removeClass('btn-success');
-                            break;
-                        case 'iptal_edildi':
-                            $('.order-filters .btn[onclick*="filterOrders(\'iptal_edildi\')"]').addClass('btn-danger').removeClass('btn-outline-danger');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'iptal_edildi\')"])').addClass('btn-outline-danger').removeClass('btn-danger');
-                            break;
-                        case 'tamamlandi':
-                            $('.order-filters .btn[onclick*="filterOrders(\'tamamlandi\')"]').addClass('btn-info').removeClass('btn-outline-info');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'tamamlandi\')"])').addClass('btn-outline-info').removeClass('btn-info');
-                            break;
-                        default:
-                            $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
-                            $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
-                    }
-                }
-
-                // Initialize filter buttons based on initial status
-                updateFilterButtons(initialStatus);
 
                 // Disable form submission for search (use AJAX instead)
                 $('form[method="GET"][action="customer_panel.php"]').on('submit', function (e) {
@@ -2009,8 +2184,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     item.addEventListener('click', function (e) {
                         const href = this.getAttribute('href');
 
-                        // Allow default behavior for external links, cart, and logout
-                        if (href === 'change_password.php' || href === 'logout.php' || this.classList.contains('cart-toggle-btn')) {
+                        // Allow default behavior for external links, cart, logout, and customer_orders
+                        if (href === 'change_password.php' || href === 'logout.php' || href === 'customer_orders.php' || this.classList.contains('cart-toggle-btn')) {
                             // For cart, ensure active state is set
                             if (this.classList.contains('cart-toggle-btn')) {
                                 bottomNavItems.forEach(i => i.classList.remove('active'));
