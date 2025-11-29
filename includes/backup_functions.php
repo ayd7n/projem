@@ -106,10 +106,16 @@ function perform_automatic_backup($connection)
         if (!mkdir($backup_dir, 0777, true)) {
             return ['status' => 'error', 'message' => "Yedekleme dizini oluşturulamadı: {$backup_dir}"];
         }
+    } else {
+        // If it exists, try to ensure it is writable
+        if (!is_writable($backup_dir)) {
+            @chmod($backup_dir, 0777);
+        }
     }
 
     if (!is_writable($backup_dir)) {
-        return ['status' => 'error', 'message' => "Yedekleme dizini yazılabilir değil: {$backup_dir}"];
+        $real_path = realpath($backup_dir) ?: $backup_dir;
+        return ['status' => 'error', 'message' => "Yedekleme dizini yazılabilir değil. Lütfen sunucunuzda şu komutu çalıştırın: chmod 777 {$real_path}"];
     }
 
     $backup_file_name = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
