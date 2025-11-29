@@ -1,9 +1,8 @@
-/*M!999999\- enable the sandbox mode */ 
--- MariaDB dump 10.19  Distrib 10.6.22-MariaDB, for debian-linux-gnu (x86_64)
+-- MariaDB dump 10.19  Distrib 10.4.32-MariaDB, for Win64 (AMD64)
 --
 -- Host: localhost    Database: parfum_erp
 -- ------------------------------------------------------
--- Server version	10.6.22-MariaDB-0ubuntu0.22.04.1
+-- Server version	10.4.32-MariaDB
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -22,14 +21,14 @@
 
 DROP TABLE IF EXISTS `ayarlar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `ayarlar` (
   `ayar_id` int(11) NOT NULL AUTO_INCREMENT,
   `ayar_anahtar` varchar(255) NOT NULL,
   `ayar_deger` varchar(255) NOT NULL,
   PRIMARY KEY (`ayar_id`),
   UNIQUE KEY `ayar_anahtar` (`ayar_anahtar`)
-) ENGINE=InnoDB AUTO_INCREMENT=28 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -38,7 +37,7 @@ CREATE TABLE `ayarlar` (
 
 LOCK TABLES `ayarlar` WRITE;
 /*!40000 ALTER TABLE `ayarlar` DISABLE KEYS */;
-INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.4960'),(2,'euro_kuru','49.1510'),(3,'son_otomatik_yedek_tarihi','2025-11-29 04:18:52'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
+INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.4270'),(2,'euro_kuru','49.0070'),(3,'son_otomatik_yedek_tarihi','2025-11-29 04:22:54'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
 /*!40000 ALTER TABLE `ayarlar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -48,7 +47,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `cerceve_sozlesmeler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `cerceve_sozlesmeler` (
   `sozlesme_id` int(11) NOT NULL AUTO_INCREMENT,
   `tedarikci_id` int(11) NOT NULL,
@@ -86,7 +85,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `cerceve_sozlesmeler_gecerlilik`;
 /*!50001 DROP VIEW IF EXISTS `cerceve_sozlesmeler_gecerlilik`*/;
 SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8mb4;
+SET character_set_client = utf8;
 /*!50001 CREATE VIEW `cerceve_sozlesmeler_gecerlilik` AS SELECT
  1 AS `sozlesme_id`,
   1 AS `tedarikci_id`,
@@ -115,7 +114,7 @@ SET character_set_client = @saved_cs_client;
 
 DROP TABLE IF EXISTS `esans_is_emirleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `esans_is_emirleri` (
   `is_emri_numarasi` int(11) NOT NULL AUTO_INCREMENT,
   `olusturulma_tarihi` date DEFAULT curdate(),
@@ -155,7 +154,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `esans_is_emri_malzeme_listesi`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `esans_is_emri_malzeme_listesi` (
   `is_emri_numarasi` int(11) NOT NULL,
   `malzeme_kodu` int(11) NOT NULL,
@@ -182,7 +181,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `esanslar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `esanslar` (
   `esans_id` int(11) NOT NULL AUTO_INCREMENT,
   `esans_kodu` varchar(50) NOT NULL,
@@ -215,7 +214,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `gider_yonetimi`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `gider_yonetimi` (
   `gider_id` int(11) NOT NULL AUTO_INCREMENT,
   `tarih` date NOT NULL,
@@ -247,7 +246,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `is_merkezleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `is_merkezleri` (
   `is_merkezi_id` int(11) NOT NULL AUTO_INCREMENT,
   `isim` varchar(255) NOT NULL,
@@ -274,7 +273,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `log_tablosu`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `log_tablosu` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `tarih` datetime DEFAULT current_timestamp(),
@@ -283,7 +282,7 @@ CREATE TABLE `log_tablosu` (
   `islem_turu` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=98 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=89 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -292,7 +291,7 @@ CREATE TABLE `log_tablosu` (
 
 LOCK TABLES `log_tablosu` WRITE;
 /*!40000 ALTER TABLE `log_tablosu` DISABLE KEYS */;
-INSERT INTO `log_tablosu` VALUES (1,'2025-11-26 09:44:47','test_kullanici','Bu bir test log kaydıdır.','CREATE','2025-11-26 06:44:47'),(2,'2025-11-26 09:45:40','test_kullanici','Test Ürün sisteme eklendi','CREATE','2025-11-26 06:45:40'),(3,'2025-11-26 09:45:40','test_kullanici','Test Ürün güncellendi','UPDATE','2025-11-26 06:45:40'),(4,'2025-11-26 09:45:40','test_kullanici','Test Ürün sistemden silindi','DELETE','2025-11-26 06:45:40'),(5,'2025-11-26 09:46:02','sistem','Melisa Rose Parfümü ürünü sisteme eklendi','CREATE','2025-11-26 06:46:02'),(6,'2025-11-26 09:46:02','sistem','Melisa Rose Parfümü ürünü Kır Çiçeği Parfümü olarak güncellendi','UPDATE','2025-11-26 06:46:02'),(7,'2025-11-26 09:46:02','sistem','Kır Çiçeği Parfümü ürünü sistemden silindi','DELETE','2025-11-26 06:46:02'),(8,'2025-11-26 09:46:02','sistem','Ahmet Yılmaz müşterisi sisteme eklendi','CREATE','2025-11-26 06:46:02'),(9,'2025-11-26 09:46:02','sistem','ABC Tedarik tedarikçisi sisteme eklendi','CREATE','2025-11-26 06:46:02'),(10,'2025-11-26 11:03:18','Admin User','Deneme Tankı adlı tank sisteme eklendi','CREATE','2025-11-26 08:03:18'),(11,'2025-11-26 11:06:21','Admin User','Güncellenmiş Tank adlı tank Güncellenmiş Tank olarak güncellendi','UPDATE','2025-11-26 08:06:21'),(12,'2025-11-26 11:06:35','Admin User','Bilinmeyen Tank adlı tank silindi','DELETE','2025-11-26 08:06:35'),(13,'2025-11-26 11:10:03','Admin User','Test Ürün ürün ağacına Test Malzeme bileşeni eklendi','CREATE','2025-11-26 08:10:03'),(14,'2025-11-26 11:10:21','Admin User','Test Ürün ürün ağacındaki Test Malzeme bileşeni Güncellenmiş Malzeme olarak güncellendi','UPDATE','2025-11-26 08:10:21'),(15,'2025-11-26 11:10:32','Admin User','Test Ürün ürün ağacından Güncellenmiş Malzeme bileşeni silindi','DELETE','2025-11-26 08:10:32'),(16,'2025-11-26 14:47:21','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:47:21'),(17,'2025-11-26 14:47:28','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:47:28'),(18,'2025-11-26 14:47:32','unknown','unknown oturumu kapattı (ID: unknown)','','2025-11-26 11:47:32'),(19,'2025-11-26 14:48:04','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:48:04'),(20,'2025-11-26 14:48:10','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 11:48:10'),(21,'2025-11-26 14:48:36','Ayse Kaya','Müşteri giriş yaptı (E-posta/Telefon: ayse.kaya@parfum.com)','','2025-11-26 11:48:36'),(22,'2025-11-26 14:56:59','Ali Can','Müşteri giriş yaptı (E-posta/Telefon: ali.can@parfum.com)','','2025-11-26 11:56:59'),(23,'2025-11-26 14:58:03','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 3)','CREATE','2025-11-26 11:58:03'),(24,'2025-11-26 14:58:22','Ali Can','musteri oturumu kapattı (ID: 8)','','2025-11-26 11:58:22'),(25,'2025-11-26 16:20:13','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:20:13'),(26,'2025-11-26 16:20:14','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:20:14'),(27,'2025-11-26 16:21:21','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:21:21'),(28,'2025-11-26 16:21:22','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:21:22'),(29,'2025-11-26 16:45:37','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:45:37'),(30,'2025-11-26 16:45:39','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:45:39'),(31,'2025-11-26 16:47:07','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 13:47:07'),(32,'2025-11-26 16:47:09','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 13:47:09'),(33,'2025-11-26 17:05:50','test_kullanici','Bu bir test logudur','TEST','2025-11-26 14:05:50'),(34,'2025-11-26 21:12:54','Admin User','Telegram ayarları güncellendi','UPDATE','2025-11-26 18:12:54'),(35,'2025-11-26 21:15:28','Admin User','Telegram ayarları güncellendi','UPDATE','2025-11-26 18:15:28'),(36,'2025-11-26 21:15:37','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:15:37'),(37,'2025-11-26 21:15:43','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:15:43'),(38,'2025-11-26 21:16:18','Admin User','Tedarikci Isim10 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:18'),(39,'2025-11-26 21:16:29','Admin User','Tedarikci Isim100 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:29'),(40,'2025-11-26 21:16:41','Admin User','Tedarikci Isim16 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:41'),(41,'2025-11-26 21:16:58','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:16:58'),(42,'2025-11-26 21:17:05','Ali Can','Müşteri giriş yaptı (E-posta/Telefon: ali.can@parfum.com)','Giriş Yapıldı','2025-11-26 18:17:05'),(43,'2025-11-26 21:17:43','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 4)','CREATE','2025-11-26 18:17:43'),(44,'2025-11-26 21:20:24','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 5)','CREATE','2025-11-26 18:20:24'),(45,'2025-11-26 21:20:49','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 6)','CREATE','2025-11-26 18:20:49'),(46,'2025-11-26 21:22:27','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 7)','CREATE','2025-11-26 18:22:27'),(47,'2025-11-26 21:23:37','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 8)','CREATE','2025-11-26 18:23:37'),(48,'2025-11-26 21:23:53','Ali Can','musteri oturumu kapattı (ID: 8)','Çıkış Yapıldı','2025-11-26 18:23:53'),(49,'2025-11-26 21:23:58','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:23:58'),(50,'2025-11-26 21:26:10','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:26:10'),(51,'2025-11-26 21:26:14','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:26:14'),(52,'2025-11-26 21:27:33','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:27:33'),(53,'2025-11-26 21:27:37','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:27:37'),(54,'2025-11-26 21:32:33','Admin User','Ali Can müşterisine ait 6 nolu sipariş iptal_edildi durumundan iptal_edildi durumuna güncellendi','UPDATE','2025-11-26 18:32:33'),(55,'2025-11-26 21:32:48','Admin User','Ali Can müşterisine ait 5 nolu sipariş onaylandi durumundan onaylandi durumuna güncellendi','UPDATE','2025-11-26 18:32:48'),(56,'2025-11-26 21:34:22','Admin User','Ali Can müşterisine ait 5 nolu siparişin durumu onaylandi oldu','UPDATE','2025-11-26 18:34:22'),(57,'2025-11-26 21:35:33','Admin User','Ali Can müşterisine ait 7 nolu sipariş silindi','DELETE','2025-11-26 18:35:33'),(58,'2025-11-26 21:35:42','Admin User','Ali Can müşterisine ait 8 nolu siparişin yeni durumu: Beklemede','UPDATE','2025-11-26 18:35:42'),(59,'2025-11-26 21:35:50','Admin User','Ali Can müşterisine ait 3 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-11-26 18:35:50'),(60,'2025-11-26 21:38:01','Admin User','Tedarikci Isim13 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:38:01'),(61,'2025-11-26 22:15:40','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 19:15:40'),(62,'2025-11-26 22:15:44','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 19:15:44'),(63,'2025-11-26 22:55:48','Admin User','Tedarikçi Abdi tedarikçisine ait Ambalaj Malzemesi 2 malzemesi için çerçeve sözleşme ve ilişkili stok hareketleri silindi','DELETE','2025-11-26 19:55:48'),(64,'2025-11-26 23:01:39','Admin User','Tedarikçi Abdi tedarikçisine Ambalaj Malzemesi 2 malzemesi için çerçeve sözleşme eklendi','CREATE','2025-11-26 20:01:39'),(65,'2025-11-26 23:22:36','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 20:22:36'),(66,'2025-11-27 08:16:34','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 05:16:34'),(67,'2025-11-27 08:16:39','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 05:16:39'),(68,'2025-11-27 09:45:06','SISTEM','Acil durum kullanıcısı ile en son yedekten geri yükleme yapıldı.','Kritik Eylem','2025-11-27 06:45:06'),(69,'2025-11-27 09:45:12','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 06:45:12'),(70,'2025-11-27 09:51:49','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 06:51:49'),(71,'2025-11-27 09:51:52','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 06:51:52'),(72,'2025-11-27 11:09:36','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 08:09:36'),(73,'2025-11-27 11:11:48','Admin User','10 evo ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:11:48'),(74,'2025-11-27 11:21:00','Admin User','Perfume 2 ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:21:00'),(75,'2025-11-27 11:25:02','Admin User','10 evo ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:25:02'),(76,'2025-11-27 14:34:42','Admin User','Malzeme Gideri kategorisindeki 1200.00 TL tutarlı gider silindi','DELETE','2025-11-27 11:34:42'),(77,'2025-11-27 14:35:09','Admin User','Sarf Malzeme Gideri kategorisinde 56000 TL tutarında gider eklendi','CREATE','2025-11-27 11:35:09'),(78,'2025-11-27 15:07:08','Admin User','Sarf Malzeme Gideri kategorisindeki 56000.00 TL tutarlı gider güncellendi','UPDATE','2025-11-27 12:07:08'),(79,'2025-11-27 15:07:29','Admin User','Sarf Malzeme Gideri kategorisindeki 560.00 TL tutarlı gider güncellendi','UPDATE','2025-11-27 12:07:29'),(80,'2025-11-27 15:21:12','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 12:21:12'),(81,'2025-11-27 15:34:41','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 12:34:41'),(82,'2025-11-27 12:38:34','SISTEM','Acil durum kullanıcısı ile en son yedekten geri yükleme yapıldı.','Kritik Eylem','2025-11-27 12:38:34'),(83,'2025-11-27 12:38:40','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 12:38:40'),(84,'2025-11-27 12:39:07','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 12:39:07'),(85,'2025-11-27 13:29:02','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 13:29:02'),(86,'2025-11-27 13:42:35','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 13:42:35'),(87,'2025-11-27 13:43:54','Admin User','Dolar ve Euro kuru ayarları güncellendi','UPDATE','2025-11-27 13:43:54'),(88,'2025-11-27 17:23:40','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 17:23:40'),(89,'2025-11-27 17:32:21','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 17:32:21'),(90,'2025-11-27 23:35:43','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 20:35:43'),(91,'2025-11-28 00:58:27','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 21:58:27'),(92,'2025-11-28 02:10:40','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 23:10:40'),(93,'2025-11-28 02:11:35','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 23:11:35'),(94,'2025-11-28 15:14:37','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-28 12:14:37'),(95,'2025-11-28 21:57:22','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-28 18:57:22'),(96,'2025-11-28 21:57:51','Admin User','Dolar ve Euro kuru ayarları güncellendi','UPDATE','2025-11-28 18:57:51'),(97,'2025-11-29 04:18:42','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-29 01:18:42');
+INSERT INTO `log_tablosu` VALUES (1,'2025-11-26 09:44:47','test_kullanici','Bu bir test log kaydıdır.','CREATE','2025-11-26 06:44:47'),(2,'2025-11-26 09:45:40','test_kullanici','Test Ürün sisteme eklendi','CREATE','2025-11-26 06:45:40'),(3,'2025-11-26 09:45:40','test_kullanici','Test Ürün güncellendi','UPDATE','2025-11-26 06:45:40'),(4,'2025-11-26 09:45:40','test_kullanici','Test Ürün sistemden silindi','DELETE','2025-11-26 06:45:40'),(5,'2025-11-26 09:46:02','sistem','Melisa Rose Parfümü ürünü sisteme eklendi','CREATE','2025-11-26 06:46:02'),(6,'2025-11-26 09:46:02','sistem','Melisa Rose Parfümü ürünü Kır Çiçeği Parfümü olarak güncellendi','UPDATE','2025-11-26 06:46:02'),(7,'2025-11-26 09:46:02','sistem','Kır Çiçeği Parfümü ürünü sistemden silindi','DELETE','2025-11-26 06:46:02'),(8,'2025-11-26 09:46:02','sistem','Ahmet Yılmaz müşterisi sisteme eklendi','CREATE','2025-11-26 06:46:02'),(9,'2025-11-26 09:46:02','sistem','ABC Tedarik tedarikçisi sisteme eklendi','CREATE','2025-11-26 06:46:02'),(10,'2025-11-26 11:03:18','Admin User','Deneme Tankı adlı tank sisteme eklendi','CREATE','2025-11-26 08:03:18'),(11,'2025-11-26 11:06:21','Admin User','Güncellenmiş Tank adlı tank Güncellenmiş Tank olarak güncellendi','UPDATE','2025-11-26 08:06:21'),(12,'2025-11-26 11:06:35','Admin User','Bilinmeyen Tank adlı tank silindi','DELETE','2025-11-26 08:06:35'),(13,'2025-11-26 11:10:03','Admin User','Test Ürün ürün ağacına Test Malzeme bileşeni eklendi','CREATE','2025-11-26 08:10:03'),(14,'2025-11-26 11:10:21','Admin User','Test Ürün ürün ağacındaki Test Malzeme bileşeni Güncellenmiş Malzeme olarak güncellendi','UPDATE','2025-11-26 08:10:21'),(15,'2025-11-26 11:10:32','Admin User','Test Ürün ürün ağacından Güncellenmiş Malzeme bileşeni silindi','DELETE','2025-11-26 08:10:32'),(16,'2025-11-26 14:47:21','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:47:21'),(17,'2025-11-26 14:47:28','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:47:28'),(18,'2025-11-26 14:47:32','unknown','unknown oturumu kapattı (ID: unknown)','','2025-11-26 11:47:32'),(19,'2025-11-26 14:48:04','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 11:48:04'),(20,'2025-11-26 14:48:10','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 11:48:10'),(21,'2025-11-26 14:48:36','Ayse Kaya','Müşteri giriş yaptı (E-posta/Telefon: ayse.kaya@parfum.com)','','2025-11-26 11:48:36'),(22,'2025-11-26 14:56:59','Ali Can','Müşteri giriş yaptı (E-posta/Telefon: ali.can@parfum.com)','','2025-11-26 11:56:59'),(23,'2025-11-26 14:58:03','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 3)','CREATE','2025-11-26 11:58:03'),(24,'2025-11-26 14:58:22','Ali Can','musteri oturumu kapattı (ID: 8)','','2025-11-26 11:58:22'),(25,'2025-11-26 16:20:13','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:20:13'),(26,'2025-11-26 16:20:14','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:20:14'),(27,'2025-11-26 16:21:21','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:21:21'),(28,'2025-11-26 16:21:22','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:21:22'),(29,'2025-11-26 16:45:37','Admin User','personel oturumu kapattı (ID: 1)','','2025-11-26 13:45:37'),(30,'2025-11-26 16:45:39','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','','2025-11-26 13:45:39'),(31,'2025-11-26 16:47:07','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 13:47:07'),(32,'2025-11-26 16:47:09','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 13:47:09'),(33,'2025-11-26 17:05:50','test_kullanici','Bu bir test logudur','TEST','2025-11-26 14:05:50'),(34,'2025-11-26 21:12:54','Admin User','Telegram ayarları güncellendi','UPDATE','2025-11-26 18:12:54'),(35,'2025-11-26 21:15:28','Admin User','Telegram ayarları güncellendi','UPDATE','2025-11-26 18:15:28'),(36,'2025-11-26 21:15:37','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:15:37'),(37,'2025-11-26 21:15:43','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:15:43'),(38,'2025-11-26 21:16:18','Admin User','Tedarikci Isim10 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:18'),(39,'2025-11-26 21:16:29','Admin User','Tedarikci Isim100 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:29'),(40,'2025-11-26 21:16:41','Admin User','Tedarikci Isim16 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:16:41'),(41,'2025-11-26 21:16:58','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:16:58'),(42,'2025-11-26 21:17:05','Ali Can','Müşteri giriş yaptı (E-posta/Telefon: ali.can@parfum.com)','Giriş Yapıldı','2025-11-26 18:17:05'),(43,'2025-11-26 21:17:43','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 4)','CREATE','2025-11-26 18:17:43'),(44,'2025-11-26 21:20:24','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 5)','CREATE','2025-11-26 18:20:24'),(45,'2025-11-26 21:20:49','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 6)','CREATE','2025-11-26 18:20:49'),(46,'2025-11-26 21:22:27','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 7)','CREATE','2025-11-26 18:22:27'),(47,'2025-11-26 21:23:37','Ali Can','Ali Can müşterisi tarafından sipariş oluşturuldu (ID: 8)','CREATE','2025-11-26 18:23:37'),(48,'2025-11-26 21:23:53','Ali Can','musteri oturumu kapattı (ID: 8)','Çıkış Yapıldı','2025-11-26 18:23:53'),(49,'2025-11-26 21:23:58','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:23:58'),(50,'2025-11-26 21:26:10','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:26:10'),(51,'2025-11-26 21:26:14','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:26:14'),(52,'2025-11-26 21:27:33','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 18:27:33'),(53,'2025-11-26 21:27:37','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 18:27:37'),(54,'2025-11-26 21:32:33','Admin User','Ali Can müşterisine ait 6 nolu sipariş iptal_edildi durumundan iptal_edildi durumuna güncellendi','UPDATE','2025-11-26 18:32:33'),(55,'2025-11-26 21:32:48','Admin User','Ali Can müşterisine ait 5 nolu sipariş onaylandi durumundan onaylandi durumuna güncellendi','UPDATE','2025-11-26 18:32:48'),(56,'2025-11-26 21:34:22','Admin User','Ali Can müşterisine ait 5 nolu siparişin durumu onaylandi oldu','UPDATE','2025-11-26 18:34:22'),(57,'2025-11-26 21:35:33','Admin User','Ali Can müşterisine ait 7 nolu sipariş silindi','DELETE','2025-11-26 18:35:33'),(58,'2025-11-26 21:35:42','Admin User','Ali Can müşterisine ait 8 nolu siparişin yeni durumu: Beklemede','UPDATE','2025-11-26 18:35:42'),(59,'2025-11-26 21:35:50','Admin User','Ali Can müşterisine ait 3 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-11-26 18:35:50'),(60,'2025-11-26 21:38:01','Admin User','Tedarikci Isim13 tedarikçisi sistemden silindi','DELETE','2025-11-26 18:38:01'),(61,'2025-11-26 22:15:40','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-26 19:15:40'),(62,'2025-11-26 22:15:44','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 19:15:44'),(63,'2025-11-26 22:55:48','Admin User','Tedarikçi Abdi tedarikçisine ait Ambalaj Malzemesi 2 malzemesi için çerçeve sözleşme ve ilişkili stok hareketleri silindi','DELETE','2025-11-26 19:55:48'),(64,'2025-11-26 23:01:39','Admin User','Tedarikçi Abdi tedarikçisine Ambalaj Malzemesi 2 malzemesi için çerçeve sözleşme eklendi','CREATE','2025-11-26 20:01:39'),(65,'2025-11-26 23:22:36','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-26 20:22:36'),(66,'2025-11-27 08:16:34','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 05:16:34'),(67,'2025-11-27 08:16:39','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 05:16:39'),(68,'2025-11-27 09:45:06','SISTEM','Acil durum kullanıcısı ile en son yedekten geri yükleme yapıldı.','Kritik Eylem','2025-11-27 06:45:06'),(69,'2025-11-27 09:45:12','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 06:45:12'),(70,'2025-11-27 09:51:49','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 06:51:49'),(71,'2025-11-27 09:51:52','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 06:51:52'),(72,'2025-11-27 11:09:36','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 08:09:36'),(73,'2025-11-27 11:11:48','Admin User','10 evo ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:11:48'),(74,'2025-11-27 11:21:00','Admin User','Perfume 2 ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:21:00'),(75,'2025-11-27 11:25:02','Admin User','10 evo ürünü için montaj iş emri oluşturuldu','CREATE','2025-11-27 08:25:02'),(76,'2025-11-27 14:34:42','Admin User','Malzeme Gideri kategorisindeki 1200.00 TL tutarlı gider silindi','DELETE','2025-11-27 11:34:42'),(77,'2025-11-27 14:35:09','Admin User','Sarf Malzeme Gideri kategorisinde 56000 TL tutarında gider eklendi','CREATE','2025-11-27 11:35:09'),(78,'2025-11-27 15:07:08','Admin User','Sarf Malzeme Gideri kategorisindeki 56000.00 TL tutarlı gider güncellendi','UPDATE','2025-11-27 12:07:08'),(79,'2025-11-27 15:07:29','Admin User','Sarf Malzeme Gideri kategorisindeki 560.00 TL tutarlı gider güncellendi','UPDATE','2025-11-27 12:07:29'),(80,'2025-11-27 15:21:12','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 12:21:12'),(81,'2025-11-27 15:34:41','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 12:34:41'),(82,'2025-11-27 15:35:01','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 12:35:01'),(83,'2025-11-27 15:38:06','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 12:38:06'),(84,'2025-11-27 15:39:00','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-11-27 12:39:00'),(85,'2025-11-27 16:20:25','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 13:20:25'),(86,'2025-11-27 21:12:40','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-27 18:12:40'),(87,'2025-11-29 03:35:09','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-29 00:35:09'),(88,'2025-11-29 16:42:56','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-11-29 13:42:56');
 /*!40000 ALTER TABLE `log_tablosu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -302,7 +301,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `lokasyonlar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `lokasyonlar` (
   `lokasyon_id` int(11) NOT NULL AUTO_INCREMENT,
   `depo_ismi` varchar(255) NOT NULL,
@@ -327,7 +326,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `malzeme_maliyetleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `malzeme_maliyetleri` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `malzeme_kodu` int(11) NOT NULL,
@@ -355,7 +354,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `malzemeler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `malzemeler` (
   `malzeme_kodu` int(11) NOT NULL AUTO_INCREMENT,
   `malzeme_ismi` varchar(255) NOT NULL,
@@ -392,7 +391,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `montaj_is_emirleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `montaj_is_emirleri` (
   `is_emri_numarasi` int(11) NOT NULL AUTO_INCREMENT,
   `olusturulma_tarihi` date DEFAULT curdate(),
@@ -430,7 +429,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `montaj_is_emri_malzeme_listesi`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `montaj_is_emri_malzeme_listesi` (
   `is_emri_numarasi` int(11) NOT NULL,
   `malzeme_kodu` varchar(50) NOT NULL,
@@ -457,7 +456,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `musteri_geri_bildirimleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `musteri_geri_bildirimleri` (
   `geri_bildirim_id` int(11) NOT NULL AUTO_INCREMENT,
   `musteri_id` int(11) NOT NULL,
@@ -493,7 +492,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `musteriler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `musteriler` (
   `musteri_id` int(11) NOT NULL AUTO_INCREMENT,
   `musteri_adi` varchar(255) NOT NULL,
@@ -526,7 +525,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `personel_izinleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `personel_izinleri` (
   `izin_id` int(11) NOT NULL AUTO_INCREMENT,
   `personel_id` int(11) NOT NULL,
@@ -553,7 +552,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `personeller`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `personeller` (
   `personel_id` int(11) NOT NULL AUTO_INCREMENT,
   `ad_soyad` varchar(255) NOT NULL,
@@ -588,7 +587,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `siparis_kalemleri`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `siparis_kalemleri` (
   `siparis_id` int(11) NOT NULL,
   `urun_kodu` int(11) NOT NULL,
@@ -616,7 +615,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `siparisler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `siparisler` (
   `siparis_id` int(11) NOT NULL AUTO_INCREMENT,
   `musteri_id` int(11) NOT NULL,
@@ -649,7 +648,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `sistem_kullanicilari`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `sistem_kullanicilari` (
   `kullanici_id` int(11) NOT NULL AUTO_INCREMENT,
   `taraf` varchar(50) NOT NULL,
@@ -680,7 +679,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `stok_hareket_kayitlari`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `stok_hareket_kayitlari` (
   `hareket_id` int(11) NOT NULL AUTO_INCREMENT,
   `tarih` datetime DEFAULT current_timestamp(),
@@ -724,7 +723,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `stok_hareketleri_sozlesmeler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `stok_hareketleri_sozlesmeler` (
   `hareket_id` int(11) NOT NULL,
   `sozlesme_id` int(11) NOT NULL,
@@ -760,7 +759,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tanklar`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tanklar` (
   `tank_id` int(11) NOT NULL AUTO_INCREMENT,
   `tank_kodu` varchar(50) NOT NULL,
@@ -789,7 +788,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `tedarikciler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `tedarikciler` (
   `tedarikci_id` int(11) NOT NULL AUTO_INCREMENT,
   `tedarikci_adi` varchar(255) NOT NULL,
@@ -821,7 +820,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `urun_agaci`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `urun_agaci` (
   `urun_agaci_id` int(11) NOT NULL AUTO_INCREMENT,
   `urun_kodu` int(11) NOT NULL,
@@ -851,7 +850,7 @@ UNLOCK TABLES;
 
 DROP TABLE IF EXISTS `urunler`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8mb4 */;
+/*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `urunler` (
   `urun_kodu` int(11) NOT NULL AUTO_INCREMENT,
   `urun_ismi` varchar(255) NOT NULL,
@@ -886,7 +885,7 @@ UNLOCK TABLES;
 DROP TABLE IF EXISTS `v_esans_maliyetleri`;
 /*!50001 DROP VIEW IF EXISTS `v_esans_maliyetleri`*/;
 SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8mb4;
+SET character_set_client = utf8;
 /*!50001 CREATE VIEW `v_esans_maliyetleri` AS SELECT
  1 AS `esans_kodu`,
   1 AS `toplam_maliyet` */;
@@ -899,7 +898,7 @@ SET character_set_client = @saved_cs_client;
 DROP TABLE IF EXISTS `v_urun_maliyetleri`;
 /*!50001 DROP VIEW IF EXISTS `v_urun_maliyetleri`*/;
 SET @saved_cs_client     = @@character_set_client;
-SET character_set_client = utf8mb4;
+SET character_set_client = utf8;
 /*!50001 CREATE VIEW `v_urun_maliyetleri` AS SELECT
  1 AS `urun_kodu`,
   1 AS `teorik_maliyet` */;
@@ -968,4 +967,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2025-11-29  4:21:15
+-- Dump completed on 2025-11-29 16:43:07
