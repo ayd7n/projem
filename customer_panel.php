@@ -622,7 +622,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         .actions {
             display: flex;
             gap: 8px;
-            justify-content: center;
+            justify-content: flex-start;
         }
 
         .actions .btn {
@@ -1614,14 +1614,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                         <td>${order.toplam_adet || 0}</td>
                                         <td>${order.aciklama ? order.aciklama.substring(0, 30) + (order.aciklama.length > 30 ? '...' : '') : '-'}</td>
                                         <td class="actions">
-                                            <button class="btn btn-primary btn-sm view-order-btn" 
-                                                    data-id="${order.siparis_id}" 
-                                                    data-status="${order.durum}"
+                                            <button class="btn btn-primary btn-sm view-order-btn"
+                                                    data-id="${order.siparis_id}"
+                                                    data-status="${order.durum}">
                                                 <i class="fas fa-eye"></i>  Detay
                                             </button>
                                             ${order.durum === 'beklemede' ?
-                                            `<button class="btn btn-danger btn-sm cancel-order-btn" 
-                                                        data-id="${order.siparis_id}" 
+                                            `<button class="btn btn-danger btn-sm cancel-order-btn"
+                                                        data-id="${order.siparis_id}">
                                                     <i class="fas fa-times"></i> İptal
                                                 </button>` : ''}
                                         </td>
