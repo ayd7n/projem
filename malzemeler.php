@@ -1066,7 +1066,11 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                 .then(response => response.json())
                                 .then(response => {
                                     if (response.status === 'success') {
-                                        this.materialPhotos = this.materialPhotos.filter(p => p.fotograf_id !== fotograf_id);
+                                        // Remove photo from array using splice for better reactivity
+                                        const index = this.materialPhotos.findIndex(p => p.fotograf_id === fotograf_id);
+                                        if (index !== -1) {
+                                            this.materialPhotos.splice(index, 1);
+                                        }
                                         this.showAlert('Fotoğraf başarıyla silindi.', 'success');
                                     } else {
                                         this.showAlert(response.message, 'danger');

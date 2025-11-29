@@ -1040,7 +1040,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 .then(response => response.json())
                                 .then(response => {
                                     if (response.status === 'success') {
-                                        this.productPhotos = this.productPhotos.filter(p => p.fotograf_id !== fotograf_id);
+                                        // Remove photo from array using splice for better reactivity
+                                        const index = this.productPhotos.findIndex(p => p.fotograf_id === fotograf_id);
+                                        if (index !== -1) {
+                                            this.productPhotos.splice(index, 1);
+                                        }
                                         this.showAlert('Fotoğraf başarıyla silindi.', 'success');
                                     } else {
                                         this.showAlert(response.message, 'danger');
