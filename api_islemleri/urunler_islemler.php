@@ -45,24 +45,31 @@ if (isset($_GET['action'])) {
             $stmt_count->close();
 
             $can_view_cost = yetkisi_var('action:urunler:view_cost');
-            $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
-
+            // Get paginated data with optional critical stock filter
             if ($filter === 'critical') {
+                $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
                 $query = "
-                    SELECT u.* {$cost_column}
+                    SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
                     FROM urunler u
                     " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
-                    WHERE (u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?) AND u.stok_miktari <= u.kritik_stok_seviyesi AND u.kritik_stok_seviyesi > 0
+                    LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu
+                    WHERE (u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?)
+                    AND u.stok_miktari <= u.kritik_stok_seviyesi
+                    AND u.kritik_stok_seviyesi > 0
+                    GROUP BY u.urun_kodu
                     ORDER BY u.urun_ismi
                     LIMIT ? OFFSET ?";
                 $stmt_data = $connection->prepare($query);
                 $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
             } else {
+                $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
                 $query = "
-                    SELECT u.* {$cost_column}
+                    SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
                     FROM urunler u
                     " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
+                    LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu
                     WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?
+                    GROUP BY u.urun_kodu
                     ORDER BY u.urun_ismi
                     LIMIT ? OFFSET ?";
                 $stmt_data = $connection->prepare($query);

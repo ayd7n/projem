@@ -356,6 +356,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-cogs"></i> Islemler</th>
                                 <th><i class="fas fa-barcode"></i> Urun Kodu</th>
                                 <th><i class="fas fa-tag"></i> Urun Ismi</th>
+                                <th><i class="fas fa-image"></i> Fotograf</th>
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
                                 <th><i class="fas fa-exclamation-triangle"></i> Kritik Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
@@ -370,11 +371,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="9" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="10" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="products.length === 0">
-                                <td colspan="9" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
+                                <td colspan="10" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu">
                                 <td class="actions">
@@ -389,6 +390,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 </td>
                                 <td>{{ product.urun_kodu }}</td>
                                 <td><strong>{{ product.urun_ismi }}</strong></td>
+                                <td class="text-center">
+                                    <span v-if="product.foto_sayisi > 0" style="color: #28a745; font-size: 1.2rem;"
+                                        :title="product.foto_sayisi + ' fotograf'">
+                                        <i class="fas fa-check-circle"></i>
+                                    </span>
+                                    <span v-else style="color: #dc3545; font-size: 1.2rem;" title="Fotograf yok">
+                                        <i class="fas fa-times-circle"></i>
+                                    </span>
+                                </td>
                                 <td>
                                     <span :class="stockClass(product)">
                                         {{ product.stok_miktari }}

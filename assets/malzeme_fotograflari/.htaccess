@@ -1,0 +1,11 @@
+# Güvenlik için sadece resim dosyalarına erişime izin ver
+<FilesMatch "\.(jpg|jpeg|png|gif)$">
+    Order Allow,Deny
+    Allow from all
+</FilesMatch>
+
+# Diğer dosya türlerini engelle
+<FilesMatch "\.php$">
+    Order Deny,Allow
+    Deny from all
+</FilesMatch>

@@ -19,8 +19,8 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Malzemeleri görüntüleme yetkiniz yok.']);
             exit;
         }
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
         $order_by = isset($_GET['order_by']) ? $_GET['order_by'] : 'malzeme_ismi';
@@ -59,11 +59,23 @@ if (isset($_GET['action'])) {
 
         // Get paginated data
         if ($filter === 'critical') {
-            $query = "SELECT * FROM malzemeler WHERE (malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0 ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
+            $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
+                      FROM malzemeler m 
+                      LEFT JOIN malzeme_fotograflari mf ON m.malzeme_kodu = mf.malzeme_kodu 
+                      WHERE (m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ?) 
+                      AND m.stok_miktari <= m.kritik_stok_seviyesi 
+                      AND m.kritik_stok_seviyesi > 0 
+                      GROUP BY m.malzeme_kodu 
+                      ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
             $stmt = $connection->prepare($query);
             $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
         } else {
-            $query = "SELECT * FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ? ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
+            $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
+                      FROM malzemeler m 
+                      LEFT JOIN malzeme_fotograflari mf ON m.malzeme_kodu = mf.malzeme_kodu 
+                      WHERE m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ? 
+                      GROUP BY m.malzeme_kodu 
+                      ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
             $stmt = $connection->prepare($query);
             $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
         }
@@ -85,13 +97,12 @@ if (isset($_GET['action'])) {
                 'current_page' => $page
             ]
         ];
-    }
-    elseif ($action == 'get_material' && isset($_GET['id'])) {
+    } elseif ($action == 'get_material' && isset($_GET['id'])) {
         if (!yetkisi_var('page:view:malzemeler')) {
             echo json_encode(['status' => 'error', 'message' => 'Malzeme görüntüleme yetkiniz yok.']);
             exit;
         }
-        $malzeme_kodu = (int)$_GET['id'];
+        $malzeme_kodu = (int) $_GET['id'];
         $query = "SELECT * FROM malzemeler WHERE malzeme_kodu = ?";
         $stmt = $connection->prepare($query);
         $stmt->bind_param('i', $malzeme_kodu);
@@ -105,8 +116,7 @@ if (isset($_GET['action'])) {
         } else {
             $response = ['status' => 'error', 'message' => 'Malzeme bulunamadı.'];
         }
-    }
-    elseif ($action == 'get_all_materials') {
+    } elseif ($action == 'get_all_materials') {
         $query = "SELECT * FROM malzemeler ORDER BY malzeme_ismi";
         $result = $connection->query($query);
 
@@ -127,14 +137,14 @@ if (isset($_GET['action'])) {
     $malzeme_ismi = $_POST['malzeme_ismi'] ?? null;
     $malzeme_turu = $_POST['malzeme_turu'] ?? '';
     $not_bilgisi = $_POST['not_bilgisi'] ?? '';
-    $stok_miktari = isset($_POST['stok_miktari']) ? (float)$_POST['stok_miktari'] : 0;
+    $stok_miktari = isset($_POST['stok_miktari']) ? (float) $_POST['stok_miktari'] : 0;
     $birim = $_POST['birim'] ?? 'adet';
-    $alis_fiyati = isset($_POST['alis_fiyati']) ? (float)$_POST['alis_fiyati'] : 0.00;
+    $alis_fiyati = isset($_POST['alis_fiyati']) ? (float) $_POST['alis_fiyati'] : 0.00;
     $para_birimi = $_POST['para_birimi'] ?? 'TRY';
-    $termin_suresi = isset($_POST['termin_suresi']) ? (int)$_POST['termin_suresi'] : 0;
+    $termin_suresi = isset($_POST['termin_suresi']) ? (int) $_POST['termin_suresi'] : 0;
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
-    $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int)$_POST['kritik_stok_seviyesi'] : 0;
+    $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
 
     if ($action == 'add_material') {
         if (!yetkisi_var('action:malzemeler:create')) {
@@ -163,8 +173,8 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Malzeme düzenleme yetkiniz yok.']);
             exit;
         }
-        $malzeme_kodu = (int)$_POST['malzeme_kodu'];
-        
+        $malzeme_kodu = (int) $_POST['malzeme_kodu'];
+
         if (empty($malzeme_ismi)) {
             $response = ['status' => 'error', 'message' => 'Malzeme ismi boş olamaz.'];
         } else {
@@ -177,7 +187,7 @@ if (isset($_GET['action'])) {
             $price_check_stmt->close();
 
             $maliyet_manuel_girildi = false;
-            if ($current_material && (float)$current_material['alis_fiyati'] != (float)$alis_fiyati) {
+            if ($current_material && (float) $current_material['alis_fiyati'] != (float) $alis_fiyati) {
                 $maliyet_manuel_girildi = true;
             }
 
@@ -209,8 +219,23 @@ if (isset($_GET['action'])) {
             echo json_encode(['status' => 'error', 'message' => 'Malzeme silme yetkiniz yok.']);
             exit;
         }
-        $malzeme_kodu = (int)$_POST['malzeme_kodu'];
-        
+        $malzeme_kodu = (int) $_POST['malzeme_kodu'];
+
+        // Önce malzemeye ait fotoğrafları al ve fiziksel dosyaları sil
+        $photos_query = "SELECT dosya_yolu FROM malzeme_fotograflari WHERE malzeme_kodu = ?";
+        $photos_stmt = $connection->prepare($photos_query);
+        $photos_stmt->bind_param('i', $malzeme_kodu);
+        $photos_stmt->execute();
+        $photos_result = $photos_stmt->get_result();
+
+        while ($photo = $photos_result->fetch_assoc()) {
+            $file_path = '../' . $photo['dosya_yolu'];
+            if (file_exists($file_path)) {
+                unlink($file_path);
+            }
+        }
+        $photos_stmt->close();
+
         $query = "DELETE FROM malzemeler WHERE malzeme_kodu = ?";
         // Silinen malzeme bilgilerini al
         $old_material_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";
