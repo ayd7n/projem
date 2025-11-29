@@ -48,7 +48,7 @@ $musteri_adi = $musteri ? $musteri['musteri_adi'] : 'Müşteri';
 
 // Get all available products (stock > 0) with their primary photo
 $products_query = "
-    SELECT u.urun_kodu, u.urun_ismi, 
+    SELECT u.urun_kodu, u.urun_ismi,
            uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
            uf.ana_fotograf
     FROM urunler u
@@ -56,6 +56,11 @@ $products_query = "
     WHERE u.stok_miktari > 0
     ORDER BY u.urun_ismi";
 $products_result = $connection->query($products_query);
+
+// Get total product count
+$products_count_query = "SELECT COUNT(*) as count FROM urunler WHERE stok_miktari > 0";
+$products_count_result = $connection->query($products_count_query);
+$products_count = $products_count_result->fetch_assoc()['count'];
 
 // Handle adding to cart
 $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
@@ -675,7 +680,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .products-container {
-            max-height: 600px;
+            max-height: 400px;
             overflow-y: auto;
         }
 
@@ -801,25 +806,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             </div>
         <?php endif; ?>
 
-        <div class="card">
-            <div class="card-body">
-                <form method="GET" action="customer_panel.php" class="mb-0">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="search" placeholder="Ürün adıyla ara..."
-                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
-
-                    </div>
-                </form>
-            </div>
-        </div>
-
         <div id="product-list-container">
             <div class="card">
                 <div class="card-header">
-                    <h2>Stoktaki Ürünler</h2>
+                    <h2>Stoktaki Ürünler <span class="badge badge-primary ml-2"><?php echo $products_count; ?></span></h2>
                 </div>
-                <div class="card-body products-container">
-                    <div id="product-items-wrapper">
+                <div class="card-body">
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control search-input" name="search" placeholder="Ürün adıyla ara..."
+                            value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
+                    </div>
+                    <div class="products-container" id="product-items-wrapper">
                         <?php if ($products_result->num_rows > 0): ?>
                             <?php while ($product = $products_result->fetch_assoc()): ?>
                                 <div class="product-item"
@@ -1844,7 +1841,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 }
 
                 // Search functionality
-                $('.form-control[name="search"]').on('input', function () {
+                $('.search-input').on('input', function () {
                     currentPaginationPage = 1;
                     if (typeof updatePagination === 'function') {
                         updatePagination(getProductsToPaginate());
@@ -1909,7 +1906,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
             // Handle "no results" message for search
             const $noResultsMessage = $('.no-results-message');
-            const searchTerm = $('.form-control[name="search"]').val().toLowerCase().trim();
+            const searchTerm = $('.search-input').val().toLowerCase().trim();
             if (productsToPaginate.length === 0 && searchTerm !== '') {
                 $noResultsMessage.show();
             } else {
