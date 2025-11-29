@@ -37,7 +37,7 @@ if ($access_result->num_rows > 0) {
 }
 
 // Get customer info
-$musteri_id = $_SESSION['id'];
+$musteri_id = $_SESSION['user_id'];
 $musteri_query = "SELECT musteri_adi FROM musteriler WHERE musteri_id = ?";
 $musteri_stmt = $connection->prepare($musteri_query);
 $musteri_stmt->bind_param('i', $musteri_id);
@@ -864,6 +864,54 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             </div>
         </div>
 
+        <!-- Past Orders Section -->
+        <div class="card" id="gecmis-siparisler">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h2><i class="fas fa-history"></i> Geçmiş Siparişlerim</h2>
+                <div class="order-filters">
+                    <button
+                        class="btn <?php echo (!isset($_GET['status']) || $_GET['status'] === 'all') ? 'btn-primary' : 'btn-outline-primary'; ?>"
+                        onclick="filterOrders('all')">Tümü</button>
+                    <button
+                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'beklemede') ? 'btn-warning' : 'btn-outline-warning'; ?>"
+                        onclick="filterOrders('beklemede')">Beklemede</button>
+                    <button
+                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'onaylandi') ? 'btn-success' : 'btn-outline-success'; ?>"
+                        onclick="filterOrders('onaylandi')">Onaylandı</button>
+                    <button
+                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'iptal_edildi') ? 'btn-danger' : 'btn-outline-danger'; ?>"
+                        onclick="filterOrders('iptal_edildi')">İptal Edildi</button>
+                    <button
+                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'tamamlandi') ? 'btn-info' : 'btn-outline-info'; ?>"
+                        onclick="filterOrders('tamamlandi')">Tamamlandı</button>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag"></i> Sipariş No</th>
+                                <th><i class="fas fa-calendar"></i> Tarih</th>
+                                <th><i class="fas fa-tag"></i> Durum</th>
+                                <th><i class="fas fa-boxes"></i> Toplam Adet</th>
+                                <th><i class="fas fa-comment"></i> Açıklama</th>
+                                <th><i class="fas fa-cogs"></i> İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders will be loaded via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-center mt-4" id="noOrdersMessage" style="display: none;">
+                    <i class="fas fa-inbox fa-3x mb-3" style="color: var(--text-secondary);"></i>
+                    <h4>Herhangi bir siparişiniz bulunmuyor.</h4>
+                    <p class="text-muted">Dilerseniz yeni bir sipariş oluşturabilirsiniz.</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Overlay for cart -->
         <div class="cart-overlay" id="cartOverlay"></div>
 
@@ -935,54 +983,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
                     </div>
                 <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Past Orders Section -->
-        <div class="card" id="gecmis-siparisler">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-history"></i> Geçmiş Siparişlerim</h2>
-                <div class="order-filters">
-                    <button
-                        class="btn <?php echo (!isset($_GET['status']) || $_GET['status'] === 'all') ? 'btn-primary' : 'btn-outline-primary'; ?>"
-                        onclick="filterOrders('all')">Tümü</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'beklemede') ? 'btn-warning' : 'btn-outline-warning'; ?>"
-                        onclick="filterOrders('beklemede')">Beklemede</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'onaylandi') ? 'btn-success' : 'btn-outline-success'; ?>"
-                        onclick="filterOrders('onaylandi')">Onaylandı</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'iptal_edildi') ? 'btn-danger' : 'btn-outline-danger'; ?>"
-                        onclick="filterOrders('iptal_edildi')">İptal Edildi</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'tamamlandi') ? 'btn-info' : 'btn-outline-info'; ?>"
-                        onclick="filterOrders('tamamlandi')">Tamamlandı</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-hashtag"></i> Sipariş No</th>
-                                <th><i class="fas fa-calendar"></i> Tarih</th>
-                                <th><i class="fas fa-tag"></i> Durum</th>
-                                <th><i class="fas fa-boxes"></i> Toplam Adet</th>
-                                <th><i class="fas fa-comment"></i> Açıklama</th>
-                                <th><i class="fas fa-cogs"></i> İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersTableBody">
-                            <!-- Orders will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="text-center mt-4" id="noOrdersMessage" style="display: none;">
-                    <i class="fas fa-inbox fa-3x mb-3" style="color: var(--text-secondary);"></i>
-                    <h4>Herhangi bir siparişiniz bulunmuyor.</h4>
-                    <p class="text-muted">Dilerseniz yeni bir sipariş oluşturabilirsiniz.</p>
-                </div>
             </div>
         </div>
     </div>
@@ -1216,16 +1216,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     success: function (response) {
                         console.log('Order submission response:', response);
                         if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            // Close the cart and update the UI
-                            closeCart();
-                            updateCartUI(); // This will refresh the cart UI and badge
-                            // Reload orders to show the new order
-                            loadOrders('all');
-                            // Refresh the page to see direct PHP processing results if any
-                            setTimeout(function () {
-                                location.reload();
-                            }, 1000);
+                            // Show a success message with SweetAlert
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Siparişiniz Alındı!',
+                                text: 'Siparişiniz başarıyla oluşturulmuştur. En kısa sürede ilgilenilerek işleme alınacaktır. Teşekkür ederiz!',
+                                showConfirmButton: true,
+                                confirmButtonText: 'Tamam',
+                                confirmButtonColor: '#4a0e63'
+                            }).then((result) => {
+                                // Close the cart and update the UI after user acknowledges
+                                closeCart();
+                                updateCartUI(); // This will refresh the cart UI and badge
+                                // Reload orders to show the new order
+                                loadOrders('all');
+                                // Refresh the page to see direct PHP processing results if any
+                                setTimeout(function () {
+                                    location.reload();
+                                }, 500);
+                            });
                         } else {
                             showAlert(response.message, 'danger');
                         }
