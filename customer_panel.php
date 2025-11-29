@@ -688,9 +688,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             scroll-behavior: smooth;
         }
 
+        /* Mobile Bottom Navigation */
+        .mobile-bottom-nav {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            border-top: 1px solid var(--border-color);
+            padding: 0.6rem 0.2rem;
+            z-index: 1000;
+            box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.08);
+            justify-content: space-around;
+            align-items: flex-start; /* Aligns items to the top */
+        }
+
+        .mobile-bottom-nav .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: var(--text-secondary);
+            transition: all 0.2s ease-in-out;
+            padding: 0.2rem 0.4rem;
+            border-radius: 8px;
+            width: 19%;
+            min-width: 55px;
+            text-align: center;
+        }
+
+        .mobile-bottom-nav .nav-item i {
+            font-size: 1.1rem;
+            margin-bottom: 0.2rem;
+            height: 1.2rem; /* Consistent height */
+        }
+
+        .mobile-bottom-nav .nav-item .nav-text {
+            font-size: 0.7rem;
+            font-weight: 500;
+            line-height: 1.2;
+        }
+
+        .mobile-bottom-nav .nav-item:hover,
+        .mobile-bottom-nav .nav-item.active {
+            color: var(--secondary);
+            background: rgba(124, 42, 153, 0.05);
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 padding: 15px;
+                padding-bottom: 80px; /* Space for bottom nav */
+            }
+            .mobile-bottom-nav {
+                display: flex;
+            }
+            .mobile-bottom-nav .nav-item .cart-badge {
+                font-size: 0.8rem; /* Daha büyük font */
+                padding: 0.25em 0.5em; /* Dolgunluk */
+                position: relative;
+                top: -1px;
+                left: 2px;
+                transform: scale(0.9); /* Sadece rozetin boyutunu küçültmek için, daha az yer kaplasın */
+                transform-origin: left center;
+                white-space: nowrap; /* Sayı tek satırda kalsın */
             }
         }
 
@@ -1057,6 +1119,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             <i class="fas fa-chevron-right"></i>
         </button>
     </div>
+
+
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-bottom-nav">
+        <a href="customer_panel.php" class="nav-item active">
+            <i class="fas fa-store"></i>
+            <span class="nav-text">Mağaza</span>
+        </a>
+        <a href="#" id="mobile-nav-cart" class="nav-item cart-toggle-btn">
+            <i class="fas fa-shopping-cart"></i>
+            <span class="nav-text">Sepet <span class="badge badge-danger ml-1 cart-badge"><?php echo count($cart); ?></span></span>
+        </a>
+        <a href="#gecmis-siparisler" id="mobile-nav-orders" class="nav-item">
+            <i class="fas fa-history"></i>
+            <span class="nav-text">Siparişlerim</span>
+        </a>
+        <a href="change_password.php" class="nav-item">
+            <i class="fas fa-key"></i>
+            <span class="nav-text">Parola</span>
+        </a>
+        <a href="logout.php" class="nav-item">
+            <i class="fas fa-sign-out-alt"></i>
+            <span class="nav-text">Çıkış</span>
+        </a>
+    </nav>
 
 
     <!-- jQuery for AJAX functionality -->
@@ -1888,6 +1975,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     updatePagination();
                 }
             }
+
+            // --- Mobile Bottom Nav ---
+            const bottomNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+
+            bottomNavItems.forEach(item => {
+                item.addEventListener('click', function (e) {
+                    const href = this.getAttribute('href');
+
+                    // Allow default behavior for external links, cart, and logout
+                    if (href === 'change_password.php' || href === 'logout.php' || this.classList.contains('cart-toggle-btn')) {
+                        // For cart, ensure active state is set
+                        if (this.classList.contains('cart-toggle-btn')) {
+                             bottomNavItems.forEach(i => i.classList.remove('active'));
+                             this.classList.add('active');
+                        }
+                        return;
+                    }
+                    e.preventDefault();
+
+                    // Set active state
+                    bottomNavItems.forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+
+                    // Handle scrolling for internal links
+                    if (href && href.startsWith('#')) {
+                        const targetElement = document.querySelector(href);
+                        if (targetElement) {
+                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    } else if (href === 'customer_panel.php') {
+                        // Scroll to top for "Mağaza"
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }
+                });
+            });
+
+            // When cart is closed, revert active state to the main page icon
+            $(document).on('click', '#closeCartBtn, #cartOverlay', function() {
+                setTimeout(function() {
+                    if (!$('#sepet').hasClass('show')) {
+                         bottomNavItems.forEach(i => i.classList.remove('active'));
+                         // Activate the "Mağaza" button
+                         $('.mobile-bottom-nav .nav-item[href="customer_panel.php"]').addClass('active');
+                    }
+                }, 350); // wait for animation
+            });
+            // --- End Mobile Bottom Nav ---
         });
 
         // Function to update pagination display - defined outside document ready to be accessible globally
