@@ -7,7 +7,8 @@
  *
  * @return array A structured array of all system permissions.
  */
-function get_all_permissions() {
+function get_all_permissions()
+{
     return [
         'Genel Sayfa Erişimi' => [
             'page:view:navigation' => 'Ana Sayfa Paneli',
@@ -130,18 +131,26 @@ function get_all_permissions() {
             'action:cerceve_sozlesmeler:delete' => 'Sözleşme Silme',
         ],
         'Raporlar' => [
-            'action:raporlar:view_stock' => 'Stok Raporlarını Görüntüleme',
-            'action:raporlar:view_sales' => 'Satış Raporlarını Görüntüleme',
-            'action:raporlar:view_cost' => 'Maliyet Raporlarını Görüntüleme',
-            'action:raporlar:view_production' => 'Üretim Raporlarını Görüntüleme',
-            'page:view:montaj_is_emri_raporu' => 'Montaj İş Emri Raporu',
-            'page:view:log_raporlari' => 'Sistem İşlem Logları Sayfası',
+            'page:view:gider_raporlari' => 'Gider Raporları',
+            'page:view:kritik_stok_raporlari' => 'Kritik Stok Seviyeleri',
+            'page:view:urun_agaci_analiz' => 'Eksik Bileşen Raporu',
+            'page:view:bileseni_eksik_esanslar' => 'Ağaçları Olmayan Esanslar',
+            'page:view:stok_hareket_raporu' => 'Stok Hareket Analizi',
+            'page:view:montaj_raporu' => 'Montaj Raporu',
+            'page:view:en_cok_satan_urunler' => 'En Çok Satan Ürünler',
+            'page:view:musteri_satis_raporu' => 'Müşteri Satış Raporu',
+            'page:view:tedarikci_odeme_raporu' => 'Tedarikçi Ödeme Raporu',
+            'page:view:tedarikciye_yapilacak_odemeler_raporu' => 'Tedarikçiye Yapılacak Ödemeler',
+            'page:view:log_raporlari' => 'Sistem İşlem Logları',
+            'page:view:sayisal_ozet' => 'Sayısal Özet',
+            'page:view:isletme_maliyeti_raporu' => 'İşletme Maliyeti Analizi',
         ],
         'Ayarlar' => [
             'action:ayarlar:maintenance_mode' => 'Bakım Modunu Değiştirme',
             'action:ayarlar:currency' => 'Döviz Kurlarını Değiştirme',
             'action:ayarlar:backup' => 'Yedekleme İşlemleri Yapma',
             'action:ayarlar:export' => 'Excel\'e Aktarma İşlemleri Yapma',
+            'action:ayarlar:telegram' => 'Telegram Bildirim Ayarları',
         ],
     ];
 }

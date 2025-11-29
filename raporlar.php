@@ -182,155 +182,181 @@ if (!yetkisi_var('page:view:raporlar')) {
         </div>
 
         <div class="row">
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="gider_raporlari.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-file-invoice-dollar icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Gider Raporları</h5>
-                            <p class="card-text mb-0">Gider yönetimi verilerini analiz edin.</p>
+            <?php if (yetkisi_var('page:view:gider_raporlari')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="gider_raporlari.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-file-invoice-dollar icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Gider Raporları</h5>
+                                <p class="card-text mb-0">Gider yönetimi verilerini analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="kritik_stok_raporlari.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-exclamation-triangle icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Kritik Stok Seviyeleri</h5>
-                            <p class="card-text mb-0">Kritik seviye altındaki ürün ve malzeme stoğunu analiz edin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:kritik_stok_raporlari')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="kritik_stok_raporlari.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Kritik Stok Seviyeleri</h5>
+                                <p class="card-text mb-0">Kritik seviye altındaki ürün ve malzeme stoğunu analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="urun_agaci_analiz.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-sitemap icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Eksik Bileşen Raporu</h5>
-                            <p class="card-text mb-0">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri
-                                analiz edin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:urun_agaci_analiz')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="urun_agaci_analiz.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-sitemap icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Eksik Bileşen Raporu</h5>
+                                <p class="card-text mb-0">Hem esans hem de diğer bileşen türlerinden eksik olan ürünleri
+                                    analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+            <?php endif; ?>
 
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="bileseni_eksik_esanslar.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-wine-bottle icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Ağaçları Olmayan Esanslar</h5>
-                            <p class="card-text mb-0">Kendi üretim ağaçları olmayan esansları analiz edin.</p>
+            <?php if (yetkisi_var('page:view:bileseni_eksik_esanslar')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="bileseni_eksik_esanslar.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-wine-bottle icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Ağaçları Olmayan Esanslar</h5>
+                                <p class="card-text mb-0">Kendi üretim ağaçları olmayan esansları analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+            <?php endif; ?>
 
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="stok_hareket_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-chart-line icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Stok Hareket Analizi</h5>
-                            <p class="card-text mb-0">Stok hareketlerini grafiklerle görselleştirin.</p>
+            <?php if (yetkisi_var('page:view:stok_hareket_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="stok_hareket_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chart-line icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Stok Hareket Analizi</h5>
+                                <p class="card-text mb-0">Stok hareketlerini grafiklerle görselleştirin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="montaj_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-industry icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Montaj Raporu</h5>
-                            <p class="card-text mb-0">Montaj hattı performansı, iş emri durumları ve üretim analizinin
-                                kapsamlı görünümü.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:montaj_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="montaj_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-industry icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Montaj Raporu</h5>
+                                <p class="card-text mb-0">Montaj hattı performansı, iş emri durumları ve üretim analizinin
+                                    kapsamlı görünümü.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="en_cok_satan_urunler.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-trophy icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">En Çok Satan Ürünler</h5>
-                            <p class="card-text mb-0">Tamamlanmış siparişlere göre en çok satan ürünleri analiz edin.
-                            </p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:en_cok_satan_urunler')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="en_cok_satan_urunler.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-trophy icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">En Çok Satan Ürünler</h5>
+                                <p class="card-text mb-0">Tamamlanmış siparişlere göre en çok satan ürünleri analiz edin.
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="musteri_satis_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-chart-line icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Müşteri Satış Raporu</h5>
-                            <p class="card-text mb-0">Müşteri bazlı satış ve karlılık analizi.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:musteri_satis_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="musteri_satis_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chart-line icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Müşteri Satış Raporu</h5>
+                                <p class="card-text mb-0">Müşteri bazlı satış ve karlılık analizi.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="tedarikci_odeme_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-money-bill-wave icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Tedarikçi Ödeme Raporu</h5>
-                            <p class="card-text mb-0">Tedarikçilere yapılan ödemeleri TL bazında analiz edin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:tedarikci_odeme_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="tedarikci_odeme_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-money-bill-wave icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Tedarikçi Ödeme Raporu</h5>
+                                <p class="card-text mb-0">Tedarikçilere yapılan ödemeleri TL bazında analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="tedarikciye_yapilacak_odemeler_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-hourglass-half icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Tedarikçiye Yapılacak Ödemeler</h5>
-                            <p class="card-text mb-0">Sözleşmelere göre bekleyen ödemeleri tedarikçi bazında
-                                görüntüleyin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:tedarikciye_yapilacak_odemeler_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="tedarikciye_yapilacak_odemeler_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-hourglass-half icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Tedarikçiye Yapılacak Ödemeler</h5>
+                                <p class="card-text mb-0">Sözleşmelere göre bekleyen ödemeleri tedarikçi bazında
+                                    görüntüleyin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="log_raporlari.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-list-alt icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Sistem İşlem Logları</h5>
-                            <p class="card-text mb-0">Sistemde yapılan tüm işlemleri analiz edin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:log_raporlari')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="log_raporlari.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-list-alt icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Sistem İşlem Logları</h5>
+                                <p class="card-text mb-0">Sistemde yapılan tüm işlemleri analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="sayisal_ozet.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-list-ol icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">Sayısal Özet</h5>
-                            <p class="card-text mb-0">Sistemdeki verilerin sayısal özetini görüntüleyin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:sayisal_ozet')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="sayisal_ozet.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-list-ol icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Sayısal Özet</h5>
+                                <p class="card-text mb-0">Sistemdeki verilerin sayısal özetini görüntüleyin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
-            <div class="col-md-6 col-lg-4 mb-4">
-                <a href="isletme_maliyeti_raporu.php" class="settings-card">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-calculator icon"></i>
-                        <div>
-                            <h5 class="card-title mb-1">İşletme Maliyeti Analizi</h5>
-                            <p class="card-text mb-0">İşletme maliyetlerini ve ürün kârlılığını analiz edin.</p>
+                    </a>
+                </div>
+            <?php endif; ?>
+            <?php if (yetkisi_var('page:view:isletme_maliyeti_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="isletme_maliyeti_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-calculator icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">İşletme Maliyeti Analizi</h5>
+                                <p class="card-text mb-0">İşletme maliyetlerini ve ürün kârlılığını analiz edin.</p>
+                            </div>
                         </div>
-                    </div>
-                </a>
-            </div>
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
     </div>
