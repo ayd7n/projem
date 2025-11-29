@@ -312,57 +312,74 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .cart-item {
-            padding: 10px 15px;
-            border-bottom: 1px solid var(--border-color);
+            padding: 15px 18px; /* Daha fazla padding */
+            margin-bottom: 10px; /* Öğeler arasına boşluk */
+            border-bottom: none; /* Alt çizgi yerine kutu stili */
+            border-radius: 8px; /* Yuvarlak köşeler */
+            background-color: var(--card-bg); /* Arka plan rengi */
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Hafif gölge */
             display: flex;
-            align-items: flex-start;
+            align-items: center; /* Öğeleri dikeyde ortala */
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .cart-item:last-child {
-            border-bottom: none;
+            margin-bottom: 10px; /* Son öğe için de boşluk */
+        }
+
+        .cart-item:hover {
+            transform: translateY(-3px); /* Hover efekti */
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .cart-item-content {
             flex-grow: 1;
-            padding-right: 12px;
-            min-width: 0; /* Allows flex item to shrink below content size */
+            padding-right: 15px; /* Sağdan boşluk */
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
         }
 
-        .item-info h4 {
-            margin-bottom: 2px;
-            font-size: 0.85rem;
-            color: var(--primary);
-            font-weight: 500;
+        .cart-item-content h4 { /* ürün adı için h4 */
+            margin-bottom: 5px;
+            font-size: 1.05rem; /* Biraz daha büyük font */
+            color: var(--text-primary); /* Daha koyu metin */
+            font-weight: 600; /* Daha kalın */
         }
 
         .item-quantity {
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            background-color: #f8f9fa;
-            padding: 2px 6px;
-            border-radius: 10px;
+            color: var(--primary); /* Renk */
+            font-size: 0.85rem; /* Biraz daha büyük font */
+            font-weight: 700;
+            background-color: rgba(74, 14, 99, 0.1); /* Hafif mor arka plan */
+            padding: 4px 10px; /* Daha fazla padding */
+            border-radius: 20px; /* Daha yuvarlak badge */
             display: inline-block;
+            align-self: flex-start; /* Başlangıca hizala */
         }
 
         .remove-from-cart-btn {
-            min-width: 32px;
-            height: 32px;
+            min-width: 36px; /* Buton boyutu */
+            height: 36px; /* Buton boyutu */
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50% !important;
             transition: all 0.3s ease;
             padding: 0 !important;
+            background-color: var(--danger); /* Kırmızı arka plan */
+            color: white;
+            box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
         }
 
         .remove-from-cart-btn:hover {
-            background-color: #f8d7da !important;
-            color: #721c24 !important;
-            transform: scale(1.05);
+            background-color: #c82333 !important; /* Koyu kırmızı */
+            box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+            transform: scale(1.1); /* Hafif büyüt */
         }
 
         .remove-from-cart-btn i {
-            font-size: 0.8rem;
+            font-size: 0.9rem; /* İkon boyutu */
         }
 
         .empty-cart {
@@ -370,21 +387,53 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 30px 20px;
+            padding: 40px 20px; /* Daha fazla padding */
             text-align: center;
             color: var(--text-secondary);
         }
 
         .empty-cart i {
-            font-size: 3.5rem;
-            margin-bottom: 15px;
+            font-size: 4.5rem; /* Daha büyük ikon */
+            margin-bottom: 20px;
             color: var(--primary);
-            opacity: 0.4;
+            opacity: 0.5; /* Biraz daha belirgin */
+            animation: bounceIn 0.8s ease-out; /* Giriş animasyonu */
         }
 
         .empty-cart h4 {
-            color: var(--primary);
-            font-weight: 500;
+            color: var(--text-primary); /* Daha koyu başlık */
+            font-weight: 700; /* Daha kalın */
+            margin-bottom: 10px;
+        }
+
+        .empty-cart p {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes bounceIn {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); opacity: 1; }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); }
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(74, 14, 99, 0.25);
         }
 
         /* Cart panel that slides from right */
@@ -426,29 +475,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .cart-summary {
-            background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            background-color: var(--bg-color);
             border-radius: 8px;
-            padding: 10px 15px;
-            font-size: 0.8rem;
-            margin: 8px 10px 10px;
-            color: var(--accent);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border: 1px solid rgba(255,255,255,0.2);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+            padding: 12px;
+            margin: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            border: 1px solid var(--border-color);
         }
 
         .cart-summary span {
-            font-weight: 600;
+            font-weight: 500;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 8px;
+            background-color: #fff;
+            border-radius: 6px;
         }
 
         .cart-summary span strong {
-            font-size: 1.1em;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary);
             display: block;
             margin-bottom: 2px;
         }
@@ -691,10 +744,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
                         </div>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item d-none d-lg-flex">
                         <button class="btn btn-light cart-toggle-btn" type="button" id="openCartBtn">
                             <i class="fas fa-shopping-cart text-primary"></i> Sepet
-                            <span class="badge badge-danger ml-1"><?php echo count($cart); ?></span>
+                            <span class="badge badge-danger ml-1 cart-badge"><?php echo count($cart); ?></span>
                         </button>
                     </li>
                 </ul>
@@ -712,6 +765,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 <p>Hoş geldiniz! Buradan stoktaki ürünlerimizi inceleyebilir, sepetinize ekleyebilir ve siparişinizi
                     kolayca oluşturabilirsiniz.</p>
             </div>
+        </div>
+
+        <!-- Mobile Cart Button - Below Page Header -->
+        <div class="d-flex justify-content-end mb-3 d-lg-none">
+            <button class="btn btn-primary cart-toggle-btn" type="button" id="mobile-cart-btn">
+                <i class="fas fa-shopping-cart"></i> Sepet <span class="badge badge-light ml-1 cart-badge"><?php echo count($cart); ?></span>
+            </button>
         </div>
 
         <?php if (isset($message)): ?>
@@ -842,7 +902,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                             <span><strong><?php echo $total_different_products; ?></strong> farklı ürün</span>
                             <span><strong><?php echo $total_quantity; ?></strong> adet</span>
                         </div>
-                        <div class="cart-items-container-inner p-2">
+                        <div class="cart-items-container-inner">
                         <?php
                         foreach ($cart as $urun_kodu => $adet):
                             $product_query_cart = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
@@ -1295,7 +1355,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                         <span><strong>${totalDifferentProducts}</strong> farklı ürün</span>
                                         <span><strong>${totalQuantity}</strong> adet</span>
                                     </div>
-                                    <div class="cart-items-container-inner p-2">`;
+                                    <div class="cart-items-container-inner">`;
 
                                 $.each(response.cart_items, function (index, item) {
                                     cartHtml += `
@@ -1482,7 +1542,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             // Attach cart toggle event handlers when the document is ready
             $(document).ready(function () {
                 // Click handlers for cart open buttons
-                $(document).on('click', '#openCartBtn', function (e) {
+                $(document).on('click', '.cart-toggle-btn', function (e) {
                     e.preventDefault();
                     openCart();
                 });
