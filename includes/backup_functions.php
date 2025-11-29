@@ -103,7 +103,6 @@ function perform_automatic_backup($connection)
 
     $backup_dir = __DIR__ . '/../yedekler';
     if (!is_dir($backup_dir)) {
-        // 0777 permission for wider compatibility
         if (!mkdir($backup_dir, 0777, true)) {
             return ['status' => 'error', 'message' => "Yedekleme dizini oluşturulamadı: {$backup_dir}"];
         }
@@ -116,90 +115,141 @@ function perform_automatic_backup($connection)
     $backup_file_name = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
     $backup_file_path = $backup_dir . '/' . $backup_file_name;
 
-    // shell_exec/exec'in kullanılabilir olup olmadığını kontrol et
-    if (!function_exists('exec')) {
-        return ['status' => 'error', 'message' => 'exec fonksiyonu bu sunucuda devre dışı bırakılmış.'];
-    }
+    $mysqldump_success = false;
+    $mysqldump_error = "";
 
-    // Determine mysqldump path
-    $mysqldump_cmd = 'mysqldump'; // Default
-    if (PHP_OS_FAMILY === 'Linux') {
-        // Try to find using 'which' command first
-        $which_output = [];
-        $which_return = 0;
-        exec('which mysqldump', $which_output, $which_return);
-
-        if ($which_return === 0 && !empty($which_output[0])) {
-            $mysqldump_cmd = $which_output[0];
-        } else {
-            // Fallback to common paths
-            $possible_paths = [
-                '/usr/bin/mysqldump',
-                '/usr/local/bin/mysqldump',
-                '/usr/mysql/bin/mysqldump'
-            ];
-
-            foreach ($possible_paths as $path) {
-                if (file_exists($path) && is_executable($path)) {
-                    $mysqldump_cmd = $path;
-                    break;
+    // 1. Try mysqldump if exec is available
+    if (function_exists('exec')) {
+        $mysqldump_cmd = 'mysqldump';
+        if (PHP_OS_FAMILY === 'Linux') {
+            $which_output = [];
+            $which_return = 0;
+            exec('which mysqldump', $which_output, $which_return);
+            if ($which_return === 0 && !empty($which_output[0])) {
+                $mysqldump_cmd = $which_output[0];
+            } else {
+                $possible_paths = ['/usr/bin/mysqldump', '/usr/local/bin/mysqldump', '/usr/mysql/bin/mysqldump'];
+                foreach ($possible_paths as $path) {
+                    if (file_exists($path) && is_executable($path)) {
+                        $mysqldump_cmd = $path;
+                        break;
+                    }
                 }
             }
         }
+
+        $password_arg = DB_PASS ? sprintf('-p%s', escapeshellarg(DB_PASS)) : '';
+        $command = sprintf(
+            '%s -h %s -u %s %s %s > %s 2>&1',
+            $mysqldump_cmd,
+            escapeshellarg(DB_HOST),
+            escapeshellarg(DB_USER),
+            $password_arg,
+            escapeshellarg(DB_NAME),
+            escapeshellarg($backup_file_path)
+        );
+
+        $output = [];
+        $return_var = 0;
+        exec($command, $output, $return_var);
+
+        if ($return_var === 0 && file_exists($backup_file_path) && filesize($backup_file_path) > 0) {
+            $mysqldump_success = true;
+        } else {
+            $mysqldump_error = "mysqldump failed (Code: $return_var). Output: " . implode("\n", $output);
+            // Clean up empty or partial file
+            if (file_exists($backup_file_path)) {
+                @unlink($backup_file_path);
+            }
+        }
+    } else {
+        $mysqldump_error = "exec function is disabled.";
     }
 
-    // mysqldump komutunu oluştur
-    $password_arg = DB_PASS ? sprintf('-p%s', escapeshellarg(DB_PASS)) : '';
-
-    // Construct command
-    $command = sprintf(
-        '%s -h %s -u %s %s %s > %s 2>&1',
-        $mysqldump_cmd,
-        escapeshellarg(DB_HOST),
-        escapeshellarg(DB_USER),
-        $password_arg,
-        escapeshellarg(DB_NAME),
-        escapeshellarg($backup_file_path)
-    );
-
-    // Komutu çalıştır ve çıktıyı yakala
-    $output = [];
-    $return_var = 0;
-    exec($command, $output, $return_var);
-
-    // Yedekleme işleminin başarılı olup olmadığını kontrol et
-    if ($return_var === 0 && file_exists($backup_file_path) && filesize($backup_file_path) > 0) {
-        // Yedekleme başarılı, veritabanındaki son yedekleme tarihini güncelle
-        if (function_exists('update_setting')) {
-            update_setting($connection, 'son_otomatik_yedek_tarihi', date('Y-m-d H:i:s'));
-        }
-
-        // Send backup to Telegram
-        $telegram_settings = get_telegram_settings($connection);
-        if (!empty($telegram_settings['bot_token']) && !empty($telegram_settings['chat_id'])) {
-            $caption = "Veritabanı yedeği oluşturuldu: " . $backup_file_name;
-            sendTelegramFile($backup_file_path, $caption, $telegram_settings['bot_token'], $telegram_settings['chat_id']);
-        }
-
-        return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi ve Telegram'a gönderildi: " . basename($backup_file_path)];
-    } else {
-        // Yedekleme başarısız oldu
-        // Mask password in command for display
-        $masked_command = str_replace($password_arg, '-p*****', $command);
-
-        $error_message = "Yedekleme başarısız (Kod: $return_var).";
-        $error_message .= " Komut: $masked_command";
-
-        if (!empty($output)) {
-            $error_message .= " Çıktı: " . implode("\n", $output);
+    // 2. Fallback to PHP Native Backup if mysqldump failed
+    if (!$mysqldump_success) {
+        // Try PHP native backup
+        $php_backup_result = php_native_backup($connection, $backup_file_path);
+        if ($php_backup_result['status'] === 'success') {
+            // Success with PHP fallback
         } else {
-            $error_message .= " (Çıktı boş)";
+            // Both failed
+            return [
+                'status' => 'error',
+                'message' => "Yedekleme başarısız. mysqldump hatası: $mysqldump_error. PHP yedekleme hatası: " . $php_backup_result['message']
+            ];
+        }
+    }
+
+    // Success (either mysqldump or PHP native)
+    if (function_exists('update_setting')) {
+        update_setting($connection, 'son_otomatik_yedek_tarihi', date('Y-m-d H:i:s'));
+    }
+
+    // Send backup to Telegram
+    $telegram_settings = get_telegram_settings($connection);
+    if (!empty($telegram_settings['bot_token']) && !empty($telegram_settings['chat_id'])) {
+        $caption = "Veritabanı yedeği oluşturuldu: " . $backup_file_name;
+        sendTelegramFile($backup_file_path, $caption, $telegram_settings['bot_token'], $telegram_settings['chat_id']);
+    }
+
+    return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi (" . ($mysqldump_success ? "Sistem" : "PHP") . ") ve Telegram'a gönderildi: " . basename($backup_file_path)];
+}
+
+/**
+ * Generates a database backup using native PHP code.
+ * Useful as a fallback when mysqldump is not available.
+ */
+function php_native_backup($connection, $filepath)
+{
+    try {
+        $tables = [];
+        $result = $connection->query("SHOW TABLES");
+        while ($row = $result->fetch_row()) {
+            $tables[] = $row[0];
         }
 
-        // Başarısız yedek dosyasını sil
-        if (file_exists($backup_file_path)) {
-            unlink($backup_file_path);
+        $content = "-- PHP Native Backup\n";
+        $content .= "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+        $content .= "SET SQL_MODE = \"NO_AUTO_VALUE_ON_ZERO\";\n";
+        $content .= "SET time_zone = \"+00:00\";\n\n";
+
+        foreach ($tables as $table) {
+            // Get create table syntax
+            $row2 = $connection->query("SHOW CREATE TABLE `$table`")->fetch_row();
+            $content .= "\n\n" . $row2[1] . ";\n\n";
+
+            // Get data
+            $result3 = $connection->query("SELECT * FROM `$table`");
+            $num_fields = $result3->field_count;
+
+            for ($i = 0; $i < $num_fields; $i++) {
+                while ($row = $result3->fetch_row()) {
+                    $content .= "INSERT INTO `$table` VALUES(";
+                    for ($j = 0; $j < $num_fields; $j++) {
+                        $row[$j] = addslashes($row[$j]);
+                        $row[$j] = str_replace("\n", "\\n", $row[$j]);
+                        if (isset($row[$j])) {
+                            $content .= '"' . $row[$j] . '"';
+                        } else {
+                            $content .= '""';
+                        }
+                        if ($j < ($num_fields - 1)) {
+                            $content .= ',';
+                        }
+                    }
+                    $content .= ");\n";
+                }
+            }
+            $content .= "\n\n\n";
         }
-        return ['status' => 'error', 'message' => $error_message];
+
+        if (file_put_contents($filepath, $content) !== false) {
+            return ['status' => 'success'];
+        } else {
+            return ['status' => 'error', 'message' => 'Dosya yazılamadı.'];
+        }
+    } catch (Exception $e) {
+        return ['status' => 'error', 'message' => $e->getMessage()];
     }
 }
