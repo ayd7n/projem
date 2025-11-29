@@ -236,6 +236,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             color: white;
         }
 
+        #sepet .btn-success {
+            background: linear-gradient(45deg, var(--success), #2ecc71);
+            border: none;
+            width: 100%;
+            padding: 12px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+        }
+
+        #sepet .btn-success:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(40, 167, 69, 0.4);
+        }
+
         .alert {
             padding: 1rem;
             margin-bottom: 1.5rem;
@@ -297,24 +312,79 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .cart-item {
-            padding: 15px 20px;
+            padding: 10px 15px;
             border-bottom: 1px solid var(--border-color);
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
         }
 
         .cart-item:last-child {
             border-bottom: none;
         }
 
+        .cart-item-content {
+            flex-grow: 1;
+            padding-right: 12px;
+            min-width: 0; /* Allows flex item to shrink below content size */
+        }
+
         .item-info h4 {
-            margin-bottom: 5px;
+            margin-bottom: 2px;
+            font-size: 0.85rem;
+            color: var(--primary);
+            font-weight: 500;
         }
 
         .item-quantity {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            background-color: #f8f9fa;
+            padding: 2px 6px;
+            border-radius: 10px;
+            display: inline-block;
+        }
+
+        .remove-from-cart-btn {
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50% !important;
+            transition: all 0.3s ease;
+            padding: 0 !important;
+        }
+
+        .remove-from-cart-btn:hover {
+            background-color: #f8d7da !important;
+            color: #721c24 !important;
+            transform: scale(1.05);
+        }
+
+        .remove-from-cart-btn i {
+            font-size: 0.8rem;
+        }
+
+        .empty-cart {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 20px;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .empty-cart i {
+            font-size: 3.5rem;
+            margin-bottom: 15px;
+            color: var(--primary);
+            opacity: 0.4;
+        }
+
+        .empty-cart h4 {
+            color: var(--primary);
+            font-weight: 500;
         }
 
         /* Cart panel that slides from right */
@@ -322,7 +392,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             position: fixed;
             top: 0;
             right: 0;
-            width: 320px;
+            width: 420px;
+            max-width: 90%;
             height: 100%;
             z-index: 1050;
             border-radius: 0;
@@ -332,8 +403,94 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             overflow-y: auto;
         }
 
+        @media (max-width: 576px) {
+            #sepet {
+                width: 320px;
+                max-width: 95%;
+            }
+        }
+
         #sepet.show {
             transform: translateX(0);
+        }
+
+        #sepet .card-header {
+            background: linear-gradient(45deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 0.8rem 1rem !important;
+            border-bottom: 1px solid rgba(255,255,255,0.15);
+        }
+
+        #sepet .card-header h2 {
+            color: var(--accent);
+        }
+
+        .cart-summary {
+            background: linear-gradient(45deg, rgba(255,255,255,0.2), rgba(255,255,255,0.1));
+            border-radius: 8px;
+            padding: 10px 15px;
+            font-size: 0.8rem;
+            margin: 8px 10px 10px;
+            color: var(--accent);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            border: 1px solid rgba(255,255,255,0.2);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .cart-summary span {
+            font-weight: 600;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .cart-summary span strong {
+            font-size: 1.1em;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        #sepet .card-header .close {
+            color: white;
+            opacity: 0.8;
+            text-shadow: none;
+        }
+
+        #sepet .card-header .close:hover {
+            opacity: 1;
+        }
+
+        #sepet .card-body {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 110px); /* Header yüksekliği çıkarılıyor */
+        }
+
+        .cart-items-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 !important;
+        }
+
+        .cart-items-container-inner {
+            padding: 10px 12px !important;
+        }
+
+        .cart-order-section {
+            padding: 12px 15px !important;
+            border-top: 1px solid var(--border-color);
+            background-color: white;
+            margin-top: auto;
+        }
+
+        .empty-cart-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .cart-overlay {
@@ -478,13 +635,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 position: fixed;
                 top: 0;
                 right: 0;
-                width: 320px;
+                width: 420px;
+                max-width: 90%;
                 height: 100%;
                 z-index: 1050;
                 /* Higher than navbar */
                 border-radius: 0;
                 box-shadow: -5px 0 20px rgba(0, 0, 0, 0.15);
             }
+
+            @media (max-width: 480px) {
+                #sepet.collapse.show {
+                    width: 320px;
+                }
+            }
+        }
 
             #sepet .card-body {
                 overflow-y: auto;
@@ -667,8 +832,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 </button>
             </div>
             <div class="card-body">
-                <?php if (!empty($cart)): ?>
-                    <div class="cart-items-container mb-4">
+                <?php if (!empty($cart)):
+                    // Calculate total different products and total quantity
+                    $total_different_products = count($cart);
+                    $total_quantity = array_sum($cart);
+                ?>
+                    <div class="cart-items-container">
+                        <div class="cart-summary">
+                            <span><strong><?php echo $total_different_products; ?></strong> farklı ürün</span>
+                            <span><strong><?php echo $total_quantity; ?></strong> adet</span>
+                        </div>
+                        <div class="cart-items-container-inner p-2">
                         <?php
                         foreach ($cart as $urun_kodu => $adet):
                             $product_query_cart = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
@@ -680,38 +854,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
                             if ($product_cart) {
                                 ?>
-                                <div class="cart-item p-3 border-bottom">
-                                    <div class="d-flex justify-content-between align-items-center">
-                                        <div class="flex-grow-1 pr-2">
-                                            <h4 class="h6 mb-1"><?php echo htmlspecialchars($product_cart['urun_ismi']); ?></h4>
-                                            <div class="item-quantity"><span
-                                                    class="badge badge-primary bg-primary"><?php echo $adet; ?> adet</span></div>
-                                        </div>
-                                        <a href="#" class="btn btn-outline-danger btn-sm remove-from-cart-btn"
-                                            data-urun-kodu="<?php echo $urun_kodu; ?>" title="Sil">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </a>
+                                <div class="cart-item">
+                                    <div class="cart-item-content">
+                                        <h4 class="mb-1"><?php echo htmlspecialchars($product_cart['urun_ismi']); ?></h4>
+                                        <div class="item-quantity"><?php echo $adet; ?> adet</div>
                                     </div>
+                                    <a href="#" class="btn btn-outline-danger remove-from-cart-btn"
+                                        data-urun-kodu="<?php echo $urun_kodu; ?>" title="Sil">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </a>
                                 </div>
                                 <?php
                             }
                         endforeach;
                         ?>
-                    </div>
-                    <hr />
-                    <form method="POST" name="submit_order" class="mt-4">
-                        <div class="form-group mb-3">
-                            <label for="order_description">Sipariş Açıklaması (Opsiyonel)</label>
-                            <textarea class="form-control" id="order_description" name="order_description"
-                                placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." rows="3"></textarea>
                         </div>
+                    </div>
+                    <div class="cart-order-section">
+                        <form method="POST" name="submit_order" class="mb-0">
+                            <div class="form-group mb-3">
+                                <label for="order_description">Sipariş Açıklaması (Opsiyonel)</label>
+                                <textarea class="form-control" id="order_description" name="order_description"
+                                    placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." rows="2"></textarea>
+                            </div>
 
-                        <button type="submit" class="btn btn-success" name="submit_order">
-                            <i class="fas fa-paper-plane"></i> Siparişi Oluştur
-                        </button>
-                    </form>
+                            <button type="submit" class="btn btn-success w-100" name="submit_order">
+                                <i class="fas fa-paper-plane"></i> Siparişi Oluştur
+                            </button>
+                        </form>
+                    </div>
                 <?php else: ?>
-                    <div class="empty-cart">
+                    <div class="empty-cart-section">
+                        <div class="empty-cart">
                         <i class="fas fa-shopping-cart text-muted"></i>
                         <h4>Sepetiniz Boş</h4>
                         <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
@@ -848,10 +1022,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
     <script>
-        // Product pagination variables
-        let currentPaginationPage = 1;
-        let itemsPerPage = 5; // Default items per page, can be changed by user
-        let allProducts = []; // Will store all product elements
+        // Product pagination variables - declared globally so they can be accessed from window.load event
+        var currentPaginationPage = 1;
+        var itemsPerPage = 5; // Default items per page, can be changed by user
+        var allProducts = []; // Will store all product elements
 
         $(document).ready(function () {
             // Determine initial status from URL parameters
@@ -1109,45 +1283,59 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                             var cartHtml = '<div class="card-body">';
 
                             if (response.cart_items.length > 0) {
-                                cartHtml += '<div class="cart-items-container mb-4">';
+                                // Calculate total different products and total quantity
+                                var totalDifferentProducts = response.cart_items.length;
+                                var totalQuantity = 0;
+                                $.each(response.cart_items, function (index, item) {
+                                    totalQuantity += item.adet;
+                                });
+
+                                cartHtml += `<div class="cart-items-container">
+                                    <div class="cart-summary">
+                                        <span><strong>${totalDifferentProducts}</strong> farklı ürün</span>
+                                        <span><strong>${totalQuantity}</strong> adet</span>
+                                    </div>
+                                    <div class="cart-items-container-inner p-2">`;
 
                                 $.each(response.cart_items, function (index, item) {
                                     cartHtml += `
-                                    <div class="cart-item p-3 border-bottom">
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <div class="flex-grow-1 pr-2">
-                                                <h4 class="h6 mb-1">${item.urun_ismi}</h4>
-                                                <div class="item-quantity"><span class="badge badge-primary bg-primary">${item.adet} adet</span></div>
-                                            </div>
-                                            <a href="#" class="btn btn-outline-danger btn-sm remove-from-cart-btn" data-urun-kodu="${item.urun_kodu}" title="Sil">
-                                                <i class="fas fa-trash-alt"></i>
-                                            </a>
+                                    <div class="cart-item">
+                                        <div class="cart-item-content">
+                                            <h4 class="mb-1">${item.urun_ismi}</h4>
+                                            <div class="item-quantity">${item.adet} adet</div>
                                         </div>
+                                        <a href="#" class="btn btn-outline-danger remove-from-cart-btn" data-urun-kodu="${item.urun_kodu}" title="Sil">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
                                     </div>
                                 `;
                                 });
 
-                                cartHtml += '</div><hr/>';
+                                cartHtml += '</div></div>'; // closing cart-items-container-inner and cart-items-container
 
-                                // Add order form
+                                // Add order form in separate section at the bottom
                                 cartHtml += `
-                                <form method="POST" name="submit_order" class="mt-4">
-                                    <div class="form-group mb-3">
-                                        <label for="order_description">Sipariş Açıklaması (Opsiyonel)</label>
-                                        <textarea class="form-control" id="order_description" name="order_description" placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." rows="3"></textarea>
-                                    </div>
-                                    
-                                    <button type="submit" class="btn btn-success submit-order-btn" name="submit_order">
-                                        <i class="fas fa-paper-plane"></i> Siparişi Oluştur
-                                    </button>
-                                </form>
+                                <div class="cart-order-section">
+                                    <form method="POST" name="submit_order" class="mb-0">
+                                        <div class="form-group mb-3">
+                                            <label for="order_description">Sipariş Açıklaması (Opsiyonel)</label>
+                                            <textarea class="form-control" id="order_description" name="order_description" placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." rows="2"></textarea>
+                                        </div>
+
+                                        <button type="submit" class="btn btn-success submit-order-btn w-100" name="submit_order">
+                                            <i class="fas fa-paper-plane"></i> Siparişi Oluştur
+                                        </button>
+                                    </form>
+                                </div>
                             `;
                             } else {
                                 cartHtml += `
-                                <div class="empty-cart">
-                                    <i class="fas fa-shopping-cart text-muted"></i>
-                                    <h4>Sepetiniz Boş</h4>
-                                    <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
+                                <div class="empty-cart-section">
+                                    <div class="empty-cart">
+                                        <i class="fas fa-shopping-cart text-muted"></i>
+                                        <h4>Sepetiniz Boş</h4>
+                                        <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
+                                    </div>
                                 </div>
                             `;
                             }
@@ -1384,14 +1572,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                             <button class="btn btn-primary btn-sm view-order-btn" 
                                                     data-id="${order.siparis_id}" 
                                                     data-status="${order.durum}"
-                                                    title="Siparişi Görüntüle">
-                                                <i class="fas fa-eye"></i>
+                                                <i class="fas fa-eye"></i>  Detay
                                             </button>
                                             ${order.durum === 'beklemede' ?
                                             `<button class="btn btn-danger btn-sm cancel-order-btn" 
                                                         data-id="${order.siparis_id}" 
-                                                        title="Siparişi İptal Et">
-                                                    <i class="fas fa-times"></i>
+                                                    <i class="fas fa-times"></i> İptal
                                                 </button>` : ''}
                                         </td>
                                     </tr>
@@ -1587,6 +1773,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 });
             }
 
+            // Function to perform search and then update pagination
+            function performSearchAndPagination() {
+                currentPaginationPage = 1;
+                if (typeof updatePagination === 'function') {
+                    updatePagination();
+                }
+            }
+
             // Initialize product pagination
             function initializePagination() {
                 allProducts = $('.product-item');
@@ -1604,14 +1798,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 // Search functionality
                 $('.form-control[name="search"]').on('input', function () {
                     currentPaginationPage = 1;
-                    updatePagination(getProductsToPaginate());
+                    if (typeof updatePagination === 'function') {
+                        updatePagination(getProductsToPaginate());
+                    }
                 });
 
                 // Items per page functionality
                 $('#itemsPerPageSelect').on('change', function () {
                     itemsPerPage = parseInt($(this).val()) || 5;
                     currentPaginationPage = 1;
-                    updatePagination(getProductsToPaginate());
+                    if (typeof updatePagination === 'function') {
+                        updatePagination(getProductsToPaginate());
+                    }
                 });
 
                 // Pagination click handlers
@@ -1620,7 +1818,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     const page = parseInt($(this).data('page'));
                     if (page && page !== currentPaginationPage) {
                         currentPaginationPage = page;
-                        updatePagination(getProductsToPaginate());
+                        if (typeof updatePagination === 'function') {
+                            updatePagination(getProductsToPaginate());
+                        }
                         // Scroll to top of product list
                         $('html, body').animate({
                             scrollTop: $('#product-list-container').offset().top - 100
@@ -1630,128 +1830,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
                 // Initial display
                 itemsPerPage = parseInt($('#itemsPerPageSelect').val()) || 5;
-                updatePagination();
+                if (typeof updatePagination === 'function') {
+                    updatePagination();
+                }
             }
-
-            // Function to perform search and then update pagination
-            function performSearchAndPagination() {
-                currentPaginationPage = 1;
-                updatePagination();
-            }
-
-            // Function to update pagination display
-            function updatePagination(productsToPaginate) {
-                // If no products are provided (e.g., on initial load), use all products.
-                if (productsToPaginate === undefined) {
-                    productsToPaginate = allProducts;
-                }
-
-                // Handle "no results" message for search
-                const $noResultsMessage = $('.no-results-message');
-                const searchTerm = $('.form-control[name="search"]').val().toLowerCase().trim();
-                if (productsToPaginate.length === 0 && searchTerm !== '') {
-                    $noResultsMessage.show();
-                } else {
-                    $noResultsMessage.hide();
-                }
-
-                const totalProducts = productsToPaginate.length;
-                const totalPages = Math.ceil(totalProducts / itemsPerPage);
-
-                // Ensure current page is valid
-                if (currentPaginationPage > totalPages && totalPages > 0) {
-                    currentPaginationPage = totalPages;
-                }
-                if (currentPaginationPage < 1 || totalProducts === 0) {
-                    currentPaginationPage = 1;
-                }
-
-                // Calculate start and end indices for current page
-                const startIndex = (currentPaginationPage - 1) * itemsPerPage;
-                const endIndex = startIndex + itemsPerPage;
-
-                // Hide all products first, then show only the current page's products
-                allProducts.removeClass('visible');
-
-                if (totalProducts > 0) {
-                    const pageProducts = productsToPaginate.slice(startIndex, endIndex);
-                    pageProducts.addClass('visible');
-                }
-
-                // Generate pagination buttons
-                generatePaginationButtons(totalPages, currentPaginationPage);
-
-                // Show pagination container
-                $('#pagination-container').show();
-            }
-
-            // Function to generate pagination buttons
-            function generatePaginationButtons(totalPages, activePage) {
-                const $pagination = $('#product-pagination');
-                let paginationHtml = '';
-
-                // Previous button
-                const prevDisabled = activePage <= 1 ? 'disabled' : '';
-                paginationHtml += `<li class="page-item ${prevDisabled}">
-                <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Previous">
-                    <i class="fas fa-chevron-left"></i>
-                </a>
-            </li>`;
-
-                // Page numbers
-                const maxVisiblePages = 5;
-                let startPage = Math.max(1, activePage - Math.floor(maxVisiblePages / 2));
-                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-                // Adjust start page if we're near the end
-                if (endPage - startPage + 1 < maxVisiblePages) {
-                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
-                }
-
-                // First page + ellipsis if needed
-                if (startPage > 1) {
-                    paginationHtml += `<li class="page-item">
-                    <a class="page-link pagination-btn" href="#" data-page="1">1</a>
-                </li>`;
-                    if (startPage > 2) {
-                        paginationHtml += `<li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>`;
-                    }
-                }
-
-                // Page numbers
-                for (let i = startPage; i <= endPage; i++) {
-                    const activeClass = i === activePage ? 'active' : '';
-                    paginationHtml += `<li class="page-item ${activeClass}">
-                    <a class="page-link pagination-btn" href="#" data-page="${i}">${i}</a>
-                </li>`;
-                }
-
-                // Last page + ellipsis if needed
-                if (endPage < totalPages) {
-                    if (endPage < totalPages - 1) {
-                        paginationHtml += `<li class="page-item disabled">
-                        <span class="page-link">...</span>
-                    </li>`;
-                    }
-                    paginationHtml += `<li class="page-item">
-                    <a class="page-link pagination-btn" href="#" data-page="${totalPages}">${totalPages}</a>
-                </li>`;
-                }
-
-                // Next button
-                const nextDisabled = activePage >= totalPages ? 'disabled' : '';
-                paginationHtml += `<li class="page-item ${nextDisabled}">
-                <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Next">
-                    <i class="fas fa-chevron-right"></i>
-                </a>
-            </li>`;
-
-                $pagination.html(paginationHtml);
-            }
-
         });
+
+        // Function to update pagination display - defined outside document ready to be accessible globally
+        function updatePagination(productsToPaginate) {
+            // Check if DOM is ready and elements exist
+            if (typeof $ === 'undefined' || !$('#product-list-container').length) {
+                // Wait a bit and try again if DOM isn't ready yet
+                setTimeout(function() {
+                    if (typeof updatePagination === 'function') {
+                        updatePagination(productsToPaginate);
+                    }
+                }, 100);
+                return;
+            }
+
+            // If no products are provided (e.g., on initial load), use all products.
+            if (productsToPaginate === undefined) {
+                // Make sure allProducts is available, if not try to get them
+                if (typeof allProducts === 'undefined' || allProducts.length === 0) {
+                    allProducts = $('.product-item');
+                }
+                productsToPaginate = allProducts;
+            }
+
+            // Handle "no results" message for search
+            const $noResultsMessage = $('.no-results-message');
+            const searchTerm = $('.form-control[name="search"]').val().toLowerCase().trim();
+            if (productsToPaginate.length === 0 && searchTerm !== '') {
+                $noResultsMessage.show();
+            } else {
+                $noResultsMessage.hide();
+            }
+
+            const totalProducts = productsToPaginate.length;
+            const totalPages = Math.ceil(totalProducts / itemsPerPage);
+
+            // Ensure current page is valid
+            if (currentPaginationPage > totalPages && totalPages > 0) {
+                currentPaginationPage = totalPages;
+            }
+            if (currentPaginationPage < 1 || totalProducts === 0) {
+                currentPaginationPage = 1;
+            }
+
+            // Calculate start and end indices for current page
+            const startIndex = (currentPaginationPage - 1) * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+
+            // Hide all products first, then show only the current page's products
+            allProducts.removeClass('visible');
+
+            if (totalProducts > 0) {
+                const pageProducts = productsToPaginate.slice(startIndex, endIndex);
+                pageProducts.addClass('visible');
+            }
+
+            // Generate pagination buttons
+            generatePaginationButtons(totalPages, currentPaginationPage);
+
+            // Show pagination container
+            $('#pagination-container').show();
+        }
+
+        // Function to generate pagination buttons - defined outside document ready to be accessible globally
+        function generatePaginationButtons(totalPages, activePage) {
+            const $pagination = $('#product-pagination');
+            let paginationHtml = '';
+
+            // Previous button
+            const prevDisabled = activePage <= 1 ? 'disabled' : '';
+            paginationHtml += `<li class="page-item ${prevDisabled}">
+            <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Previous">
+                <i class="fas fa-chevron-left"></i>
+            </a>
+        </li>`;
+
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, activePage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+            // Adjust start page if we're near the end
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+
+            // First page + ellipsis if needed
+            if (startPage > 1) {
+                paginationHtml += `<li class="page-item">
+                <a class="page-link pagination-btn" href="#" data-page="1">1</a>
+            </li>`;
+                if (startPage > 2) {
+                    paginationHtml += `<li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>`;
+                }
+            }
+
+            // Page numbers
+            for (let i = startPage; i <= endPage; i++) {
+                const activeClass = i === activePage ? 'active' : '';
+                paginationHtml += `<li class="page-item ${activeClass}">
+                <a class="page-link pagination-btn" href="#" data-page="${i}">${i}</a>
+            </li>`;
+            }
+
+            // Last page + ellipsis if needed
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHtml += `<li class="page-item disabled">
+                    <span class="page-link">...</span>
+                </li>`;
+                }
+                paginationHtml += `<li class="page-item">
+                <a class="page-link pagination-btn" href="#" data-page="${totalPages}">${totalPages}</a>
+            </li>`;
+            }
+
+            // Next button
+            const nextDisabled = activePage >= totalPages ? 'disabled' : '';
+            paginationHtml += `<li class="page-item ${nextDisabled}">
+            <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Next">
+                <i class="fas fa-chevron-right"></i>
+            </a>
+        </li>`;
+
+            $pagination.html(paginationHtml);
+        }
 
         // Ensure initial products are displayed when page is fully loaded
         $(window).on('load', function () {
