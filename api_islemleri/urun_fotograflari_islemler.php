@@ -6,7 +6,14 @@ include '../config.php';
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
+// Allow customers to view photos (GET requests), but restrict modifications (POST) to staff only
+$is_get_request = $_SERVER['REQUEST_METHOD'] === 'GET';
+if (!isset($_SESSION['user_id'])) {
+    echo json_encode(['status' => 'error', 'message' => 'Oturum açmanız gerekiyor.']);
+    exit;
+}
+
+if (!$is_get_request && $_SESSION['taraf'] !== 'personel') {
     echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim.']);
     exit;
 }
@@ -18,10 +25,7 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_photos' && isset($_GET['urun_kodu'])) {
-        if (!yetkisi_var('page:view:urunler')) {
-            echo json_encode(['status' => 'error', 'message' => 'Fotoğrafları görüntüleme yetkiniz yok.']);
-            exit;
-        }
+        // Allow all logged-in users to view photos (no additional permission check)
 
         $urun_kodu = (int) $_GET['urun_kodu'];
         $query = "SELECT * FROM urun_fotograflari WHERE urun_kodu = ? ORDER BY sira_no ASC, fotograf_id ASC";
@@ -230,43 +234,41 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
                 $response = ['status' => 'success', 'message' => 'Ana fotoğraf başarıyla ayarlandı.'];
             } catch (Exception $e) {
                 $connection->rollback();
-                $response = ['status' => 'error', 'message' => 'Ana fotoğraf ayarlanırken hata oluştu: ' . $e->getMessage()];
+                $response = ['status' => 'error', 'message' => 'İşlem sırasında bir hata oluştu: ' . $e->getMessage()];
             }
         } else {
             $response = ['status' => 'error', 'message' => 'Fotoğraf bulunamadı.'];
         }
     } elseif ($action == 'update_order' && isset($_POST['photos'])) {
         if (!yetkisi_var('action:urunler:edit')) {
-            echo json_encode(['status' => 'error', 'message' => 'Fotoğraf sıralama yetkiniz yok.']);
+            echo json_encode(['status' => 'error', 'message' => 'Fotoğraf düzenleme yetkiniz yok.']);
             exit;
         }
 
         $photos = json_decode($_POST['photos'], true);
 
-        if (is_array($photos)) {
+        if (!is_array($photos)) {
+            $response = ['status' => 'error', 'message' => 'Geçersiz veri formatı.'];
+        } else {
             $connection->begin_transaction();
             try {
-                $stmt = $connection->prepare("UPDATE urun_fotograflari SET sira_no = ? WHERE fotograf_id = ?");
-
                 foreach ($photos as $index => $fotograf_id) {
                     $sira_no = $index + 1;
+                    $stmt = $connection->prepare("UPDATE urun_fotograflari SET sira_no = ? WHERE fotograf_id = ?");
                     $stmt->bind_param('ii', $sira_no, $fotograf_id);
                     $stmt->execute();
+                    $stmt->close();
                 }
 
-                $stmt->close();
                 $connection->commit();
                 $response = ['status' => 'success', 'message' => 'Fotoğraf sıralaması güncellendi.'];
             } catch (Exception $e) {
                 $connection->rollback();
-                $response = ['status' => 'error', 'message' => 'Sıralama güncellenirken hata oluştu: ' . $e->getMessage()];
+                $response = ['status' => 'error', 'message' => 'İşlem sırasında bir hata oluştu: ' . $e->getMessage()];
             }
-        } else {
-            $response = ['status' => 'error', 'message' => 'Geçersiz veri formatı.'];
         }
     }
 }
 
-$connection->close();
 echo json_encode($response);
-?>
+$connection->close();
