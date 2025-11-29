@@ -1026,6 +1026,12 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
 
                                 if (response.status === 'success') {
                                     this.materialPhotos.push(response.data);
+
+                                    // Update main material list photo count
+                                    const materialIndex = this.materials.findIndex(m => m.malzeme_kodu === this.modal.data.malzeme_kodu);
+                                    if (materialIndex !== -1) {
+                                        this.materials[materialIndex].foto_sayisi = (parseInt(this.materials[materialIndex].foto_sayisi) || 0) + 1;
+                                    }
                                 } else {
                                     this.showAlert(response.message, 'danger');
                                 }
@@ -1070,6 +1076,12 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                         const index = this.materialPhotos.findIndex(p => p.fotograf_id === fotograf_id);
                                         if (index !== -1) {
                                             this.materialPhotos.splice(index, 1);
+                                        }
+
+                                        // Update main material list photo count
+                                        const materialIndex = this.materials.findIndex(m => m.malzeme_kodu === this.modal.data.malzeme_kodu);
+                                        if (materialIndex !== -1) {
+                                            this.materials[materialIndex].foto_sayisi = Math.max(0, (parseInt(this.materials[materialIndex].foto_sayisi) || 0) - 1);
                                         }
                                         this.showAlert('Fotoğraf başarıyla silindi.', 'success');
                                     } else {

@@ -1000,6 +1000,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
                                 if (response.status === 'success') {
                                     this.productPhotos.push(response.data);
+
+                                    // Update main product list photo count
+                                    const productIndex = this.products.findIndex(p => p.urun_kodu === this.modal.data.urun_kodu);
+                                    if (productIndex !== -1) {
+                                        // Force reactivity by creating a new object or using Vue.set if needed, 
+                                        // but direct assignment usually works if property exists. 
+                                        // To be safe with Vue 2 reactivity for numbers:
+                                        this.products[productIndex].foto_sayisi = (parseInt(this.products[productIndex].foto_sayisi) || 0) + 1;
+                                    }
                                 } else {
                                     this.showAlert(response.message, 'danger');
                                 }
@@ -1044,6 +1053,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         const index = this.productPhotos.findIndex(p => p.fotograf_id === fotograf_id);
                                         if (index !== -1) {
                                             this.productPhotos.splice(index, 1);
+                                        }
+
+                                        // Update main product list photo count
+                                        const productIndex = this.products.findIndex(p => p.urun_kodu === this.modal.data.urun_kodu);
+                                        if (productIndex !== -1) {
+                                            this.products[productIndex].foto_sayisi = Math.max(0, (parseInt(this.products[productIndex].foto_sayisi) || 0) - 1);
                                         }
                                         this.showAlert('Fotoğraf başarıyla silindi.', 'success');
                                     } else {
