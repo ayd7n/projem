@@ -8,7 +8,8 @@ require_once __DIR__ . '/telegram_functions.php'; // For sending notifications
  *
  * @return string|null En son yedek dosyasının tam yolu veya yedek bulunamazsa null.
  */
-function find_latest_backup() {
+function find_latest_backup()
+{
     $backup_dir = __DIR__ . '/../yedekler';
     $backups = glob($backup_dir . '/backup_*.sql');
 
@@ -17,7 +18,7 @@ function find_latest_backup() {
     }
 
     // Dosyaları değiştirilme zamanına göre sırala (en yeni en üstte)
-    usort($backups, function($a, $b) {
+    usort($backups, function ($a, $b) {
         return filemtime($b) - filemtime($a);
     });
 
@@ -32,7 +33,8 @@ function find_latest_backup() {
  * @param string $backup_path Geri yüklenecek .sql dosyasının tam yolu.
  * @return bool Başarılı olursa true, başarısız olursa false döner.
  */
-function restore_database($connection, $backup_path) {
+function restore_database($connection, $backup_path)
+{
     if (!file_exists($backup_path)) {
         return false;
     }
@@ -92,7 +94,8 @@ function restore_database($connection, $backup_path) {
  * @param mysqli $connection The database connection object.
  * @return array Status and message of the backup operation.
  */
-function perform_automatic_backup($connection) {
+function perform_automatic_backup($connection)
+{
     // Ensure the required constants are defined before using them.
     if (!defined('DB_HOST') || !defined('DB_USER') || !defined('DB_PASS') || !defined('DB_NAME')) {
         return ['status' => 'error', 'message' => 'Database credentials are not defined.'];
@@ -106,38 +109,49 @@ function perform_automatic_backup($connection) {
         }
     }
 
+    if (!is_writable($backup_dir)) {
+        return ['status' => 'error', 'message' => "Yedekleme dizini yazılabilir değil: {$backup_dir}"];
+    }
+
     $backup_file_name = 'backup_' . date('Y-m-d_H-i-s') . '.sql';
     $backup_file_path = $backup_dir . '/' . $backup_file_name;
-    
-    // shell_exec'in kullanılabilir olup olmadığını kontrol et
+
+    // shell_exec/exec'in kullanılabilir olup olmadığını kontrol et
     if (!function_exists('exec')) {
         return ['status' => 'error', 'message' => 'exec fonksiyonu bu sunucuda devre dışı bırakılmış.'];
     }
-    
+
     // Determine mysqldump path
-    $mysqldump_cmd = 'mysqldump'; // Default for Windows/Standard Linux
+    $mysqldump_cmd = 'mysqldump'; // Default
     if (PHP_OS_FAMILY === 'Linux') {
-        // Common paths for mysqldump on Linux
-        $possible_paths = [
-            '/usr/bin/mysqldump',
-            '/usr/local/bin/mysqldump',
-            '/usr/mysql/bin/mysqldump'
-        ];
-        
-        foreach ($possible_paths as $path) {
-            if (file_exists($path) && is_executable($path)) {
-                $mysqldump_cmd = $path;
-                break;
+        // Try to find using 'which' command first
+        $which_output = [];
+        $which_return = 0;
+        exec('which mysqldump', $which_output, $which_return);
+
+        if ($which_return === 0 && !empty($which_output[0])) {
+            $mysqldump_cmd = $which_output[0];
+        } else {
+            // Fallback to common paths
+            $possible_paths = [
+                '/usr/bin/mysqldump',
+                '/usr/local/bin/mysqldump',
+                '/usr/mysql/bin/mysqldump'
+            ];
+
+            foreach ($possible_paths as $path) {
+                if (file_exists($path) && is_executable($path)) {
+                    $mysqldump_cmd = $path;
+                    break;
+                }
             }
         }
     }
 
     // mysqldump komutunu oluştur
     $password_arg = DB_PASS ? sprintf('-p%s', escapeshellarg(DB_PASS)) : '';
-    
-    // Add --column-statistics=0 for compatibility with newer MySQL versions if needed, 
-    // but standard dump is usually safer without extra flags unless known issue.
-    // We will stick to basic arguments.
+
+    // Construct command
     $command = sprintf(
         '%s -h %s -u %s %s %s > %s 2>&1',
         $mysqldump_cmd,
@@ -170,11 +184,18 @@ function perform_automatic_backup($connection) {
         return ['status' => 'success', 'message' => "Veritabanı başarıyla yedeklendi ve Telegram'a gönderildi: " . basename($backup_file_path)];
     } else {
         // Yedekleme başarısız oldu
-        $error_message = "mysqldump ile yedekleme başarısız oldu (Hata Kodu: $return_var).";
+        // Mask password in command for display
+        $masked_command = str_replace($password_arg, '-p*****', $command);
+
+        $error_message = "Yedekleme başarısız (Kod: $return_var).";
+        $error_message .= " Komut: $masked_command";
+
         if (!empty($output)) {
             $error_message .= " Çıktı: " . implode("\n", $output);
+        } else {
+            $error_message .= " (Çıktı boş)";
         }
-        
+
         // Başarısız yedek dosyasını sil
         if (file_exists($backup_file_path)) {
             unlink($backup_file_path);
