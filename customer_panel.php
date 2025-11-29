@@ -317,74 +317,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .cart-item {
-            padding: 15px 18px; /* Daha fazla padding */
-            margin-bottom: 10px; /* Öğeler arasına boşluk */
-            border-bottom: none; /* Alt çizgi yerine kutu stili */
-            border-radius: 8px; /* Yuvarlak köşeler */
-            background-color: var(--card-bg); /* Arka plan rengi */
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Hafif gölge */
+            padding: 15px 18px;
+            /* Daha fazla padding */
+            margin-bottom: 10px;
+            /* Öğeler arasına boşluk */
+            border-bottom: none;
+            /* Alt çizgi yerine kutu stili */
+            border-radius: 8px;
+            /* Yuvarlak köşeler */
+            background-color: var(--card-bg);
+            /* Arka plan rengi */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            /* Hafif gölge */
             display: flex;
-            align-items: center; /* Öğeleri dikeyde ortala */
+            align-items: center;
+            /* Öğeleri dikeyde ortala */
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
 
         .cart-item:last-child {
-            margin-bottom: 10px; /* Son öğe için de boşluk */
+            margin-bottom: 10px;
+            /* Son öğe için de boşluk */
         }
 
         .cart-item:hover {
-            transform: translateY(-3px); /* Hover efekti */
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-3px);
+            /* Hover efekti */
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
         }
 
         .cart-item-content {
             flex-grow: 1;
-            padding-right: 15px; /* Sağdan boşluk */
+            padding-right: 15px;
+            /* Sağdan boşluk */
             min-width: 0;
             display: flex;
             flex-direction: column;
         }
 
-        .cart-item-content h4 { /* ürün adı için h4 */
+        .cart-item-content h4 {
+            /* ürün adı için h4 */
             margin-bottom: 5px;
-            font-size: 1.05rem; /* Biraz daha büyük font */
-            color: var(--text-primary); /* Daha koyu metin */
-            font-weight: 600; /* Daha kalın */
+            font-size: 1.05rem;
+            /* Biraz daha büyük font */
+            color: var(--text-primary);
+            /* Daha koyu metin */
+            font-weight: 600;
+            /* Daha kalın */
         }
 
         .item-quantity {
-            color: var(--primary); /* Renk */
-            font-size: 0.85rem; /* Biraz daha büyük font */
+            color: var(--primary);
+            /* Renk */
+            font-size: 0.85rem;
+            /* Biraz daha büyük font */
             font-weight: 700;
-            background-color: rgba(74, 14, 99, 0.1); /* Hafif mor arka plan */
-            padding: 4px 10px; /* Daha fazla padding */
-            border-radius: 20px; /* Daha yuvarlak badge */
+            background-color: rgba(74, 14, 99, 0.1);
+            /* Hafif mor arka plan */
+            padding: 4px 10px;
+            /* Daha fazla padding */
+            border-radius: 20px;
+            /* Daha yuvarlak badge */
             display: inline-block;
-            align-self: flex-start; /* Başlangıca hizala */
+            align-self: flex-start;
+            /* Başlangıca hizala */
         }
 
         .remove-from-cart-btn {
-            min-width: 36px; /* Buton boyutu */
-            height: 36px; /* Buton boyutu */
+            min-width: 36px;
+            /* Buton boyutu */
+            height: 36px;
+            /* Buton boyutu */
             display: flex;
             align-items: center;
             justify-content: center;
             border-radius: 50% !important;
             transition: all 0.3s ease;
             padding: 0 !important;
-            background-color: var(--danger); /* Kırmızı arka plan */
+            background-color: var(--danger);
+            /* Kırmızı arka plan */
             color: white;
             box-shadow: 0 2px 6px rgba(220, 53, 69, 0.2);
         }
 
         .remove-from-cart-btn:hover {
-            background-color: #c82333 !important; /* Koyu kırmızı */
+            background-color: #c82333 !important;
+            /* Koyu kırmızı */
             box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
-            transform: scale(1.1); /* Hafif büyüt */
+            transform: scale(1.1);
+            /* Hafif büyüt */
         }
 
         .remove-from-cart-btn i {
-            font-size: 0.9rem; /* İkon boyutu */
+            font-size: 0.9rem;
+            /* İkon boyutu */
         }
 
         .empty-cart {
@@ -392,22 +418,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 40px 20px; /* Daha fazla padding */
+            padding: 40px 20px;
+            /* Daha fazla padding */
             text-align: center;
             color: var(--text-secondary);
         }
 
         .empty-cart i {
-            font-size: 4.5rem; /* Daha büyük ikon */
+            font-size: 4.5rem;
+            /* Daha büyük ikon */
             margin-bottom: 20px;
             color: var(--primary);
-            opacity: 0.5; /* Biraz daha belirgin */
-            animation: bounceIn 0.8s ease-out; /* Giriş animasyonu */
+            opacity: 0.5;
+            /* Biraz daha belirgin */
+            animation: bounceIn 0.8s ease-out;
+            /* Giriş animasyonu */
         }
 
         .empty-cart h4 {
-            color: var(--text-primary); /* Daha koyu başlık */
-            font-weight: 700; /* Daha kalın */
+            color: var(--text-primary);
+            /* Daha koyu başlık */
+            font-weight: 700;
+            /* Daha kalın */
             margin-bottom: 10px;
         }
 
@@ -417,10 +449,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         @keyframes bounceIn {
-            0% { transform: scale(0.3); opacity: 0; }
-            50% { transform: scale(1.05); opacity: 1; }
-            70% { transform: scale(0.9); }
-            100% { transform: scale(1); }
+            0% {
+                transform: scale(0.3);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.05);
+                opacity: 1;
+            }
+
+            70% {
+                transform: scale(0.9);
+            }
+
+            100% {
+                transform: scale(1);
+            }
         }
 
         .form-group label {
@@ -472,7 +517,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             background: linear-gradient(45deg, var(--primary), var(--secondary));
             color: white;
             padding: 0.8rem 1rem !important;
-            border-bottom: 1px solid rgba(255,255,255,0.15);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
         }
 
         #sepet .card-header h2 {
@@ -524,7 +569,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         #sepet .card-body {
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 110px); /* Header yüksekliği çıkarılıyor */
+            height: calc(100vh - 110px);
+            /* Header yüksekliği çıkarılıyor */
         }
 
         .cart-items-container {
@@ -608,7 +654,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
-            white-space: nowrap; /* Metinlerin tek satırda kalmasını sağlar */
+            white-space: nowrap;
+            /* Metinlerin tek satırda kalmasını sağlar */
         }
 
         .table th i {
@@ -618,14 +665,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
-            white-space: nowrap; /* Metinlerin tek satırda kalmasını sağlar */
+            white-space: nowrap;
+            /* Metinlerin tek satırda kalmasını sağlar */
         }
 
-        .table-responsive.past-orders-table { /* Geçmiş siparişler tablosu için özel sınıf */
-            max-height: 400px; /* Maksimum yükseklik */
-            overflow-y: auto;  /* İçerik sığmazsa kaydırma çubuğu */
-            border: 1px solid var(--border-color); /* Kenarlık ekleyelim, daha derli toplu durur */
-            border-radius: 8px; /* Köşeleri yuvarlayalım */
+        .table-responsive.past-orders-table {
+            /* Geçmiş siparişler tablosu için özel sınıf */
+            max-height: 400px;
+            /* Maksimum yükseklik */
+            overflow-y: auto;
+            /* İçerik sığmazsa kaydırma çubuğu */
+            border: 1px solid var(--border-color);
+            /* Kenarlık ekleyelim, daha derli toplu durur */
+            border-radius: 8px;
+            /* Köşeleri yuvarlayalım */
         }
 
         .actions {
@@ -673,7 +726,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
         .pagination-container {
             margin-top: 20px;
-            display: none; /* Pagination removed to show all products */
+            display: none;
+            /* Pagination removed to show all products */
         }
 
         .pagination {
@@ -710,7 +764,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             z-index: 1000;
             box-shadow: 0 -5px 15px rgba(0, 0, 0, 0.08);
             justify-content: space-around;
-            align-items: flex-start; /* Aligns items to the top */
+            align-items: flex-start;
+            /* Aligns items to the top */
         }
 
         .mobile-bottom-nav .nav-item {
@@ -730,7 +785,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         .mobile-bottom-nav .nav-item i {
             font-size: 1.1rem;
             margin-bottom: 0.2rem;
-            height: 1.2rem; /* Consistent height */
+            height: 1.2rem;
+            /* Consistent height */
         }
 
         .mobile-bottom-nav .nav-item .nav-text {
@@ -748,20 +804,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         @media (max-width: 768px) {
             .main-content {
                 padding: 15px;
-                padding-bottom: 80px; /* Space for bottom nav */
+                padding-bottom: 80px;
+                /* Space for bottom nav */
             }
+
             .mobile-bottom-nav {
                 display: flex;
             }
+
             .mobile-bottom-nav .nav-item .cart-badge {
-                font-size: 0.8rem; /* Daha büyük font */
-                padding: 0.25em 0.5em; /* Dolgunluk */
+                font-size: 0.8rem;
+                /* Daha büyük font */
+                padding: 0.25em 0.5em;
+                /* Dolgunluk */
                 position: relative;
                 top: -1px;
                 left: 2px;
-                transform: scale(0.9); /* Sadece rozetin boyutunu küçültmek için, daha az yer kaplasın */
+                transform: scale(0.9);
+                /* Sadece rozetin boyutunu küçültmek için, daha az yer kaplasın */
                 transform-origin: left center;
-                white-space: nowrap; /* Sayı tek satırda kalsın */
+                white-space: nowrap;
+                /* Sayı tek satırda kalsın */
             }
         }
 
@@ -786,10 +849,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             }
         }
 
-            #sepet .card-body {
-                overflow-y: auto;
-                height: 100%;
-            }
+        #sepet .card-body {
+            overflow-y: auto;
+            height: 100%;
+        }
         }
     </style>
 </head>
@@ -813,6 +876,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 <ul class="navbar-nav ml-auto align-items-center">
                     <li class="nav-item active">
                         <a class="nav-link" href="customer_panel.php">Sipariş Paneli</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="customer_orders.php">Geçmiş Siparişlerim</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
@@ -852,7 +918,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <!-- Mobile Cart Button - Below Page Header -->
         <div class="d-flex justify-content-end mb-3 d-lg-none">
             <button class="btn btn-primary cart-toggle-btn" type="button" id="mobile-cart-btn">
-                <i class="fas fa-shopping-cart"></i> Sepet <span class="badge badge-light ml-1 cart-badge"><?php echo count($cart); ?></span>
+                <i class="fas fa-shopping-cart"></i> Sepet <span
+                    class="badge badge-light ml-1 cart-badge"><?php echo count($cart); ?></span>
             </button>
         </div>
 
@@ -880,11 +947,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <div id="product-list-container">
             <div class="card">
                 <div class="card-header">
-                    <h2>Stoktaki Ürünler <span class="badge badge-primary ml-2"><?php echo $products_count; ?></span></h2>
+                    <h2>Stoktaki Ürünler <span class="badge badge-primary ml-2"><?php echo $products_count; ?></span>
+                    </h2>
                 </div>
                 <div class="card-body">
                     <div class="input-group mb-3">
-                        <input type="text" class="form-control search-input" name="search" placeholder="Ürün adıyla ara..."
+                        <input type="text" class="form-control search-input" name="search"
+                            placeholder="Ürün adıyla ara..."
                             value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search']) : ''; ?>">
                     </div>
                     <div class="products-container" id="product-items-wrapper">
@@ -935,53 +1004,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             </div>
         </div>
 
-        <!-- Past Orders Section -->
-        <div class="card" id="gecmis-siparisler">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-history"></i> Geçmiş Siparişlerim</h2>
-                <div class="order-filters">
-                    <button
-                        class="btn <?php echo (!isset($_GET['status']) || $_GET['status'] === 'all') ? 'btn-primary' : 'btn-outline-primary'; ?>"
-                        onclick="filterOrders('all')">Tümü</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'beklemede') ? 'btn-warning' : 'btn-outline-warning'; ?>"
-                        onclick="filterOrders('beklemede')">Beklemede</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'onaylandi') ? 'btn-success' : 'btn-outline-success'; ?>"
-                        onclick="filterOrders('onaylandi')">Onaylandı</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'iptal_edildi') ? 'btn-danger' : 'btn-outline-danger'; ?>"
-                        onclick="filterOrders('iptal_edildi')">İptal Edildi</button>
-                    <button
-                        class="btn <?php echo (isset($_GET['status']) && $_GET['status'] === 'tamamlandi') ? 'btn-info' : 'btn-outline-info'; ?>"
-                        onclick="filterOrders('tamamlandi')">Tamamlandı</button>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="table-responsive past-orders-table">
-                    <table class="table table-hover">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-hashtag"></i> Sipariş No</th>
-                                <th><i class="fas fa-calendar"></i> Tarih</th>
-                                <th><i class="fas fa-tag"></i> Durum</th>
-                                <th><i class="fas fa-boxes"></i> Toplam Adet</th>
-                                <th><i class="fas fa-comment"></i> Açıklama</th>
-                                <th><i class="fas fa-cogs"></i> İşlemler</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ordersTableBody">
-                            <!-- Orders will be loaded via AJAX -->
-                        </tbody>
-                    </table>
-                </div>
-                <div class="text-center mt-4" id="noOrdersMessage" style="display: none;">
-                    <i class="fas fa-inbox fa-3x mb-3" style="color: var(--text-secondary);"></i>
-                    <h4>Herhangi bir siparişiniz bulunmuyor.</h4>
-                    <p class="text-muted">Dilerseniz yeni bir sipariş oluşturabilirsiniz.</p>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Overlay for cart -->
         <div class="cart-overlay" id="cartOverlay"></div>
@@ -999,38 +1022,38 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     // Calculate total different products and total quantity
                     $total_different_products = count($cart);
                     $total_quantity = array_sum($cart);
-                ?>
+                    ?>
                     <div class="cart-items-container">
                         <div class="cart-summary">
                             <span><strong><?php echo $total_different_products; ?></strong> farklı ürün</span>
                             <span><strong><?php echo $total_quantity; ?></strong> adet</span>
                         </div>
                         <div class="cart-items-container-inner">
-                        <?php
-                        foreach ($cart as $urun_kodu => $adet):
-                            $product_query_cart = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
-                            $product_stmt_cart = $connection->prepare($product_query_cart);
-                            $product_stmt_cart->bind_param('i', $urun_kodu);
-                            $product_stmt_cart->execute();
-                            $product_result_cart = $product_stmt_cart->get_result();
-                            $product_cart = $product_result_cart->fetch_assoc();
+                            <?php
+                            foreach ($cart as $urun_kodu => $adet):
+                                $product_query_cart = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
+                                $product_stmt_cart = $connection->prepare($product_query_cart);
+                                $product_stmt_cart->bind_param('i', $urun_kodu);
+                                $product_stmt_cart->execute();
+                                $product_result_cart = $product_stmt_cart->get_result();
+                                $product_cart = $product_result_cart->fetch_assoc();
 
-                            if ($product_cart) {
-                                ?>
-                                <div class="cart-item">
-                                    <div class="cart-item-content">
-                                        <h4 class="mb-1"><?php echo htmlspecialchars($product_cart['urun_ismi']); ?></h4>
-                                        <div class="item-quantity"><?php echo $adet; ?> adet</div>
+                                if ($product_cart) {
+                                    ?>
+                                    <div class="cart-item">
+                                        <div class="cart-item-content">
+                                            <h4 class="mb-1"><?php echo htmlspecialchars($product_cart['urun_ismi']); ?></h4>
+                                            <div class="item-quantity"><?php echo $adet; ?> adet</div>
+                                        </div>
+                                        <a href="#" class="btn btn-outline-danger remove-from-cart-btn"
+                                            data-urun-kodu="<?php echo $urun_kodu; ?>" title="Sil">
+                                            <i class="fas fa-trash-alt"></i>
+                                        </a>
                                     </div>
-                                    <a href="#" class="btn btn-outline-danger remove-from-cart-btn"
-                                        data-urun-kodu="<?php echo $urun_kodu; ?>" title="Sil">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </a>
-                                </div>
-                                <?php
-                            }
-                        endforeach;
-                        ?>
+                                    <?php
+                                }
+                            endforeach;
+                            ?>
                         </div>
                     </div>
                     <div class="cart-order-section">
@@ -1038,7 +1061,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                             <div class="form-group mb-3">
                                 <label for="order_description">Sipariş Açıklaması (Opsiyonel)</label>
                                 <textarea class="form-control" id="order_description" name="order_description"
-                                    placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." rows="2"></textarea>
+                                    placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..."
+                                    rows="2"></textarea>
                             </div>
 
                             <button type="submit" class="btn btn-success w-100" name="submit_order">
@@ -1049,351 +1073,344 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 <?php else: ?>
                     <div class="empty-cart-section">
                         <div class="empty-cart">
-                        <i class="fas fa-shopping-cart text-muted"></i>
-                        <h4>Sepetiniz Boş</h4>
-                        <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
-                    </div>
-                <?php endif; ?>
+                            <i class="fas fa-shopping-cart text-muted"></i>
+                            <h4>Sepetiniz Boş</h4>
+                            <p class="text-muted">Sepetinize ürün eklemek için ürünler kısmından seçim yapabilirsiniz.</p>
+                        </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Order Modal -->
-    <div class="modal fade" id="orderModal" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content">
-                <div class="modal-header"
-                    style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                    <h5 class="modal-title" id="modalTitle">
-                        <i class="fas fa-shopping-cart"></i>
-                        <span id="orderTitleText">Sipariş Detayı</span>
-                    </h5>
-                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true">&times;</span>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="orderDescription"><i class="fas fa-comment"></i> Sipariş Açıklaması</label>
-                        <textarea class="form-control" id="orderDescription" name="orderDescription" rows="4"
-                            placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..." readonly></textarea>
-                        <input type="hidden" id="orderId" name="orderId">
+        <!-- Order Modal -->
+        <div class="modal fade" id="orderModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content">
+                    <div class="modal-header"
+                        style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title" id="modalTitle">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span id="orderTitleText">Sipariş Detayı</span>
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
                     </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-list"></i> Sipariş Kalemleri</label>
-                        <div id="orderItemsList" class="border rounded p-3 bg-light">
-                            <!-- Order items will be loaded via AJAX -->
-                            <div class="text-center p-3">
-                                <div class="spinner-border text-primary" role="status">
-                                    <span class="sr-only">Yükleniyor...</span>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <label for="orderDescription"><i class="fas fa-comment"></i> Sipariş Açıklaması</label>
+                            <textarea class="form-control" id="orderDescription" name="orderDescription" rows="4"
+                                placeholder="Siparişinizle ilgili notlarınızı buraya yazabilirsiniz..."
+                                readonly></textarea>
+                            <input type="hidden" id="orderId" name="orderId">
+                        </div>
+                        <div class="form-group">
+                            <label><i class="fas fa-list"></i> Sipariş Kalemleri</label>
+                            <div id="orderItemsList" class="border rounded p-3 bg-light">
+                                <!-- Order items will be loaded via AJAX -->
+                                <div class="text-center p-3">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="sr-only">Yükleniyor...</span>
+                                    </div>
+                                    <p class="mt-2">Sipariş kalemleri yükleniyor...</p>
                                 </div>
-                                <p class="mt-2">Sipariş kalemleri yükleniyor...</p>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-dismiss="modal">
-                        <i class="fas fa-times"></i> Kapat
-                    </button>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-dismiss="modal">
+                            <i class="fas fa-times"></i> Kapat
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Product Photo Lightbox -->
-    <div id="productPhotoLightbox"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
-        <button onclick="closeProductGallery()"
-            style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; background: none; border: none; cursor: pointer; z-index: 10000;">
-            <i class="fas fa-times"></i>
-        </button>
+        <!-- Product Photo Lightbox -->
+        <div id="productPhotoLightbox"
+            style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; align-items: center; justify-content: center;">
+            <button onclick="closeProductGallery()"
+                style="position: absolute; top: 20px; right: 30px; color: white; font-size: 40px; background: none; border: none; cursor: pointer; z-index: 10000;">
+                <i class="fas fa-times"></i>
+            </button>
 
-        <button id="prevPhotoBtn" onclick="previousProductPhoto()"
-            style="position: absolute; left: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: none; align-items: center; justify-content: center;">
-            <i class="fas fa-chevron-left"></i>
-        </button>
+            <button id="prevPhotoBtn" onclick="previousProductPhoto()"
+                style="position: absolute; left: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: none; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-left"></i>
+            </button>
 
-        <div style="max-width: 90%; max-height: 90%; display: flex; flex-direction: column; align-items: center;">
-            <img id="lightboxImage" src="" alt=""
-                style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
-            <div style="color: white; margin-top: 15px; text-align: center;">
-                <p id="lightboxProductName" style="margin: 5px 0; font-size: 18px; font-weight: bold;"></p>
-                <small id="lightboxPhotoCounter" style="opacity: 0.7;"></small>
+            <div style="max-width: 90%; max-height: 90%; display: flex; flex-direction: column; align-items: center;">
+                <img id="lightboxImage" src="" alt=""
+                    style="max-width: 100%; max-height: 85vh; object-fit: contain; border-radius: 8px;">
+                <div style="color: white; margin-top: 15px; text-align: center;">
+                    <p id="lightboxProductName" style="margin: 5px 0; font-size: 18px; font-weight: bold;"></p>
+                    <small id="lightboxPhotoCounter" style="opacity: 0.7;"></small>
+                </div>
             </div>
+
+            <button id="nextPhotoBtn" onclick="nextProductPhoto()"
+                style="position: absolute; right: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: none; align-items: center; justify-content: center;">
+                <i class="fas fa-chevron-right"></i>
+            </button>
         </div>
 
-        <button id="nextPhotoBtn" onclick="nextProductPhoto()"
-            style="position: absolute; right: 30px; color: white; font-size: 50px; background: rgba(255,255,255,0.1); border: none; cursor: pointer; padding: 20px; border-radius: 50%; width: 70px; height: 70px; display: none; align-items: center; justify-content: center;">
-            <i class="fas fa-chevron-right"></i>
-        </button>
-    </div>
+
+        <!-- Mobile Bottom Navigation -->
+        <nav class="mobile-bottom-nav">
+            <a href="customer_panel.php" class="nav-item active">
+                <i class="fas fa-store"></i>
+                <span class="nav-text">Mağaza</span>
+            </a>
+            <a href="#" id="mobile-nav-cart" class="nav-item cart-toggle-btn">
+                <i class="fas fa-shopping-cart"></i>
+                <span class="nav-text">Sepet <span
+                        class="badge badge-danger ml-1 cart-badge"><?php echo count($cart); ?></span></span>
+            </a>
+            <a href="customer_orders.php" id="mobile-nav-orders" class="nav-item">
+                <i class="fas fa-history"></i>
+                <span class="nav-text">Siparişlerim</span>
+            </a>
+            <a href="change_password.php" class="nav-item">
+                <i class="fas fa-key"></i>
+                <span class="nav-text">Parola</span>
+            </a>
+            <a href="logout.php" class="nav-item">
+                <i class="fas fa-sign-out-alt"></i>
+                <span class="nav-text">Çıkış</span>
+            </a>
+        </nav>
 
 
-    <!-- Mobile Bottom Navigation -->
-    <nav class="mobile-bottom-nav">
-        <a href="customer_panel.php" class="nav-item active">
-            <i class="fas fa-store"></i>
-            <span class="nav-text">Mağaza</span>
-        </a>
-        <a href="#" id="mobile-nav-cart" class="nav-item cart-toggle-btn">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="nav-text">Sepet <span class="badge badge-danger ml-1 cart-badge"><?php echo count($cart); ?></span></span>
-        </a>
-        <a href="#gecmis-siparisler" id="mobile-nav-orders" class="nav-item">
-            <i class="fas fa-history"></i>
-            <span class="nav-text">Siparişlerim</span>
-        </a>
-        <a href="change_password.php" class="nav-item">
-            <i class="fas fa-key"></i>
-            <span class="nav-text">Parola</span>
-        </a>
-        <a href="logout.php" class="nav-item">
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="nav-text">Çıkış</span>
-        </a>
-    </nav>
+        <!-- jQuery for AJAX functionality -->
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <!-- SweetAlert2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <script>
+            // Product pagination variables - declared globally so they can be accessed from window.load event
+            // Pagination has been removed to show all products at once
+            var currentPaginationPage = 1;
+            var itemsPerPage = 9999; // Set to high number to show all products
+            var allProducts = []; // Will store all product elements
 
+            $(document).ready(function () {
+                // Initialize product pagination
+                initializePagination();
 
-    <!-- jQuery for AJAX functionality -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <!-- SweetAlert2 JS -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    <script>
-        // Product pagination variables - declared globally so they can be accessed from window.load event
-        // Pagination has been removed to show all products at once
-        var currentPaginationPage = 1;
-        var itemsPerPage = 9999; // Set to high number to show all products
-        var allProducts = []; // Will store all product elements
+                // Mobile menu toggle
+                const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
+                const sidebar = document.querySelector('.sidebar');
 
-        $(document).ready(function () {
-            // Determine initial status from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const initialStatus = urlParams.get('status') || 'all';
-
-            // Load orders on page load with initial status
-            loadOrders(initialStatus);
-
-            // Initialize product pagination
-            initializePagination();
-
-            // Mobile menu toggle
-            const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-            const sidebar = document.querySelector('.sidebar');
-
-            if (mobileMenuBtn) {
-                mobileMenuBtn.addEventListener('click', function () {
-                    sidebar.classList.toggle('active');
-                });
-            }
-
-            // Highlight active nav link
-            const currentNavPage = window.location.pathname.split('/').pop();
-            const navLinks = document.querySelectorAll('.nav-links a');
-
-            navLinks.forEach(link => {
-                const linkPage = link.getAttribute('href').split('/').pop();
-                if (currentNavPage === linkPage || (currentNavPage === '' && linkPage === 'index.php') || (currentNavPage === 'customer_panel.php' && linkPage === '#')) {
-                    link.classList.add('active');
+                if (mobileMenuBtn) {
+                    mobileMenuBtn.addEventListener('click', function () {
+                        sidebar.classList.toggle('active');
+                    });
                 }
-            });
 
-            // AJAX for adding to cart
-            $(document).on('submit', 'form.add-to-cart-form', function (e) {
-                e.preventDefault();
+                // Highlight active nav link
+                const currentNavPage = window.location.pathname.split('/').pop();
+                const navLinks = document.querySelectorAll('.nav-links a');
 
-                var form = $(this);
-                var formData = form.serialize();
-                var button = form.find('button[name="add_to_cart"]');
-                var originalText = button.html();
-
-                // Show loading state
-                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Ekleniyor...');
-
-                $.ajax({
-                    url: 'api_islemleri/cart_operations.php',
-                    type: 'POST',
-                    data: formData + '&action=add_to_cart',
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            // Count number of different products in cart
-                            var differentProductsCount = response.total_different_products || 0;
-                            if (differentProductsCount === 0) {
-                                // If response doesn't contain the count, calculate from the cart UI
-                                differentProductsCount = $('.cart-item').length;
-                                // If we're adding to an empty cart, it would be 1
-                                if (differentProductsCount === 0) {
-                                    differentProductsCount = 1;
-                                }
-                            }
-
-                            // Show SweetAlert with the number of different products
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Ürün Sepete Eklendi!',
-                                text: `Sepette toplam ${differentProductsCount} farklı ürün bulunmaktadır.`,
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-
-                            // Update the cart UI without page reload (includes badge update)
-                            updateCartUI();
-                        } else {
-                            showAlert(response.message, 'danger');
-                        }
-                        // Re-enable button
-                        button.prop('disabled', false).html(originalText);
-                    },
-                    error: function () {
-                        showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
-                        // Re-enable button
-                        button.prop('disabled', false).html(originalText);
+                navLinks.forEach(link => {
+                    const linkPage = link.getAttribute('href').split('/').pop();
+                    if (currentNavPage === linkPage || (currentNavPage === '' && linkPage === 'index.php') || (currentNavPage === 'customer_panel.php' && linkPage === '#')) {
+                        link.classList.add('active');
                     }
                 });
-            });
 
-            // AJAX for removing from cart
-            $(document).on('click', '.remove-from-cart-btn', function (e) {
-                e.preventDefault();
+                // AJAX for adding to cart
+                $(document).on('submit', 'form.add-to-cart-form', function (e) {
+                    e.preventDefault();
 
-                var urun_kodu = $(this).data('urun-kodu');
-                var button = $(this);
+                    var form = $(this);
+                    var formData = form.serialize();
+                    var button = form.find('button[name="add_to_cart"]');
+                    var originalText = button.html();
 
-                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+                    // Show loading state
+                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Ekleniyor...');
 
-                $.ajax({
-                    url: 'api_islemleri/cart_operations.php',
-                    type: 'POST',
-                    data: {
-                        action: 'remove_from_cart',
-                        urun_kodu: urun_kodu
-                    },
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            showAlert(response.message, 'success');
-                            // Update cart UI instead of reloading page
-                            updateCartUI();
-                        } else {
-                            showAlert(response.message, 'danger');
+                    $.ajax({
+                        url: 'api_islemleri/cart_operations.php',
+                        type: 'POST',
+                        data: formData + '&action=add_to_cart',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                // Count number of different products in cart
+                                var differentProductsCount = response.total_different_products || 0;
+                                if (differentProductsCount === 0) {
+                                    // If response doesn't contain the count, calculate from the cart UI
+                                    differentProductsCount = $('.cart-item').length;
+                                    // If we're adding to an empty cart, it would be 1
+                                    if (differentProductsCount === 0) {
+                                        differentProductsCount = 1;
+                                    }
+                                }
+
+                                // Show SweetAlert with the number of different products
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Ürün Sepete Eklendi!',
+                                    text: `Sepette toplam ${differentProductsCount} farklı ürün bulunmaktadır.`,
+                                    showConfirmButton: false,
+                                    timer: 2000
+                                });
+
+                                // Update the cart UI without page reload (includes badge update)
+                                updateCartUI();
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                            // Re-enable button
+                            button.prop('disabled', false).html(originalText);
+                        },
+                        error: function () {
+                            showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
+                            // Re-enable button
+                            button.prop('disabled', false).html(originalText);
+                        }
+                    });
+                });
+
+                // AJAX for removing from cart
+                $(document).on('click', '.remove-from-cart-btn', function (e) {
+                    e.preventDefault();
+
+                    var urun_kodu = $(this).data('urun-kodu');
+                    var button = $(this);
+
+                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
+
+                    $.ajax({
+                        url: 'api_islemleri/cart_operations.php',
+                        type: 'POST',
+                        data: {
+                            action: 'remove_from_cart',
+                            urun_kodu: urun_kodu
+                        },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                showAlert(response.message, 'success');
+                                // Update cart UI instead of reloading page
+                                updateCartUI();
+                            } else {
+                                showAlert(response.message, 'danger');
+                                button.prop('disabled', false).html('<i class="fas fa-trash-alt"></i>');
+                            }
+                        },
+                        error: function () {
+                            showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                             button.prop('disabled', false).html('<i class="fas fa-trash-alt"></i>');
                         }
-                    },
-                    error: function () {
-                        showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                        button.prop('disabled', false).html('<i class="fas fa-trash-alt"></i>');
-                    }
+                    });
                 });
-            });
 
-            // AJAX for submitting order - using event delegation for dynamic content
-            $(document).on('submit', 'form[name="submit_order"]', function (e) {
-                e.preventDefault();
+                // AJAX for submitting order - using event delegation for dynamic content
+                $(document).on('submit', 'form[name="submit_order"]', function (e) {
+                    e.preventDefault();
 
-                var form = $(this);
-                var formData = form.serialize() + '&action=submit_order';
-                var button = form.find('button[name="submit_order"]');
-                var originalText = button.html();
+                    var form = $(this);
+                    var formData = form.serialize() + '&action=submit_order';
+                    var button = form.find('button[name="submit_order"]');
+                    var originalText = button.html();
 
-                // Debug: Check what data is being sent
-                console.log('Form data being sent:', formData);
+                    // Debug: Check what data is being sent
+                    console.log('Form data being sent:', formData);
 
-                // Show loading state
-                button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sipariş İşleniyor...');
+                    // Show loading state
+                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Sipariş İşleniyor...');
 
-                $.ajax({
-                    url: 'api_islemleri/order_operations.php',
-                    type: 'POST',
-                    data: formData,
-                    dataType: 'json',
-                    success: function (response) {
-                        console.log('Order submission response:', response);
-                        if (response.status === 'success') {
-                            // Show a success message with SweetAlert
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Siparişiniz Alındı!',
-                                text: 'Siparişiniz başarıyla oluşturulmuştur. En kısa sürede ilgilenilerek işleme alınacaktır. Teşekkür ederiz!',
-                                showConfirmButton: true,
-                                confirmButtonText: 'Tamam',
-                                confirmButtonColor: '#4a0e63'
-                            }).then((result) => {
-                                // Close the cart and update the UI after user acknowledges
-                                closeCart();
-                                updateCartUI(); // This will refresh the cart UI and badge
-                                // Reload orders to show the new order
-                                loadOrders('all');
-                                // Refresh the page to see direct PHP processing results if any
-                                setTimeout(function () {
-                                    location.reload();
-                                }, 500);
-                            });
-                        } else {
-                            showAlert(response.message, 'danger');
+                    $.ajax({
+                        url: 'api_islemleri/order_operations.php',
+                        type: 'POST',
+                        data: formData,
+                        dataType: 'json',
+                        success: function (response) {
+                            console.log('Order submission response:', response);
+                            if (response.status === 'success') {
+                                // Show a success message with SweetAlert
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Siparişiniz Alındı!',
+                                    text: 'Siparişiniz başarıyla oluşturulmuştur. En kısa sürede ilgilenilerek işleme alınacaktır. Teşekkür ederiz!',
+                                    showConfirmButton: true,
+                                    confirmButtonText: 'Tamam',
+                                    confirmButtonColor: '#4a0e63'
+                                }).then((result) => {
+                                    // Close the cart and update the UI after user acknowledges
+                                    closeCart();
+                                    updateCartUI(); // This will refresh the cart UI and badge
+                                    // Refresh the page to see direct PHP processing results if any
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 500);
+                                });
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                            // Re-enable button
+                            button.prop('disabled', false).html(originalText);
+                        },
+                        error: function (xhr, status, error) {
+                            console.log('AJAX Error:', xhr.responseText, status, error);
+                            showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
+                            // Re-enable button
+                            button.prop('disabled', false).html(originalText);
                         }
-                        // Re-enable button
-                        button.prop('disabled', false).html(originalText);
-                    },
-                    error: function (xhr, status, error) {
-                        console.log('AJAX Error:', xhr.responseText, status, error);
-                        showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
-                        // Re-enable button
-                        button.prop('disabled', false).html(originalText);
-                    }
+                    });
+
+                    return false; // Prevent any form submission
                 });
 
-                return false; // Prevent any form submission
-            });
+                // Update filter button active states
+                function updateFilterButtons(status) {
+                    $('.order-filters .btn').removeClass('btn-primary btn-outline-primary btn-warning btn-outline-warning btn-success btn-outline-success btn-danger btn-outline-danger btn-info btn-outline-info');
 
-            // Update filter button active states
-            function updateFilterButtons(status) {
-                $('.order-filters .btn').removeClass('btn-primary btn-outline-primary btn-warning btn-outline-warning btn-success btn-outline-success btn-danger btn-outline-danger btn-info btn-outline-info');
-
-                switch (status) {
-                    case 'all':
-                        $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
-                        break;
-                    case 'beklemede':
-                        $('.order-filters .btn[onclick*="filterOrders(\'beklemede\')"]').addClass('btn-warning').removeClass('btn-outline-warning');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'beklemede\')"])').addClass('btn-outline-warning').removeClass('btn-warning');
-                        break;
-                    case 'onaylandi':
-                        $('.order-filters .btn[onclick*="filterOrders(\'onaylandi\')"]').addClass('btn-success').removeClass('btn-outline-success');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'onaylandi\')"])').addClass('btn-outline-success').removeClass('btn-success');
-                        break;
-                    case 'iptal_edildi':
-                        $('.order-filters .btn[onclick*="filterOrders(\'iptal_edildi\')"]').addClass('btn-danger').removeClass('btn-outline-danger');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'iptal_edildi\')"])').addClass('btn-outline-danger').removeClass('btn-danger');
-                        break;
-                    case 'tamamlandi':
-                        $('.order-filters .btn[onclick*="filterOrders(\'tamamlandi\')"]').addClass('btn-info').removeClass('btn-outline-info');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'tamamlandi\')"])').addClass('btn-outline-info').removeClass('btn-info');
-                        break;
-                    default:
-                        $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
-                        $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
+                    switch (status) {
+                        case 'all':
+                            $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
+                            break;
+                        case 'beklemede':
+                            $('.order-filters .btn[onclick*="filterOrders(\'beklemede\')"]').addClass('btn-warning').removeClass('btn-outline-warning');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'beklemede\')"])').addClass('btn-outline-warning').removeClass('btn-warning');
+                            break;
+                        case 'onaylandi':
+                            $('.order-filters .btn[onclick*="filterOrders(\'onaylandi\')"]').addClass('btn-success').removeClass('btn-outline-success');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'onaylandi\')"])').addClass('btn-outline-success').removeClass('btn-success');
+                            break;
+                        case 'iptal_edildi':
+                            $('.order-filters .btn[onclick*="filterOrders(\'iptal_edildi\')"]').addClass('btn-danger').removeClass('btn-outline-danger');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'iptal_edildi\')"])').addClass('btn-outline-danger').removeClass('btn-danger');
+                            break;
+                        case 'tamamlandi':
+                            $('.order-filters .btn[onclick*="filterOrders(\'tamamlandi\')"]').addClass('btn-info').removeClass('btn-outline-info');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'tamamlandi\')"])').addClass('btn-outline-info').removeClass('btn-info');
+                            break;
+                        default:
+                            $('.order-filters .btn[onclick*="filterOrders(\'all\')"]').addClass('btn-primary');
+                            $('.order-filters .btn:not([onclick*="filterOrders(\'all\')"])').addClass('btn-outline-primary');
+                    }
                 }
-            }
 
-            // Initialize filter buttons based on initial status
-            updateFilterButtons(initialStatus);
+                // Initialize filter buttons based on initial status
+                updateFilterButtons(initialStatus);
 
-            // Disable form submission for search (use AJAX instead)
-            $('form[method="GET"][action="customer_panel.php"]').on('submit', function (e) {
-                e.preventDefault();
-            });
+                // Disable form submission for search (use AJAX instead)
+                $('form[method="GET"][action="customer_panel.php"]').on('submit', function (e) {
+                    e.preventDefault();
+                });
 
-            // Function to show alerts
-            function showAlert(message, type) {
-                // Remove existing alerts
-                $('.alert').remove();
+                // Function to show alerts
+                function showAlert(message, type) {
+                    // Remove existing alerts
+                    $('.alert').remove();
 
-                var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
-                var alertHtml = `
+                    var icon = type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
+                    var alertHtml = `
                 <div class="alert alert-${type} alert-dismissible fade show d-flex align-items-center" role="alert" style="border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                     <i class="fas ${icon} fa-2x mr-3"></i>
                     <div>
@@ -1405,50 +1422,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 </div>
             `;
 
-                // Insert alert after page header
-                $('.page-header').after(alertHtml);
+                    // Insert alert after page header
+                    $('.page-header').after(alertHtml);
 
-                // Auto-hide messages after 3 seconds
-                setTimeout(function () {
-                    $('.alert').fadeOut(function () {
-                        $(this).remove();
-                    });
-                }, 3000);
-            }
+                    // Auto-hide messages after 3 seconds
+                    setTimeout(function () {
+                        $('.alert').fadeOut(function () {
+                            $(this).remove();
+                        });
+                    }, 3000);
+                }
 
-            // Function to update cart UI with current cart contents
-            function updateCartUI() {
-                $.ajax({
-                    url: 'api_islemleri/cart_operations.php',
-                    type: 'POST',
-                    data: { action: 'get_cart_contents' },
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success' && response.cart_items) {
-                            // Update cart count badge
-                            var totalItems = response.total_items || 0;
-                            $('.cart-toggle-btn .badge').text(totalItems);
+                // Function to update cart UI with current cart contents
+                function updateCartUI() {
+                    $.ajax({
+                        url: 'api_islemleri/cart_operations.php',
+                        type: 'POST',
+                        data: { action: 'get_cart_contents' },
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success' && response.cart_items) {
+                                // Update cart count badge
+                                var totalItems = response.total_items || 0;
+                                $('.cart-toggle-btn .badge').text(totalItems);
 
-                            // Update cart content if the cart is visible
-                            var cartHtml = '<div class="card-body">';
+                                // Update cart content if the cart is visible
+                                var cartHtml = '<div class="card-body">';
 
-                            if (response.cart_items.length > 0) {
-                                // Calculate total different products and total quantity
-                                var totalDifferentProducts = response.cart_items.length;
-                                var totalQuantity = 0;
-                                $.each(response.cart_items, function (index, item) {
-                                    totalQuantity += item.adet;
-                                });
+                                if (response.cart_items.length > 0) {
+                                    // Calculate total different products and total quantity
+                                    var totalDifferentProducts = response.cart_items.length;
+                                    var totalQuantity = 0;
+                                    $.each(response.cart_items, function (index, item) {
+                                        totalQuantity += item.adet;
+                                    });
 
-                                cartHtml += `<div class="cart-items-container">
+                                    cartHtml += `<div class="cart-items-container">
                                     <div class="cart-summary">
                                         <span><strong>${totalDifferentProducts}</strong> farklı ürün</span>
                                         <span><strong>${totalQuantity}</strong> adet</span>
                                     </div>
                                     <div class="cart-items-container-inner">`;
 
-                                $.each(response.cart_items, function (index, item) {
-                                    cartHtml += `
+                                    $.each(response.cart_items, function (index, item) {
+                                        cartHtml += `
                                     <div class="cart-item">
                                         <div class="cart-item-content">
                                             <h4 class="mb-1">${item.urun_ismi}</h4>
@@ -1459,12 +1476,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                         </a>
                                     </div>
                                 `;
-                                });
+                                    });
 
-                                cartHtml += '</div></div>'; // closing cart-items-container-inner and cart-items-container
+                                    cartHtml += '</div></div>'; // closing cart-items-container-inner and cart-items-container
 
-                                // Add order form in separate section at the bottom
-                                cartHtml += `
+                                    // Add order form in separate section at the bottom
+                                    cartHtml += `
                                 <div class="cart-order-section">
                                     <form method="POST" name="submit_order" class="mb-0">
                                         <div class="form-group mb-3">
@@ -1478,8 +1495,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                     </form>
                                 </div>
                             `;
-                            } else {
-                                cartHtml += `
+                                } else {
+                                    cartHtml += `
                                 <div class="empty-cart-section">
                                     <div class="empty-cart">
                                         <i class="fas fa-shopping-cart text-muted"></i>
@@ -1488,180 +1505,180 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                     </div>
                                 </div>
                             `;
-                            }
+                                }
 
-                            cartHtml += '</div>';
+                                cartHtml += '</div>';
 
-                            // Update the cart content
-                            $('#sepet .card-body').replaceWith(cartHtml);
+                                // Update the cart content
+                                $('#sepet .card-body').replaceWith(cartHtml);
 
-                            // Function to set up event handlers using event delegation
-                            function setupCartEventHandlers() {
-                                // Use event delegation to handle both initial and dynamically loaded forms
-                                $(document).off('submit', 'form.add-to-cart-form').on('submit', 'form.add-to-cart-form', function (e) {
-                                    e.preventDefault();
+                                // Function to set up event handlers using event delegation
+                                function setupCartEventHandlers() {
+                                    // Use event delegation to handle both initial and dynamically loaded forms
+                                    $(document).off('submit', 'form.add-to-cart-form').on('submit', 'form.add-to-cart-form', function (e) {
+                                        e.preventDefault();
 
-                                    var form = $(this);
-                                    var formData = form.serialize();
-                                    var button = form.find('button[name="add_to_cart"]');
-                                    var originalText = button.html();
+                                        var form = $(this);
+                                        var formData = form.serialize();
+                                        var button = form.find('button[name="add_to_cart"]');
+                                        var originalText = button.html();
 
-                                    // Prevent multiple clicks during processing
-                                    if (button.prop('disabled')) {
-                                        return false;
-                                    }
+                                        // Prevent multiple clicks during processing
+                                        if (button.prop('disabled')) {
+                                            return false;
+                                        }
 
-                                    // Show loading state
-                                    button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Ekleniyor...');
+                                        // Show loading state
+                                        button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i> Ekleniyor...');
 
-                                    $.ajax({
-                                        url: 'api_islemleri/cart_operations.php',
-                                        type: 'POST',
-                                        data: formData + '&action=add_to_cart',
-                                        dataType: 'json',
-                                        success: function (response) {
-                                            if (response.status === 'success') {
-                                                // Update cart count by getting the current count and adding the quantity
-                                                var quantityAdded = parseInt(form.find('input[name="adet"]').val()) || 1;
-                                                // Find all cart toggle buttons and update their badge
-                                                $('.cart-toggle-btn .badge').each(function () {
-                                                    var currentText = $(this).text();
-                                                    var currentCount = parseInt(currentText) || 0;
-                                                    $(this).text(currentCount + quantityAdded);
-                                                });
+                                        $.ajax({
+                                            url: 'api_islemleri/cart_operations.php',
+                                            type: 'POST',
+                                            data: formData + '&action=add_to_cart',
+                                            dataType: 'json',
+                                            success: function (response) {
+                                                if (response.status === 'success') {
+                                                    // Update cart count by getting the current count and adding the quantity
+                                                    var quantityAdded = parseInt(form.find('input[name="adet"]').val()) || 1;
+                                                    // Find all cart toggle buttons and update their badge
+                                                    $('.cart-toggle-btn .badge').each(function () {
+                                                        var currentText = $(this).text();
+                                                        var currentCount = parseInt(currentText) || 0;
+                                                        $(this).text(currentCount + quantityAdded);
+                                                    });
 
-                                                // Count number of different products in cart
-                                                var differentProductsCount = response.total_different_products || 0;
-                                                if (differentProductsCount === 0) {
-                                                    // If response doesn't contain the count, calculate from the cart UI
-                                                    differentProductsCount = $('.cart-item').length;
-                                                    // If we're adding to an empty cart, it would be 1
+                                                    // Count number of different products in cart
+                                                    var differentProductsCount = response.total_different_products || 0;
                                                     if (differentProductsCount === 0) {
-                                                        differentProductsCount = 1;
+                                                        // If response doesn't contain the count, calculate from the cart UI
+                                                        differentProductsCount = $('.cart-item').length;
+                                                        // If we're adding to an empty cart, it would be 1
+                                                        if (differentProductsCount === 0) {
+                                                            differentProductsCount = 1;
+                                                        }
                                                     }
+
+                                                    // Show SweetAlert with the number of different products
+                                                    Swal.fire({
+                                                        icon: 'success',
+                                                        title: 'Ürün Sepete Eklendi!',
+                                                        text: `Sepette toplam ${differentProductsCount} farklı ürün bulunmaktadır.`,
+                                                        showConfirmButton: false,
+                                                        timer: 2000
+                                                    });
+
+                                                    // Update the cart UI without page reload
+                                                    updateCartUI();
+                                                } else {
+                                                    showAlert(response.message, 'danger');
                                                 }
-
-                                                // Show SweetAlert with the number of different products
-                                                Swal.fire({
-                                                    icon: 'success',
-                                                    title: 'Ürün Sepete Eklendi!',
-                                                    text: `Sepette toplam ${differentProductsCount} farklı ürün bulunmaktadır.`,
-                                                    showConfirmButton: false,
-                                                    timer: 2000
-                                                });
-
-                                                // Update the cart UI without page reload
-                                                updateCartUI();
-                                            } else {
-                                                showAlert(response.message, 'danger');
+                                                // Re-enable button
+                                                button.prop('disabled', false).html(originalText);
+                                            },
+                                            error: function () {
+                                                showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
+                                                // Re-enable button
+                                                button.prop('disabled', false).html(originalText);
                                             }
-                                            // Re-enable button
-                                            button.prop('disabled', false).html(originalText);
-                                        },
-                                        error: function () {
-                                            showAlert('İşlem sırasında bir hata oluştu. Lütfen tekrar deneyin.', 'danger');
-                                            // Re-enable button
-                                            button.prop('disabled', false).html(originalText);
-                                        }
+                                        });
                                     });
-                                });
 
-                                // Use event delegation for remove from cart functionality
-                                $(document).off('click', '.remove-from-cart-btn').on('click', '.remove-from-cart-btn', function (e) {
-                                    e.preventDefault();
+                                    // Use event delegation for remove from cart functionality
+                                    $(document).off('click', '.remove-from-cart-btn').on('click', '.remove-from-cart-btn', function (e) {
+                                        e.preventDefault();
 
-                                    var urun_kodu = $(this).data('urun-kodu');
-                                    var button = $(this);
+                                        var urun_kodu = $(this).data('urun-kodu');
+                                        var button = $(this);
 
-                                    $.ajax({
-                                        url: 'api_islemleri/cart_operations.php',
-                                        type: 'POST',
-                                        data: {
-                                            action: 'remove_from_cart',
-                                            urun_kodu: urun_kodu
-                                        },
-                                        dataType: 'json',
-                                        success: function (response) {
-                                            if (response.status === 'success') {
-                                                showAlert(response.message, 'success');
-                                                // Update cart UI instead of reloading page
-                                                updateCartUI();
-                                            } else {
-                                                showAlert(response.message, 'danger');
+                                        $.ajax({
+                                            url: 'api_islemleri/cart_operations.php',
+                                            type: 'POST',
+                                            data: {
+                                                action: 'remove_from_cart',
+                                                urun_kodu: urun_kodu
+                                            },
+                                            dataType: 'json',
+                                            success: function (response) {
+                                                if (response.status === 'success') {
+                                                    showAlert(response.message, 'success');
+                                                    // Update cart UI instead of reloading page
+                                                    updateCartUI();
+                                                } else {
+                                                    showAlert(response.message, 'danger');
+                                                }
+                                            },
+                                            error: function () {
+                                                showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                                             }
-                                        },
-                                        error: function () {
-                                            showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                                        }
+                                        });
                                     });
-                                });
-                            }
+                                }
 
-                            // Re-attach event handlers for the newly added elements
-                            setupCartEventHandlers();
+                                // Re-attach event handlers for the newly added elements
+                                setupCartEventHandlers();
 
-                            // Check if cart is currently open and update accordingly
-                            if ($('#sepet').hasClass('show')) {
-                                // Cart is open, ensure the content is visible
+                                // Check if cart is currently open and update accordingly
+                                if ($('#sepet').hasClass('show')) {
+                                    // Cart is open, ensure the content is visible
+                                }
                             }
+                        },
+                        error: function () {
+                            console.error('Error fetching cart contents');
+                            // At least update the badge count by calculating from existing UI
+                            var cartCount = parseInt($('.cart-toggle-btn .badge').text()) || 0;
+                            // Keep the existing count as is since we couldn't fetch updated data
                         }
-                    },
-                    error: function () {
-                        console.error('Error fetching cart contents');
-                        // At least update the badge count by calculating from existing UI
-                        var cartCount = parseInt($('.cart-toggle-btn .badge').text()) || 0;
-                        // Keep the existing count as is since we couldn't fetch updated data
-                    }
-                });
-            }
+                    });
+                }
 
-            // Function to open the cart panel
-            function openCart() {
-                $('#sepet').addClass('show');
-                $('#cartOverlay').addClass('show');
-                $('body').css('overflow', 'hidden'); // Prevent background scrolling
-            }
+                // Function to open the cart panel
+                function openCart() {
+                    $('#sepet').addClass('show');
+                    $('#cartOverlay').addClass('show');
+                    $('body').css('overflow', 'hidden'); // Prevent background scrolling
+                }
 
-            // Function to close the cart panel
-            function closeCart() {
-                $('#sepet').removeClass('show');
-                $('#cartOverlay').removeClass('show');
-                $('body').css('overflow', 'auto'); // Re-enable scrolling
-            }
+                // Function to close the cart panel
+                function closeCart() {
+                    $('#sepet').removeClass('show');
+                    $('#cartOverlay').removeClass('show');
+                    $('body').css('overflow', 'auto'); // Re-enable scrolling
+                }
 
-            // Attach cart toggle event handlers when the document is ready
-            $(document).ready(function () {
-                // Click handlers for cart open buttons
-                $(document).on('click', '.cart-toggle-btn', function (e) {
-                    e.preventDefault();
-                    openCart();
-                });
+                // Attach cart toggle event handlers when the document is ready
+                $(document).ready(function () {
+                    // Click handlers for cart open buttons
+                    $(document).on('click', '.cart-toggle-btn', function (e) {
+                        e.preventDefault();
+                        openCart();
+                    });
 
-                // Click handler for closing cart
-                $(document).on('click', '#closeCartBtn', function (e) {
-                    e.preventDefault();
-                    closeCart();
-                });
-
-                // Click handler for overlay to close cart
-                $(document).on('click', '#cartOverlay', function (e) {
-                    if (e.target === this) {
+                    // Click handler for closing cart
+                    $(document).on('click', '#closeCartBtn', function (e) {
+                        e.preventDefault();
                         closeCart();
-                    }
+                    });
+
+                    // Click handler for overlay to close cart
+                    $(document).on('click', '#cartOverlay', function (e) {
+                        if (e.target === this) {
+                            closeCart();
+                        }
+                    });
+
+                    // Keyboard handler for closing cart (ESC key)
+                    $(document).keydown(function (e) {
+                        if (e.key === 'Escape' && $('#sepet').hasClass('show')) {
+                            closeCart();
+                        }
+                    });
                 });
 
-                // Keyboard handler for closing cart (ESC key)
-                $(document).keydown(function (e) {
-                    if (e.key === 'Escape' && $('#sepet').hasClass('show')) {
-                        closeCart();
-                    }
-                });
-            });
-
-            // Load orders by status
-            function loadOrders(status) {
-                // Show loading indicator
-                $('#ordersTableBody').html(`
+                // Load orders by status
+                function loadOrders(status) {
+                    // Show loading indicator
+                    $('#ordersTableBody').html(`
                 <tr>
                     <td colspan="6" class="text-center p-4">
                         <div class="d-flex justify-content-center align-items-center">
@@ -1674,44 +1691,44 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 </tr>
             `);
 
-                $.ajax({
-                    url: 'api_islemleri/musteri_siparis_islemler.php?action=get_orders&status=' + status,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            var ordersHtml = '';
-                            var orders = response.data;
+                    $.ajax({
+                        url: 'api_islemleri/musteri_siparis_islemler.php?action=get_orders&status=' + status,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                var ordersHtml = '';
+                                var orders = response.data;
 
-                            if (orders.length > 0) {
-                                $.each(orders, function (index, order) {
-                                    // Set status badge style based on status
-                                    var statusClass = '';
-                                    var statusText = '';
+                                if (orders.length > 0) {
+                                    $.each(orders, function (index, order) {
+                                        // Set status badge style based on status
+                                        var statusClass = '';
+                                        var statusText = '';
 
-                                    switch (order.durum) {
-                                        case 'beklemede':
-                                            statusClass = 'badge-warning text-dark';
-                                            statusText = 'Beklemede';
-                                            break;
-                                        case 'onaylandi':
-                                            statusClass = 'badge-success';
-                                            statusText = 'Onaylandı';
-                                            break;
-                                        case 'iptal_edildi':
-                                            statusClass = 'badge-danger';
-                                            statusText = 'İptal Edildi';
-                                            break;
-                                        case 'tamamlandi':
-                                            statusClass = 'badge-info';
-                                            statusText = 'Tamamlandı';
-                                            break;
-                                        default:
-                                            statusClass = 'badge-secondary';
-                                            statusText = order.durum;
-                                    }
+                                        switch (order.durum) {
+                                            case 'beklemede':
+                                                statusClass = 'badge-warning text-dark';
+                                                statusText = 'Beklemede';
+                                                break;
+                                            case 'onaylandi':
+                                                statusClass = 'badge-success';
+                                                statusText = 'Onaylandı';
+                                                break;
+                                            case 'iptal_edildi':
+                                                statusClass = 'badge-danger';
+                                                statusText = 'İptal Edildi';
+                                                break;
+                                            case 'tamamlandi':
+                                                statusClass = 'badge-info';
+                                                statusText = 'Tamamlandı';
+                                                break;
+                                            default:
+                                                statusClass = 'badge-secondary';
+                                                statusText = order.durum;
+                                        }
 
-                                    ordersHtml += `
+                                        ordersHtml += `
                                     <tr>
                                         <td>#${order.siparis_id}</td>
                                         <td>${new Date(order.tarih).toLocaleString('tr-TR')}</td>
@@ -1725,531 +1742,531 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                                 <i class="fas fa-eye"></i>  Detay
                                             </button>
                                             ${order.durum === 'beklemede' ?
-                                            `<button class="btn btn-danger btn-sm cancel-order-btn"
+                                                `<button class="btn btn-danger btn-sm cancel-order-btn"
                                                         data-id="${order.siparis_id}">
                                                     <i class="fas fa-times"></i> İptal
                                                 </button>` : ''}
                                         </td>
                                     </tr>
                                 `;
+                                    });
+                                } else {
+                                    $('#ordersTableBody').html('');
+                                    $('#noOrdersMessage').show();
+                                    return;
+                                }
+
+                                $('#ordersTableBody').html(ordersHtml);
+                                $('#noOrdersMessage').hide();
+
+                                // Add event listeners for view order buttons
+                                $('.view-order-btn').on('click', function () {
+                                    var orderId = $(this).data('id');
+                                    var status = $(this).data('status');
+                                    openOrderModal(orderId, status);
                                 });
-                            } else {
-                                $('#ordersTableBody').html('');
-                                $('#noOrdersMessage').show();
-                                return;
-                            }
 
-                            $('#ordersTableBody').html(ordersHtml);
-                            $('#noOrdersMessage').hide();
+                                // Add event listeners for cancel order buttons
+                                $(document).on('click', '.cancel-order-btn', function (e) {
+                                    e.preventDefault(); // Prevent any default behavior
+                                    e.stopPropagation(); // Stop event bubbling
 
-                            // Add event listeners for view order buttons
-                            $('.view-order-btn').on('click', function () {
-                                var orderId = $(this).data('id');
-                                var status = $(this).data('status');
-                                openOrderModal(orderId, status);
-                            });
+                                    var $button = $(this);
+                                    var orderId = $button.data('id');
 
-                            // Add event listeners for cancel order buttons
-                            $(document).on('click', '.cancel-order-btn', function (e) {
-                                e.preventDefault(); // Prevent any default behavior
-                                e.stopPropagation(); // Stop event bubbling
+                                    if ($button.prop('disabled')) return; // If already processing, return
 
-                                var $button = $(this);
-                                var orderId = $button.data('id');
+                                    Swal.fire({
+                                        title: 'Emin misiniz?',
+                                        text: 'Siparişi iptal etmek istediğinize emin misiniz?',
+                                        icon: 'warning',
+                                        showCancelButton: true,
+                                        confirmButtonText: 'Evet',
+                                        cancelButtonText: 'İptal'
+                                    }).then((result) => {
+                                        if (result.isConfirmed) {
+                                            $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
 
-                                if ($button.prop('disabled')) return; // If already processing, return
-
-                                Swal.fire({
-                                    title: 'Emin misiniz?',
-                                    text: 'Siparişi iptal etmek istediğinize emin misiniz?',
-                                    icon: 'warning',
-                                    showCancelButton: true,
-                                    confirmButtonText: 'Evet',
-                                    cancelButtonText: 'İptal'
-                                }).then((result) => {
-                                    if (result.isConfirmed) {
-                                        $button.prop('disabled', true).html('<i class="fas fa-spinner fa-spin"></i>');
-
-                                        $.ajax({
-                                            url: 'api_islemleri/musteri_siparis_islemler.php',
-                                            type: 'POST',
-                                            data: {
-                                                action: 'cancel_order',
-                                                siparis_id: orderId
-                                            },
-                                            dataType: 'json',
-                                            success: function (response) {
-                                                if (response.status === 'success') {
-                                                    showAlert(response.message, 'success');
-                                                    // Reload orders to reflect the change
-                                                    loadOrders('all');
-                                                } else {
-                                                    showAlert(response.message, 'danger');
+                                            $.ajax({
+                                                url: 'api_islemleri/musteri_siparis_islemler.php',
+                                                type: 'POST',
+                                                data: {
+                                                    action: 'cancel_order',
+                                                    siparis_id: orderId
+                                                },
+                                                dataType: 'json',
+                                                success: function (response) {
+                                                    if (response.status === 'success') {
+                                                        showAlert(response.message, 'success');
+                                                        // Reload orders to reflect the change
+                                                        loadOrders('all');
+                                                    } else {
+                                                        showAlert(response.message, 'danger');
+                                                        $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
+                                                    }
+                                                },
+                                                error: function () {
+                                                    showAlert('Sipariş iptal edilirken bir hata oluştu.', 'danger');
                                                     $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
                                                 }
-                                            },
-                                            error: function () {
-                                                showAlert('Sipariş iptal edilirken bir hata oluştu.', 'danger');
-                                                $button.prop('disabled', false).html('<i class="fas fa-times"></i>');
-                                            }
-                                        });
-                                    }
+                                            });
+                                        }
+                                    });
                                 });
-                            });
-                        } else {
-                            $('#ordersTableBody').html(`
+                            } else {
+                                $('#ordersTableBody').html(`
                             <tr>
                                 <td colspan="6" class="text-center p-4 text-danger">
                                     <i class="fas fa-exclamation-triangle"></i> ${response.message}
                                 </td>
                             </tr>
                         `);
-                            $('#noOrdersMessage').hide();
-                        }
-                    },
-                    error: function () {
-                        $('#ordersTableBody').html(`
+                                $('#noOrdersMessage').hide();
+                            }
+                        },
+                        error: function () {
+                            $('#ordersTableBody').html(`
                         <tr>
                             <td colspan="6" class="text-center p-4 text-danger">
                                 <i class="fas fa-exclamation-circle"></i> Siparişler yüklenirken bir hata oluştu.
                             </td>
                         </tr>
                     `);
-                        $('#noOrdersMessage').hide();
-                    }
-                });
-            }
-
-            // Filter orders by status
-            window.filterOrders = function (status) {
-                loadOrders(status);
-                updateFilterButtons(status);
-            };
-
-            // Open order modal for viewing/editing
-            function openOrderModal(orderId, status) {
-                // Load order details
-                $.ajax({
-                    url: 'api_islemleri/musteri_siparis_islemler.php?action=get_order&siparis_id=' + orderId,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            var order = response.data;
-                            $('#orderId').val(order.siparis_id);
-                            $('#orderDescription').val(order.aciklama || '');
-
-                            // Set appropriate title based on status
-                            var statusText = '';
-                            switch (status) {
-                                case 'beklemede':
-                                    statusText = 'Beklemede';
-                                    break;
-                                case 'onaylandi':
-                                    statusText = 'Onaylandı';
-                                    break;
-                                case 'iptal_edildi':
-                                    statusText = 'İptal Edildi';
-                                    break;
-                                case 'tamamlandi':
-                                    statusText = 'Tamamlandı';
-                                    break;
-                                default:
-                                    statusText = status;
-                            }
-
-                            $('#orderTitleText').html(`Sipariş #${order.siparis_id} <small class="text-light">(${statusText})</small>`);
-
-                            // Load order items
-                            loadOrderItems(orderId);
-
-                            // Show/hide buttons based on status
-                            if (status === 'beklemede') {
-                                $('#cancelOrderBtn').show();
-                                $('#updateOrderBtn').show();
-                            } else {
-                                $('#cancelOrderBtn').hide();
-                                $('#updateOrderBtn').hide();
-                            }
-
-                            $('#orderModal').modal('show');
-                        } else {
-                            showAlert(response.message, 'danger');
+                            $('#noOrdersMessage').hide();
                         }
-                    },
-                    error: function () {
-                        showAlert('Sipariş detayı yüklenirken bir hata oluştu.', 'danger');
-                    }
-                });
-            }
+                    });
+                }
 
-            // Load order items
-            function loadOrderItems(orderId) {
-                $.ajax({
-                    url: 'api_islemleri/musteri_siparis_islemler.php?action=get_order_items&siparis_id=' + orderId,
-                    type: 'GET',
-                    dataType: 'json',
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            var itemsHtml = '';
-                            var items = response.data;
+                // Filter orders by status
+                window.filterOrders = function (status) {
+                    loadOrders(status);
+                    updateFilterButtons(status);
+                };
 
-                            if (items.length > 0) {
-                                itemsHtml += '<div class="table-responsive"><table class="table table-borderless mb-0"><thead class="bg-light"><tr><th>Ürün</th><th class="text-center">Adet</th><th class="text-center">Birim</th></tr></thead><tbody>';
+                // Open order modal for viewing/editing
+                function openOrderModal(orderId, status) {
+                    // Load order details
+                    $.ajax({
+                        url: 'api_islemleri/musteri_siparis_islemler.php?action=get_order&siparis_id=' + orderId,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                var order = response.data;
+                                $('#orderId').val(order.siparis_id);
+                                $('#orderDescription').val(order.aciklama || '');
 
-                                $.each(items, function (index, item) {
-                                    itemsHtml += `
+                                // Set appropriate title based on status
+                                var statusText = '';
+                                switch (status) {
+                                    case 'beklemede':
+                                        statusText = 'Beklemede';
+                                        break;
+                                    case 'onaylandi':
+                                        statusText = 'Onaylandı';
+                                        break;
+                                    case 'iptal_edildi':
+                                        statusText = 'İptal Edildi';
+                                        break;
+                                    case 'tamamlandi':
+                                        statusText = 'Tamamlandı';
+                                        break;
+                                    default:
+                                        statusText = status;
+                                }
+
+                                $('#orderTitleText').html(`Sipariş #${order.siparis_id} <small class="text-light">(${statusText})</small>`);
+
+                                // Load order items
+                                loadOrderItems(orderId);
+
+                                // Show/hide buttons based on status
+                                if (status === 'beklemede') {
+                                    $('#cancelOrderBtn').show();
+                                    $('#updateOrderBtn').show();
+                                } else {
+                                    $('#cancelOrderBtn').hide();
+                                    $('#updateOrderBtn').hide();
+                                }
+
+                                $('#orderModal').modal('show');
+                            } else {
+                                showAlert(response.message, 'danger');
+                            }
+                        },
+                        error: function () {
+                            showAlert('Sipariş detayı yüklenirken bir hata oluştu.', 'danger');
+                        }
+                    });
+                }
+
+                // Load order items
+                function loadOrderItems(orderId) {
+                    $.ajax({
+                        url: 'api_islemleri/musteri_siparis_islemler.php?action=get_order_items&siparis_id=' + orderId,
+                        type: 'GET',
+                        dataType: 'json',
+                        success: function (response) {
+                            if (response.status === 'success') {
+                                var itemsHtml = '';
+                                var items = response.data;
+
+                                if (items.length > 0) {
+                                    itemsHtml += '<div class="table-responsive"><table class="table table-borderless mb-0"><thead class="bg-light"><tr><th>Ürün</th><th class="text-center">Adet</th><th class="text-center">Birim</th></tr></thead><tbody>';
+
+                                    $.each(items, function (index, item) {
+                                        itemsHtml += `
                                     <tr class="border-bottom">
                                         <td>${item.urun_ismi}</td>
                                         <td class="text-center"><span class="badge badge-primary">${item.adet}</span></td>
                                         <td class="text-center">${item.birim}</td>
                                     </tr>
                                 `;
-                                });
+                                    });
 
-                                itemsHtml += '</tbody></table></div>';
+                                    itemsHtml += '</tbody></table></div>';
+                                } else {
+                                    itemsHtml = '<div class="text-center py-3"><i class="fas fa-inbox fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Sipariş kalemi bulunmuyor.</p></div>';
+                                }
+
+                                $('#orderItemsList').html(itemsHtml);
                             } else {
-                                itemsHtml = '<div class="text-center py-3"><i class="fas fa-inbox fa-2x text-muted mb-2"></i><p class="text-muted mb-0">Sipariş kalemi bulunmuyor.</p></div>';
+                                $('#orderItemsList').html('<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p class="mb-0">Sipariş kalemleri yüklenirken hata oluştu.</p></div>');
                             }
-
-                            $('#orderItemsList').html(itemsHtml);
-                        } else {
+                        },
+                        error: function () {
                             $('#orderItemsList').html('<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p class="mb-0">Sipariş kalemleri yüklenirken hata oluştu.</p></div>');
                         }
-                    },
-                    error: function () {
-                        $('#orderItemsList').html('<div class="text-center py-3 text-danger"><i class="fas fa-exclamation-circle fa-2x mb-2"></i><p class="mb-0">Sipariş kalemleri yüklenirken hata oluştu.</p></div>');
-                    }
-                });
-            }
-
-            // Function to perform search and then update pagination
-            function performSearchAndPagination() {
-                currentPaginationPage = 1;
-                if (typeof updatePagination === 'function') {
-                    updatePagination();
-                }
-            }
-
-            // Initialize product pagination
-            function initializePagination() {
-                allProducts = $('.product-item');
-
-                // Helper function to get currently filtered products based on search
-                function getProductsToPaginate() {
-                    const searchTerm = $('.form-control[name="search"]').val().toLowerCase().trim();
-                    if (!searchTerm) return allProducts;
-                    return allProducts.filter(function () {
-                        const productName = $(this).data('name') || '';
-                        return productName.includes(searchTerm);
                     });
                 }
 
-                // Search functionality
-                $('.search-input').on('input', function () {
+                // Function to perform search and then update pagination
+                function performSearchAndPagination() {
                     currentPaginationPage = 1;
                     if (typeof updatePagination === 'function') {
-                        updatePagination(getProductsToPaginate());
+                        updatePagination();
                     }
-                });
+                }
 
-                // Items per page functionality
-                $('#itemsPerPageSelect').on('change', function () {
-                    itemsPerPage = parseInt($(this).val()) || 5;
-                    currentPaginationPage = 1;
-                    if (typeof updatePagination === 'function') {
-                        updatePagination(getProductsToPaginate());
+                // Initialize product pagination
+                function initializePagination() {
+                    allProducts = $('.product-item');
+
+                    // Helper function to get currently filtered products based on search
+                    function getProductsToPaginate() {
+                        const searchTerm = $('.form-control[name="search"]').val().toLowerCase().trim();
+                        if (!searchTerm) return allProducts;
+                        return allProducts.filter(function () {
+                            const productName = $(this).data('name') || '';
+                            return productName.includes(searchTerm);
+                        });
                     }
-                });
 
-                // Pagination click handlers
-                $(document).on('click', '.pagination-btn', function (e) {
-                    e.preventDefault();
-                    const page = parseInt($(this).data('page'));
-                    if (page && page !== currentPaginationPage) {
-                        currentPaginationPage = page;
+                    // Search functionality
+                    $('.search-input').on('input', function () {
+                        currentPaginationPage = 1;
                         if (typeof updatePagination === 'function') {
                             updatePagination(getProductsToPaginate());
                         }
-                        // Scroll to top of product list
-                        $('html, body').animate({
-                            scrollTop: $('#product-list-container').offset().top - 100
-                        }, 300);
+                    });
+
+                    // Items per page functionality
+                    $('#itemsPerPageSelect').on('change', function () {
+                        itemsPerPage = parseInt($(this).val()) || 5;
+                        currentPaginationPage = 1;
+                        if (typeof updatePagination === 'function') {
+                            updatePagination(getProductsToPaginate());
+                        }
+                    });
+
+                    // Pagination click handlers
+                    $(document).on('click', '.pagination-btn', function (e) {
+                        e.preventDefault();
+                        const page = parseInt($(this).data('page'));
+                        if (page && page !== currentPaginationPage) {
+                            currentPaginationPage = page;
+                            if (typeof updatePagination === 'function') {
+                                updatePagination(getProductsToPaginate());
+                            }
+                            // Scroll to top of product list
+                            $('html, body').animate({
+                                scrollTop: $('#product-list-container').offset().top - 100
+                            }, 300);
+                        }
+                    });
+
+                    // Initial display
+                    itemsPerPage = parseInt($('#itemsPerPageSelect').val()) || 5;
+                    if (typeof updatePagination === 'function') {
+                        updatePagination();
                     }
+                }
+
+                // --- Mobile Bottom Nav ---
+                const bottomNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+
+                bottomNavItems.forEach(item => {
+                    item.addEventListener('click', function (e) {
+                        const href = this.getAttribute('href');
+
+                        // Allow default behavior for external links, cart, and logout
+                        if (href === 'change_password.php' || href === 'logout.php' || this.classList.contains('cart-toggle-btn')) {
+                            // For cart, ensure active state is set
+                            if (this.classList.contains('cart-toggle-btn')) {
+                                bottomNavItems.forEach(i => i.classList.remove('active'));
+                                this.classList.add('active');
+                            }
+                            return;
+                        }
+                        e.preventDefault();
+
+                        // Set active state
+                        bottomNavItems.forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // Handle scrolling for internal links
+                        if (href && href.startsWith('#')) {
+                            const targetElement = document.querySelector(href);
+                            if (targetElement) {
+                                targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        } else if (href === 'customer_panel.php') {
+                            // Scroll to top for "Mağaza"
+                            window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }
+                    });
                 });
 
-                // Initial display
-                itemsPerPage = parseInt($('#itemsPerPageSelect').val()) || 5;
-                if (typeof updatePagination === 'function') {
+                // When cart is closed, revert active state to the main page icon
+                $(document).on('click', '#closeCartBtn, #cartOverlay', function () {
+                    setTimeout(function () {
+                        if (!$('#sepet').hasClass('show')) {
+                            bottomNavItems.forEach(i => i.classList.remove('active'));
+                            // Activate the "Mağaza" button
+                            $('.mobile-bottom-nav .nav-item[href="customer_panel.php"]').addClass('active');
+                        }
+                    }, 350); // wait for animation
+                });
+                // --- End Mobile Bottom Nav ---
+            });
+
+            // Function to update pagination display - defined outside document ready to be accessible globally
+            // Pagination has been removed to show all products at once
+            function updatePagination(productsToPaginate) {
+                // Check if DOM is ready and elements exist
+                if (typeof $ === 'undefined' || !$('#product-list-container').length) {
+                    // Wait a bit and try again if DOM isn't ready yet
+                    setTimeout(function () {
+                        if (typeof updatePagination === 'function') {
+                            updatePagination(productsToPaginate);
+                        }
+                    }, 100);
+                    return;
+                }
+
+                // If no products are provided (e.g., on initial load), use all products.
+                if (productsToPaginate === undefined) {
+                    // Make sure allProducts is available, if not try to get them
+                    if (typeof allProducts === 'undefined' || allProducts.length === 0) {
+                        allProducts = $('.product-item');
+                    }
+                    productsToPaginate = allProducts;
+                }
+
+                // Handle "no results" message for search
+                const $noResultsMessage = $('.no-results-message');
+                const searchTerm = $('.search-input').val().toLowerCase().trim();
+                if (productsToPaginate.length === 0 && searchTerm !== '') {
+                    $noResultsMessage.show();
+                } else {
+                    $noResultsMessage.hide();
+                }
+
+                // Since pagination is removed, show all products
+                allProducts.removeClass('visible');
+
+                if (productsToPaginate.length > 0) {
+                    productsToPaginate.addClass('visible');
+                }
+
+                // Hide pagination container since pagination is removed
+                $('#pagination-container').hide();
+            }
+
+            // Function to generate pagination buttons - defined outside document ready to be accessible globally
+            // Pagination has been removed to show all products at once
+            /*
+            function generatePaginationButtons(totalPages, activePage) {
+                const $pagination = $('#product-pagination');
+                let paginationHtml = '';
+    
+                // Previous button
+                const prevDisabled = activePage <= 1 ? 'disabled' : '';
+                paginationHtml += `<li class="page-item ${prevDisabled}">
+                <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Previous">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>`;
+    
+                // Page numbers
+                const maxVisiblePages = 5;
+                let startPage = Math.max(1, activePage - Math.floor(maxVisiblePages / 2));
+                let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+    
+                // Adjust start page if we're near the end
+                if (endPage - startPage + 1 < maxVisiblePages) {
+                    startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                }
+    
+                // First page + ellipsis if needed
+                if (startPage > 1) {
+                    paginationHtml += `<li class="page-item">
+                    <a class="page-link pagination-btn" href="#" data-page="1">1</a>
+                </li>`;
+                    if (startPage > 2) {
+                        paginationHtml += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+                    }
+                }
+    
+                // Page numbers
+                for (let i = startPage; i <= endPage; i++) {
+                    const activeClass = i === activePage ? 'active' : '';
+                    paginationHtml += `<li class="page-item ${activeClass}">
+                    <a class="page-link pagination-btn" href="#" data-page="${i}">${i}</a>
+                </li>`;
+                }
+    
+                // Last page + ellipsis if needed
+                if (endPage < totalPages) {
+                    if (endPage < totalPages - 1) {
+                        paginationHtml += `<li class="page-item disabled">
+                        <span class="page-link">...</span>
+                    </li>`;
+                    }
+                    paginationHtml += `<li class="page-item">
+                    <a class="page-link pagination-btn" href="#" data-page="${totalPages}">${totalPages}</a>
+                </li>`;
+                }
+    
+                // Next button
+                const nextDisabled = activePage >= totalPages ? 'disabled' : '';
+                paginationHtml += `<li class="page-item ${nextDisabled}">
+                <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Next">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>`;
+    
+                $pagination.html(paginationHtml);
+            }
+            */
+
+            // Ensure initial products are displayed when page is fully loaded
+            $(window).on('load', function () {
+                if (typeof allProducts !== 'undefined' && allProducts.length > 0) {
+                    // Update pagination to show first page
                     updatePagination();
                 }
-            }
+            });
 
-            // --- Mobile Bottom Nav ---
-            const bottomNavItems = document.querySelectorAll('.mobile-bottom-nav .nav-item');
+            // Product photo gallery variables
+            let currentProductPhotos = [];
+            let currentPhotoIndex = 0;
+            let currentProductName = '';
 
-            bottomNavItems.forEach(item => {
-                item.addEventListener('click', function (e) {
-                    const href = this.getAttribute('href');
+            // Open product photo gallery
+            window.openProductGallery = function (urunKodu) {
+                console.log('Opening gallery for product:', urunKodu);
 
-                    // Allow default behavior for external links, cart, and logout
-                    if (href === 'change_password.php' || href === 'logout.php' || this.classList.contains('cart-toggle-btn')) {
-                        // For cart, ensure active state is set
-                        if (this.classList.contains('cart-toggle-btn')) {
-                             bottomNavItems.forEach(i => i.classList.remove('active'));
-                             this.classList.add('active');
+                // Fetch all photos for this product
+                $.ajax({
+                    url: 'api_islemleri/urun_fotograflari_islemler.php',
+                    type: 'GET',
+                    data: {
+                        action: 'get_photos',
+                        urun_kodu: urunKodu
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        console.log('Photo API response:', response);
+
+                        if (response.status === 'success' && response.data.length > 0) {
+                            currentProductPhotos = response.data;
+                            currentPhotoIndex = 0;
+
+                            // Get product name from the list
+                            const productItem = $('.product-item').filter(function () {
+                                return $(this).find('input[name="urun_kodu"]').val() == urunKodu;
+                            });
+                            currentProductName = productItem.find('.product-name').text().trim();
+
+                            console.log('Total photos:', currentProductPhotos.length);
+                            console.log('Product name:', currentProductName);
+
+                            showProductPhoto();
+                            $('#productPhotoLightbox').css('display', 'flex');
+                            $('body').css('overflow', 'hidden');
+
+                            // Show/hide navigation buttons
+                            if (currentProductPhotos.length > 1) {
+                                $('#prevPhotoBtn, #nextPhotoBtn').css('display', 'flex');
+                            } else {
+                                $('#prevPhotoBtn, #nextPhotoBtn').hide();
+                            }
+
+                            // Add keyboard support
+                            $(document).on('keydown.lightbox', handleLightboxKeyboard);
+                        } else {
+                            console.error('No photos found or API error');
+                            alert('Bu ürün için fotoğraf bulunamadı.');
                         }
-                        return;
-                    }
-                    e.preventDefault();
-
-                    // Set active state
-                    bottomNavItems.forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Handle scrolling for internal links
-                    if (href && href.startsWith('#')) {
-                        const targetElement = document.querySelector(href);
-                        if (targetElement) {
-                            targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                        }
-                    } else if (href === 'customer_panel.php') {
-                        // Scroll to top for "Mağaza"
-                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('AJAX Error:', xhr.responseText, status, error);
+                        alert('Fotoğraflar yüklenirken bir hata oluştu.');
                     }
                 });
-            });
+            };
 
-            // When cart is closed, revert active state to the main page icon
-            $(document).on('click', '#closeCartBtn, #cartOverlay', function() {
-                setTimeout(function() {
-                    if (!$('#sepet').hasClass('show')) {
-                         bottomNavItems.forEach(i => i.classList.remove('active'));
-                         // Activate the "Mağaza" button
-                         $('.mobile-bottom-nav .nav-item[href="customer_panel.php"]').addClass('active');
-                    }
-                }, 350); // wait for animation
-            });
-            // --- End Mobile Bottom Nav ---
-        });
+            // Close product gallery
+            window.closeProductGallery = function () {
+                $('#productPhotoLightbox').hide();
+                $('body').css('overflow', '');
+                $(document).off('keydown.lightbox');
+            };
 
-        // Function to update pagination display - defined outside document ready to be accessible globally
-        // Pagination has been removed to show all products at once
-        function updatePagination(productsToPaginate) {
-            // Check if DOM is ready and elements exist
-            if (typeof $ === 'undefined' || !$('#product-list-container').length) {
-                // Wait a bit and try again if DOM isn't ready yet
-                setTimeout(function() {
-                    if (typeof updatePagination === 'function') {
-                        updatePagination(productsToPaginate);
-                    }
-                }, 100);
-                return;
+            // Show current photo
+            function showProductPhoto() {
+                const photo = currentProductPhotos[currentPhotoIndex];
+                $('#lightboxImage').attr('src', photo.dosya_yolu).attr('alt', photo.dosya_adi);
+                $('#lightboxProductName').text(currentProductName);
+                $('#lightboxPhotoCounter').text(`${currentPhotoIndex + 1} / ${currentProductPhotos.length}`);
             }
 
-            // If no products are provided (e.g., on initial load), use all products.
-            if (productsToPaginate === undefined) {
-                // Make sure allProducts is available, if not try to get them
-                if (typeof allProducts === 'undefined' || allProducts.length === 0) {
-                    allProducts = $('.product-item');
-                }
-                productsToPaginate = allProducts;
-            }
+            // Navigate to next photo
+            window.nextProductPhoto = function () {
+                currentPhotoIndex = (currentPhotoIndex + 1) % currentProductPhotos.length;
+                showProductPhoto();
+            };
 
-            // Handle "no results" message for search
-            const $noResultsMessage = $('.no-results-message');
-            const searchTerm = $('.search-input').val().toLowerCase().trim();
-            if (productsToPaginate.length === 0 && searchTerm !== '') {
-                $noResultsMessage.show();
-            } else {
-                $noResultsMessage.hide();
-            }
+            // Navigate to previous photo
+            window.previousProductPhoto = function () {
+                currentPhotoIndex = (currentPhotoIndex - 1 + currentProductPhotos.length) % currentProductPhotos.length;
+                showProductPhoto();
+            };
 
-            // Since pagination is removed, show all products
-            allProducts.removeClass('visible');
-
-            if (productsToPaginate.length > 0) {
-                productsToPaginate.addClass('visible');
-            }
-
-            // Hide pagination container since pagination is removed
-            $('#pagination-container').hide();
-        }
-
-        // Function to generate pagination buttons - defined outside document ready to be accessible globally
-        // Pagination has been removed to show all products at once
-        /*
-        function generatePaginationButtons(totalPages, activePage) {
-            const $pagination = $('#product-pagination');
-            let paginationHtml = '';
-
-            // Previous button
-            const prevDisabled = activePage <= 1 ? 'disabled' : '';
-            paginationHtml += `<li class="page-item ${prevDisabled}">
-            <a class="page-link pagination-btn" href="#" data-page="${activePage - 1}" aria-label="Previous">
-                <i class="fas fa-chevron-left"></i>
-            </a>
-        </li>`;
-
-            // Page numbers
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, activePage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-            // Adjust start page if we're near the end
-            if (endPage - startPage + 1 < maxVisiblePages) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-
-            // First page + ellipsis if needed
-            if (startPage > 1) {
-                paginationHtml += `<li class="page-item">
-                <a class="page-link pagination-btn" href="#" data-page="1">1</a>
-            </li>`;
-                if (startPage > 2) {
-                    paginationHtml += `<li class="page-item disabled">
-                    <span class="page-link">...</span>
-                </li>`;
+            // Handle keyboard navigation
+            function handleLightboxKeyboard(e) {
+                if (e.key === 'Escape') {
+                    closeProductGallery();
+                } else if (e.key === 'ArrowRight') {
+                    nextProductPhoto();
+                } else if (e.key === 'ArrowLeft') {
+                    previousProductPhoto();
                 }
             }
-
-            // Page numbers
-            for (let i = startPage; i <= endPage; i++) {
-                const activeClass = i === activePage ? 'active' : '';
-                paginationHtml += `<li class="page-item ${activeClass}">
-                <a class="page-link pagination-btn" href="#" data-page="${i}">${i}</a>
-            </li>`;
-            }
-
-            // Last page + ellipsis if needed
-            if (endPage < totalPages) {
-                if (endPage < totalPages - 1) {
-                    paginationHtml += `<li class="page-item disabled">
-                    <span class="page-link">...</span>
-                </li>`;
-                }
-                paginationHtml += `<li class="page-item">
-                <a class="page-link pagination-btn" href="#" data-page="${totalPages}">${totalPages}</a>
-            </li>`;
-            }
-
-            // Next button
-            const nextDisabled = activePage >= totalPages ? 'disabled' : '';
-            paginationHtml += `<li class="page-item ${nextDisabled}">
-            <a class="page-link pagination-btn" href="#" data-page="${activePage + 1}" aria-label="Next">
-                <i class="fas fa-chevron-right"></i>
-            </a>
-        </li>`;
-
-            $pagination.html(paginationHtml);
-        }
-        */
-
-        // Ensure initial products are displayed when page is fully loaded
-        $(window).on('load', function () {
-            if (typeof allProducts !== 'undefined' && allProducts.length > 0) {
-                // Update pagination to show first page
-                updatePagination();
-            }
-        });
-
-        // Product photo gallery variables
-        let currentProductPhotos = [];
-        let currentPhotoIndex = 0;
-        let currentProductName = '';
-
-        // Open product photo gallery
-        window.openProductGallery = function (urunKodu) {
-            console.log('Opening gallery for product:', urunKodu);
-
-            // Fetch all photos for this product
-            $.ajax({
-                url: 'api_islemleri/urun_fotograflari_islemler.php',
-                type: 'GET',
-                data: {
-                    action: 'get_photos',
-                    urun_kodu: urunKodu
-                },
-                dataType: 'json',
-                success: function (response) {
-                    console.log('Photo API response:', response);
-
-                    if (response.status === 'success' && response.data.length > 0) {
-                        currentProductPhotos = response.data;
-                        currentPhotoIndex = 0;
-
-                        // Get product name from the list
-                        const productItem = $('.product-item').filter(function () {
-                            return $(this).find('input[name="urun_kodu"]').val() == urunKodu;
-                        });
-                        currentProductName = productItem.find('.product-name').text().trim();
-
-                        console.log('Total photos:', currentProductPhotos.length);
-                        console.log('Product name:', currentProductName);
-
-                        showProductPhoto();
-                        $('#productPhotoLightbox').css('display', 'flex');
-                        $('body').css('overflow', 'hidden');
-
-                        // Show/hide navigation buttons
-                        if (currentProductPhotos.length > 1) {
-                            $('#prevPhotoBtn, #nextPhotoBtn').css('display', 'flex');
-                        } else {
-                            $('#prevPhotoBtn, #nextPhotoBtn').hide();
-                        }
-
-                        // Add keyboard support
-                        $(document).on('keydown.lightbox', handleLightboxKeyboard);
-                    } else {
-                        console.error('No photos found or API error');
-                        alert('Bu ürün için fotoğraf bulunamadı.');
-                    }
-                },
-                error: function (xhr, status, error) {
-                    console.error('AJAX Error:', xhr.responseText, status, error);
-                    alert('Fotoğraflar yüklenirken bir hata oluştu.');
-                }
-            });
-        };
-
-        // Close product gallery
-        window.closeProductGallery = function () {
-            $('#productPhotoLightbox').hide();
-            $('body').css('overflow', '');
-            $(document).off('keydown.lightbox');
-        };
-
-        // Show current photo
-        function showProductPhoto() {
-            const photo = currentProductPhotos[currentPhotoIndex];
-            $('#lightboxImage').attr('src', photo.dosya_yolu).attr('alt', photo.dosya_adi);
-            $('#lightboxProductName').text(currentProductName);
-            $('#lightboxPhotoCounter').text(`${currentPhotoIndex + 1} / ${currentProductPhotos.length}`);
-        }
-
-        // Navigate to next photo
-        window.nextProductPhoto = function () {
-            currentPhotoIndex = (currentPhotoIndex + 1) % currentProductPhotos.length;
-            showProductPhoto();
-        };
-
-        // Navigate to previous photo
-        window.previousProductPhoto = function () {
-            currentPhotoIndex = (currentPhotoIndex - 1 + currentProductPhotos.length) % currentProductPhotos.length;
-            showProductPhoto();
-        };
-
-        // Handle keyboard navigation
-        function handleLightboxKeyboard(e) {
-            if (e.key === 'Escape') {
-                closeProductGallery();
-            } else if (e.key === 'ArrowRight') {
-                nextProductPhoto();
-            } else if (e.key === 'ArrowLeft') {
-                previousProductPhoto();
-            }
-        }
-    </script>
+        </script>
 </body>
 
 </html>
