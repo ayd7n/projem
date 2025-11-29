@@ -608,6 +608,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap; /* Metinlerin tek satırda kalmasını sağlar */
         }
 
         .table th i {
@@ -617,6 +618,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
+            white-space: nowrap; /* Metinlerin tek satırda kalmasını sağlar */
+        }
+
+        .table-responsive.past-orders-table { /* Geçmiş siparişler tablosu için özel sınıf */
+            max-height: 400px; /* Maksimum yükseklik */
+            overflow-y: auto;  /* İçerik sığmazsa kaydırma çubuğu */
+            border: 1px solid var(--border-color); /* Kenarlık ekleyelim, daha derli toplu durur */
+            border-radius: 8px; /* Köşeleri yuvarlayalım */
         }
 
         .actions {
@@ -949,7 +958,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 </div>
             </div>
             <div class="card-body">
-                <div class="table-responsive">
+                <div class="table-responsive past-orders-table">
                     <table class="table table-hover">
                         <thead>
                             <tr>
