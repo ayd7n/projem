@@ -1,4 +1,7 @@
 <?php
+// Start output buffering to catch any unwanted output
+ob_start();
+
 // Enable error reporting for debugging but log to file instead of outputting to break JSON
 ini_set('display_errors', 0);
 ini_set('log_errors', 1);
@@ -8,6 +11,8 @@ error_reporting(E_ALL);
 register_shutdown_function(function () {
     $error = error_get_last();
     if ($error !== NULL && in_array($error['type'], [E_ERROR, E_PARSE, E_CORE_ERROR, E_COMPILE_ERROR])) {
+        // Clean any previous output
+        ob_clean();
         $response = ['status' => 'error', 'message' => 'Kritik hata: ' . $error['message'] . ' dosya: ' . $error['file'] . ' satır: ' . $error['line']];
         if (!headers_sent()) {
             header('Content-Type: application/json');
@@ -21,6 +26,8 @@ try {
     require_once '../includes/backup_functions.php'; // Include the new shared functions
     require_once '../includes/telegram_functions.php'; // For sending notifications
 
+    // Clear buffer before sending headers
+    ob_clean();
     header('Content-Type: application/json');
 
     // Check if user is logged in and is staff
@@ -167,9 +174,12 @@ try {
         }
     }
 
+    // Clean buffer one last time before outputting JSON
+    ob_clean();
     echo json_encode($response);
 
 } catch (Exception $e) {
+    ob_clean();
     echo json_encode(['status' => 'error', 'message' => 'Beklenmeyen hata: ' . $e->getMessage()]);
 }
 ?>

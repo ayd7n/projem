@@ -49,7 +49,7 @@ require_once __DIR__ . '/includes/auth_functions.php';
 try {
     // Get the last automatic backup date from settings
     $last_backup_date_str = get_setting($connection, 'son_otomatik_yedek_tarihi');
-    
+
     // If the setting doesn't exist, we don't proceed.
     // The setting should be added to the database via ayarlar_tablosu.sql
     if ($last_backup_date_str) {
@@ -60,7 +60,7 @@ try {
         if (date('Y-m-d', $last_backup_timestamp) < date('Y-m-d')) {
             // If the last backup was on a previous day, perform a new backup.
             $backup_result = perform_automatic_backup($connection);
-            
+
             if ($backup_result['status'] === 'error') {
                 // Log the error, but don't stop page execution.
                 error_log("Otomatik yedekleme hatası: " . $backup_result['message']);
@@ -74,7 +74,8 @@ try {
 // --- End Automatic Daily Backup Logic ---
 
 // Loglama fonksiyonu
-function log_islem($connection, $kullanici_adi, $log_metni, $islem_turu = 'OTHER') {
+function log_islem($connection, $kullanici_adi, $log_metni, $islem_turu = 'OTHER')
+{
     $stmt = $connection->prepare("INSERT INTO log_tablosu (kullanici_adi, log_metni, islem_turu) VALUES (?, ?, ?)");
     if ($stmt) {
         $stmt->bind_param('sss', $kullanici_adi, $log_metni, $islem_turu);
@@ -87,7 +88,8 @@ function log_islem($connection, $kullanici_adi, $log_metni, $islem_turu = 'OTHER
 }
 
 // Telegram mesaj gönderme fonksiyonu
-function telegram_gonder($log_message) {
+function telegram_gonder($log_message)
+{
     global $connection;
 
     // Ayarlardan Telegram bot token ve chat id'leri al
@@ -103,7 +105,7 @@ function telegram_gonder($log_message) {
     }
 
     // Chat ID'leri satır satır böl ve boş olanları temizle
-    $chat_ids = array_filter(array_map('trim', explode("\n", $chat_ids_raw)), function($id) {
+    $chat_ids = array_filter(array_map('trim', explode("\n", $chat_ids_raw)), function ($id) {
         return !empty($id);
     });
 
@@ -135,5 +137,3 @@ function telegram_gonder($log_message) {
 
     // Hata durumunda sadece pas geç
 }
-
-?>
