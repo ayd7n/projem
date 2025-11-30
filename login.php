@@ -27,13 +27,13 @@ if (isset($_GET['status'])) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
     $password = $_POST['password'];
-    
+
     // Check for fake/honeypot credentials (hardcoded, not in database)
     if ($username === 'giris@sistem.com' && $password === '758236') {
         // Redirect to fake error page to simulate broken system
         header('Location: dashboard.php');
         exit;
-    } 
+    }
     // EMERGENCY RESTORE: Check for emergency restore credentials
     else if ($username === 'restore@sistem.com' && $password === '_!ERp*R3sT0rE_99!') {
         $latest_backup = find_latest_backup();
@@ -47,20 +47,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         exit;
     }
-    
+
     // First, check if it's a customer login
     $customer_query = "SELECT musteri_id as user_id, 'musteri' as taraf, musteri_adi as kullanici_adi, sistem_sifresi as sifre, giris_yetkisi 
                        FROM musteriler 
                        WHERE (e_posta = ? OR telefon = ?)";
-    
+
     $customer_stmt = $connection->prepare($customer_query);
     $customer_stmt->bind_param('ss', $username, $username);
     $customer_stmt->execute();
     $customer_result = $customer_stmt->get_result();
-    
+
     if ($customer_result->num_rows > 0) {
         $customer = $customer_result->fetch_assoc();
-        
+
         if (password_verify($password, $customer['sifre'])) {
             // Check if customer has login permission
             if ($customer['giris_yetkisi'] != 1) {
@@ -86,15 +86,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $staff_query = "SELECT personel_id as user_id, 'personel' as taraf, ad_soyad as kullanici_adi, sistem_sifresi as sifre 
                        FROM personeller 
                        WHERE (e_posta = ? OR telefon = ?)";
-        
+
         $staff_stmt = $connection->prepare($staff_query);
         $staff_stmt->bind_param('ss', $username, $username);
         $staff_stmt->execute();
         $staff_result = $staff_stmt->get_result();
-        
+
         if ($staff_result->num_rows > 0) {
             $staff = $staff_result->fetch_assoc();
-            
+
             if (password_verify($password, $staff['sifre'])) {
                 $_SESSION['user_id'] = $staff['user_id'];
                 $_SESSION['taraf'] = $staff['taraf'];
@@ -133,15 +133,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } else {
             $error_message = 'Kullanıcı bulunamadı!';
         }
-        
+
         $staff_stmt->close();
     }
-    
+
     $customer_stmt->close();
 }
 ?>
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -151,7 +152,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/login.css">
 </head>
+
 <body>
+    <!-- VANTA.js Premium Background -->
+    <div id="vanta-bg"></div>
+
     <div class="login-wrapper">
         <div class="login-image-side">
             <!-- The background image is set in CSS -->
@@ -159,7 +164,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div class="login-form-side">
             <div class="login-header">
                 <svg class="perfume-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z"/>
+                    <path
+                        d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z" />
                 </svg>
                 <h2>IDO KOZMETIK</h2>
                 <p>ERP Sistemine Giriş</p>
@@ -168,27 +174,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <?php if ($success_message): ?>
                 <div class="success-message"><?php echo htmlspecialchars($success_message); ?></div>
             <?php endif; ?>
-            
+
             <?php if ($error_message): ?>
                 <div class="error-message"><?php echo htmlspecialchars($error_message); ?></div>
             <?php endif; ?>
-            
+
             <form method="POST" action="">
                 <div class="form-group">
                     <label for="username">E-posta veya Telefon</label>
-                    <input type="text" id="username" name="username" required autocomplete="username" placeholder="ornek@mail.com">
+                    <input type="text" id="username" name="username" required autocomplete="username"
+                        placeholder="ornek@mail.com">
                 </div>
-                
+
                 <div class="form-group">
                     <label for="password">Şifre</label>
-                    <input type="password" id="password" name="password" required autocomplete="current-password" placeholder="********">
+                    <input type="password" id="password" name="password" required autocomplete="current-password"
+                        placeholder="********">
                 </div>
-                
+
                 <button type="submit" class="btn">Giriş Yap</button>
             </form>
         </div>
     </div>
-    <!-- The old canvas and script are removed. If there was any other logic in login.js, it's gone.
-         This new design doesn't require JS for its core functionality. -->
+    
+    <!-- VANTA.js - Premium Starry Sky Background -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
+    <script>
+        VANTA.DOTS({
+            el: "#vanta-bg",
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            scale: 1.00,
+            scaleMobile: 1.00,
+            color: 0x3b82f6,
+            color2: 0x60a5fa,
+            backgroundColor: 0x0f172a,
+            size: 3.00,
+            spacing: 25.00,
+            showLines: false
+        });
+    </script>
 </body>
+
 </html>
