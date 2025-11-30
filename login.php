@@ -196,12 +196,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </form>
         </div>
     </div>
-    
-    <!-- VANTA.js - Premium Starry Sky Background -->
+
+    <!-- VANTA.js - Premium Network Background -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.dots.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
     <script>
-        VANTA.DOTS({
+        VANTA.NET({
             el: "#vanta-bg",
             mouseControls: true,
             touchControls: true,
@@ -211,12 +211,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             scale: 1.00,
             scaleMobile: 1.00,
             color: 0x3b82f6,
-            color2: 0x60a5fa,
             backgroundColor: 0x0f172a,
-            size: 3.00,
-            spacing: 25.00,
-            showLines: false
-        });
+            points: 10.00,
+            maxDistance: 20.00,
+            spacing: 15.00
+    });
     </script>
 </body>
 
