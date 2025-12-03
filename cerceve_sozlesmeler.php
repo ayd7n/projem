@@ -804,8 +804,14 @@ function display_date($date_string) {
                             showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                         }
                     });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Ensure complete cleanup when cancelled
+                } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
+                    // Ensure complete cleanup when cancelled or clicked outside
+                    setTimeout(() => {
+                        $('body').removeClass('swal2-no-backdrop swal2-shown');
+                        $('.swal2-container').remove();
+                    }, 100);
+                } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
+                    // Additional cleanup for other dismissal methods
                     setTimeout(() => {
                         $('body').removeClass('swal2-no-backdrop swal2-shown');
                         $('.swal2-container').remove();
@@ -905,10 +911,12 @@ function display_date($date_string) {
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Ödeme Yap',
                 cancelButtonText: 'İptal',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
                 didOpen: () => {
                     const input = Swal.getPopup().querySelector('#payment-amount');
                     const totalSpan = Swal.getPopup().querySelector('#total-amount');
-                    
+
                     input.oninput = () => {
                         let val = parseFloat(input.value) || 0;
                         if (val > maxQuantity) {
@@ -932,7 +940,7 @@ function display_date($date_string) {
             }).then((result) => {
                 if (result.isConfirmed) {
                     const quantity = result.value.quantity;
-                    
+
                     $.ajax({
                         url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
                         type: 'POST',
@@ -956,8 +964,14 @@ function display_date($date_string) {
                             Swal.fire('Hata!', 'İşlem sırasında bir hata oluştu.', 'error');
                         }
                     });
-                } else if (result.dismiss === Swal.DismissReason.cancel) {
-                    // Ensure complete cleanup when cancelled
+                } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
+                    // Ensure complete cleanup when cancelled or clicked outside
+                    setTimeout(() => {
+                        $('body').removeClass('swal2-no-backdrop swal2-shown');
+                        $('.swal2-container').remove();
+                    }, 100);
+                } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
+                    // Additional cleanup for other dismissal methods
                     setTimeout(() => {
                         $('body').removeClass('swal2-no-backdrop swal2-shown');
                         $('.swal2-container').remove();

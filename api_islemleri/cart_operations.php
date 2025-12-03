@@ -11,47 +11,48 @@ $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 if ($action === 'add_to_cart') {
     $urun_kodu = $_POST['urun_kodu'];
-    $adet = (int)$_POST['adet'];
-    
-    // Check if product exists and has enough stock
-    $check_query = "SELECT * FROM urunler WHERE urun_kodu = ? AND stok_miktari >= ?";
+    $adet = (int) $_POST['adet'];
+
+    // Check if product exists (no stock check)
+    $check_query = "SELECT * FROM urunler WHERE urun_kodu = ?";
     $check_stmt = $connection->prepare($check_query);
-    $check_stmt->bind_param('ii', $urun_kodu, $adet);
+    $check_stmt->bind_param('i', $urun_kodu);
     $check_stmt->execute();
     $check_result = $check_stmt->get_result();
-    
+
     if ($check_result->num_rows > 0) {
         // Handle cart in session
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = array();
         }
-        
+
         $cart = &$_SESSION['cart'];
-        
+
         // Add to cart
         if (isset($cart[$urun_kodu])) {
             $cart[$urun_kodu] += $adet;
         } else {
             $cart[$urun_kodu] = $adet;
         }
-        
+
         $_SESSION['cart'] = $cart;
-        
+
         echo json_encode([
-            'status' => 'success', 
-            'message' => 'Ürün sepete eklendi!'
+            'status' => 'success',
+            'message' => 'Ürün sepete eklendi!',
+            'total_different_products' => count($cart)
         ]);
     } else {
         echo json_encode([
-            'status' => 'error', 
-            'message' => 'Yeterli stok bulunmamaktadır!'
+            'status' => 'error',
+            'message' => 'Ürün bulunamadı!'
         ]);
     }
-    
+
     $check_stmt->close();
 } elseif ($action === 'remove_from_cart') {
     $urun_kodu = $_POST['urun_kodu'];
-    
+
     if (isset($_SESSION['cart'][$urun_kodu])) {
         unset($_SESSION['cart'][$urun_kodu]);
         echo json_encode(['status' => 'success', 'message' => 'Ürün sepetten kaldırıldı!']);
@@ -61,7 +62,7 @@ if ($action === 'add_to_cart') {
 } elseif ($action === 'get_cart_contents') {
     // Return current cart contents with product information
     $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
-    
+
     $cart_items = array();
 
     if (!empty($cart)) {
@@ -85,7 +86,7 @@ if ($action === 'add_to_cart') {
     }
 
     $total_items = count($cart_items);
-    
+
     echo json_encode([
         'status' => 'success',
         'cart_items' => $cart_items,
