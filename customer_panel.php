@@ -69,10 +69,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     $urun_kodu = $_POST['urun_kodu'];
     $adet = $_POST['adet'];
 
-    // Check if product exists and has enough stock
-    $check_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ? AND stok_miktari >= ?";
+    // Check if product exists (no stock check)
+    $check_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
     $check_stmt = $connection->prepare($check_query);
-    $check_stmt->bind_param('ii', $urun_kodu, $adet);
+    $check_stmt->bind_param('i', $urun_kodu);
     $check_stmt->execute();
     $check_result = $check_stmt->get_result();
 
@@ -86,7 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         $_SESSION['cart'] = $cart;
         $message = "Ürün sepete eklendi!";
     } else {
-        $error = "Yeterli stok bulunmamaktadır!";
+        $error = "Ürün bulunamadı!";
     }
 }
 
@@ -475,7 +475,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .quantity-input {
-            width: 60px;
+            width: 80px;
             padding: 0.5rem 0.75rem;
             border: 2px solid var(--border-color);
             border-radius: 6px;
