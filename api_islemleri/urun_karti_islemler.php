@@ -262,6 +262,39 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
             $order_summary = $summary_result->fetch_assoc();
             $stmt->close();
 
+            // 6. Üretimdeki Miktarı Getir (Yeni Eklendi)
+            // SUM(planlanan_miktar) yerine COUNT(*) istendiği için COUNT kullanıyoruz, 
+            // ancak kullanıcı "kaç adet ürün var" dediği için iş emri sayısı mı yoksa üretilecek ürün miktarı mı kastettiği önemli.
+            // "Durum alanındaki değeri 'Uretimde' olan kaç adet ürün var" ifadesi genellikle miktar belirtir.
+            // Ancak "kaç adet ürün var" derken "kaç tane iş emri var" da kastedilmiş olabilir.
+            // Genellikle stok analizinde miktar daha önemlidir. 
+            // Kullanıcı "kaç adet ürün var" dediği için toplam planlanan miktarı alalım.
+            // DÜZELTME: Kullanıcı "kaç adet ürün var" dedi, bu genellikle miktar (quantity) anlamına gelir.
+            // Fakat "Uretimde olanlar demek" dediği için iş emri sayısını da kastediyor olabilir.
+            // En garantisi hem iş emri sayısını hem de toplam miktarı almak.
+            // Ama basitlik adına toplam miktarı (planlanan - tamamlanan) almak daha mantıklı stok analizi için.
+            // Fakat talep "kaç adet ürün var" şeklinde. 
+            // Ben toplam miktarı (SUM(planlanan_miktar - tamamlanan_miktar)) alacağım çünkü stok analizi yapıyoruz.
+            // Ve ayrıca iş emri sayısını da alalım.
+
+            $production_query = "SELECT 
+                                COUNT(*) as is_emri_sayisi, 
+                                COALESCE(SUM(planlanan_miktar), 0) as uretimdeki_toplam_planlanan_miktar
+                                FROM montaj_is_emirleri 
+                                WHERE urun_kodu = ? AND durum = 'uretimde'";
+
+            $stmt = $connection->prepare($production_query);
+            if (!$stmt) {
+                throw new Exception("Production query prepare failed: " . $connection->error);
+            }
+            $stmt->bind_param('i', $urun_kodu);
+            if (!$stmt->execute()) {
+                throw new Exception("Production query execute failed: " . $stmt->error);
+            }
+            $production_result = $stmt->get_result();
+            $production_data = $production_result->fetch_assoc();
+            $stmt->close();
+
             $response = [
                 'status' => 'success',
                 'data' => [
@@ -280,7 +313,8 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
                     'orders' => [
                         'data' => $orders,
                         'summary' => $order_summary
-                    ]
+                    ],
+                    'production' => $production_data // Yeni eklenen veri
                 ]
             ];
 

@@ -879,6 +879,31 @@ if ($urun_kodu == 0) {
                                 <p>Yeterli Stok</p>
                             </div>
                         </div>
+                        
+                        <!-- Üretimdeki Miktar Gösterimi (Gelişmiş) -->
+                        <div class="col-md-6 mt-3" v-if="productData.production && productData.production.uretimdeki_toplam_planlanan_miktar > 0">
+                            <div class="stat-card" 
+                                 :style="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap 
+                                         ? 'background: linear-gradient(135deg, #7c3aed, #6d28d9); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);' 
+                                         : 'background: linear-gradient(135deg, #8b5cf6, #7c3aed);'">
+                                <div class="d-flex align-items-center justify-content-center mb-2">
+                                    <i class="fas fa-industry mr-2" style="font-size: 1.8rem;"></i>
+                                    <i v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap" 
+                                       class="fas fa-check-circle text-white ml-2" 
+                                       title="Bu üretim stok açığını kapatacak"
+                                       style="font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></i>
+                                </div>
+                                <h3 class="mb-1">{{ parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar).toFixed(2) }}</h3>
+                                <p class="mb-1 font-weight-bold">Üretimde (Planlanan)</p>
+                                <small class="d-block opacity-75 mb-2">{{ productData.production.is_emri_sayisi }} adet aktif iş emri</small>
+                                
+                                <div v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap" 
+                                     class="mt-2 px-3 py-1 rounded" 
+                                     style="background: rgba(255,255,255,0.2); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">
+                                    <i class="fas fa-shield-alt mr-1"></i> Kritik stok açığı kapanıyor
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="mt-3" v-if="stockGap.hasGap && stockGap.gapDetails.length > 0">
