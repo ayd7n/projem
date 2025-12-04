@@ -172,6 +172,28 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
             }
             $bom_components = [];
             while ($row = $bom_result->fetch_assoc()) {
+                // Check for planned essence production
+                if ($row['bilesen_turu'] === 'esans') {
+                    // Calculate total planned quantity from active work orders
+                    $esans_query = "SELECT SUM(planlanan_miktar) as total_planned 
+                                  FROM esans_is_emirleri 
+                                  WHERE esans_kodu = ? 
+                                  AND durum IN ('olusturuldu', 'uretimde')";
+
+                    // Create a new statement for the inner query
+                    $stmt_esans = $connection->prepare($esans_query);
+                    if ($stmt_esans) {
+                        $stmt_esans->bind_param('s', $row['bilesen_kodu']);
+                        $stmt_esans->execute();
+                        $res_esans = $stmt_esans->get_result();
+                        $row['planlanan_uretim'] = $res_esans->fetch_assoc()['total_planned'] ?? 0;
+                        $stmt_esans->close();
+                    } else {
+                        $row['planlanan_uretim'] = 0;
+                    }
+                } else {
+                    $row['planlanan_uretim'] = 0;
+                }
                 $bom_components[] = $row;
             }
             $stmt->close();
