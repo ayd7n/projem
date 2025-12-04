@@ -45,26 +45,27 @@ if ($urun_kodu == 0) {
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
-            --primary: #5a189a;
-            --secondary: #7b2cbf;
-            --accent: #ff9f1c;
-            --success: #2a9d8f;
-            --danger: #e63946;
-            --warning: #fca311;
-            --info: #4361ee;
-            --bg-color: #f8f9fa;
+            --primary: #6366f1;
+            --secondary: #8b5cf6;
+            --accent: #f59e0b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg-color: #f1f5f9;
             --card-bg: #ffffff;
-            --border-color: #dee2e6;
-            --text-primary: #212529;
-            --text-secondary: #6c757d;
-            --shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-            --transition: all 0.3s ease;
-            --border-radius: 12px;
-            --card-padding: 24px;
+            --border-color: #e2e8f0;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            --border-radius: 16px;
+            --card-padding: 20px;
         }
 
         html {
-            font-size: 15px;
+            font-size: 14px;
         }
 
         * {
@@ -75,94 +76,87 @@ if ($urun_kodu == 0) {
 
         body {
             font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-color);
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
             color: var(--text-primary);
+            min-height: 100vh;
         }
 
         .main-content {
-            padding: 25px;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
         .page-header {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
-            gap: 18px;
+            gap: 15px;
         }
 
         .page-header h1 {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             font-weight: 700;
             margin: 0;
             color: var(--text-primary);
-            position: relative;
             display: flex;
             align-items: center;
-            gap: 12px;
-        }
-
-        .page-header h1::after {
-            content: '';
-            position: absolute;
-            bottom: -5px;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 3px;
+            gap: 10px;
         }
 
         .back-btn {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
             transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(90, 24, 154, 0.3);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
             border: none;
         }
 
         .back-btn:hover {
             background: linear-gradient(135deg, var(--secondary), var(--primary));
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: 0 6px 16px rgba(90, 24, 154, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
             color: white;
         }
 
         .card {
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            border: none;
-            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            margin-bottom: 18px;
             overflow: hidden;
             transition: var(--transition);
         }
 
         .card:hover {
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            box-shadow: var(--shadow-hover);
+            transform: translateY(-2px);
         }
 
         .card-header {
-            padding: 20px var(--card-padding);
-            border-bottom: 1px solid var(--border-color);
+            padding: 14px var(--card-padding);
+            border-bottom: none;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
             border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
         }
 
         .card-header h2 {
-            font-size: 1.1rem;
+            font-size: 1rem;
             font-weight: 700;
             margin: 0;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .card-body {
@@ -172,96 +166,123 @@ if ($urun_kodu == 0) {
         .stat-card {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            border-radius: var(--border-radius);
-            padding: 24px;
+            border-radius: 14px;
+            padding: 18px;
             text-align: center;
             height: 100%;
-            box-shadow: var(--shadow);
+            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
             transition: var(--transition);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            transition: var(--transition);
         }
 
         .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.3);
+        }
+
+        .stat-card:hover::before {
+            top: -30%;
+            right: -30%;
         }
 
         .stat-card h3 {
-            font-size: 2.2rem;
-            margin: 10px 0;
+            font-size: 1.8rem;
+            margin: 8px 0;
             font-weight: 700;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-card p {
             margin: 0;
-            opacity: 0.9;
-            font-size: 0.95rem;
+            opacity: 0.95;
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-card i {
-            font-size: 2.8rem;
-            opacity: 0.9;
-            margin-bottom: 12px;
+            font-size: 2rem;
+            opacity: 0.95;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-content {
             text-align: center;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .photo-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 15px;
         }
 
         .photo-item {
             position: relative;
-            border-radius: var(--border-radius);
+            border-radius: 12px;
             overflow: hidden;
             cursor: pointer;
             transition: var(--transition);
             border: 2px solid var(--border-color);
             box-shadow: var(--shadow);
+            background: white;
         }
 
         .photo-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-hover);
+            border-color: var(--primary);
         }
 
         .photo-item img {
             width: 100%;
-            height: 220px;
+            height: 180px;
             object-fit: cover;
             transition: var(--transition);
         }
 
         .photo-item:hover img {
-            transform: scale(1.05);
+            transform: scale(1.08);
         }
 
         .primary-badge {
             position: absolute;
-            top: 12px;
-            left: 12px;
+            top: 10px;
+            left: 10px;
             background: linear-gradient(135deg, var(--warning), var(--accent));
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.75rem;
+            padding: 5px 10px;
+            border-radius: 8px;
+            font-size: 0.7rem;
             font-weight: 600;
             z-index: 10;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
 
         .table {
             margin-bottom: 0;
             border-collapse: separate;
             border-spacing: 0;
+            font-size: 0.9rem;
         }
 
         .table th {
@@ -269,14 +290,15 @@ if ($urun_kodu == 0) {
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
-            background-color: rgba(0, 0, 0, 0.02);
-            padding: 14px 12px;
+            background: linear-gradient(to bottom, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
+            padding: 10px 12px;
+            font-size: 0.85rem;
         }
 
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
-            padding: 12px;
+            padding: 10px 12px;
             border-top: 1px solid var(--border-color);
         }
 
@@ -285,11 +307,11 @@ if ($urun_kodu == 0) {
         }
 
         .table tr:hover {
-            background-color: rgba(0, 0, 0, 0.02);
+            background: linear-gradient(to right, rgba(99, 102, 241, 0.03), rgba(139, 92, 246, 0.03));
         }
 
         .table-header {
-            background-color: rgba(0, 0, 0, 0.03) !important;
+            background: linear-gradient(to bottom, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08)) !important;
         }
 
         .table-row {
@@ -297,140 +319,236 @@ if ($urun_kodu == 0) {
         }
 
         .badge-in {
-            background: linear-gradient(135deg, var(--success), #26c485);
+            background: linear-gradient(135deg, var(--success), #059669);
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
         }
 
         .badge-out {
-            background: linear-gradient(135deg, var(--danger), #f28482);
+            background: linear-gradient(135deg, var(--danger), #dc2626);
             color: white;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
             font-weight: 600;
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
         }
 
         .empty-state {
             text-align: center;
-            padding: 40px 20px;
+            padding: 30px 20px;
             color: var(--text-secondary);
-            background-color: rgba(0, 0, 0, 0.02);
-            border-radius: var(--border-radius);
-            margin: 20px 0;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(139, 92, 246, 0.03));
+            border-radius: 12px;
+            margin: 15px 0;
+            border: 2px dashed var(--border-color);
         }
 
         .empty-state i {
-            font-size: 3.5rem;
-            opacity: 0.4;
-            margin-bottom: 15px;
+            font-size: 2.8rem;
+            opacity: 0.3;
+            margin-bottom: 12px;
             color: var(--text-secondary);
         }
 
         .empty-state p {
-            font-size: 1.1rem;
+            font-size: 1rem;
             margin: 0;
         }
 
         .info-item {
             display: flex;
             align-items: flex-start;
-            gap: 15px;
-            padding: 12px 0;
+            gap: 12px;
+            padding: 8px 0;
         }
 
         .info-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 16px;
+            font-size: 14px;
             flex-shrink: 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
 
         .info-value {
             font-weight: 600;
             color: var(--text-primary);
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .stat-summary-card {
-            border-radius: var(--border-radius);
-            padding: 18px;
+            border-radius: 12px;
+            padding: 14px 16px;
             color: white;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
             transition: var(--transition);
             height: 100%;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-summary-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            transform: translate(30%, -30%);
         }
 
         .stat-summary-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
         }
 
         .stat-summary-card i {
-            font-size: 1.8rem;
+            font-size: 1.6rem;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .stat-summary-card h4,
         .stat-summary-card small {
             margin: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-summary-card h4 {
+            font-size: 1.4rem;
         }
 
         .stat-summary-card small {
-            opacity: 0.85;
-            font-size: 0.8rem;
+            opacity: 0.9;
+            font-size: 0.75rem;
         }
+
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
+            color: #92400e;
+            border-left: 4px solid #f59e0b;
+        }
+
+        .alert-success {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+            color: #065f46;
+            border-left: 4px solid #10b981;
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
+            color: #1e3a8a;
+            border-left: 4px solid #3b82f6;
+        }
+
+        .badge {
+            border-radius: 8px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #10b981, #34d399);
+            color: white;
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #f59e0b, #fbbf24);
+            color: white;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+        }
+
+        .badge-info {
+            background: linear-gradient(135deg, #3b82f6, #60a5fa);
+            color: white;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+        }
+
+        .badge-secondary {
+            background: linear-gradient(135deg, #64748b, #94a3b8);
+            color: white;
+            box-shadow: 0 2px 6px rgba(100, 116, 139, 0.2);
+        }
+
+        .badge-danger {
+            background: linear-gradient(135deg, #ef4444, #f87171);
+            color: white;
+            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+        }
+
 
         @media (max-width: 768px) {
             .photo-gallery {
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+
+            .photo-item img {
+                height: 140px;
             }
 
             .stat-card h3 {
-                font-size: 1.7rem;
+                font-size: 1.5rem;
             }
 
             .stat-card i {
-                font-size: 2.2rem;
+                font-size: 1.8rem;
             }
 
             .info-item {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 8px;
+                gap: 6px;
             }
 
             .info-icon {
-                width: 35px;
-                height: 35px;
-                font-size: 14px;
+                width: 32px;
+                height: 32px;
+                font-size: 13px;
             }
 
             .stat-summary-card {
                 flex-direction: column;
                 align-items: flex-start;
                 text-align: left;
-                gap: 10px;
+                gap: 8px;
+                padding: 12px;
             }
 
             .stat-summary-card i {
-                font-size: 1.5rem;
+                font-size: 1.4rem;
             }
 
             .page-header {
@@ -440,21 +558,21 @@ if ($urun_kodu == 0) {
             }
 
             .main-content {
-                padding: 15px;
+                padding: 12px;
+            }
+
+            .card-body {
+                padding: 16px;
             }
         }
 
         @media (max-width: 576px) {
             .photo-gallery {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr;
             }
 
             .stat-summary-card {
-                padding: 15px;
-            }
-
-            .card-body {
-                padding: 20px;
+                padding: 12px;
             }
         }
     </style>
@@ -521,100 +639,114 @@ if ($urun_kodu == 0) {
                     <h2><i class="fas fa-info-circle"></i> Ürün Bilgileri</h2>
                 </div>
                 <div class="card-body">
-                            <div class="row">
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-barcode info-icon" style="background: linear-gradient(135deg, #a663cc, #4a0e63);"></i>
-                                        <div>
-                                            <small class="text-muted">Ürün Kodu</small>
-                                            <p class="mb-0 info-value">{{ productData.product.urun_kodu }}</p>
-                                        </div>
-                                    </div>
+                    <div class="row">
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-barcode info-icon"
+                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Ürün Kodu</small>
+                                    <p class="mb-0 info-value">{{ productData.product.urun_kodu }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-tag info-icon" style="background: linear-gradient(135deg, #7b2cbf, #5a189a);"></i>
-                                        <div>
-                                            <small class="text-muted">Ürün İsmi</small>
-                                            <p class="mb-0 info-value">{{ productData.product.urun_ismi }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-tag info-icon"
+                                    style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Ürün İsmi</small>
+                                    <p class="mb-0 info-value">{{ productData.product.urun_ismi }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-ruler info-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);"></i>
-                                        <div>
-                                            <small class="text-muted">Birim</small>
-                                            <p class="mb-0 info-value">{{ productData.product.birim }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-ruler info-icon"
+                                    style="background: linear-gradient(135deg, #3b82f6, #60a5fa);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Birim</small>
+                                    <p class="mb-0 info-value">{{ productData.product.birim }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-money-bill-wave info-icon" style="background: linear-gradient(135deg, #2a9d8f, #2a9d8f);"></i>
-                                        <div>
-                                            <small class="text-muted">Satış Fiyatı</small>
-                                            <p class="mb-0 info-value">{{ formatCurrency(productData.product.satis_fiyati) }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-money-bill-wave info-icon"
+                                    style="background: linear-gradient(135deg, #10b981, #34d399);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Satış Fiyatı</small>
+                                    <p class="mb-0 info-value">{{ formatCurrency(productData.product.satis_fiyati) }}
+                                    </p>
                                 </div>
-                                <div class="col-md-6 mb-4" v-if="productData.product.teorik_maliyet !== undefined">
-                                    <div class="info-item">
-                                        <i class="fas fa-calculator info-icon" style="background: linear-gradient(135deg, #fca311, #f72585);"></i>
-                                        <div>
-                                            <small class="text-muted">Teorik Maliyet</small>
-                                            <p class="mb-0 info-value">{{ formatCurrency(productData.product.teorik_maliyet) }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3"
+                            v-if="productData.product.teorik_maliyet !== undefined">
+                            <div class="info-item">
+                                <i class="fas fa-calculator info-icon"
+                                    style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Teorik Maliyet</small>
+                                    <p class="mb-0 info-value">{{ formatCurrency(productData.product.teorik_maliyet) }}
+                                    </p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-warehouse info-icon" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);"></i>
-                                        <div>
-                                            <small class="text-muted">Depo</small>
-                                            <p class="mb-0 info-value">{{ productData.product.depo }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-warehouse info-icon"
+                                    style="background: linear-gradient(135deg, #3b82f6, #60a5fa);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Depo</small>
+                                    <p class="mb-0 info-value">{{ productData.product.depo }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-boxes info-icon" style="background: linear-gradient(135deg, #2a9d8f, #2a9d8f);"></i>
-                                        <div>
-                                            <small class="text-muted">Mevcut Stok</small>
-                                            <p class="mb-0 info-value">{{ productData.product.stok_miktari }} {{ productData.product.birim }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-boxes info-icon"
+                                    style="background: linear-gradient(135deg, #10b981, #34d399);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Mevcut Stok</small>
+                                    <p class="mb-0 info-value">{{ productData.product.stok_miktari }} {{
+                                        productData.product.birim }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-cube info-icon" style="background: linear-gradient(135deg, #ff9f1c, #ff5400);"></i>
-                                        <div>
-                                            <small class="text-muted">Raf</small>
-                                            <p class="mb-0 info-value">{{ productData.product.raf }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-cube info-icon"
+                                    style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Raf</small>
+                                    <p class="mb-0 info-value">{{ productData.product.raf }}</p>
                                 </div>
-                                <div class="col-md-6 mb-4">
-                                    <div class="info-item">
-                                        <i class="fas fa-exclamation-triangle info-icon" style="background: linear-gradient(135deg, #e63946, #d90429);"></i>
-                                        <div>
-                                            <small class="text-muted">Kritik Stok Seviyesi</small>
-                                            <p class="mb-0 info-value">{{ productData.product.kritik_stok_seviyesi }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-md-4 col-6 mb-3">
+                            <div class="info-item">
+                                <i class="fas fa-exclamation-triangle info-icon"
+                                    style="background: linear-gradient(135deg, #ef4444, #f87171);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Kritik Stok</small>
+                                    <p class="mb-0 info-value">{{ productData.product.kritik_stok_seviyesi }}</p>
                                 </div>
-                                <div class="col-12 mb-4" v-if="productData.product.not_bilgisi">
-                                    <div class="info-item">
-                                        <i class="fas fa-sticky-note info-icon" style="background: linear-gradient(135deg, #4cc9f0, #3a0ca3);"></i>
-                                        <div>
-                                            <small class="text-muted">Not</small>
-                                            <p class="mb-0 info-value">{{ productData.product.not_bilgisi }}</p>
-                                        </div>
-                                    </div>
+                            </div>
+                        </div>
+                        <div class="col-12 mb-3" v-if="productData.product.not_bilgisi">
+                            <div class="info-item">
+                                <i class="fas fa-sticky-note info-icon"
+                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"></i>
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">Not</small>
+                                    <p class="mb-0 info-value">{{ productData.product.not_bilgisi }}</p>
                                 </div>
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
 
             <!-- Stok Analizi -->
             <div class="card" v-if="stockGap">
@@ -626,8 +758,10 @@ if ($urun_kodu == 0) {
                         <div class="col-md-12">
                             <div class="alert" :class="stockGap.hasGap ? 'alert-warning' : 'alert-success'">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>Kritik Stok Seviyesi:</strong> {{ productData.product.kritik_stok_seviyesi }} {{ productData.product.birim }} |
-                                <strong>Mevcut Stok:</strong> {{ productData.product.stok_miktari }} {{ productData.product.birim }}
+                                <strong>Kritik Stok Seviyesi:</strong> {{ productData.product.kritik_stok_seviyesi }} {{
+                                productData.product.birim }} |
+                                <strong>Mevcut Stok:</strong> {{ productData.product.stok_miktari }} {{
+                                productData.product.birim }}
                                 <span v-if="stockGap.hasGap">
                                     | <strong>Stok Açığı:</strong> {{ stockGap.gap }} {{ productData.product.birim }}
                                     ({{ stockGap.gapPercentage }}%)
@@ -638,7 +772,7 @@ if ($urun_kodu == 0) {
                             </div>
                         </div>
                         <div class="col-md-6" v-if="stockGap.hasGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #5a189a, #7b2cbf);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                                 <i class="fas fa-calculator"></i>
                                 <div class="stat-content">
                                     <h3>{{ stockGap.producibleForGap }}</h3>
@@ -647,7 +781,7 @@ if ($urun_kodu == 0) {
                             </div>
                         </div>
                         <div class="col-md-6" v-if="stockGap.hasGap && !stockGap.canCoverGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #e63946, #d90429);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #f87171);">
                                 <i class="fas fa-exclamation-triangle"></i>
                                 <div class="stat-content">
                                     <h3>{{ stockGap.gap - stockGap.producibleForGap }}</h3>
@@ -656,7 +790,7 @@ if ($urun_kodu == 0) {
                             </div>
                         </div>
                         <div class="col-md-6" v-else-if="!stockGap.hasGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #2a9d8f, #2a9d8f);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
                                 <i class="fas fa-check-circle"></i>
                                 <div class="stat-content">
                                     <h3>{{ productData.product.stok_miktari }}</h3>
@@ -668,7 +802,8 @@ if ($urun_kodu == 0) {
 
                     <div class="mt-3" v-if="stockGap.hasGap && stockGap.gapDetails.length > 0">
                         <h4><i class="fas fa-exclamation-triangle text-warning"></i> Eksik Bileşenler</h4>
-                        <p>Stok seviyesini kritik seviyeye çıkarmak için aşağıdaki bileşenlerden talep/giderilmelidir:</p>
+                        <p>Stok seviyesini kritik seviyeye çıkarmak için aşağıdaki bileşenlerden talep/giderilmelidir:
+                        </p>
                         <div class="table-responsive">
                             <table class="table table-sm">
                                 <thead>
@@ -690,7 +825,8 @@ if ($urun_kodu == 0) {
                                         <td>{{ detail.code }}</td>
                                         <td>{{ Math.ceil(detail.needed) }} {{ detail.unit }}</td>
                                         <td>{{ detail.available }} {{ detail.unit }}</td>
-                                        <td class="text-danger font-weight-bold">{{ Math.ceil(detail.shortfall) }} {{ detail.unit }}</td>
+                                        <td class="text-danger font-weight-bold">{{ Math.ceil(detail.shortfall) }} {{
+                                            detail.unit }}</td>
                                         <td>{{ detail.unit }}</td>
                                     </tr>
                                 </tbody>
@@ -701,7 +837,8 @@ if ($urun_kodu == 0) {
                     <div class="mt-3" v-else-if="stockGap.hasGap && stockGap.canCoverGap">
                         <div class="alert alert-success">
                             <i class="fas fa-check-circle"></i> <strong>Harika!</strong>
-                            Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip kritik seviyeye ulaşabilirsiniz.
+                            Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip
+                            kritik seviyeye ulaşabilirsiniz.
                         </div>
                     </div>
                 </div>
@@ -761,12 +898,14 @@ if ($urun_kodu == 0) {
                                     <td><strong>{{ movement.miktar }} {{ movement.birim }}</strong></td>
                                     <td>{{ movement.depo || '-' }}</td>
                                     <td>{{ movement.raf || '-' }}</td>
-                                    <td class="text-truncate" :title="movement.aciklama || '-'">{{ movement.aciklama || '-' }}</td>
+                                    <td class="text-truncate" :title="movement.aciklama || '-'">{{ movement.aciklama ||
+                                        '-' }}</td>
                                 </tr>
                             </tbody>
                         </table>
                         <div class="text-center mt-3">
-                            <small class="text-muted">Tüm stok hareketleri için <a href="manuel_stok_hareket.php">stok hareketleri sayfasını</a> ziyaret edin</small>
+                            <small class="text-muted">Tüm stok hareketleri için <a href="manuel_stok_hareket.php">stok
+                                    hareketleri sayfasını</a> ziyaret edin</small>
                         </div>
                     </div>
                 </div>
@@ -780,7 +919,8 @@ if ($urun_kodu == 0) {
                 </div>
                 <div class="card-body">
                     <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle"></i> <strong>Bu ürün ağacına göre mevcut stoklarla üretilebilir:</strong>
+                        <i class="fas fa-info-circle"></i> <strong>Bu ürün ağacına göre mevcut stoklarla
+                            üretilebilir:</strong>
                         <span class="font-weight-bold ml-2">{{ producibleQuantity }} adet</span>
                     </div>
                     <div class="table-responsive">
@@ -793,11 +933,13 @@ if ($urun_kodu == 0) {
                                     <th><i class="fas fa-sort-numeric-up"></i> Gerekli Miktar</th>
                                     <th><i class="fas fa-warehouse"></i> Mevcut Stok</th>
                                     <th><i class="fas fa-calculator"></i> Üretilebilir</th>
-                                    <th v-if="contractsLoaded"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmesi</th>
+                                    <th v-if="contractsLoaded"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmesi
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="component in productData.bom_components" :key="component.id" class="table-row">
+                                <tr v-for="component in productData.bom_components" :key="component.id"
+                                    class="table-row">
                                     <td>
                                         <span class="badge badge-info">{{ component.bilesen_turu }}</span>
                                     </td>
@@ -806,21 +948,25 @@ if ($urun_kodu == 0) {
                                     <td>{{ component.bilesen_miktari }} {{ component.bilesen_birim }}</td>
                                     <td>{{ component.bilesen_stok }} {{ component.bilesen_birim }}</td>
                                     <td>
-                                        <span class="font-weight-bold"
-                                              :class="{
+                                        <span class="font-weight-bold" :class="{
                                                   'text-success': canProduceEnough(component),
                                                   'text-danger': !canProduceEnough(component)
                                               }">
-                                            {{ component.bilesen_miktari > 0 ? Math.floor(component.bilesen_stok / component.bilesen_miktari) : 0 }} adet
+                                            {{ component.bilesen_miktari > 0 ? Math.floor(component.bilesen_stok /
+                                            component.bilesen_miktari) : 0 }} adet
                                         </span>
                                     </td>
                                     <td v-if="contractsLoaded">
-                                        <div v-if="component.bilesen_turu !== 'esans' && getContractForComponent(component.bilesen_kodu)">
+                                        <div
+                                            v-if="component.bilesen_turu !== 'esans' && getContractForComponent(component.bilesen_kodu)">
                                             <span class="badge badge-success">
-                                                {{ getContractForComponent(component.bilesen_kodu).sozlesme_id }} - {{ getContractForComponent(component.bilesen_kodu).tedarikci_adi }}
+                                                {{ getContractForComponent(component.bilesen_kodu).sozlesme_id }} - {{
+                                                getContractForComponent(component.bilesen_kodu).tedarikci_adi }}
                                             </span>
                                             <div class="mt-1">
-                                                <small class="text-muted">Kalan: {{ getContractForComponent(component.bilesen_kodu).kalan_miktar }} {{ component.bilesen_birim }}</small>
+                                                <small class="text-muted">Kalan: {{
+                                                    getContractForComponent(component.bilesen_kodu).kalan_miktar }} {{
+                                                    component.bilesen_birim }}</small>
                                             </div>
                                         </div>
                                         <div v-else-if="component.bilesen_turu !== 'esans'">
@@ -844,9 +990,10 @@ if ($urun_kodu == 0) {
                 </div>
                 <div class="card-body">
                     <!-- Sipariş Özeti -->
-                    <div class="row mb-4">
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="stat-summary-card" style="background: linear-gradient(135deg, #4361ee, #3a0ca3);">
+                    <div class="row mb-3">
+                        <div class="col-lg-3 col-md-6 col-6 mb-2">
+                            <div class="stat-summary-card"
+                                style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
                                 <i class="fas fa-shopping-bag"></i>
                                 <div>
                                     <h4 class="mb-0">{{ activeOrders.length || 0 }}</h4>
@@ -854,8 +1001,9 @@ if ($urun_kodu == 0) {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="stat-summary-card" style="background: linear-gradient(135deg, #fca311, #f72585);">
+                        <div class="col-lg-3 col-md-6 col-6 mb-2">
+                            <div class="stat-summary-card"
+                                style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
                                 <i class="fas fa-sort-numeric-up"></i>
                                 <div>
                                     <h4 class="mb-0">{{ calculateActiveOrdersTotal() || 0 }}</h4>
@@ -863,8 +1011,9 @@ if ($urun_kodu == 0) {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="stat-summary-card" style="background: linear-gradient(135deg, #2a9d8f, #2a9d8f);">
+                        <div class="col-lg-3 col-md-6 col-6 mb-2">
+                            <div class="stat-summary-card"
+                                style="background: linear-gradient(135deg, #10b981, #34d399);">
                                 <i class="fas fa-check-circle"></i>
                                 <div>
                                     <h4 class="mb-0">{{ productData.orders.summary.tamamlanan_siparis || 0 }}</h4>
@@ -872,8 +1021,9 @@ if ($urun_kodu == 0) {
                                 </div>
                             </div>
                         </div>
-                        <div class="col-md-3 col-6 mb-3">
-                            <div class="stat-summary-card" style="background: linear-gradient(135deg, #7b2cbf, #5a189a);">
+                        <div class="col-lg-3 col-md-6 col-6 mb-2">
+                            <div class="stat-summary-card"
+                                style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
                                 <i class="fas fa-tools"></i>
                                 <div>
                                     <h4 class="mb-0">{{ productData.orders.summary.hazirlanan_siparis || 0 }}</h4>
@@ -1047,32 +1197,32 @@ if ($urun_kodu == 0) {
                         fetch(`api_islemleri/urun_karti_islemler.php?action=get_product_card&urun_kodu=${this.urunKodu}`),
                         timeoutPromise
                     ])
-                    .then(response => {
-                        if (response.status === 404) {
-                            throw new Error('API endpoint bulunamadı. Lütfen geliştirici ile iletişime geçin.');
-                        }
-                        return response.json();
-                    })
-                    .then(response => {
-                        if (response.status === 'success') {
-                            this.productData = response.data;
-                            // Load frame contracts after product data is loaded
-                            this.loadFrameContracts();
-                        } else {
-                            this.error = response.message || 'Ürün bilgileri yüklenirken hata oluştu.';
-                        }
-                        this.loading = false;
-                    })
-                    .catch(error => {
-                        if (error.message.includes('zaman aşımı')) {
-                            this.error = error.message;
-                        } else if (error.message.includes('endpoint bulunamadı')) {
-                            this.error = error.message;
-                        } else {
-                            this.error = 'Bir ağ hatası oluştu: ' + error.message;
-                        }
-                        this.loading = false;
-                    });
+                        .then(response => {
+                            if (response.status === 404) {
+                                throw new Error('API endpoint bulunamadı. Lütfen geliştirici ile iletişime geçin.');
+                            }
+                            return response.json();
+                        })
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.productData = response.data;
+                                // Load frame contracts after product data is loaded
+                                this.loadFrameContracts();
+                            } else {
+                                this.error = response.message || 'Ürün bilgileri yüklenirken hata oluştu.';
+                            }
+                            this.loading = false;
+                        })
+                        .catch(error => {
+                            if (error.message.includes('zaman aşımı')) {
+                                this.error = error.message;
+                            } else if (error.message.includes('endpoint bulunamadı')) {
+                                this.error = error.message;
+                            } else {
+                                this.error = 'Bir ağ hatası oluştu: ' + error.message;
+                            }
+                            this.loading = false;
+                        });
                 },
                 formatCurrency(value) {
                     if (value === null || value === undefined) return '0.00 ₺';
