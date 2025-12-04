@@ -317,6 +317,209 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
             $production_data = $production_result->fetch_assoc();
             $stmt->close();
 
+            // 7. Durum Özeti Hesaplama (Enhanced)
+            $durum_ozeti = [];
+
+            // Stok Durumu - Enhanced
+            $stok_miktari = floatval($product['stok_miktari']);
+            $kritik_seviye = floatval($product['kritik_stok_seviyesi']);
+            $stok_yuzde = $kritik_seviye > 0 ? ($stok_miktari / $kritik_seviye) * 100 : 100;
+
+            $durum_ozeti['stok_durumu'] = [
+                'deger' => $stok_miktari,
+                'kritik_seviye' => $kritik_seviye,
+                'birim' => $product['birim'],
+                'yuzde' => round($stok_yuzde, 2),
+                'durum' => $stok_miktari >= $kritik_seviye ? 'success' : ($stok_miktari >= $kritik_seviye * 0.5 ? 'warning' : 'danger'),
+                'durum_text' => $stok_miktari >= $kritik_seviye ? 'Yeterli' : ($stok_miktari >= $kritik_seviye * 0.5 ? 'Kritik seviyeye yakın' : 'Kritik seviyenin altında')
+            ];
+
+            // Stok Açığı - Enhanced
+            $stok_acigi = max(0, $kritik_seviye - $stok_miktari);
+            $yuzde_eksik = $kritik_seviye > 0 ? ($stok_acigi / $kritik_seviye) * 100 : 0;
+
+            $durum_ozeti['stok_acigi'] = [
+                'deger' => $stok_acigi,
+                'kritik_seviye' => $kritik_seviye,
+                'birim' => $product['birim'],
+                'yuzde_eksik' => round($yuzde_eksik, 2),
+                'durum' => $stok_acigi > 0 ? ($stok_acigi > $kritik_seviye * 0.5 ? 'danger' : 'warning') : 'success'
+            ];
+
+            // Üretilebilir Miktar - Enhanced (bileşenlere göre minimum)
+            $uretilebilir = PHP_INT_MAX;
+            $sinir_bilesen = '';
+            $sinir_bilesen_stok = 0;
+
+            if (!empty($bom_components)) {
+                foreach ($bom_components as $component) {
+                    $gerekli = floatval($component['bilesen_miktari']);
+                    $mevcut = floatval($component['bilesen_stok']);
+                    if ($gerekli > 0) {
+                        $bu_bilesenden_uretilebilir = floor($mevcut / $gerekli);
+                        if ($bu_bilesenden_uretilebilir < $uretilebilir) {
+                            $uretilebilir = $bu_bilesenden_uretilebilir;
+                            $sinir_bilesen = $component['bilesen_ismi'];
+                            $sinir_bilesen_stok = $mevcut;
+                        }
+                    }
+                }
+                if ($uretilebilir === PHP_INT_MAX) {
+                    $uretilebilir = 0;
+                }
+            } else {
+                $uretilebilir = 0;
+            }
+
+            $acik_kapatma_orani = $stok_acigi > 0 ? round(($uretilebilir / $stok_acigi) * 100, 0) : 0;
+
+            $durum_ozeti['uretilebilir'] = [
+                'deger' => $uretilebilir,
+                'birim' => 'adet',
+                'acik_kapatma_orani' => $acik_kapatma_orani,
+                'sinir_bilesen' => $sinir_bilesen,
+                'sinir_bilesen_stok' => $sinir_bilesen_stok,
+                'durum' => $uretilebilir >= $stok_acigi ? 'success' : ($uretilebilir > 0 ? 'warning' : 'danger')
+            ];
+
+            // Üretimdeki Miktar - Enhanced
+            $uretimdeki = floatval($production_data['uretimdeki_toplam_planlanan_miktar']);
+            $is_emri_sayisi = intval($production_data['is_emri_sayisi']);
+            $acik_kapatir = $uretimdeki >= $stok_acigi && $stok_acigi > 0;
+
+            $durum_ozeti['uretimde'] = [
+                'deger' => $uretimdeki,
+                'is_emri_sayisi' => $is_emri_sayisi,
+                'birim' => $product['birim'],
+                'acik_kapatir' => $acik_kapatir,
+                'durum' => $uretimdeki > 0 ? 'info' : 'secondary',
+                'durum_text' => $acik_kapatir ? 'Açığı kapatıyor' : ($uretimdeki > 0 ? 'Üretimde' : 'Üretim yok')
+            ];
+
+            // Bekleyen Siparişler - Enhanced
+            $bekleyen_siparisler = 0;
+            $siparis_sayisi = 0;
+
+            foreach ($orders as $order) {
+                if (in_array($order['siparis_durum'], ['onaylandi', 'hazirlaniyor'])) {
+                    $bekleyen_siparisler += floatval($order['adet'] ?? $order['miktar'] ?? 0);
+                    $siparis_sayisi++;
+                }
+            }
+
+            $toplam_kullanilabilir = $stok_miktari + $uretimdeki;
+            $karsilanabilir = $bekleyen_siparisler <= $toplam_kullanilabilir;
+
+            $durum_ozeti['bekleyen_siparisler'] = [
+                'deger' => $bekleyen_siparisler,
+                'birim' => $product['birim'],
+                'siparis_sayisi' => $siparis_sayisi,
+                'karsilanabilir' => $karsilanabilir,
+                'toplam_kullanilabilir' => $toplam_kullanilabilir,
+                'durum' => $bekleyen_siparisler > $toplam_kullanilabilir ? 'warning' : 'info',
+                'durum_text' => $karsilanabilir ? 'Karşılanıyor' : 'Yetersiz stok'
+            ];
+
+            // Bileşen Durumu - Enhanced
+            $eksik_bilesenler = [];
+            $toplam_bilesen = count($bom_components);
+
+            foreach ($bom_components as $component) {
+                $gerekli = floatval($component['bilesen_miktari']) * $stok_acigi;
+                $mevcut = floatval($component['bilesen_stok']);
+                if ($gerekli > $mevcut) {
+                    $eksik_bilesenler[] = $component['bilesen_ismi'];
+                }
+            }
+
+            $tamamlik_yuzdesi = $toplam_bilesen > 0 ? round((($toplam_bilesen - count($eksik_bilesenler)) / $toplam_bilesen) * 100, 0) : 100;
+            $eksik_ilk_3 = array_slice($eksik_bilesenler, 0, 3);
+
+            $durum_ozeti['bilesen_durumu'] = [
+                'eksik_sayi' => count($eksik_bilesenler),
+                'toplam' => $toplam_bilesen,
+                'tamamlik_yuzdesi' => $tamamlik_yuzdesi,
+                'eksik_bilesenler' => $eksik_bilesenler,
+                'eksik_ilk_3' => $eksik_ilk_3,
+                'durum' => count($eksik_bilesenler) === 0 ? 'success' : (count($eksik_bilesenler) <= $toplam_bilesen / 2 ? 'warning' : 'danger')
+            ];
+
+            // 8. Eylem Önerileri
+            $eylem_onerileri = [];
+
+            // Öncelik 1: Kritik stok durumu
+            if ($stok_miktari < $kritik_seviye) {
+                if ($uretilebilir >= $stok_acigi) {
+                    $eylem_onerileri[] = [
+                        'oncelik' => 'warning',
+                        'mesaj' => 'Üretim başlatın: Stok kritik seviyenin altında',
+                        'detay' => round($stok_acigi, 2) . ' ' . $product['birim'] . ' eksik, mevcut bileşenlerle ' . $uretilebilir . ' adet üretilebilir',
+                        'ikon' => 'fa-industry',
+                        'renk' => 'warning'
+                    ];
+                } else {
+                    $eylem_onerileri[] = [
+                        'oncelik' => 'critical',
+                        'mesaj' => 'Acil aksiyon gerekli: Stok kritik seviyenin altında',
+                        'detay' => round($stok_acigi, 2) . ' ' . $product['birim'] . ' eksik, sadece ' . $uretilebilir . ' adet üretilebilir',
+                        'ikon' => 'fa-exclamation-triangle',
+                        'renk' => 'danger'
+                    ];
+                }
+            }
+
+            // Öncelik 2: Bileşen eksikleri
+            if (!empty($eksik_bilesenler)) {
+                $bilesen_listesi = implode(', ', array_slice($eksik_bilesenler, 0, 3));
+                if (count($eksik_bilesenler) > 3) {
+                    $bilesen_listesi .= ' (+' . (count($eksik_bilesenler) - 3) . ' daha)';
+                }
+
+                $eylem_onerileri[] = [
+                    'oncelik' => count($eksik_bilesenler) > $toplam_bilesen / 2 ? 'critical' : 'warning',
+                    'mesaj' => count($eksik_bilesenler) . ' bileşeni satın alın',
+                    'detay' => $bilesen_listesi,
+                    'ikon' => 'fa-shopping-cart',
+                    'renk' => count($eksik_bilesenler) > $toplam_bilesen / 2 ? 'danger' : 'warning'
+                ];
+            }
+
+            // Öncelik 3: Üretim yetersizliği
+            if ($uretimdeki > 0 && $uretimdeki < $stok_acigi) {
+                $eksik_uretim = $stok_acigi - $uretimdeki;
+                $eylem_onerileri[] = [
+                    'oncelik' => 'warning',
+                    'mesaj' => 'Üretim planını artırın',
+                    'detay' => round($eksik_uretim, 2) . ' ' . $product['birim'] . ' daha üretilmeli',
+                    'ikon' => 'fa-chart-line',
+                    'renk' => 'warning'
+                ];
+            }
+
+            // Öncelik 4: Sipariş karşılama kapasitesi
+            $toplam_kullanilabilir = $stok_miktari + $uretimdeki;
+            if ($bekleyen_siparisler > $toplam_kullanilabilir) {
+                $eksik_miktar = $bekleyen_siparisler - $toplam_kullanilabilir;
+                $eylem_onerileri[] = [
+                    'oncelik' => 'warning',
+                    'mesaj' => 'Sipariş karşılama riski',
+                    'detay' => round($eksik_miktar, 2) . ' ' . $product['birim'] . ' daha üretilmeli (bekleyen siparişler için)',
+                    'ikon' => 'fa-shipping-fast',
+                    'renk' => 'warning'
+                ];
+            }
+
+            // Her şey yolundaysa
+            if (empty($eylem_onerileri)) {
+                $eylem_onerileri[] = [
+                    'oncelik' => 'info',
+                    'mesaj' => 'Ürün hazır durumda',
+                    'detay' => 'Stok yeterli, bileşenler tamam, acil aksiyon gerekmiyor',
+                    'ikon' => 'fa-check-circle',
+                    'renk' => 'success'
+                ];
+            }
+
             $response = [
                 'status' => 'success',
                 'data' => [
@@ -336,7 +539,9 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
                         'data' => $orders,
                         'summary' => $order_summary
                     ],
-                    'production' => $production_data // Yeni eklenen veri
+                    'production' => $production_data,
+                    'durum_ozeti' => $durum_ozeti,
+                    'eylem_onerileri' => $eylem_onerileri
                 ]
             ];
 

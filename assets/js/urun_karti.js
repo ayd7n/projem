@@ -187,6 +187,14 @@ const app = Vue.createApp({
       if (value === null || value === undefined) return "0.00 ₺";
       return parseFloat(value).toFixed(2) + " ₺";
     },
+    formatNumber(value) {
+      if (value === null || value === undefined) return "0";
+      const num = parseFloat(value);
+      if (Number.isInteger(num)) {
+        return num.toString();
+      }
+      return num.toFixed(2);
+    },
     formatDate(dateString) {
       if (!dateString) return "-";
       const date = new Date(dateString);

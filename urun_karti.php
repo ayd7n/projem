@@ -43,7 +43,690 @@ if ($urun_kodu == 0) {
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
         rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
-    <link rel="stylesheet" href="assets/css/urun_karti.css">
+    <style>
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap");
+
+:root {
+  /* Teal & Cyan Color Palette */
+  --primary: #0891b2;
+  --primary-light: #06b6d4;
+  --primary-dark: #0e7490;
+  --secondary: #14b8a6;
+  --accent: #f59e0b;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #0ea5e9;
+
+  /* Neutral Palette */
+  --bg-main: #fafbfc;
+  --bg-secondary: #f3f4f6;
+  --card-bg: #ffffff;
+  --border-light: #e5e7eb;
+  --border-medium: #d1d5db;
+
+  /* Text Colors */
+  --text-dark: #111827;
+  --text-medium: #374151;
+  --text-light: #6b7280;
+  --text-lighter: #9ca3af;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.12);
+
+  /* Transitions */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Spacing */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --spacing-unit: 20px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 15px;
+}
+
+body {
+  font-family: "Poppins", "Ubuntu", -apple-system, sans-serif;
+  background: var(--bg-main);
+  color: var(--text-dark);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+.main-content {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.page-header {
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  letter-spacing: -0.025em;
+}
+
+.page-header h1 i {
+  color: var(--primary);
+}
+
+
+.back-btn {
+  background: white;
+  color: var(--text-medium);
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  transition: var(--transition-base);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+}
+
+.back-btn:hover {
+  background: var(--primary);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary);
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-light);
+  margin-bottom: var(--spacing-unit);
+  overflow: hidden;
+  transition: var(--transition-base);
+}
+
+.card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-medium);
+}
+
+.card-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border-light);
+  background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
+}
+
+.card-header h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--text-dark);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  letter-spacing: -0.01em;
+}
+
+.card-header h2 i {
+  color: var(--primary);
+  font-size: 1.1rem;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.stat-card {
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-light) 100%
+  );
+  color: white;
+  border-radius: var(--radius-md);
+  padding: 20px;
+  text-align: center;
+  height: 100%;
+  box-shadow: var(--shadow-sm);
+  transition: var(--transition-base);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-card h3 {
+  font-size: 2rem;
+  margin: 8px 0;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.stat-card p {
+  margin: 0;
+  opacity: 0.95;
+  font-size: 0.85rem;
+  font-weight: 400;
+}
+
+.stat-card i {
+  font-size: 2rem;
+  opacity: 0.9;
+  margin-bottom: 8px;
+}
+
+.table {
+  margin-bottom: 0;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.table th {
+  border-top: none;
+  border-bottom: 2px solid var(--border-light);
+  font-weight: 600;
+  color: var(--text-medium);
+  background: var(--bg-secondary);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  text-align: left;
+}
+
+.table td {
+  vertical-align: middle;
+  color: var(--text-light);
+  padding: 12px 14px;
+  border-top: 1px solid var(--border-light);
+}
+
+.table tr:first-child td {
+  border-top: none;
+}
+
+.table tbody tr {
+  transition: var(--transition-fast);
+}
+
+.table tbody tr:hover {
+  background: #fafbfc;
+}
+
+.badge-in {
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: var(--shadow-xs);
+}
+
+.badge-out {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: var(--shadow-xs);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--text-lighter);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  margin: 16px 0;
+  border: 2px dashed var(--border-medium);
+}
+
+.empty-state i {
+  font-size: 3rem;
+  opacity: 0.4;
+  margin-bottom: 12px;
+  color: var(--text-lighter);
+}
+
+.empty-state p {
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 400;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.info-item:last-child {
+  border-bottom: none;
+}
+
+.info-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 16px;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.info-value {
+  font-weight: 500;
+  color: var(--text-dark);
+  font-size: 0.95rem;
+}
+
+.stat-summary-card {
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  transition: var(--transition-base);
+  height: 100%;
+  box-shadow: var(--shadow-sm);
+  border: none;
+}
+
+.stat-summary-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-summary-card i {
+  font-size: 1.6rem;
+  flex-shrink: 0;
+}
+
+.stat-summary-card h4 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.stat-summary-card small {
+  opacity: 0.9;
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin: 0;
+}
+
+.alert {
+  border-radius: var(--radius-md);
+  border: 1px solid;
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.alert i {
+  margin-top: 2px;
+}
+
+.alert-warning {
+  background-color: #fffbeb;
+  border-color: #fde68a;
+  color: #92400e;
+}
+
+.alert-success {
+  background-color: #f0fdf4;
+  border-color: #bbf7d0;
+  color: #166534;
+}
+
+.alert-info {
+  background-color: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.alert-danger {
+  background-color: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.badge {
+  border-radius: 20px;
+  padding: 5px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.badge-success {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.badge-info {
+  background: linear-gradient(135deg, #0ea5e9, #0284c7);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.badge-secondary {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+.badge-danger {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  box-shadow: var(--shadow-xs);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-medium);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-lighter);
+}
+
+[v-cloak] {
+  display: none !important;
+}
+
+.photo-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 16px;
+}
+
+.photo-item {
+  position: relative;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  cursor: pointer;
+  transition: var(--transition-base);
+  border: 1px solid var(--border-light);
+  box-shadow: var(--shadow-xs);
+  background: white;
+}
+
+.photo-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+  border-color: var(--primary-light);
+}
+
+.photo-item img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  transition: var(--transition-slow);
+}
+
+.photo-item:hover img {
+  transform: scale(1.08);
+}
+
+.primary-badge {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  color: white;
+  padding: 5px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 0.7rem;
+  font-weight: 600;
+  z-index: 10;
+  box-shadow: var(--shadow-md);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* SORUNLU BÖLÜMLER İÇİN YENİ, BASİT STİLLER */
+#app .durum-ozeti-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    padding-top: 1rem;
+}
+#app .durum-kart {
+    background-color: #ffffff;
+    border-radius: 12px;
+    padding: 1.25rem;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    border: 1px solid #e9ecef;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: all 0.2s ease-in-out;
+}
+#app .durum-kart:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+}
+#app .durum-kart-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #6c757d;
+    order: -1;
+}
+#app .durum-kart-ikon {
+    font-size: 1.8rem;
+    opacity: 0.8;
+    align-self: flex-start;
+}
+#app .durum-kart-ana-deger {
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: #343a40;
+}
+#app .durum-kart-alt-bilgi {
+    font-size: 0.85rem;
+    color: #6c757d;
+    margin-top: auto;
+}
+#app .durum-kart-progress {
+    background-color: #e9ecef;
+    border-radius: 99px;
+    height: 6px;
+    width: 100%;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+#app .durum-kart-progress .progress-bar {
+    height: 100%;
+    border-radius: 99px;
+}
+
+#app .durum-kart.danger .durum-kart-ikon, #app .durum-kart.danger .durum-kart-ana-deger { color: #dc3545; }
+#app .durum-kart.danger .progress-bar { background-color: #dc3545; }
+
+#app .durum-kart.warning .durum-kart-ikon, #app .durum-kart.warning .durum-kart-ana-deger { color: #ffc107; }
+#app .durum-kart.warning .progress-bar { background-color: #ffc107; }
+
+#app .durum-kart.success .durum-kart-ikon, #app .durum-kart.success .durum-kart-ana-deger { color: #28a745; }
+#app .durum-kart.success .progress-bar { background-color: #28a745; }
+
+#app .durum-kart.info .durum-kart-ikon, #app .durum-kart.info .durum-kart-ana-deger { color: #17a2b8; }
+#app .durum-kart.info .progress-bar { background-color: #17a2b8; }
+
+#app .eylem-onerileri-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+#app .eylem-kart {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    border: 1px solid #dee2e6;
+    background-color: #ffffff;
+}
+#app .eylem-kart.critical { border-left: 5px solid #721c24; background-color: #f8d7da; }
+#app .eylem-kart.warning { border-left: 5px solid #856404; background-color: #fff3cd; }
+#app .eylem-kart.info { border-left: 5px solid #0c5460; background-color: #d1ecf1; }
+
+#app .eylem-kart-ikon {
+    font-size: 1.75rem;
+    width: 40px;
+    padding-top: 5px;
+}
+#app .eylem-kart.critical .eylem-kart-ikon { color: #721c24; }
+#app .eylem-kart.warning .eylem-kart-ikon { color: #856404; }
+#app .eylem-kart.info .eylem-kart-ikon { color: #0c5460; }
+
+#app .eylem-kart-mesaj {
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+#app .eylem-kart-detay {
+    font-size: 0.9rem;
+    color: #495057;
+    margin: 0;
+}
+#app .eylem-kart-oncelik-badge{
+    text-transform: uppercase;
+}
+
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 16px;
+  }
+  .page-header h1 {
+    font-size: 1.4rem;
+  }
+  .photo-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+  }
+  .photo-item img {
+    height: 140px;
+  }
+  .stat-card h3 {
+    font-size: 1.6rem;
+  }
+  .stat-card i {
+    font-size: 1.6rem;
+  }
+  .info-item {
+    flex-direction: row;
+    gap: 10px;
+  }
+  .info-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  .stat-summary-card {
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+    gap: 8px;
+    padding: 14px;
+  }
+  .stat-summary-card i {
+    font-size: 1.4rem;
+  }
+  .page-header {
+    flex-direction: row;
+    align-items: center;
+    gap: 12px;
+  }
+  .card-body {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 576px) {
+  .photo-gallery {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-summary-card {
+    padding: 12px;
+  }
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+    </style>
 </head>
 
 <body>
@@ -101,6 +784,164 @@ if ($urun_kodu == 0) {
         </div>
 
         <div v-else-if="productData">
+            <!-- Durum Özeti Dashboard -->
+            <div class="card" v-if="productData.durum_ozeti">
+                <div class="card-header">
+                    <h2><i class="fas fa-chart-pie"></i> Ürün Durum Özeti</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-4" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Ürünün mevcut durumu hakkında hızlı bilgiler ve kritik metrikler.
+                    </p>
+                    <div class="durum-ozeti-container">
+                        <!-- Stok Durumu -->
+                        <div class="durum-kart" :class="{
+                            'danger': productData.durum_ozeti.stok_durumu.durum === 'kritik',
+                            'warning': productData.durum_ozeti.stok_durumu.durum === 'uyari',
+                            'success': productData.durum_ozeti.stok_durumu.durum === 'yeterli',
+                            'info': productData.durum_ozeti.stok_durumu.durum === 'bilgi'
+                        }">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-boxes"></i>
+                            </div>
+                            <div class="durum-kart-label">Mevcut Stok</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.stok_durumu.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.stok_durumu.birim }}</span>
+                            </div>
+                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.stok_durumu.yuzde }}% Dolu</div>
+                            <div class="durum-kart-progress">
+                                <div class="progress-bar" :style="{ width: Math.min(productData.durum_ozeti.stok_durumu.yuzde, 100) + '%' }"></div>
+                            </div>
+                            <div class="durum-kart-alt-bilgi">
+                                Kritik Seviye: {{ formatNumber(productData.durum_ozeti.stok_durumu.kritik_seviye) }}
+                            </div>
+                        </div>
+
+                        <!-- Stok Açığı -->
+                        <div class="durum-kart danger" v-if="productData.durum_ozeti.stok_acigi.deger > 0">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="durum-kart-label">Stok Açığı</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.stok_acigi.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.stok_acigi.birim }}</span>
+                            </div>
+                             <div class="durum-kart-yuzde">{{ productData.durum_ozeti.stok_acigi.yuzde_eksik }}% Eksik</div>
+                            <div class="durum-kart-alt-bilgi">
+                                Kritik: {{ formatNumber(productData.durum_ozeti.stok_acigi.kritik_seviye) }}
+                            </div>
+                        </div>
+
+                        <!-- Üretilebilir -->
+                        <div class="durum-kart success">
+                             <div class="durum-kart-ikon">
+                                <i class="fas fa-calculator"></i>
+                            </div>
+                            <div class="durum-kart-label">Üretilebilir</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.uretilebilir.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.uretilebilir.birim }}</span>
+                            </div>
+                            <div class="durum-kart-yuzde" v-if="productData.durum_ozeti.stok_acigi.deger > 0 && productData.durum_ozeti.uretilebilir.acik_kapatma_orani > 0">
+                                Açığın %{{ productData.durum_ozeti.uretilebilir.acik_kapatma_orani }}'ı
+                            </div>
+                            <div class="durum-kart-alt-bilgi" v-if="productData.durum_ozeti.uretilebilir.sinir_bilesen">
+                                {{ productData.durum_ozeti.uretilebilir.sinir_bilesen }} sınırlıyor
+                            </div>
+                            <div class="durum-kart-alt-bilgi" v-else>Tüm bileşenler yeterli</div>
+                        </div>
+
+                        <!-- Üretimdeki -->
+                        <div class="durum-kart info" v-if="productData.durum_ozeti.uretimde.deger > 0">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <div class="durum-kart-label">Üretimdeki</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.uretimde.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.uretimde.birim }}</span>
+                            </div>
+                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.uretimde.is_emri_sayisi }} İş Emri</div>
+                            <div class="durum-kart-alt-bilgi">
+                                <i v-if="productData.durum_ozeti.uretimde.acik_kapatir" class="fas fa-check-circle mr-1"></i>
+                                {{ productData.durum_ozeti.uretimde.durum_text }}
+                            </div>
+                        </div>
+
+                        <!-- Bekleyen Siparişler -->
+                        <div class="durum-kart warning" v-if="productData.durum_ozeti.bekleyen_siparisler.deger > 0">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-shopping-cart"></i>
+                            </div>
+                            <div class="durum-kart-label">Bekleyen Sipariş</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.bekleyen_siparisler.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.bekleyen_siparisler.birim }}</span>
+                            </div>
+                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.bekleyen_siparisler.siparis_sayisi }} Aktif Sipariş</div>
+                            <div class="durum-kart-alt-bilgi">
+                                <i v-if="productData.durum_ozeti.bekleyen_siparisler.karsilanabilir" class="fas fa-check-circle mr-1"></i>
+                                <i v-else class="fas fa-exclamation-triangle mr-1"></i>
+                                {{ productData.durum_ozeti.bekleyen_siparisler.durum_text }}
+                            </div>
+                        </div>
+
+                        <!-- Bileşen Durumu -->
+                        <div class="durum-kart" :class="{
+                            'danger': productData.durum_ozeti.bilesen_durumu.eksik_sayi > 0,
+                            'success': productData.durum_ozeti.bilesen_durumu.eksik_sayi === 0
+                        }" v-if="productData.durum_ozeti.bilesen_durumu.toplam > 0">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
+                            <div class="durum-kart-label">Bileşen Durumu</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ productData.durum_ozeti.bilesen_durumu.eksik_sayi }} / {{ productData.durum_ozeti.bilesen_durumu.toplam }}
+                            </div>
+                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.bilesen_durumu.tamamlik_yuzdesi }}% Tamam</div>
+                            <div class="durum-kart-progress">
+                                <div class="progress-bar" :style="{ width: productData.durum_ozeti.bilesen_durumu.tamamlik_yuzdesi + '%' }"></div>
+                            </div>
+                            <div class="durum-kart-alt-bilgi" v-if="productData.durum_ozeti.bilesen_durumu.eksik_sayi > 0" style="font-size: 0.68rem;">
+                                {{ productData.durum_ozeti.bilesen_durumu.eksik_ilk_3.join(', ') }}
+                                <span v-if="productData.durum_ozeti.bilesen_durumu.eksik_sayi > 3">+{{ productData.durum_ozeti.bilesen_durumu.eksik_sayi - 3 }}</span>
+                            </div>
+                             <div class="durum-kart-alt-bilgi" v-else>Tüm bileşenler yeterli</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eylem Önerileri -->
+            <div class="card" v-if="productData.eylem_onerileri && productData.eylem_onerileri.length > 0">
+                <div class="card-header">
+                    <h2><i class="fas fa-lightbulb"></i> Eylem Önerileri</h2>
+                </div>
+                <div class="card-body">
+                     <p class="text-muted mb-4" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Mevcut duruma göre önerilen aksiyonlar ve öncelikler.
+                    </p>
+                    <div class="eylem-onerileri-container">
+                        <div v-for="(oneri, index) in productData.eylem_onerileri" :key="index" class="eylem-kart" :class="{
+                            'critical': oneri.oncelik === 'yuksek',
+                            'warning': oneri.oncelik === 'orta',
+                            'info': oneri.oncelik === 'dusuk'
+                        }">
+                             <div class="eylem-kart-oncelik-badge">{{ oneri.oncelik }}</div>
+                            <div class="eylem-kart-ikon">
+                                <i :class="'fas ' + oneri.ikon"></i>
+                            </div>
+                            <div class="eylem-kart-icerik">
+                                <div class="eylem-kart-mesaj">{{ oneri.mesaj }}</div>
+                                <p class="eylem-kart-detay">{{ oneri.detay }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Ürün Fotoğrafları -->
             <div class="card" v-if="productData.photos.length > 0">
                 <div class="card-header">
@@ -596,8 +1437,7 @@ if ($urun_kodu == 0) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
     <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
 
-    <script>
-        window.urunKodu = <?php echo $urun_kodu; ?>;
+    <script>  window.urunKodu = <?php echo $urun_kodu; ?>;
     </script>
     <script src="assets/js/urun_karti.js"></script>
 </body>
