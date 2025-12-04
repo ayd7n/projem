@@ -461,7 +461,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             transition: var(--transition);
             padding: 0.2rem 0.5rem;
             border-radius: 8px;
-            width: 19%; /* Adjusted to accommodate 5 items */
+            width: 19%;
+            /* Adjusted to accommodate 5 items */
             min-width: 55px;
             text-align: center;
         }
@@ -592,7 +593,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             main {
                 padding: 1rem 0;
-                padding-bottom: 70px; /* Space for bottom nav */
+                padding-bottom: 70px;
+                /* Space for bottom nav */
             }
         }
 
@@ -715,7 +717,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             main {
                 padding: 0.8rem 0;
-                padding-bottom: 70px; /* Space for bottom nav */
+                padding-bottom: 70px;
+                /* Space for bottom nav */
             }
 
             .top-bar-wrapper {
@@ -996,6 +999,15 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p>
                             </div>
                         </a>
+                        <?php if (yetkisi_var('page:view:personel_bordro')): ?>
+                            <a href="personel_bordro.php" class="module-card">
+                                <div class="icon"><i class="fas fa-money-check-alt"></i></div>
+                                <div class="card-content">
+                                    <span class="title">Personel Bordro</span>
+                                    <p class="description">Maaş ödemelerini ve avansları yönetin.</p>
+                                </div>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 
@@ -1045,7 +1057,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 // Check if the item is the logout button
                 const isLogoutButton = item.getAttribute('href') === 'logout.php';
 
-                item.addEventListener('click', function(e) {
+                item.addEventListener('click', function (e) {
                     if (isLogoutButton) {
                         // For logout button, allow the default behavior
                         return; // Allow default navigation to logout.php

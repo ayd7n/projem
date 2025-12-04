@@ -30,6 +30,7 @@ function get_all_permissions()
             'page:view:ayarlar' => 'Ayarlar Sayfası',
             'page:view:gider_yonetimi' => 'Gider Yönetimi Sayfası',
             'page:view:cerceve_sozlesmeler' => 'Sözleşmeler Sayfası',
+            'page:view:personel_bordro' => 'Personel Bordro Sayfası',
             'page:view:change_password' => 'Şifre Değiştirme Sayfası',
             'page:view:doviz_kurlari' => 'Döviz Kurları Sayfası',
             'page:view:yedekleme' => 'Yedekleme Sayfası',
@@ -45,6 +46,11 @@ function get_all_permissions()
             'action:personeller:edit' => 'Personel Bilgilerini Düzenleme',
             'action:personeller:delete' => 'Personel Silme',
             'action:personeller:permissions' => 'Personel Yetkilerini Düzenleme',
+        ],
+        'Personel Bordro' => [
+            'action:personel_bordro:odeme_yap' => 'Maaş Ödemesi Yapma',
+            'action:personel_bordro:avans_ver' => 'Avans Verme',
+            'action:personel_bordro:gecmis_goruntule' => 'Ödeme Geçmişini Görüntüleme',
         ],
         'Tedarikçiler' => [
             'action:tedarikciler:create' => 'Yeni Tedarikçi Ekleme',
