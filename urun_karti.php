@@ -625,8 +625,7 @@ if ($urun_kodu == 0) {
                 gap: 8px;
             }
         }
-
-        </style>
+    </style>
 </head>
 
 <body>
@@ -700,8 +699,8 @@ if ($urun_kodu == 0) {
                                 <i class="fas fa-star"></i> ANA FOTOĞRAF
                             </div>
                             <a :href="photo.dosya_yolu" data-fancybox="product-photos" :data-caption="photo.dosya_adi">
-                                <img :src="photo.dosya_yolu" :alt="photo.dosya_adi"
-                                    style="cursor: pointer;" title="Fotoğrafı büyütmek için tıklayın">
+                                <img :src="photo.dosya_yolu" :alt="photo.dosya_adi" style="cursor: pointer;"
+                                    title="Fotoğrafı büyütmek için tıklayın">
                             </a>
                         </div>
                     </div>
@@ -879,302 +878,284 @@ if ($urun_kodu == 0) {
                                 <p>Yeterli Stok</p>
                             </div>
                         </div>
-                        
+
                         <!-- Üretimdeki Miktar Gösterimi (Gelişmiş) -->
-                        <div class="col-md-6 mt-3" v-if="productData.production && productData.production.uretimdeki_toplam_planlanan_miktar > 0">
-                            <div class="stat-card" 
-                                 :style="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap 
+                        <div class="col-md-6 mt-3"
+                            v-if="productData.production && productData.production.uretimdeki_toplam_planlanan_miktar > 0">
+                            <div class="stat-card" :style="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap 
                                          ? 'background: linear-gradient(135deg, #7c3aed, #6d28d9); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);' 
                                          : 'background: linear-gradient(135deg, #8b5cf6, #7c3aed);'">
                                 <div class="d-flex align-items-center justify-content-center mb-2">
                                     <i class="fas fa-industry mr-2" style="font-size: 1.8rem;"></i>
-                                    <i v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap" 
-                                       class="fas fa-check-circle text-white ml-2" 
-                                       title="Bu üretim stok açığını kapatacak"
-                                       style="font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></i>
+                                    <i v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap"
+                                        class="fas fa-check-circle text-white ml-2"
+                                        title="Bu üretim stok açığını kapatacak"
+                                        style="font-size: 1.2rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));"></i>
                                 </div>
-                                <h3 class="mb-1">{{ parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar).toFixed(2) }}</h3>
+                                <h3 class="mb-1">{{
+                                    parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar).toFixed(2) }}
+                                </h3>
                                 <p class="mb-1 font-weight-bold">Üretimde (Planlanan)</p>
-                                <small class="d-block opacity-75 mb-2">{{ productData.production.is_emri_sayisi }} adet aktif iş emri</small>
-                                
-                                <div v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap" 
-                                     class="mt-2 px-3 py-1 rounded" 
-                                     style="background: rgba(255,255,255,0.2); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">
+                                <small class="d-block opacity-75 mb-2">{{ productData.production.is_emri_sayisi }} adet
+                                    aktif iş emri</small>
+
+                                <div v-if="stockGap && stockGap.hasGap && parseFloat(productData.production.uretimdeki_toplam_planlanan_miktar) >= stockGap.gap"
+                                    class="mt-2 px-3 py-1 rounded"
+                                    style="background: rgba(255,255,255,0.2); font-size: 0.8rem; border: 1px solid rgba(255,255,255,0.3);">
                                     <i class="fas fa-shield-alt mr-1"></i> Kritik stok açığı kapanıyor
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-3" v-if="stockGap.hasGap && stockGap.gapDetails.length > 0">
-                        <h4 style="font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">
-                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Eksik Bileşenler
-                        </h4>
-                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
-                            Stok seviyesini kritik seviyeye çıkarmak için aşağıdaki bileşenlerden temin edilmelidir:
-                        </p>
-                        <div class="table-responsive">
-                            <table class="table table-sm">
-                                <thead>
-                                    <tr>
-                                        <th><i class="fas fa-layer-group"></i> Bileşen</th>
-                                        <th><i class="fas fa-barcode"></i> Kod</th>
-                                        <th><i class="fas fa-sort-numeric-up"></i> Gerekli</th>
-                                        <th><i class="fas fa-warehouse"></i> Mevcut</th>
-                                        <th><i class="fas fa-minus-circle"></i> Eksik</th>
-                                        <th><i class="fas fa-ruler"></i> Birim</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="detail in stockGap.gapDetails" :key="detail.code">
-                                        <td>
-                                            <span class="badge badge-info">{{ detail.type }}</span>
-                                            {{ detail.name }}
-                                        </td>
-                                        <td>{{ detail.code }}</td>
-                                        <td>{{ Math.ceil(detail.needed) }} {{ detail.unit }}</td>
-                                        <td>{{ detail.available }} {{ detail.unit }}</td>
-                                        <td class="text-danger font-weight-bold">{{ Math.ceil(detail.shortfall) }} {{
-                                            detail.unit }}</td>
-                                        <td>{{ detail.unit }}</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+                </div>
 
-                    <div class="mt-3" v-else-if="stockGap.hasGap && stockGap.canCoverGap">
-                        <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i>
-                            <div>
-                                <strong>Harika!</strong>
-                                Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip
-                                kritik seviyeye ulaşabilirsiniz.
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stok Hareketleri -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-exchange-alt"></i> Son Stok Hareketleri</h2>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                        <i class="fas fa-info-circle"></i> Bu ürüne ait en son {{ recentMovements.length }} stok
-                        hareketi gösterilmektedir. Tüm hareketler için stok hareketleri sayfasını ziyaret edebilirsiniz.
-                    </p>
-                    <div v-if="recentMovements.length === 0" class="empty-state">
-                        <i class="fas fa-inbox"></i>
-                        <p>Henüz stok hareketi bulunmuyor.</p>
-                    </div>
-                    <div v-else class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-calendar"></i> Tarih</th>
-                                    <th><i class="fas fa-arrows-alt-v"></i> Yön</th>
-                                    <th><i class="fas fa-tag"></i> Hareket Türü</th>
-                                    <th><i class="fas fa-sort-numeric-up"></i> Miktar</th>
-                                    <th><i class="fas fa-warehouse"></i> Depo</th>
-                                    <th><i class="fas fa-cube"></i> Raf</th>
-                                    <th><i class="fas fa-comment"></i> Açıklama</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="movement in recentMovements" :key="movement.hareket_id">
-                                    <td><span class="text-nowrap">{{ formatDate(movement.tarih) }}</span></td>
-                                    <td>
-                                        <span :class="movement.yon === 'giris' ? 'badge-in' : 'badge-out'">
-                                            <i
-                                                :class="movement.yon === 'giris' ? 'fas fa-arrow-down' : 'fas fa-arrow-up'"></i>
-                                            {{ movement.yon === 'giris' ? 'Giriş' : 'Çıkış' }}
-                                        </span>
-                                    </td>
-                                    <td>{{ movement.hareket_turu }}</td>
-                                    <td><strong>{{ movement.miktar }} {{ movement.birim }}</strong></td>
-                                    <td>{{ movement.depo || '-' }}</td>
-                                    <td>{{ movement.raf || '-' }}</td>
-                                    <td class="text-truncate" :title="movement.aciklama || '-'">{{ movement.aciklama ||
-                                        '-' }}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="text-center mt-3">
-                            <small class="text-muted">Tüm stok hareketleri için <a href="manuel_stok_hareket.php">stok
-                                    hareketleri sayfasını</a> ziyaret edin</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ürün Ağacı Bileşenleri -->
-            <div class="card" v-if="productData.bom_components.length > 0">
-                <div class="card-header">
-                    <h2><i class="fas fa-sitemap"></i> Ürün Ağacı Bileşenleri</h2>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                        <i class="fas fa-info-circle"></i> Bu ürünü üretmek için gereken {{
-                        productData.bom_components.length }} adet bileşen ve mevcut stoklarla üretilebilir miktar
-                        bilgileri aşağıda gösterilmektedir.
-                    </p>
-                    <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle"></i>
+                <div class="mt-3" v-if="stockGap.hasGap && stockGap.canCoverGap">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i>
                         <div>
-                            <strong>Bu ürün ağacına göre mevcut stoklarla üretilebilir:</strong>
-                            <span class="font-weight-bold ml-2">{{ producibleQuantity }} adet</span>
+                            <strong>Harika!</strong>
+                            Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip
+                            kritik seviyeye ulaşabilirsiniz.
                         </div>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-layer-group"></i> Bileşen Türü</th>
-                                    <th><i class="fas fa-barcode"></i> Kod</th>
-                                    <th><i class="fas fa-tag"></i> İsim</th>
-                                    <th><i class="fas fa-sort-numeric-up"></i> Gerekli Miktar</th>
-                                    <th><i class="fas fa-warehouse"></i> Mevcut Stok</th>
-                                    <th><i class="fas fa-calculator"></i> Üretilebilir</th>
-                                    <th v-if="contractsLoaded"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmesi
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="component in productData.bom_components" :key="component.id">
-                                    <td>
-                                        <span class="badge badge-info">{{ component.bilesen_turu }}</span>
-                                    </td>
-                                    <td>{{ component.bilesen_kodu }}</td>
-                                    <td><strong>{{ component.bilesen_ismi }}</strong></td>
-                                    <td>{{ component.bilesen_miktari }} {{ component.bilesen_birim }}</td>
-                                    <td>{{ component.bilesen_stok }} {{ component.bilesen_birim }}</td>
-                                    <td>
-                                        <span class="font-weight-bold" :class="{
-                                                  'text-success': canProduceEnough(component),
-                                                  'text-danger': !canProduceEnough(component)
-                                              }">
-                                            {{ component.bilesen_miktari > 0 ? Math.floor(component.bilesen_stok /
-                                            component.bilesen_miktari) : 0 }} adet
-                                        </span>
-                                    </td>
-                                    <td v-if="contractsLoaded">
-                                        <div
-                                            v-if="component.bilesen_turu !== 'esans' && getContractForComponent(component.bilesen_kodu)">
-                                            <span class="badge badge-success">
-                                                {{ getContractForComponent(component.bilesen_kodu).sozlesme_id }} - {{
-                                                getContractForComponent(component.bilesen_kodu).tedarikci_adi }}
-                                            </span>
-                                            <div class="mt-1">
-                                                <small class="text-muted">Kalan: {{
-                                                    getContractForComponent(component.bilesen_kodu).kalan_miktar }} {{
-                                                    component.bilesen_birim }}</small>
-                                            </div>
-                                        </div>
-                                        <div v-else-if="component.bilesen_turu !== 'esans'">
-                                            <span class="badge badge-warning">Yok</span>
-                                        </div>
-                                        <div v-else>
-                                            <span class="text-muted">-</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Sipariş Bilgileri -->
-            <div class="card">
-                <div class="card-header">
-                    <h2><i class="fas fa-shopping-cart"></i> Sipariş Bilgileri</h2>
-                </div>
-                <div class="card-body">
-                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
-                        <i class="fas fa-info-circle"></i> Bu ürüne ait aktif ve tamamlanmış sipariş özeti ile detaylı
-                        sipariş listesi aşağıda gösterilmektedir.
-                    </p>
-                    <!-- Sipariş Özeti -->
-                    <div class="row mb-3">
-                        <div class="col-lg-3 col-md-6 col-6 mb-2">
-                            <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
-                                <i class="fas fa-shopping-bag"></i>
-                                <div>
-                                    <h4 class="mb-0">{{ activeOrders.length || 0 }}</h4>
-                                    <small class="text-light">Aktif Sipariş</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-6 mb-2">
-                            <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
-                                <i class="fas fa-sort-numeric-up"></i>
-                                <div>
-                                    <h4 class="mb-0">{{ calculateActiveOrdersTotal() || 0 }}</h4>
-                                    <small class="text-light">Aktif Miktar</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-6 mb-2">
-                            <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #22c55e, #16a34a);">
-                                <i class="fas fa-check-circle"></i>
-                                <div>
-                                    <h4 class="mb-0">{{ productData.orders.summary.tamamlanan_siparis || 0 }}</h4>
-                                    <small class="text-light">Tamamlanan</small>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-lg-3 col-md-6 col-6 mb-2">
-                            <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #14b8a6, #0891b2);">
-                                <i class="fas fa-tools"></i>
-                                <div>
-                                    <h4 class="mb-0">{{ productData.orders.summary.hazirlanan_siparis || 0 }}</h4>
-                                    <small class="text-light">Hazırlanan</small>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Sipariş Listesi -->
-                    <div v-if="activeOrders.length === 0" class="empty-state">
-                        <i class="fas fa-shopping-cart"></i>
-                        <p>Henüz aktif sipariş bulunmuyor.</p>
-                    </div>
-                    <div v-else class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th><i class="fas fa-hashtag"></i> Sipariş No</th>
-                                    <th><i class="fas fa-user"></i> Müşteri</th>
-                                    <th><i class="fas fa-calendar"></i> Tarih</th>
-                                    <th><i class="fas fa-sort-numeric-up"></i> Miktar</th>
-                                    <th><i class="fas fa-info-circle"></i> Durum</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="order in activeOrders" :key="order.kalem_id">
-                                    <td><strong>#{{ order.siparis_id }}</strong></td>
-                                    <td>{{ order.musteri_adi }}</td>
-                                    <td><span class="text-nowrap">{{ formatDate(order.siparis_tarihi) }}</span></td>
-                                    <td>{{ order.adet }} {{ productData.product.birim }}</td>
-                                    <td>
-                                        <span :class="getStatusBadgeClass(order.siparis_durum)">
-                                            {{ order.siparis_durum }}
-                                        </span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Stok Hareketleri -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-exchange-alt"></i> Son Stok Hareketleri</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Bu ürüne ait en son {{ recentMovements.length }} stok
+                    hareketi gösterilmektedir. Tüm hareketler için stok hareketleri sayfasını ziyaret edebilirsiniz.
+                </p>
+                <div v-if="recentMovements.length === 0" class="empty-state">
+                    <i class="fas fa-inbox"></i>
+                    <p>Henüz stok hareketi bulunmuyor.</p>
+                </div>
+                <div v-else class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-calendar"></i> Tarih</th>
+                                <th><i class="fas fa-arrows-alt-v"></i> Yön</th>
+                                <th><i class="fas fa-tag"></i> Hareket Türü</th>
+                                <th><i class="fas fa-sort-numeric-up"></i> Miktar</th>
+                                <th><i class="fas fa-warehouse"></i> Depo</th>
+                                <th><i class="fas fa-cube"></i> Raf</th>
+                                <th><i class="fas fa-comment"></i> Açıklama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="movement in recentMovements" :key="movement.hareket_id">
+                                <td><span class="text-nowrap">{{ formatDate(movement.tarih) }}</span></td>
+                                <td>
+                                    <span :class="movement.yon === 'giris' ? 'badge-in' : 'badge-out'">
+                                        <i
+                                            :class="movement.yon === 'giris' ? 'fas fa-arrow-down' : 'fas fa-arrow-up'"></i>
+                                        {{ movement.yon === 'giris' ? 'Giriş' : 'Çıkış' }}
+                                    </span>
+                                </td>
+                                <td>{{ movement.hareket_turu }}</td>
+                                <td><strong>{{ movement.miktar }} {{ movement.birim }}</strong></td>
+                                <td>{{ movement.depo || '-' }}</td>
+                                <td>{{ movement.raf || '-' }}</td>
+                                <td class="text-truncate" :title="movement.aciklama || '-'">{{ movement.aciklama ||
+                                    '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div class="text-center mt-3">
+                        <small class="text-muted">Tüm stok hareketleri için <a href="manuel_stok_hareket.php">stok
+                                hareketleri sayfasını</a> ziyaret edin</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ürün Ağacı Bileşenleri -->
+        <div class="card" v-if="productData && productData.bom_components && productData.bom_components.length > 0">
+            <div class="card-header">
+                <h2><i class="fas fa-sitemap"></i> Ürün Ağacı Bileşenleri</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Bu ürünü üretmek için gereken {{
+                    productData.bom_components.length }} adet bileşen ve mevcut stoklarla üretilebilir miktar
+                    bilgileri aşağıda gösterilmektedir.
+                </p>
+                <div class="alert alert-info mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <div>
+                        <strong>Bu ürün ağacına göre mevcut stoklarla üretilebilir:</strong>
+                        <span class="font-weight-bold ml-2">{{ producibleQuantity }} adet</span>
+                    </div>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-layer-group"></i> Bileşen Türü</th>
+                                <th><i class="fas fa-barcode"></i> Kod</th>
+                                <th><i class="fas fa-tag"></i> İsim</th>
+                                <th><i class="fas fa-sort-numeric-up"></i> Gerekli Miktar</th>
+                                <th><i class="fas fa-warehouse"></i> Mevcut Stok</th>
+                                <th><i class="fas fa-calculator"></i> Üretilebilir</th>
+                                <!-- Yeni Kolon: Kritik Stok İçin Eksik -->
+                                <th v-if="stockGap && stockGap.hasGap"><i
+                                        class="fas fa-exclamation-triangle text-warning"></i> Kritik Stok İçin Eksik
+                                </th>
+                                <th v-if="contractsLoaded"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmesi
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="component in productData.bom_components" :key="component.id">
+                                <td>
+                                    <span class="badge badge-info">{{ component.bilesen_turu }}</span>
+                                </td>
+                                <td>{{ component.bilesen_kodu }}</td>
+                                <td><strong>{{ component.bilesen_ismi }}</strong></td>
+                                <td>{{ component.bilesen_miktari }} {{ component.bilesen_birim }}</td>
+                                <td>{{ component.bilesen_stok }} {{ component.bilesen_birim }}</td>
+                                <td>
+                                    <span class="font-weight-bold" :class="{
+                                                  'text-success': canProduceEnough(component),
+                                                  'text-danger': !canProduceEnough(component)
+                                              }">
+                                        {{ component.bilesen_miktari > 0 ? Math.floor(component.bilesen_stok /
+                                        component.bilesen_miktari) : 0 }} adet
+                                    </span>
+                                </td>
+                                <!-- Eksik Miktar Gösterimi -->
+                                <td v-if="stockGap && stockGap.hasGap">
+                                    <span v-if="getShortfallForComponent(component.bilesen_kodu) > 0"
+                                        class="text-danger font-weight-bold">
+                                        <i class="fas fa-arrow-down mr-1"></i>
+                                        {{ Math.ceil(getShortfallForComponent(component.bilesen_kodu)) }} {{
+                                        component.bilesen_birim }}
+                                    </span>
+                                    <span v-else class="text-success">
+                                        <i class="fas fa-check mr-1"></i> Yeterli
+                                    </span>
+                                </td>
+                                <td v-if="contractsLoaded">
+                                    <div
+                                        v-if="component.bilesen_turu !== 'esans' && getContractForComponent(component.bilesen_kodu)">
+                                        <span class="badge badge-success">
+                                            {{ getContractForComponent(component.bilesen_kodu).sozlesme_id }} - {{
+                                            getContractForComponent(component.bilesen_kodu).tedarikci_adi }}
+                                        </span>
+                                        <div class="mt-1">
+                                            <small class="text-muted">Kalan: {{
+                                                getContractForComponent(component.bilesen_kodu).kalan_miktar }} {{
+                                                component.bilesen_birim }}</small>
+                                        </div>
+                                    </div>
+                                    <div v-else-if="component.bilesen_turu !== 'esans'">
+                                        <span class="badge badge-warning">Yok</span>
+                                    </div>
+                                    <div v-else>
+                                        <span class="text-muted">-</span>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sipariş Bilgileri -->
+        <div class="card" v-if="productData && productData.orders">
+            <div class="card-header">
+                <h2><i class="fas fa-shopping-cart"></i> Sipariş Bilgileri</h2>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> Bu ürüne ait aktif ve tamamlanmış sipariş özeti ile detaylı
+                    sipariş listesi aşağıda gösterilmektedir.
+                </p>
+                <!-- Sipariş Özeti -->
+                <div class="row mb-3">
+                    <div class="col-lg-3 col-md-6 col-6 mb-2">
+                        <div class="stat-summary-card" style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
+                            <i class="fas fa-shopping-bag"></i>
+                            <div>
+                                <h4 class="mb-0">{{ activeOrders.length || 0 }}</h4>
+                                <small class="text-light">Aktif Sipariş</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6 mb-2">
+                        <div class="stat-summary-card" style="background: linear-gradient(135deg, #f59e0b, #d97706);">
+                            <i class="fas fa-sort-numeric-up"></i>
+                            <div>
+                                <h4 class="mb-0">{{ calculateActiveOrdersTotal() || 0 }}</h4>
+                                <small class="text-light">Aktif Miktar</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6 mb-2">
+                        <div class="stat-summary-card" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <h4 class="mb-0">{{ (productData.orders.summary &&
+                                    productData.orders.summary.tamamlanan_siparis) || 0 }}</h4>
+                                <small class="text-light">Tamamlanan</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6 col-6 mb-2">
+                        <div class="stat-summary-card" style="background: linear-gradient(135deg, #14b8a6, #0891b2);">
+                            <i class="fas fa-tools"></i>
+                            <div>
+                                <h4 class="mb-0">{{ (productData.orders.summary &&
+                                    productData.orders.summary.hazirlanan_siparis) || 0 }}</h4>
+                                <small class="text-light">Hazırlanan</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sipariş Listesi -->
+                <div v-if="activeOrders.length === 0" class="empty-state">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Henüz aktif sipariş bulunmuyor.</p>
+                </div>
+                <div v-else class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-hashtag"></i> Sipariş No</th>
+                                <th><i class="fas fa-user"></i> Müşteri</th>
+                                <th><i class="fas fa-calendar"></i> Tarih</th>
+                                <th><i class="fas fa-sort-numeric-up"></i> Miktar</th>
+                                <th><i class="fas fa-info-circle"></i> Durum</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="order in activeOrders" :key="order.kalem_id">
+                                <td><strong>#{{ order.siparis_id }}</strong></td>
+                                <td>{{ order.musteri_adi }}</td>
+                                <td><span class="text-nowrap">{{ formatDate(order.siparis_tarihi) }}</span></td>
+                                <td>{{ order.adet }} {{ productData.product.birim }}</td>
+                                <td>
+                                    <span :class="getStatusBadgeClass(order.siparis_durum)">
+                                        {{ order.siparis_durum }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->
@@ -1455,6 +1436,13 @@ if ($urun_kodu == 0) {
                     // Count how many valid contracts are available for this product
                     return this.getRelevantContracts().length;
                 },
+                getShortfallForComponent(componentCode) {
+                    if (!this.stockGap || !this.stockGap.hasGap || !this.stockGap.gapDetails) {
+                        return 0;
+                    }
+                    const detail = this.stockGap.gapDetails.find(d => d.code === componentCode);
+                    return detail ? detail.shortfall : 0;
+                },
                 // Image viewer methods removed since we're using Lightbox2
             }
         });
@@ -1462,7 +1450,7 @@ if ($urun_kodu == 0) {
         app.mount('#app');
 
         // Initialize Fancybox after Vue has rendered
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Fancybox will automatically initialize for elements with data-fancybox attribute
             // But we can also configure it if needed
             Fancybox.bind("[data-fancybox]", {
