@@ -13,9 +13,9 @@ if ($_SESSION['taraf'] !== 'musteri') {
     exit;
 }
 
-// Check if customer still has login access
+// Check if customer still has login access and stock visibility permission
 $musteri_id = $_SESSION['user_id'];
-$access_check_query = "SELECT giris_yetkisi FROM musteriler WHERE musteri_id = ?";
+$access_check_query = "SELECT giris_yetkisi, stok_goruntuleme_yetkisi FROM musteriler WHERE musteri_id = ?";
 $access_check_stmt = $connection->prepare($access_check_query);
 $access_check_stmt->bind_param('i', $musteri_id);
 $access_check_stmt->execute();
@@ -29,6 +29,8 @@ if ($access_result->num_rows > 0) {
         header('Location: login.php?error=no_access');
         exit;
     }
+    // Store stock visibility permission in session
+    $_SESSION['stok_goruntuleme_yetkisi'] = $customer['stok_goruntuleme_yetkisi'];
 } else {
     // Customer record doesn't exist
     session_destroy();
@@ -47,14 +49,29 @@ $musteri = $musteri_result->fetch_assoc();
 $musteri_adi = $musteri ? $musteri['musteri_adi'] : 'Müşteri';
 
 // Get all available products (stock > 0) with their primary photo
-$products_query = "
-    SELECT u.urun_kodu, u.urun_ismi,
-           uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
-           uf.ana_fotograf
-    FROM urunler u
-    LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu AND uf.ana_fotograf = 1
-    WHERE u.stok_miktari > 0
-    ORDER BY u.urun_ismi";
+// Include stock quantity if customer has permission to see it
+$stok_goruntuleme_yetkisi = $_SESSION['stok_goruntuleme_yetkisi'] ?? 0;
+if ($stok_goruntuleme_yetkisi == 1) {
+    // Customer has permission to see stock quantities
+    $products_query = "
+        SELECT u.urun_kodu, u.urun_ismi, u.stok_miktari,
+               uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
+               uf.ana_fotograf
+        FROM urunler u
+        LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu AND uf.ana_fotograf = 1
+        WHERE u.stok_miktari > 0
+        ORDER BY u.urun_ismi";
+} else {
+    // Customer does not have permission to see stock quantities
+    $products_query = "
+        SELECT u.urun_kodu, u.urun_ismi,
+               uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
+               uf.ana_fotograf
+        FROM urunler u
+        LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu AND uf.ana_fotograf = 1
+        WHERE u.stok_miktari > 0
+        ORDER BY u.urun_ismi";
+}
 $products_result = $connection->query($products_query);
 
 // Get total product count
@@ -1179,7 +1196,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                                 </div>
                                             <?php endif; ?>
 
-                                            <div class="product-name"><?php echo htmlspecialchars($product['urun_ismi']); ?>
+                                            <div class="product-name"><?php
+                                                echo htmlspecialchars($product['urun_ismi']);
+                                                // Show stock quantity if customer has permission
+                                                if (isset($_SESSION['stok_goruntuleme_yetkisi']) && $_SESSION['stok_goruntuleme_yetkisi'] == 1) {
+                                                    echo ' (' . $product['stok_miktari'] . ' adet)';
+                                                }
+                                            ?>
                                             </div>
                                         </div>
                                         <form method="POST" class="add-to-cart-form">

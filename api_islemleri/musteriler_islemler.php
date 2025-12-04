@@ -52,7 +52,7 @@ function getCustomers() {
     if (!empty($search)) {
         $search_escaped = $connection->real_escape_string($search);
         $search_param = '%' . $search_escaped . '%';
-        $where_clause = "WHERE musteri_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR telefon LIKE '$search_param'";
+        $where_clause = "WHERE musteri_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
     }
 
     $count_query = "SELECT COUNT(*) as total FROM musteriler " . $where_clause;
@@ -125,6 +125,7 @@ function addCustomer() {
     $sifre = $_POST['sifre'] ?? '';
     $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
+    $stok_goruntuleme_yetkisi = isset($_POST['stok_goruntuleme_yetkisi']) ? (($_POST['stok_goruntuleme_yetkisi'] === 'true' || $_POST['stok_goruntuleme_yetkisi'] === true || $_POST['stok_goruntuleme_yetkisi'] === '1' || $_POST['stok_goruntuleme_yetkisi'] == 1) ? 1 : 0) : 0;
 
     if (empty($musteri_adi)) {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri adı alanı zorunludur.']);
@@ -146,7 +147,7 @@ function addCustomer() {
             $escaped_hashed_password = '';
         }
 
-        $query = "INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, e_posta, sistem_sifresi, aciklama_notlar, giris_yetkisi) VALUES ('$musteri_adi', '$vergi_no_tc', '$adres', '$telefon', '$e_posta', '$escaped_hashed_password', '$aciklama_notlar', $giris_yetkisi)";
+        $query = "INSERT INTO musteriler (musteri_adi, vergi_no_tc, adres, telefon, telefon_2, e_posta, sistem_sifresi, aciklama_notlar, giris_yetkisi, stok_goruntuleme_yetkisi) VALUES ('$musteri_adi', '$vergi_no_tc', '$adres', '$telefon', '$telefon_2', '$e_posta', '$escaped_hashed_password', '$aciklama_notlar', $giris_yetkisi, $stok_goruntuleme_yetkisi)";
         $result = $connection->query($query);
 
         if ($result) {
@@ -174,19 +175,15 @@ function updateCustomer() {
     $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
     $adres = $connection->real_escape_string($_POST['adres'] ?? '');
     $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+    $telefon_2 = $connection->real_escape_string($_POST['telefon_2'] ?? '');
     $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
     $sifre = $_POST['sifre'] ?? '';
     $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
     $giris_yetkisi = isset($_POST['giris_yetkisi']) ? 1 : 0;
+    $stok_goruntuleme_yetkisi = isset($_POST['stok_goruntuleme_yetkisi']) ? (($_POST['stok_goruntuleme_yetkisi'] === 'true' || $_POST['stok_goruntuleme_yetkisi'] === true || $_POST['stok_goruntuleme_yetkisi'] === '1' || $_POST['stok_goruntuleme_yetkisi'] == 1) ? 1 : 0) : 0;
 
     if (empty($musteri_id) || empty($musteri_adi)) {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri ID ve müşteri adı alanları zorunludur.']);
-        return;
-    }
-
-    // If giris_yetkisi is enabled, password is required
-    if ($giris_yetkisi == 1 && empty($sifre)) {
-        echo json_encode(['status' => 'error', 'message' => 'Sisteme giriş yetkisi verildiğinde şifre zorunludur.']);
         return;
     }
 
@@ -195,9 +192,9 @@ function updateCustomer() {
         if (!empty($sifre) && $giris_yetkisi == 1) {
             $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
             $escaped_hashed_password = $connection->real_escape_string($hashed_password);
-            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', sistem_sifresi = '$escaped_hashed_password', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
+            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', telefon_2 = '$telefon_2', e_posta = '$e_posta', sistem_sifresi = '$escaped_hashed_password', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi, stok_goruntuleme_yetkisi = $stok_goruntuleme_yetkisi WHERE musteri_id = $musteri_id";
         } else {
-            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', e_posta = '$e_posta', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi WHERE musteri_id = $musteri_id";
+            $query = "UPDATE musteriler SET musteri_adi = '$musteri_adi', vergi_no_tc = '$vergi_no_tc', adres = '$adres', telefon = '$telefon', telefon_2 = '$telefon_2', e_posta = '$e_posta', aciklama_notlar = '$aciklama_notlar', giris_yetkisi = $giris_yetkisi, stok_goruntuleme_yetkisi = $stok_goruntuleme_yetkisi WHERE musteri_id = $musteri_id";
         }
 
         // Eski müşteri adını almak için sorgu

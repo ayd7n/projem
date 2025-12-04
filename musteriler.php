@@ -129,6 +129,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             border-bottom: 2px solid var(--border-color);
             font-weight: 700;
             color: var(--text-primary);
+            white-space: nowrap;
         }
         .table th i {
             margin-right: 6px;
@@ -136,6 +137,15 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
+            white-space: nowrap;
+        }
+        /* Specific styling for long text fields */
+        .table td.address-cell,
+        .table td.description-cell {
+            max-width: 150px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
         .actions {
             display: flex;
@@ -233,9 +243,11 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                             <tr>
                                 <th><i class="fas fa-cogs"></i> İşlemler</th>
                                 <th><i class="fas fa-lock"></i> Giriş Yetkisi</th>
+                                <th><i class="fas fa-boxes"></i> Stok Yetkisi</th>
                                 <th><i class="fas fa-user"></i> Müşteri Adı</th>
                                 <th><i class="fas fa-id-card"></i> Vergi/TC No</th>
                                 <th><i class="fas fa-phone"></i> Telefon</th>
+                                <th><i class="fas fa-phone"></i> Telefon 2</th>
                                 <th><i class="fas fa-envelope"></i> E-posta</th>
                                 <th><i class="fas fa-map-marker-alt"></i> Adres</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
@@ -261,12 +273,17 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                     <span v-if="customer.giris_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
                                     <span v-else style="color: red; font-weight: bold;">✗</span>
                                 </td>
+                                <td>
+                                    <span v-if="customer.stok_goruntuleme_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
+                                    <span v-else style="color: red; font-weight: bold;">✗</span>
+                                </td>
                                 <td><strong>{{ customer.musteri_adi }}</strong></td>
                                 <td>{{ customer.vergi_no_tc || '-' }}</td>
                                 <td>{{ customer.telefon || '-' }}</td>
+                                <td>{{ customer.telefon_2 || '-' }}</td>
                                 <td>{{ customer.e_posta || '-' }}</td>
-                                <td>{{ customer.adres ? (customer.adres.length > 30 ? customer.adres.substring(0, 30) + '...' : customer.adres) : '-' }}</td>
-                                <td>{{ customer.aciklama_notlar ? (customer.aciklama_notlar.length > 20 ? customer.aciklama_notlar.substring(0, 20) + '...' : customer.aciklama_notlar) : '-' }}</td>
+                                <td class="address-cell">{{ customer.adres || '-' }}</td>
+                                <td class="description-cell">{{ customer.aciklama_notlar || '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -351,6 +368,14 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
+                                        <label>Telefon 2</label>
+                                        <input type="text" class="form-control" v-model="modal.data.telefon_2">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
                                         <label>E-posta</label>
                                         <input type="email" class="form-control" v-model="modal.data.e_posta">
                                     </div>
@@ -372,8 +397,19 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" v-model="modal.data.stok_goruntuleme_yetkisi">
+                                            <label class="form-check-label">Stok Görüntüleme Yetkisi</label>
+                                        </div>
+                                        <small class="form-text text-muted">Müşterinin ürün stok miktarlarını görmesine izin ver</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
                                         <label>Şifre <span v-if="modal.data.giris_yetkisi">*</span></label>
-                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi" :placeholder="modal.data.musteri_id ? 'Şifrenin değişmesini istemiyorsanız boş bırakın' : 'Şifre giriniz'">
+                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi && !modal.data.musteri_id" :placeholder="modal.data.musteri_id ? 'Şifrenin değişmesini istemiyorsanız boş bırakın' : 'Şifre giriniz'">
                                     </div>
                                 </div>
                             </div>
@@ -470,28 +506,36 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                 openModal(customer) {
                     if (customer) {
                         this.modal.title = 'Müşteriyi Düzenle';
-                        // Create a copy of customer data and ensure giris_yetkisi is boolean
+                        // Create a copy of customer data and ensure boolean fields are properly set
                         this.modal.data = {
                             ...customer,
-                            giris_yetkisi: customer.giris_yetkisi == 1 || customer.giris_yetkisi === true
+                            giris_yetkisi: customer.giris_yetkisi == 1 || customer.giris_yetkisi === true,
+                            stok_goruntuleme_yetkisi: customer.stok_goruntuleme_yetkisi == 1 || customer.stok_goruntuleme_yetkisi === true
                         };
                     } else {
                         this.modal.title = 'Yeni Müşteri Ekle';
-                        this.modal.data = {};
+                        this.modal.data = {
+                            stok_goruntuleme_yetkisi: false  // Default to false for new customers
+                        };
                     }
                     $('#customerModal').modal('show');
                 },
                 saveCustomer() {
-                    // Check if giris_yetkisi is enabled but no password is provided
-                    if (this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
-                        this.showAlert('Sisteme giriş yetkisi verildiğinde şifre zorunludur.', 'danger');
-                        return;
-                    }
-                    
                     let action = this.modal.data.musteri_id ? 'update_customer' : 'add_customer';
+
+                    // For add operations, if giris_yetkisi is enabled, password is required
+                    if (action === 'add_customer') {
+                        if (this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
+                            this.showAlert('Yeni müşteri için sistemde giriş yetkisi verildiğinde şifre zorunludur.', 'danger');
+                            return;
+                        }
+                    }
+
                     let formData = new FormData();
                     for (let key in this.modal.data) {
-                        formData.append(key, this.modal.data[key]);
+                        if (this.modal.data[key] !== undefined && this.modal.data[key] !== null) {
+                            formData.append(key, this.modal.data[key]);
+                        }
                     }
                     formData.append('action', action);
 
@@ -514,8 +558,9 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                     });
                 },
                 validateForm() {
-                    if (this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
-                        this.showAlert('Sisteme giriş yetkisi verildiğinde şifre zorunludur.', 'warning');
+                    // Only show warning for new customer creation
+                    if (!this.modal.data.musteri_id && this.modal.data.giris_yetkisi && (!this.modal.data.sifre || this.modal.data.sifre.trim() === '')) {
+                        this.showAlert('Yeni müşteri için sistemde giriş yetkisi verildiğinde şifre zorunludur.', 'warning');
                     }
                 },
                 deleteCustomer(id) {

@@ -52,7 +52,7 @@ function getSuppliers() {
     if (!empty($search)) {
         $search_escaped = $connection->real_escape_string($search);
         $search_param = '%' . $search_escaped . '%';
-        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param'";
+        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
     }
 
     $count_query = "SELECT COUNT(*) as total FROM tedarikciler " . $where_clause;
@@ -125,18 +125,22 @@ function addSupplier() {
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
     $adres = $_POST['adres'] ?? '';
     $telefon = $_POST['telefon'] ?? '';
+    $telefon_2 = $_POST['telefon_2'] ?? '';
     $e_posta = $_POST['e_posta'] ?? '';
     $yetkili_kisi = $_POST['yetkili_kisi'] ?? '';
     $aciklama_notlar = $_POST['aciklama_notlar'] ?? '';
+
+    // Debug output to understand what's happening with telefon_2
+    // error_log("Tedarikci API Add - telefon: '$telefon', telefon_2: '$telefon_2'");
 
     if (empty($tedarikci_adi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi adı zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO tedarikciler (tedarikci_adi, vergi_no_tc, adres, telefon, e_posta, yetkili_kisi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO tedarikciler (tedarikci_adi, vergi_no_tc, adres, telefon, telefon_2, e_posta, yetkili_kisi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($query);
-    $stmt->bind_param('sssssss', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $yetkili_kisi, $aciklama_notlar);
+    $stmt->bind_param('ssssssss', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar);
 
     if ($stmt->execute()) {
         // Log ekleme
@@ -162,9 +166,13 @@ function updateSupplier() {
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
     $adres = $_POST['adres'] ?? '';
     $telefon = $_POST['telefon'] ?? '';
+    $telefon_2 = $_POST['telefon_2'] ?? '';
     $e_posta = $_POST['e_posta'] ?? '';
     $yetkili_kisi = $_POST['yetkili_kisi'] ?? '';
     $aciklama_notlar = $_POST['aciklama_notlar'] ?? '';
+
+    // Debug output to understand what's happening with telefon_2
+    // error_log("Tedarikci API Update - telefon: '$telefon', telefon_2: '$telefon_2'");
 
     if (empty($tedarikci_id) || empty($tedarikci_adi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tedarikçi ID ve tedarikçi adı alanları zorunludur.']);
@@ -181,9 +189,9 @@ function updateSupplier() {
     $old_supplier_name = $old_supplier['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
     $old_stmt->close();
 
-    $query = "UPDATE tedarikciler SET tedarikci_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, e_posta = ?, yetkili_kisi = ?, aciklama_notlar = ? WHERE tedarikci_id = ?";
+    $query = "UPDATE tedarikciler SET tedarikci_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, telefon_2 = ?, e_posta = ?, yetkili_kisi = ?, aciklama_notlar = ? WHERE tedarikci_id = ?";
     $stmt = $connection->prepare($query);
-    $stmt->bind_param('sssssssi', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $e_posta, $yetkili_kisi, $aciklama_notlar, $tedarikci_id);
+    $stmt->bind_param('ssssssssi', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar, $tedarikci_id);
 
     if ($stmt->execute()) {
         // Log ekleme

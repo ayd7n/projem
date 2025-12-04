@@ -313,6 +313,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-user"></i> Tedarikçi Adı</th>
                                 <th><i class="fas fa-id-card"></i> Vergi/TC No</th>
                                 <th><i class="fas fa-phone"></i> Telefon</th>
+                                <th><i class="fas fa-phone"></i> Telefon 2</th>
                                 <th><i class="fas fa-envelope"></i> E-posta</th>
                                 <th><i class="fas fa-user-tie"></i> Yetkili Kişi</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
@@ -340,6 +341,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
                                 <td>{{ supplier.vergi_no_tc || '-' }}</td>
                                 <td>{{ supplier.telefon || '-' }}</td>
+                                <td>{{ supplier.telefon_2 || '-' }}</td>
                                 <td>{{ supplier.e_posta || '-' }}</td>
                                 <td>{{ supplier.yetkili_kisi || '-' }}</td>
                                 <td>{{ supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ?
@@ -434,6 +436,14 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                         <input type="text" class="form-control" v-model="modal.data.telefon">
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Telefon 2</label>
+                                        <input type="text" class="form-control" v-model="modal.data.telefon_2">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>E-posta</label>

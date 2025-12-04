@@ -125,6 +125,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-briefcase"></i> Pozisyon</th>
                                 <th><i class="fas fa-building"></i> Departman</th>
                                 <th><i class="fas fa-phone"></i> Telefon</th>
+                                <th><i class="fas fa-phone"></i> Telefon 2</th>
                                 <th><i class="fas fa-envelope"></i> E-posta</th>
                                 <th><i class="fas fa-id-card"></i> TC Kimlik No</th>
                                 <th><i class="fas fa-birthday-cake"></i> Doğum Tarihi</th>
@@ -160,6 +161,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ employee.pozisyon || '-' }}</td>
                                 <td>{{ employee.departman || '-' }}</td>
                                 <td>{{ employee.telefon || '-' }}</td>
+                                <td>{{ employee.telefon_2 || '-' }}</td>
                                 <td>{{ employee.e_posta || '-' }}</td>
                                 <td>{{ employee.tc_kimlik_no || '-' }}</td>
                                 <td>{{ formatDate(employee.dogum_tarihi) }}</td>
@@ -260,6 +262,14 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <input type="text" class="form-control" v-model="modal.data.telefon">
                                     </div>
                                 </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Telefon 2</label>
+                                        <input type="text" class="form-control" v-model="modal.data.telefon_2">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>E-posta</label>
