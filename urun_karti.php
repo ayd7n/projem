@@ -44,28 +44,50 @@ if ($urun_kodu == 0) {
         rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
         :root {
-            --primary: #6366f1;
-            --secondary: #8b5cf6;
+            /* Teal & Cyan Color Palette */
+            --primary: #0891b2;
+            --primary-light: #06b6d4;
+            --primary-dark: #0e7490;
+            --secondary: #14b8a6;
             --accent: #f59e0b;
-            --success: #10b981;
+            --success: #22c55e;
             --danger: #ef4444;
             --warning: #f59e0b;
-            --info: #3b82f6;
-            --bg-color: #f1f5f9;
-            --card-bg: #ffffff;
-            --border-color: #e2e8f0;
-            --text-primary: #1e293b;
-            --text-secondary: #64748b;
-            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-            --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
-            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            --border-radius: 16px;
-            --card-padding: 20px;
-        }
+            --info: #0ea5e9;
 
-        html {
-            font-size: 14px;
+            /* Neutral Palette */
+            --bg-main: #fafbfc;
+            --bg-secondary: #f3f4f6;
+            --card-bg: #ffffff;
+            --border-light: #e5e7eb;
+            --border-medium: #d1d5db;
+
+            /* Text Colors */
+            --text-dark: #111827;
+            --text-medium: #374151;
+            --text-light: #6b7280;
+            --text-lighter: #9ca3af;
+
+            /* Shadows */
+            --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.08);
+            --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.1);
+            --shadow-xl: 0 12px 24px rgba(0, 0, 0, 0.12);
+
+            /* Transitions */
+            --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-base: 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+
+            /* Spacing */
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --spacing-unit: 20px;
         }
 
         * {
@@ -74,190 +96,437 @@ if ($urun_kodu == 0) {
             box-sizing: border-box;
         }
 
+        html {
+            font-size: 15px;
+        }
+
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
-            color: var(--text-primary);
+            font-family: 'Poppins', 'Ubuntu', -apple-system, sans-serif;
+            background: var(--bg-main);
+            color: var(--text-dark);
             min-height: 100vh;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
         }
 
         .main-content {
-            padding: 20px;
+            padding: 24px;
             max-width: 1400px;
             margin: 0 auto;
         }
 
         .page-header {
-            margin-bottom: 20px;
+            margin-bottom: 24px;
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 16px;
         }
 
         .page-header h1 {
-            font-size: 1.6rem;
-            font-weight: 700;
+            font-size: 1.75rem;
+            font-weight: 600;
             margin: 0;
-            color: var(--text-primary);
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.025em;
+        }
+
+        .page-header h1 i {
+            color: var(--primary);
         }
 
         .back-btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            width: 40px;
-            height: 40px;
-            border-radius: 12px;
+            background: white;
+            color: var(--text-medium);
+            width: 42px;
+            height: 42px;
+            border-radius: var(--radius-md);
             display: flex;
             align-items: center;
             justify-content: center;
             text-decoration: none;
-            transition: var(--transition);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
-            border: none;
+            transition: var(--transition-base);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
         }
 
         .back-btn:hover {
-            background: linear-gradient(135deg, var(--secondary), var(--primary));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.35);
+            background: var(--primary);
             color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary);
         }
 
         .card {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            margin-bottom: 18px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+            margin-bottom: var(--spacing-unit);
             overflow: hidden;
-            transition: var(--transition);
+            transition: var(--transition-base);
         }
 
         .card:hover {
-            box-shadow: var(--shadow-hover);
-            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--border-medium);
         }
 
         .card-header {
-            padding: 14px var(--card-padding);
-            border-bottom: none;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border-radius: var(--border-radius) var(--border-radius) 0 0 !important;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-light);
+            background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
         }
 
         .card-header h2 {
             font-size: 1rem;
-            font-weight: 700;
+            font-weight: 600;
             margin: 0;
+            color: var(--text-dark);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 10px;
+            letter-spacing: -0.01em;
+        }
+
+        .card-header h2 i {
+            color: var(--primary);
+            font-size: 1.1rem;
         }
 
         .card-body {
-            padding: var(--card-padding);
+            padding: 20px;
         }
 
         .stat-card {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
             color: white;
-            border-radius: 14px;
-            padding: 18px;
+            border-radius: var(--radius-md);
+            padding: 20px;
             text-align: center;
             height: 100%;
-            box-shadow: 0 4px 16px rgba(99, 102, 241, 0.2);
-            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition-base);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
-            transition: var(--transition);
+            border: none;
         }
 
         .stat-card:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 12px 28px rgba(99, 102, 241, 0.3);
-        }
-
-        .stat-card:hover::before {
-            top: -30%;
-            right: -30%;
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
         }
 
         .stat-card h3 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             margin: 8px 0;
-            font-weight: 700;
-            position: relative;
-            z-index: 1;
+            font-weight: 600;
+            letter-spacing: -0.02em;
         }
 
         .stat-card p {
             margin: 0;
             opacity: 0.95;
             font-size: 0.85rem;
-            position: relative;
-            z-index: 1;
+            font-weight: 400;
         }
 
         .stat-card i {
             font-size: 2rem;
-            opacity: 0.95;
+            opacity: 0.9;
             margin-bottom: 8px;
-            position: relative;
-            z-index: 1;
         }
 
-        .stat-content {
+
+        .table {
+            margin-bottom: 0;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.9rem;
+            width: 100%;
+        }
+
+        .table th {
+            border-top: none;
+            border-bottom: 2px solid var(--border-light);
+            font-weight: 600;
+            color: var(--text-medium);
+            background: var(--bg-secondary);
+            padding: 12px 14px;
+            font-size: 0.85rem;
+            text-align: left;
+        }
+
+        .table td {
+            vertical-align: middle;
+            color: var(--text-light);
+            padding: 12px 14px;
+            border-top: 1px solid var(--border-light);
+        }
+
+        .table tr:first-child td {
+            border-top: none;
+        }
+
+        .table tbody tr {
+            transition: var(--transition-fast);
+        }
+
+        .table tbody tr:hover {
+            background: #fafbfc;
+        }
+
+        .badge-in {
+            background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .badge-out {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .empty-state {
             text-align: center;
-            margin-top: 8px;
+            padding: 48px 24px;
+            color: var(--text-lighter);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            margin: 16px 0;
+            border: 2px dashed var(--border-medium);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            opacity: 0.4;
+            margin-bottom: 12px;
+            color: var(--text-lighter);
+        }
+
+        .empty-state p {
+            font-size: 0.95rem;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .info-value {
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .stat-summary-card {
+            border-radius: var(--radius-md);
+            padding: 16px 18px;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: var(--transition-base);
+            height: 100%;
+            box-shadow: var(--shadow-sm);
+            border: none;
+        }
+
+        .stat-summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .stat-summary-card i {
+            font-size: 1.6rem;
+            flex-shrink: 0;
+        }
+
+        .stat-summary-card h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin: 0;
+            letter-spacing: -0.02em;
+        }
+
+        .stat-summary-card small {
+            opacity: 0.9;
+            font-size: 0.75rem;
+            font-weight: 400;
+            margin: 0;
+        }
+
+        .alert {
+            border-radius: var(--radius-md);
+            border: 1px solid;
+            padding: 14px 16px;
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .alert i {
+            margin-top: 2px;
+        }
+
+        .alert-warning {
+            background-color: #fffbeb;
+            border-color: #fde68a;
+            color: #92400e;
+        }
+
+        .alert-success {
+            background-color: #f0fdf4;
+            border-color: #bbf7d0;
+            color: #166534;
+        }
+
+        .alert-info {
+            background-color: #eff6ff;
+            border-color: #bfdbfe;
+            color: #1e40af;
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            border-color: #fecaca;
+            color: #991b1b;
+        }
+
+        .badge {
+            border-radius: 20px;
+            padding: 5px 10px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: inline-block;
+        }
+
+        .badge-success {
+            background: linear-gradient(135deg, #22c55e, #16a34a);
+            color: white;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .badge-warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            color: white;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .badge-info {
+            background: linear-gradient(135deg, #0ea5e9, #0284c7);
+            color: white;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .badge-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+            box-shadow: var(--shadow-xs);
+        }
+
+        .badge-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            color: white;
+            box-shadow: var(--shadow-xs);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-secondary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-medium);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-lighter);
+        }
+
+        /* Hide elements until Vue is loaded */
+        [v-cloak] {
+            display: none !important;
         }
 
         .photo-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 15px;
+            gap: 16px;
         }
 
         .photo-item {
             position: relative;
-            border-radius: 12px;
+            border-radius: var(--radius-md);
             overflow: hidden;
             cursor: pointer;
-            transition: var(--transition);
-            border: 2px solid var(--border-color);
-            box-shadow: var(--shadow);
+            transition: var(--transition-base);
+            border: 1px solid var(--border-light);
+            box-shadow: var(--shadow-xs);
             background: white;
         }
 
         .photo-item:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-hover);
-            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary-light);
         }
 
         .photo-item img {
             width: 100%;
             height: 180px;
             object-fit: cover;
-            transition: var(--transition);
+            transition: var(--transition-slow);
         }
 
         .photo-item:hover img {
@@ -268,248 +537,27 @@ if ($urun_kodu == 0) {
             position: absolute;
             top: 10px;
             left: 10px;
-            background: linear-gradient(135deg, var(--warning), var(--accent));
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: white;
             padding: 5px 10px;
-            border-radius: 8px;
+            border-radius: var(--radius-sm);
             font-size: 0.7rem;
             font-weight: 600;
             z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            box-shadow: var(--shadow-md);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
-
-        .table {
-            margin-bottom: 0;
-            border-collapse: separate;
-            border-spacing: 0;
-            font-size: 0.9rem;
-        }
-
-        .table th {
-            border-top: none;
-            border-bottom: 2px solid var(--border-color);
-            font-weight: 700;
-            color: var(--text-primary);
-            background: linear-gradient(to bottom, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05));
-            padding: 10px 12px;
-            font-size: 0.85rem;
-        }
-
-        .table td {
-            vertical-align: middle;
-            color: var(--text-secondary);
-            padding: 10px 12px;
-            border-top: 1px solid var(--border-color);
-        }
-
-        .table tr:first-child td {
-            border-top: none;
-        }
-
-        .table tr:hover {
-            background: linear-gradient(to right, rgba(99, 102, 241, 0.03), rgba(139, 92, 246, 0.03));
-        }
-
-        .table-header {
-            background: linear-gradient(to bottom, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08)) !important;
-        }
-
-        .table-row {
-            transition: var(--transition);
-        }
-
-        .badge-in {
-            background: linear-gradient(135deg, var(--success), #059669);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
-        }
-
-        .badge-out {
-            background: linear-gradient(135deg, var(--danger), #dc2626);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 30px 20px;
-            color: var(--text-secondary);
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.03), rgba(139, 92, 246, 0.03));
-            border-radius: 12px;
-            margin: 15px 0;
-            border: 2px dashed var(--border-color);
-        }
-
-        .empty-state i {
-            font-size: 2.8rem;
-            opacity: 0.3;
-            margin-bottom: 12px;
-            color: var(--text-secondary);
-        }
-
-        .empty-state p {
-            font-size: 1rem;
-            margin: 0;
-        }
-
-        .info-item {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            padding: 8px 0;
-        }
-
-        .info-icon {
-            width: 36px;
-            height: 36px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-        }
-
-        .info-value {
-            font-weight: 600;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-        }
-
-        .stat-summary-card {
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: white;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: var(--transition);
-            height: 100%;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .stat-summary-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 100px;
-            height: 100px;
-            background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
-            transform: translate(30%, -30%);
-        }
-
-        .stat-summary-card:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
-        }
-
-        .stat-summary-card i {
-            font-size: 1.6rem;
-            flex-shrink: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-summary-card h4,
-        .stat-summary-card small {
-            margin: 0;
-            position: relative;
-            z-index: 1;
-        }
-
-        .stat-summary-card h4 {
-            font-size: 1.4rem;
-        }
-
-        .stat-summary-card small {
-            opacity: 0.9;
-            font-size: 0.75rem;
-        }
-
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 12px 16px;
-            font-size: 0.9rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(251, 191, 36, 0.15));
-            color: #92400e;
-            border-left: 4px solid #f59e0b;
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
-            color: #065f46;
-            border-left: 4px solid #10b981;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.15));
-            color: #1e3a8a;
-            border-left: 4px solid #3b82f6;
-        }
-
-        .badge {
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 0.8rem;
-            font-weight: 600;
-        }
-
-        .badge-success {
-            background: linear-gradient(135deg, #10b981, #34d399);
-            color: white;
-            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);
-        }
-
-        .badge-warning {
-            background: linear-gradient(135deg, #f59e0b, #fbbf24);
-            color: white;
-            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
-        }
-
-        .badge-info {
-            background: linear-gradient(135deg, #3b82f6, #60a5fa);
-            color: white;
-            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
-        }
-
-        .badge-secondary {
-            background: linear-gradient(135deg, #64748b, #94a3b8);
-            color: white;
-            box-shadow: 0 2px 6px rgba(100, 116, 139, 0.2);
-        }
-
-        .badge-danger {
-            background: linear-gradient(135deg, #ef4444, #f87171);
-            color: white;
-            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
-        }
-
 
         @media (max-width: 768px) {
+            .main-content {
+                padding: 16px;
+            }
+
+            .page-header h1 {
+                font-size: 1.4rem;
+            }
+
             .photo-gallery {
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 12px;
@@ -520,23 +568,22 @@ if ($urun_kodu == 0) {
             }
 
             .stat-card h3 {
-                font-size: 1.5rem;
+                font-size: 1.6rem;
             }
 
             .stat-card i {
-                font-size: 1.8rem;
+                font-size: 1.6rem;
             }
 
             .info-item {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 6px;
+                flex-direction: row;
+                gap: 10px;
             }
 
             .info-icon {
-                width: 32px;
-                height: 32px;
-                font-size: 13px;
+                width: 36px;
+                height: 36px;
+                font-size: 14px;
             }
 
             .stat-summary-card {
@@ -544,7 +591,7 @@ if ($urun_kodu == 0) {
                 align-items: flex-start;
                 text-align: left;
                 gap: 8px;
-                padding: 12px;
+                padding: 14px;
             }
 
             .stat-summary-card i {
@@ -552,13 +599,9 @@ if ($urun_kodu == 0) {
             }
 
             .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 10px;
-            }
-
-            .main-content {
-                padding: 12px;
+                flex-direction: row;
+                align-items: center;
+                gap: 12px;
             }
 
             .card-body {
@@ -569,13 +612,21 @@ if ($urun_kodu == 0) {
         @media (max-width: 576px) {
             .photo-gallery {
                 grid-template-columns: 1fr 1fr;
+                gap: 10px;
             }
 
             .stat-summary-card {
                 padding: 12px;
             }
+
+            .info-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 8px;
+            }
         }
-    </style>
+
+        </style>
 </head>
 
 <body>
@@ -613,7 +664,7 @@ if ($urun_kodu == 0) {
     </nav>
 
     <!-- Main Content -->
-    <div id="app" class="main-content">
+    <div id="app" class="main-content" v-cloak>
         <div class="page-header">
             <a href="urunler.php" class="back-btn" title="Geri Dön">
                 <i class="fas fa-arrow-left"></i>
@@ -633,17 +684,45 @@ if ($urun_kodu == 0) {
         </div>
 
         <div v-else-if="productData">
+            <!-- Ürün Fotoğrafları -->
+            <div class="card" v-if="productData.photos.length > 0">
+                <div class="card-header">
+                    <h2><i class="fas fa-images"></i> Ürün Fotoğrafları</h2>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Bu ürüne ait {{ productData.photos.length }} adet fotoğraf
+                        bulunmaktadır. Ana fotoğraf yıldız işareti ile belirtilmiştir.
+                    </p>
+                    <div class="photo-gallery">
+                        <div v-for="(photo, index) in productData.photos" :key="photo.fotograf_id" class="photo-item">
+                            <div v-if="photo.ana_fotograf == 1" class="primary-badge">
+                                <i class="fas fa-star"></i> ANA FOTOĞRAF
+                            </div>
+                            <a :href="photo.dosya_yolu" data-fancybox="product-photos" :data-caption="photo.dosya_adi">
+                                <img :src="photo.dosya_yolu" :alt="photo.dosya_adi"
+                                    style="cursor: pointer;" title="Fotoğrafı büyütmek için tıklayın">
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Ürün Bilgileri -->
             <div class="card">
                 <div class="card-header">
                     <h2><i class="fas fa-info-circle"></i> Ürün Bilgileri</h2>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Ürünün temel bilgileri, fiyatlandırma ve stok konumu
+                        detayları aşağıda gösterilmektedir.
+                    </p>
                     <div class="row">
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-barcode info-icon"
-                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"></i>
+                                    style="background: linear-gradient(135deg, #0891b2, #06b6d4);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Ürün Kodu</small>
                                     <p class="mb-0 info-value">{{ productData.product.urun_kodu }}</p>
@@ -653,7 +732,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-tag info-icon"
-                                    style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);"></i>
+                                    style="background: linear-gradient(135deg, #14b8a6, #0891b2);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Ürün İsmi</small>
                                     <p class="mb-0 info-value">{{ productData.product.urun_ismi }}</p>
@@ -663,7 +742,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-ruler info-icon"
-                                    style="background: linear-gradient(135deg, #3b82f6, #60a5fa);"></i>
+                                    style="background: linear-gradient(135deg, #0ea5e9, #0284c7);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Birim</small>
                                     <p class="mb-0 info-value">{{ productData.product.birim }}</p>
@@ -673,7 +752,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-money-bill-wave info-icon"
-                                    style="background: linear-gradient(135deg, #10b981, #34d399);"></i>
+                                    style="background: linear-gradient(135deg, #22c55e, #16a34a);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Satış Fiyatı</small>
                                     <p class="mb-0 info-value">{{ formatCurrency(productData.product.satis_fiyati) }}
@@ -685,7 +764,7 @@ if ($urun_kodu == 0) {
                             v-if="productData.product.teorik_maliyet !== undefined">
                             <div class="info-item">
                                 <i class="fas fa-calculator info-icon"
-                                    style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></i>
+                                    style="background: linear-gradient(135deg, #f59e0b, #d97706);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Teorik Maliyet</small>
                                     <p class="mb-0 info-value">{{ formatCurrency(productData.product.teorik_maliyet) }}
@@ -696,7 +775,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-warehouse info-icon"
-                                    style="background: linear-gradient(135deg, #3b82f6, #60a5fa);"></i>
+                                    style="background: linear-gradient(135deg, #0ea5e9, #0284c7);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Depo</small>
                                     <p class="mb-0 info-value">{{ productData.product.depo }}</p>
@@ -706,7 +785,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-boxes info-icon"
-                                    style="background: linear-gradient(135deg, #10b981, #34d399);"></i>
+                                    style="background: linear-gradient(135deg, #22c55e, #16a34a);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Mevcut Stok</small>
                                     <p class="mb-0 info-value">{{ productData.product.stok_miktari }} {{
@@ -717,7 +796,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-cube info-icon"
-                                    style="background: linear-gradient(135deg, #f59e0b, #fbbf24);"></i>
+                                    style="background: linear-gradient(135deg, #f59e0b, #d97706);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Raf</small>
                                     <p class="mb-0 info-value">{{ productData.product.raf }}</p>
@@ -727,7 +806,7 @@ if ($urun_kodu == 0) {
                         <div class="col-lg-3 col-md-4 col-6 mb-3">
                             <div class="info-item">
                                 <i class="fas fa-exclamation-triangle info-icon"
-                                    style="background: linear-gradient(135deg, #ef4444, #f87171);"></i>
+                                    style="background: linear-gradient(135deg, #ef4444, #dc2626);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Kritik Stok</small>
                                     <p class="mb-0 info-value">{{ productData.product.kritik_stok_seviyesi }}</p>
@@ -737,7 +816,7 @@ if ($urun_kodu == 0) {
                         <div class="col-12 mb-3" v-if="productData.product.not_bilgisi">
                             <div class="info-item">
                                 <i class="fas fa-sticky-note info-icon"
-                                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"></i>
+                                    style="background: linear-gradient(135deg, #0891b2, #06b6d4);"></i>
                                 <div>
                                     <small class="text-muted d-block" style="font-size: 0.75rem;">Not</small>
                                     <p class="mb-0 info-value">{{ productData.product.not_bilgisi }}</p>
@@ -754,55 +833,60 @@ if ($urun_kodu == 0) {
                     <h2><i class="fas fa-chart-line"></i> Stok Analizi</h2>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Mevcut stok durumu ve kritik seviye karşılaştırması. Stok
+                        açığı varsa üretilebilir miktar ve eksik bileşenler gösterilir.
+                    </p>
                     <div class="row">
                         <div class="col-md-12">
                             <div class="alert" :class="stockGap.hasGap ? 'alert-warning' : 'alert-success'">
                                 <i class="fas fa-info-circle"></i>
-                                <strong>Kritik Stok Seviyesi:</strong> {{ productData.product.kritik_stok_seviyesi }} {{
-                                productData.product.birim }} |
-                                <strong>Mevcut Stok:</strong> {{ productData.product.stok_miktari }} {{
-                                productData.product.birim }}
-                                <span v-if="stockGap.hasGap">
-                                    | <strong>Stok Açığı:</strong> {{ stockGap.gap }} {{ productData.product.birim }}
-                                    ({{ stockGap.gapPercentage }}%)
-                                </span>
-                                <span v-else>
-                                    | <strong>Stok yeterli!</strong>
-                                </span>
+                                <div>
+                                    <strong>Kritik Stok Seviyesi:</strong> {{ productData.product.kritik_stok_seviyesi
+                                    }} {{
+                                    productData.product.birim }} |
+                                    <strong>Mevcut Stok:</strong> {{ productData.product.stok_miktari }} {{
+                                    productData.product.birim }}
+                                    <span v-if="stockGap.hasGap">
+                                        | <strong>Stok Açığı:</strong> {{ stockGap.gap }} {{ productData.product.birim
+                                        }}
+                                        ({{ stockGap.gapPercentage }}%)
+                                    </span>
+                                    <span v-else>
+                                        | <strong>Stok yeterli!</strong>
+                                    </span>
+                                </div>
                             </div>
                         </div>
                         <div class="col-md-6" v-if="stockGap.hasGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #0891b2, #06b6d4);">
                                 <i class="fas fa-calculator"></i>
-                                <div class="stat-content">
-                                    <h3>{{ stockGap.producibleForGap }}</h3>
-                                    <p>Üretilebilir Adet</p>
-                                </div>
+                                <h3>{{ stockGap.producibleForGap }}</h3>
+                                <p>Üretilebilir Adet</p>
                             </div>
                         </div>
                         <div class="col-md-6" v-if="stockGap.hasGap && !stockGap.canCoverGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #f87171);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #ef4444, #dc2626);">
                                 <i class="fas fa-exclamation-triangle"></i>
-                                <div class="stat-content">
-                                    <h3>{{ stockGap.gap - stockGap.producibleForGap }}</h3>
-                                    <p>Ek Eksiklik</p>
-                                </div>
+                                <h3>{{ stockGap.gap - stockGap.producibleForGap }}</h3>
+                                <p>Ek Eksiklik</p>
                             </div>
                         </div>
                         <div class="col-md-6" v-else-if="!stockGap.hasGap">
-                            <div class="stat-card" style="background: linear-gradient(135deg, #10b981, #34d399);">
+                            <div class="stat-card" style="background: linear-gradient(135deg, #22c55e, #16a34a);">
                                 <i class="fas fa-check-circle"></i>
-                                <div class="stat-content">
-                                    <h3>{{ productData.product.stok_miktari }}</h3>
-                                    <p>Yeterli Stok</p>
-                                </div>
+                                <h3>{{ productData.product.stok_miktari }}</h3>
+                                <p>Yeterli Stok</p>
                             </div>
                         </div>
                     </div>
 
                     <div class="mt-3" v-if="stockGap.hasGap && stockGap.gapDetails.length > 0">
-                        <h4><i class="fas fa-exclamation-triangle text-warning"></i> Eksik Bileşenler</h4>
-                        <p>Stok seviyesini kritik seviyeye çıkarmak için aşağıdaki bileşenlerden talep/giderilmelidir:
+                        <h4 style="font-size: 1.1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 12px;">
+                            <i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Eksik Bileşenler
+                        </h4>
+                        <p class="text-muted mb-3" style="font-size: 0.85rem;">
+                            Stok seviyesini kritik seviyeye çıkarmak için aşağıdaki bileşenlerden temin edilmelidir:
                         </p>
                         <div class="table-responsive">
                             <table class="table table-sm">
@@ -836,26 +920,12 @@ if ($urun_kodu == 0) {
 
                     <div class="mt-3" v-else-if="stockGap.hasGap && stockGap.canCoverGap">
                         <div class="alert alert-success">
-                            <i class="fas fa-check-circle"></i> <strong>Harika!</strong>
-                            Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip
-                            kritik seviyeye ulaşabilirsiniz.
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Ürün Fotoğrafları -->
-            <div class="card" v-if="productData.photos.length > 0">
-                <div class="card-header">
-                    <h2><i class="fas fa-images"></i> Ürün Fotoğrafları ({{ productData.photos.length }})</h2>
-                </div>
-                <div class="card-body">
-                    <div class="photo-gallery">
-                        <div v-for="photo in productData.photos" :key="photo.fotograf_id" class="photo-item">
-                            <div v-if="photo.ana_fotograf == 1" class="primary-badge">
-                                <i class="fas fa-star"></i> ANA FOTOĞRAF
+                            <i class="fas fa-check-circle"></i>
+                            <div>
+                                <strong>Harika!</strong>
+                                Mevcut bileşenlerle stok açığını kapatabilirsiniz. {{ stockGap.gap }} adet ürün üretip
+                                kritik seviyeye ulaşabilirsiniz.
                             </div>
-                            <img :src="photo.dosya_yolu" :alt="photo.dosya_adi">
                         </div>
                     </div>
                 </div>
@@ -864,9 +934,13 @@ if ($urun_kodu == 0) {
             <!-- Stok Hareketleri -->
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-exchange-alt"></i> Son Stok Hareketleri ({{ recentMovements.length }})</h2>
+                    <h2><i class="fas fa-exchange-alt"></i> Son Stok Hareketleri</h2>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Bu ürüne ait en son {{ recentMovements.length }} stok
+                        hareketi gösterilmektedir. Tüm hareketler için stok hareketleri sayfasını ziyaret edebilirsiniz.
+                    </p>
                     <div v-if="recentMovements.length === 0" class="empty-state">
                         <i class="fas fa-inbox"></i>
                         <p>Henüz stok hareketi bulunmuyor.</p>
@@ -874,7 +948,7 @@ if ($urun_kodu == 0) {
                     <div v-else class="table-responsive">
                         <table class="table table-hover">
                             <thead>
-                                <tr class="table-header">
+                                <tr>
                                     <th><i class="fas fa-calendar"></i> Tarih</th>
                                     <th><i class="fas fa-arrows-alt-v"></i> Yön</th>
                                     <th><i class="fas fa-tag"></i> Hareket Türü</th>
@@ -885,7 +959,7 @@ if ($urun_kodu == 0) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="movement in recentMovements" :key="movement.hareket_id" class="table-row">
+                                <tr v-for="movement in recentMovements" :key="movement.hareket_id">
                                     <td><span class="text-nowrap">{{ formatDate(movement.tarih) }}</span></td>
                                     <td>
                                         <span :class="movement.yon === 'giris' ? 'badge-in' : 'badge-out'">
@@ -914,19 +988,25 @@ if ($urun_kodu == 0) {
             <!-- Ürün Ağacı Bileşenleri -->
             <div class="card" v-if="productData.bom_components.length > 0">
                 <div class="card-header">
-                    <h2><i class="fas fa-sitemap"></i> Ürün Ağacı Bileşenleri ({{ productData.bom_components.length }})
-                    </h2>
+                    <h2><i class="fas fa-sitemap"></i> Ürün Ağacı Bileşenleri</h2>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Bu ürünü üretmek için gereken {{
+                        productData.bom_components.length }} adet bileşen ve mevcut stoklarla üretilebilir miktar
+                        bilgileri aşağıda gösterilmektedir.
+                    </p>
                     <div class="alert alert-info mb-4">
-                        <i class="fas fa-info-circle"></i> <strong>Bu ürün ağacına göre mevcut stoklarla
-                            üretilebilir:</strong>
-                        <span class="font-weight-bold ml-2">{{ producibleQuantity }} adet</span>
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <strong>Bu ürün ağacına göre mevcut stoklarla üretilebilir:</strong>
+                            <span class="font-weight-bold ml-2">{{ producibleQuantity }} adet</span>
+                        </div>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-hover">
                             <thead>
-                                <tr class="table-header">
+                                <tr>
                                     <th><i class="fas fa-layer-group"></i> Bileşen Türü</th>
                                     <th><i class="fas fa-barcode"></i> Kod</th>
                                     <th><i class="fas fa-tag"></i> İsim</th>
@@ -938,8 +1018,7 @@ if ($urun_kodu == 0) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="component in productData.bom_components" :key="component.id"
-                                    class="table-row">
+                                <tr v-for="component in productData.bom_components" :key="component.id">
                                     <td>
                                         <span class="badge badge-info">{{ component.bilesen_turu }}</span>
                                     </td>
@@ -989,11 +1068,15 @@ if ($urun_kodu == 0) {
                     <h2><i class="fas fa-shopping-cart"></i> Sipariş Bilgileri</h2>
                 </div>
                 <div class="card-body">
+                    <p class="text-muted mb-3" style="font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Bu ürüne ait aktif ve tamamlanmış sipariş özeti ile detaylı
+                        sipariş listesi aşağıda gösterilmektedir.
+                    </p>
                     <!-- Sipariş Özeti -->
                     <div class="row mb-3">
                         <div class="col-lg-3 col-md-6 col-6 mb-2">
                             <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">
+                                style="background: linear-gradient(135deg, #0ea5e9, #0284c7);">
                                 <i class="fas fa-shopping-bag"></i>
                                 <div>
                                     <h4 class="mb-0">{{ activeOrders.length || 0 }}</h4>
@@ -1003,7 +1086,7 @@ if ($urun_kodu == 0) {
                         </div>
                         <div class="col-lg-3 col-md-6 col-6 mb-2">
                             <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #f59e0b, #fbbf24);">
+                                style="background: linear-gradient(135deg, #f59e0b, #d97706);">
                                 <i class="fas fa-sort-numeric-up"></i>
                                 <div>
                                     <h4 class="mb-0">{{ calculateActiveOrdersTotal() || 0 }}</h4>
@@ -1013,7 +1096,7 @@ if ($urun_kodu == 0) {
                         </div>
                         <div class="col-lg-3 col-md-6 col-6 mb-2">
                             <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #10b981, #34d399);">
+                                style="background: linear-gradient(135deg, #22c55e, #16a34a);">
                                 <i class="fas fa-check-circle"></i>
                                 <div>
                                     <h4 class="mb-0">{{ productData.orders.summary.tamamlanan_siparis || 0 }}</h4>
@@ -1023,7 +1106,7 @@ if ($urun_kodu == 0) {
                         </div>
                         <div class="col-lg-3 col-md-6 col-6 mb-2">
                             <div class="stat-summary-card"
-                                style="background: linear-gradient(135deg, #8b5cf6, #a78bfa);">
+                                style="background: linear-gradient(135deg, #14b8a6, #0891b2);">
                                 <i class="fas fa-tools"></i>
                                 <div>
                                     <h4 class="mb-0">{{ productData.orders.summary.hazirlanan_siparis || 0 }}</h4>
@@ -1041,7 +1124,7 @@ if ($urun_kodu == 0) {
                     <div v-else class="table-responsive">
                         <table class="table table-hover">
                             <thead>
-                                <tr class="table-header">
+                                <tr>
                                     <th><i class="fas fa-hashtag"></i> Sipariş No</th>
                                     <th><i class="fas fa-user"></i> Müşteri</th>
                                     <th><i class="fas fa-calendar"></i> Tarih</th>
@@ -1050,7 +1133,7 @@ if ($urun_kodu == 0) {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="order in activeOrders" :key="order.kalem_id" class="table-row">
+                                <tr v-for="order in activeOrders" :key="order.kalem_id">
                                     <td><strong>#{{ order.siparis_id }}</strong></td>
                                     <td>{{ order.musteri_adi }}</td>
                                     <td><span class="text-nowrap">{{ formatDate(order.siparis_tarihi) }}</span></td>
@@ -1074,6 +1157,10 @@ if ($urun_kodu == 0) {
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
+    <!-- Fancybox CSS and JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.css" />
+    <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui@4.0/dist/fancybox.umd.js"></script>
+
     <script>
         const app = Vue.createApp({
             data() {
@@ -1083,7 +1170,8 @@ if ($urun_kodu == 0) {
                     error: null,
                     urunKodu: <?php echo $urun_kodu; ?>,
                     frameContracts: [], // Store available frame contracts
-                    contractsLoaded: false // Track if contracts have been loaded
+                    contractsLoaded: false, // Track if contracts have been loaded
+                    // No image viewer needed since we're using Lightbox2
                 }
             },
             computed: {
@@ -1180,6 +1268,13 @@ if ($urun_kodu == 0) {
             },
             mounted() {
                 this.loadProductCard();
+                // Remove v-cloak attribute after Vue has mounted to show the content
+                this.$nextTick(() => {
+                    const appElement = document.getElementById('app');
+                    if (appElement && appElement.hasAttribute('v-cloak')) {
+                        appElement.removeAttribute('v-cloak');
+                    }
+                });
             },
             methods: {
                 loadProductCard() {
@@ -1334,11 +1429,25 @@ if ($urun_kodu == 0) {
                 getAvailableContractsCount() {
                     // Count how many valid contracts are available for this product
                     return this.getRelevantContracts().length;
-                }
+                },
+                // Image viewer methods removed since we're using Lightbox2
             }
         });
 
         app.mount('#app');
+
+        // Initialize Fancybox after Vue has rendered
+        document.addEventListener('DOMContentLoaded', function() {
+            // Fancybox will automatically initialize for elements with data-fancybox attribute
+            // But we can also configure it if needed
+            Fancybox.bind("[data-fancybox]", {
+                // Optional customizations
+                infinite: true,  // Loop through gallery
+                Carousel: {
+                    infinite: true
+                }
+            });
+        });
     </script>
 </body>
 

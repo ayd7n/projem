@@ -1,1 +1,0 @@
-ALTER TABLE personeller DROP COLUMN `aylÂ²k_brut_ucret`;
