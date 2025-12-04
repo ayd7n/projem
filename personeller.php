@@ -130,14 +130,16 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-id-card"></i> TC Kimlik No</th>
                                 <th><i class="fas fa-birthday-cake"></i> Doğum Tarihi</th>
                                 <th><i class="fas fa-calendar-plus"></i> İşe Giriş</th>
+                                <th><i class="fas fa-wallet"></i> Bordrolu Mu?</th>
+                                <th><i class="fas fa-money-bill-wave"></i> Aylık Brüt Ücret</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="9" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="employees.length === 0">
-                                <td colspan="9" class="text-center p-4">Henüz kayıtlı personel bulunmuyor.</td>
+                                <td colspan="11" class="text-center p-4">Henüz kayıtlı personel bulunmuyor.</td>
                             </tr>
                             <tr v-for="employee in employees" :key="employee.personel_id" :class="employee.ad_soyad === 'Admin User' ? 'disabled-row' : ''">
                                 <td class="actions">
@@ -166,6 +168,11 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ employee.tc_kimlik_no || '-' }}</td>
                                 <td>{{ formatDate(employee.dogum_tarihi) }}</td>
                                 <td>{{ formatDate(employee.ise_giris_tarihi) }}</td>
+                                <td>
+                                    <span v-if="employee.bordrolu_calisan_mi" class="badge badge-success">Evet</span>
+                                    <span v-else class="badge badge-danger">Hayır</span>
+                                </td>
+                                <td>{{ employee.aylik_brut_ucret ? '₺' + parseFloat(employee.aylik_brut_ucret).toFixed(2) : '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -252,6 +259,22 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                     <div class="form-group mb-3">
                                         <label>İşe Giriş Tarihi</label>
                                         <input type="date" class="form-control" v-model="modal.data.ise_giris_tarihi">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <div class="form-check">
+                                            <input type="checkbox" class="form-check-input" v-model="modal.data.bordrolu_calisan_mi" id="bordrolu_calisan_mi" true-value="1" false-value="0">
+                                            <label class="form-check-label" for="bordrolu_calisan_mi">Bordrolu Çalışan Mı?</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label>Aylık Brüt Ücret (₺)</label>
+                                        <input type="number" step="0.01" class="form-control" v-model="modal.data.aylik_brut_ucret" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>
@@ -445,7 +468,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         this.showAlert('Bu kullanıcı silinemez.', 'warning');
                         return;
                     }
-                    
+
                     Swal.fire({
                         title: 'Emin misiniz?',
                         text: "Bu personeli silmek istediğinizden emin misiniz?",
@@ -479,10 +502,87 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             });
                         }
                     })
+                },
+                validatePayrollFields() {
+                    // If not a payroll employee, set salary to 0
+                    if (!this.modal.data.bordrolu_calisan_mi || this.modal.data.bordrolu_calisan_mi == '0') {
+                        this.modal.data.bordrolu_calisan_mi = 0;
+                        this.modal.data.aylik_brut_ucret = '0.00';
+                    }
+                    // If payroll employee, ensure salary is greater than 0
+                    else if (this.modal.data.bordrolu_calisan_mi == '1' || this.modal.data.bordrolu_calisan_mi == 1) {
+                        this.modal.data.bordrolu_calisan_mi = 1;
+                        if (!this.modal.data.aylik_brut_ucret || parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
+                            Swal.fire({
+                                title: 'Uyarı!',
+                                text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
+                                icon: 'warning',
+                                confirmButtonText: 'Tamam'
+                            });
+                        }
+                    }
+                },
+                saveEmployee() {
+                    // Validate payroll fields before saving
+                    if (this.modal.data.bordrolu_calisan_mi) {
+                        if (parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
+                            Swal.fire({
+                                title: 'Hata!',
+                                text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
+                                icon: 'error',
+                                confirmButtonText: 'Tamam'
+                            });
+                            return;
+                        }
+                    } else {
+                        this.modal.data.aylik_brut_ucret = '0.00';
+                    }
+
+                    let action = this.modal.data.personel_id ? 'update_employee' : 'add_employee';
+                    let formData = new FormData();
+                    for (let key in this.modal.data) {
+                        if (this.modal.data[key] !== undefined && this.modal.data[key] !== null) {
+                            formData.append(key, this.modal.data[key]);
+                        }
+                    }
+                    formData.append('action', action);
+
+                    fetch('api_islemleri/personeller_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                    .then(response => response.json())
+                    .then(response => {
+                        if (response.status === 'success') {
+                            this.showAlert(response.message, 'success');
+                            $('#employeeModal').modal('hide');
+                            this.loadEmployees(this.currentPage);
+                        } else {
+                            this.showAlert(response.message, 'danger');
+                        }
+                    })
+                    .catch(error => {
+                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                    });
                 }
             },
             mounted() {
                 this.loadEmployees();
+            },
+            watch: {
+                'modal.data.bordrolu_calisan_mi'(newVal) {
+                    if (!newVal || newVal == '0') {
+                        this.modal.data.bordrolu_calisan_mi = 0;
+                        this.modal.data.aylik_brut_ucret = '0.00';
+                    } else if (newVal == '1' && parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
+                        Swal.fire({
+                            title: 'Uyarı!',
+                            text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
+                            icon: 'warning',
+                            confirmButtonText: 'Tamam'
+                        });
+                    }
+                }
             }
         });
         app.mount('#app');

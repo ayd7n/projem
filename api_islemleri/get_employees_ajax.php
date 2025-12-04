@@ -40,7 +40,7 @@ $total_employees = $result->fetch_assoc()['total'];
 $total_pages = $limit > 0 ? ceil($total_employees / $limit) : 0;
 
 // Get employees for current page (excluding password for security)
-$query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar FROM personeller " . $where_clause . " ORDER BY ad_soyad LIMIT $limit OFFSET $offset";
+$query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller " . $where_clause . " ORDER BY ad_soyad LIMIT $limit OFFSET $offset";
 $result = $connection->query($query);
 
 $employees = [];

@@ -21,9 +21,9 @@ if (isset($_GET['action'])) {
         $personel_id = (int)$_GET['id'];
         try {
             // Don't include password in the response for security
-            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar FROM personeller WHERE personel_id = $personel_id";
+            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller WHERE personel_id = $personel_id";
             $result = $connection->query($query);
-            
+
             if ($result) {
                 $employee = $result->fetch_assoc();
                 if ($employee) {
@@ -41,7 +41,7 @@ if (isset($_GET['action'])) {
     elseif ($action == 'get_all_employees') {
         try {
             // Don't include password in the response for security
-            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar FROM personeller ORDER BY ad_soyad";
+            $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller ORDER BY ad_soyad";
             $result = $connection->query($query);
 
             if ($result) {
@@ -72,6 +72,8 @@ if (isset($_GET['action'])) {
         $telefon_2 = $connection->real_escape_string($_POST['telefon_2'] ?? '');
         $adres = $connection->real_escape_string($_POST['adres'] ?? '');
         $notlar = $connection->real_escape_string($_POST['notlar'] ?? '');
+        $bordrolu_calisan_mi = isset($_POST['bordrolu_calisan_mi']) && $_POST['bordrolu_calisan_mi'] == '1' ? 1 : 0;
+        $aylik_brut_ucret = $connection->real_escape_string($_POST['aylik_brut_ucret'] ?? 0);
         $sifre = $_POST['sifre'] ?? '';
 
         if (empty($ad_soyad)) {
@@ -83,7 +85,7 @@ if (isset($_GET['action'])) {
                 $hashed_password = !empty($sifre) ? password_hash($sifre, PASSWORD_DEFAULT) : password_hash('12345', PASSWORD_DEFAULT);
                 $escaped_hashed_password = $connection->real_escape_string($hashed_password);
 
-                $query = "INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, sistem_sifresi) VALUES ('$ad_soyad', '$tc_kimlik_no', '$dogum_tarihi', '$ise_giris_tarihi', '$pozisyon', '$departman', '$e_posta', '$telefon', '$telefon_2', '$adres', '$notlar', '$escaped_hashed_password')";
+                $query = "INSERT INTO personeller (ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, sistem_sifresi, bordrolu_calisan_mi, aylik_brut_ucret) VALUES ('$ad_soyad', '$tc_kimlik_no', '$dogum_tarihi', '$ise_giris_tarihi', '$pozisyon', '$departman', '$e_posta', '$telefon', '$telefon_2', '$adres', '$notlar', '$escaped_hashed_password', $bordrolu_calisan_mi, '$aylik_brut_ucret')";
 
                 if ($connection->query($query)) {
                     // Log ekleme
@@ -121,6 +123,8 @@ if (isset($_GET['action'])) {
         $telefon_2 = $connection->real_escape_string($_POST['telefon_2'] ?? '');
         $adres = $connection->real_escape_string($_POST['adres'] ?? '');
         $notlar = $connection->real_escape_string($_POST['notlar'] ?? '');
+        $bordrolu_calisan_mi = isset($_POST['bordrolu_calisan_mi']) && $_POST['bordrolu_calisan_mi'] == '1' ? 1 : 0;
+        $aylik_brut_ucret = $connection->real_escape_string($_POST['aylik_brut_ucret'] ?? 0);
         $sifre = $_POST['sifre'] ?? '';
 
         if (empty($ad_soyad)) {
@@ -129,8 +133,8 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Doğum tarihi zorunludur.'];
         } else {
             try {
-                $update_fields = "ad_soyad = '$ad_soyad', tc_kimlik_no = '$tc_kimlik_no', dogum_tarihi = '$dogum_tarihi', ise_giris_tarihi = '$ise_giris_tarihi', pozisyon = '$pozisyon', departman = '$departman', e_posta = '$e_posta', telefon = '$telefon', telefon_2 = '$telefon_2', adres = '$adres', notlar = '$notlar'";
-                
+                $update_fields = "ad_soyad = '$ad_soyad', tc_kimlik_no = '$tc_kimlik_no', dogum_tarihi = '$dogum_tarihi', ise_giris_tarihi = '$ise_giris_tarihi', pozisyon = '$pozisyon', departman = '$departman', e_posta = '$e_posta', telefon = '$telefon', telefon_2 = '$telefon_2', adres = '$adres', notlar = '$notlar', bordrolu_calisan_mi = $bordrolu_calisan_mi, aylik_brut_ucret = '$aylik_brut_ucret'";
+
                 if (!empty($sifre)) {
                     $hashed_password = password_hash($sifre, PASSWORD_DEFAULT);
                     $escaped_hashed_password = $connection->real_escape_string($hashed_password);
