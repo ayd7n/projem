@@ -1008,6 +1008,15 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 </div>
                             </a>
                         <?php endif; ?>
+                        <?php if (yetkisi_var('page:view:tekrarli_odemeler')): ?>
+                            <a href="tekrarli_odemeler.php" class="module-card">
+                                <div class="icon"><i class="fas fa-calendar-check"></i></div>
+                                <div class="card-content">
+                                    <span class="title">Tekrarlı Ödemeler</span>
+                                    <p class="description">Kira, fatura ve aylık ödemeleri takip edin.</p>
+                                </div>
+                            </a>
+                        <?php endif; ?>
                     </div>
                 </div>
 

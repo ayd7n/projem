@@ -31,6 +31,7 @@ function get_all_permissions()
             'page:view:gider_yonetimi' => 'Gider Yönetimi Sayfası',
             'page:view:cerceve_sozlesmeler' => 'Sözleşmeler Sayfası',
             'page:view:personel_bordro' => 'Personel Bordro Sayfası',
+            'page:view:tekrarli_odemeler' => 'Tekrarlı Ödemeler Sayfası',
             'page:view:change_password' => 'Şifre Değiştirme Sayfası',
             'page:view:doviz_kurlari' => 'Döviz Kurları Sayfası',
             'page:view:yedekleme' => 'Yedekleme Sayfası',
@@ -135,6 +136,13 @@ function get_all_permissions()
             'action:cerceve_sozlesmeler:create' => 'Yeni Sözleşme Ekleme',
             'action:cerceve_sozlesmeler:edit' => 'Sözleşme Düzenleme',
             'action:cerceve_sozlesmeler:delete' => 'Sözleşme Silme',
+        ],
+        'Tekrarlı Ödemeler' => [
+            'action:tekrarli_odemeler:create' => 'Yeni Tekrarlı Ödeme Tanımlama',
+            'action:tekrarli_odemeler:edit' => 'Tekrarlı Ödeme Düzenleme',
+            'action:tekrarli_odemeler:delete' => 'Tekrarlı Ödeme Silme',
+            'action:tekrarli_odemeler:odeme_yap' => 'Ödeme Yapma',
+            'action:tekrarli_odemeler:gecmis_goruntule' => 'Ödeme Geçmişini Görüntüleme',
         ],
         'Raporlar' => [
             'page:view:gider_raporlari' => 'Gider Raporları',
