@@ -36,7 +36,22 @@ switch ($action) {
         break;
 
     case 'get_all_contracts':
-        $query = "SELECT * FROM cerceve_sozlesmeler ORDER BY olusturulma_tarihi DESC";
+        $query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik ORDER BY sozlesme_id DESC";
+        $result = $connection->query($query);
+
+        if ($result) {
+            $contracts = [];
+            while ($row = $result->fetch_assoc()) {
+                $contracts[] = $row;
+            }
+            echo json_encode(['status' => 'success', 'data' => $contracts]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Veri alınırken hata oluştu: ' . $connection->error]);
+        }
+        break;
+
+    case 'get_valid_contracts':
+        $query = "SELECT * FROM cerceve_sozlesmeler_gecerlilik WHERE gecerli_mi = 1 ORDER BY sozlesme_id DESC";
         $result = $connection->query($query);
 
         if ($result) {

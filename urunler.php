@@ -379,6 +379,10 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu">
                                 <td class="actions">
+                                    <a :href="'urun_karti.php?urun_kodu=' + product.urun_kodu"
+                                        class="btn btn-info btn-sm" title="Ürün Kartı">
+                                        <i class="fas fa-id-card"></i>
+                                    </a>
                                     <?php if (yetkisi_var('action:urunler:edit')): ?>
                                         <button @click="openModal(product)" class="btn btn-primary btn-sm"><i
                                                 class="fas fa-edit"></i></button>
