@@ -555,14 +555,14 @@ body {
 /* SORUNLU BÖLÜMLER İÇİN YENİ, BASİT STİLLER */
 #app .durum-ozeti-container {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
     padding-top: 1rem;
 }
 #app .durum-kart {
     background-color: #ffffff;
     border-radius: 12px;
-    padding: 1.25rem;
+    padding: 1rem;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border: 1px solid #e9ecef;
     display: flex;
@@ -816,6 +816,7 @@ body {
                             <div class="durum-kart-alt-bilgi">
                                 Kritik Seviye: {{ formatNumber(productData.durum_ozeti.stok_durumu.kritik_seviye) }}
                             </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Hesaplama: Mevcut stok / kritik seviye × 100</small>
                         </div>
 
                         <!-- Stok Açığı -->
@@ -832,6 +833,25 @@ body {
                             <div class="durum-kart-alt-bilgi">
                                 Kritik: {{ formatNumber(productData.durum_ozeti.stok_acigi.kritik_seviye) }}
                             </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Hesaplama: Kritik seviye - mevcut stok</small>
+                        </div>
+
+                        <!-- Üretimdeki -->
+                        <div class="durum-kart info" v-if="productData.durum_ozeti.uretimde.deger > 0">
+                            <div class="durum-kart-ikon">
+                                <i class="fas fa-industry"></i>
+                            </div>
+                            <div class="durum-kart-label">Üretimdeki</div>
+                            <div class="durum-kart-ana-deger">
+                                {{ formatNumber(productData.durum_ozeti.uretimde.deger) }}
+                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.uretimde.birim }}</span>
+                            </div>
+                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.uretimde.is_emri_sayisi }} İş Emri</div>
+                            <div class="durum-kart-alt-bilgi">
+                                <i v-if="productData.durum_ozeti.uretimde.acik_kapatir" class="fas fa-check-circle mr-1"></i>
+                                {{ productData.durum_ozeti.uretimde.durum_text }}
+                            </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Hesaplama: Aktif iş emirlerinin toplamı</small>
                         </div>
 
                         <!-- Üretilebilir -->
@@ -851,23 +871,7 @@ body {
                                 {{ productData.durum_ozeti.uretilebilir.sinir_bilesen }} sınırlıyor
                             </div>
                             <div class="durum-kart-alt-bilgi" v-else>Tüm bileşenler yeterli</div>
-                        </div>
-
-                        <!-- Üretimdeki -->
-                        <div class="durum-kart info" v-if="productData.durum_ozeti.uretimde.deger > 0">
-                            <div class="durum-kart-ikon">
-                                <i class="fas fa-industry"></i>
-                            </div>
-                            <div class="durum-kart-label">Üretimdeki</div>
-                            <div class="durum-kart-ana-deger">
-                                {{ formatNumber(productData.durum_ozeti.uretimde.deger) }}
-                                <span class="durum-kart-birim-inline">{{ productData.durum_ozeti.uretimde.birim }}</span>
-                            </div>
-                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.uretimde.is_emri_sayisi }} İş Emri</div>
-                            <div class="durum-kart-alt-bilgi">
-                                <i v-if="productData.durum_ozeti.uretimde.acik_kapatir" class="fas fa-check-circle mr-1"></i>
-                                {{ productData.durum_ozeti.uretimde.durum_text }}
-                            </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Hesaplama: En az stoklu bileşene göre</small>
                         </div>
 
                         <!-- Bekleyen Siparişler -->
@@ -886,30 +890,10 @@ body {
                                 <i v-else class="fas fa-exclamation-triangle mr-1"></i>
                                 {{ productData.durum_ozeti.bekleyen_siparisler.durum_text }}
                             </div>
+                            <small class="text-muted" style="font-size: 0.65rem;">Hesaplama: Aktif siparişlerin toplamı</small>
                         </div>
 
-                        <!-- Bileşen Durumu -->
-                        <div class="durum-kart" :class="{
-                            'danger': productData.durum_ozeti.bilesen_durumu.eksik_sayi > 0,
-                            'success': productData.durum_ozeti.bilesen_durumu.eksik_sayi === 0
-                        }" v-if="productData.durum_ozeti.bilesen_durumu.toplam > 0">
-                            <div class="durum-kart-ikon">
-                                <i class="fas fa-sitemap"></i>
-                            </div>
-                            <div class="durum-kart-label">Bileşen Durumu</div>
-                            <div class="durum-kart-ana-deger">
-                                {{ productData.durum_ozeti.bilesen_durumu.eksik_sayi }} / {{ productData.durum_ozeti.bilesen_durumu.toplam }}
-                            </div>
-                            <div class="durum-kart-yuzde">{{ productData.durum_ozeti.bilesen_durumu.tamamlik_yuzdesi }}% Tamam</div>
-                            <div class="durum-kart-progress">
-                                <div class="progress-bar" :style="{ width: productData.durum_ozeti.bilesen_durumu.tamamlik_yuzdesi + '%' }"></div>
-                            </div>
-                            <div class="durum-kart-alt-bilgi" v-if="productData.durum_ozeti.bilesen_durumu.eksik_sayi > 0" style="font-size: 0.68rem;">
-                                {{ productData.durum_ozeti.bilesen_durumu.eksik_ilk_3.join(', ') }}
-                                <span v-if="productData.durum_ozeti.bilesen_durumu.eksik_sayi > 3">+{{ productData.durum_ozeti.bilesen_durumu.eksik_sayi - 3 }}</span>
-                            </div>
-                             <div class="durum-kart-alt-bilgi" v-else>Tüm bileşenler yeterli</div>
-                        </div>
+
                     </div>
                 </div>
             </div>
@@ -925,17 +909,33 @@ body {
                     </p>
                     <div class="eylem-onerileri-container">
                         <div v-for="(oneri, index) in productData.eylem_onerileri" :key="index" class="eylem-kart" :class="{
-                            'critical': oneri.oncelik === 'yuksek',
-                            'warning': oneri.oncelik === 'orta',
-                            'info': oneri.oncelik === 'dusuk'
+                            'critical': oneri.oncelik === 'critical',
+                            'warning': oneri.oncelik === 'warning',
+                            'info': oneri.oncelik === 'info'
                         }">
-                             <div class="eylem-kart-oncelik-badge">{{ oneri.oncelik }}</div>
                             <div class="eylem-kart-ikon">
                                 <i :class="'fas ' + oneri.ikon"></i>
                             </div>
                             <div class="eylem-kart-icerik">
                                 <div class="eylem-kart-mesaj">{{ oneri.mesaj }}</div>
                                 <p class="eylem-kart-detay">{{ oneri.detay }}</p>
+                                <small class="text-muted" style="font-size: 0.65rem;">
+                                    <template v-if="oneri.mesaj.includes('kritik seviyenin altında')">
+                                        Algoritma: 1) Stok açığı = kritik seviye - mevcut stok. 2) Üretilebilir miktar = min(bileşen_stok / bileşen_gerekli_miktar). 3) Eğer üretilebilir ≥ stok_açığı ise üretim öner, değilse acil aksiyon (tedarikçi riski). Neden acil: Stok kritik seviyenin altında olduğu için sipariş karşılanamayabilir, müşteri kaybı ve itibar zedelenmesi riski var. Mevcut: {{ productData.durum_ozeti.stok_acigi.deger }} {{ productData.product.birim }} açık, {{ productData.durum_ozeti.uretilebilir.deger }} adet üretilebilir.
+                                    </template>
+                                    <template v-else-if="oneri.mesaj.includes('bileşeni satın alın')">
+                                        Algoritma: 1) Kritik stok için gereken = stok_açığı × bileşen_miktarı. 2) Her bileşen için eğer mevcut_stok < gereken_miktar ise eksik. 3) Eksik bileşen sayısı ve önem sırasına göre öncelik belirle. Neden acil: Üretim durabilir, teslimat gecikebilir, sözleşme cezaları uygulanabilir. Stok açığı nedeniyle üretim kapasitesi sınırlı.
+                                    </template>
+                                    <template v-else-if="oneri.mesaj.includes('Üretim planını artırın')">
+                                        Algoritma: 1) Mevcut üretim kapasitesi = aktif_iş_emirleri_toplam. 2) Eksik kapasite = stok_açığı - mevcut_üretim. 3) Eğer eksik > 0 ise üretim artır. Neden acil: Mevcut üretim stok açığını kapatmaya yetmiyor, müşteri siparişleri risk altında. {{ productData.durum_ozeti.stok_acigi.deger - productData.durum_ozeti.uretimde.deger }} {{ productData.product.birim }} daha üretilmeli.
+                                    </template>
+                                    <template v-else-if="oneri.mesaj.includes('Sipariş karşılama riski')">
+                                        Algoritma: 1) Kullanılabilir toplam = mevcut_stok + üretimdeki_miktar. 2) Eğer bekleyen_siparişler > kullanılabilir_toplam ise risk var. 3) Öncelik sırası: üretim artır → bileşen satın al → müşteri bilgilendir. Neden acil: Sipariş teslimatı gecikecek, müşteri memnuniyeti düşecek, tekrar sipariş alma ihtimali azalacak. {{ productData.durum_ozeti.bekleyen_siparisler.deger }} {{ productData.product.birim }} bekliyor, {{ productData.durum_ozeti.stok_durumu.deger + productData.durum_ozeti.uretimde.deger }} {{ productData.product.birim }} kullanılabilir.
+                                    </template>
+                                    <template v-else-if="oneri.mesaj.includes('Ürün hazır durumda')">
+                                        Algoritma: 1) Stok kontrolü: mevcut ≥ kritik_seviye. 2) Bileşen kontrolü: tüm bileşenler yeterli. 3) Sipariş kontrolü: bekleyen_siparişler ≤ kullanılabilir_toplam. 4) Hepsi true ise hazır durum. Neden olumlu: Üretim devam edebilir, siparişler zamanında teslim edilebilir, operasyonel risk minimum.
+                                    </template>
+                                </small>
                             </div>
                         </div>
                     </div>
