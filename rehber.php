@@ -359,6 +359,7 @@
                 <li class="nav-item"><a href="#raporlama" class="nav-link"><i class="fas fa-chart-bar"></i> Raporlama</a></li>
                 <li class="nav-item"><a href="#raporlar" class="nav-link"><i class="fas fa-chart-pie"></i> Raporlar</a></li>
                 <li class="nav-item"><a href="#siparis-takibi" class="nav-link"><i class="fas fa-clipboard-list"></i> Sipariş Takibi</a></li>
+                <li class="nav-item"><a href="#malzeme-siparisleri" class="nav-link"><i class="fas fa-box-open"></i> Malzeme Siparişleri</a></li>
                 <li class="nav-item"><a href="#urun-akisi" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün Akışı</a></li>
                 <li class="nav-item"><a href="#sss" class="nav-link"><i class="fas fa-question-circle"></i> SSS</a></li>
             </ul>
@@ -788,6 +789,92 @@
                     <li>İlgili personel bilgisi takibi</li>
                     <li>Stok etkisi izleme</li>
                 </ul>
+            </section>
+
+            <!-- Malzeme Siparişleri -->
+            <section id="malzeme-siparisleri" class="section-card">
+                <h2 class="section-title"><i class="fas fa-box-open"></i> Malzeme Siparişleri</h2>
+                <p>Tedarikçilere verilen hammadde ve ambalaj malzemesi siparişlerinin takip edildiği bölümdür. Sistemde malzeme ihtiyaçları tespit edildikçe bu alanda tedarikçilere sipariş verilebilir.</p>
+
+                <h3>1. Malzeme Siparişi Oluşturma</h3>
+                <p>Yeni bir malzeme siparişi oluşturmak için:</p>
+                <ol>
+                    <li>"Operasyonlar" menüsünden "Malzeme Siparişleri" sayfasına gidin.</li>
+                    <li>"Yeni Sipariş Ekle" butonuna tıklayın.</li>
+                    <li>Malzeme seçin (Sistemde tanımlı olan hammaddeler, ambalaj malzemeleri vb.).</li>
+                    <li>Eşleşen tedarikçiyi seçin (Malzemeyle ilişkili olan veya uygun fiyat teklifi veren tedarikçi).</li>
+                    <li>Gerekli miktarı girin (Ondalıklı girişe izin verilir).</li>
+                    <li>Teslim edileceği bildirilen tarihi seçin (Planlama için önemlidir).</li>
+                    <li>İsteğe bağlı açıklama ekleyin.</li>
+                    <li>"Kaydet" butonuna tıklayın.</li>
+                </ol>
+
+                <h3>2. Sipariş Durumları</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Durum</th>
+                                <th>Anlamı</th>
+                                <th>İşlemler</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><span class="badge bg-info">Oluşturuldu</span></td>
+                                <td>Sipariş planlama aşamasında</td>
+                                <td>Sipariş verilmeden önceki durumu</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-warning text-dark">Sipariş Verildi</span></td>
+                                <td>Tedarikçiye sipariş iletildi</td>
+                                <td>Siparişin tedarikçiye iletildiği aşamadır</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-success">Teslim Edildi</span></td>
+                                <td>Tedarikçiden malzeme teslim alındı</td>
+                                <td>Malzeme physically tedarikçiden teslim alındığında bu duruma getirilir</td>
+                            </tr>
+                            <tr>
+                                <td><span class="badge bg-danger">İptal Edildi</span></td>
+                                <td>Sipariş iptal edildi</td>
+                                <td>Gerekli durumlarda sipariş iptal edilebilir</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>3. Sipariş Takibi ve Yönetimi</h3>
+                <p>Malzeme siparişlerinin takibi şu şekilde yapılır:</p>
+                <ul>
+                    <li><strong>Arama ve Filtreleme:</strong> Malzeme adı, tedarikçi, sipariş numarası gibi kriterlere göre arama yapılabilir.</li>
+                    <li><strong>Durum Güncelleme:</strong> Siparişlerin durumu ilerledikçe güncellenmelidir (Sipariş Verildi → Teslim Edildi).</li>
+                    <li><strong>Listeleme ve Sayfalandırma:</strong> Sayfa başına 10, 25, 50 veya 100 kayıtlık görüntüleme seçeneği mevcuttur.</li>
+                </ul>
+
+                <h3>4. Malzeme ve Tedarikçi Seçimi</h3>
+                <p>Sipariş oluştururken:</p>
+                <ul>
+                    <li>Sistemde daha önceden tanımlanmış malzemeler listelenir.</li>
+                    <li>Bir malzeme seçildiğinde, o malzeme ile sözleşme (çerçeve sözleşme) olan tedarikçiler otomatik olarak listelenir.</li>
+                    <li>Bu sayede uygun tedarikçi seçimini kolaylaştırır.</li>
+                </ul>
+
+                <h3>5. Teslimat Takibi</h3>
+                <p>Malzeme siparişleri oluştururken teslim tarihi belirlenir. Bu tarih planlama açısından önemlidir:</p>
+                <ul>
+                    <li>Teslim tarihi, üretim planlarını etkileyebilir.</li>
+                    <li>Geç teslimat risklerini minimize etmek için tedarikçiyle uyumlu planlama yapılmalıdır.</li>
+                    <li>Teslim alınan mallar, "Mal Kabul" işlemi ile stoklara dahil edilmelidir.</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong><i class="fas fa-info-circle"></i> Entegrasyon:</strong> Malzeme siparişlerinden teslim alınan ürünler "Manuel Stok Operasyonları" sayfasındaki "Mal Kabul" işlemi ile sisteme stoğa dahil edilmelidir. Bu işlem, sipariş durumu "Teslim Edildi" yapıldığında otomatik olarak gerçekleşmez.
+                </div>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Önemli:</strong> Sipariş verilen malzemelerin üretimde kullanılabilmesi için mutlaka "Mal Kabul" işlemiyle sisteme alınması gerekir. Aksi takdirde üretim planları aksamış olur.
+                </div>
             </section>
 
             <!-- Ürün Akışı -->
