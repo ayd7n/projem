@@ -512,6 +512,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                                     <option value="ic_ambalaj">İç Ambalaj</option>
                                                     <option value="numune_sisesi">Numune Şişesi</option>
                                                     <option value="kapak">Kapak</option>
+                                                    <option value="kimyasal_madde">Kimyasal Madde</option>
                                                     <option value="karton_ara_bolme">Karton Ara Bölme</option>
                                                     <option value="diger">Diğer</option>
                                                 </select>
