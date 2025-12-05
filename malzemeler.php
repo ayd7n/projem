@@ -124,6 +124,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             font-size: 1.1rem;
             font-weight: 700;
             margin: 0;
+            white-space: nowrap;
         }
 
         .btn {
@@ -329,7 +330,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Malzeme Listesi</h2>
+                <h2 class="mb-2 mb-md-0 mr-md-3"><i class="fas fa-list"></i> Malzeme Listesi</h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -428,7 +429,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage - 1)"><i
-                                            class="fas fa-chevron-left"></i> Previous</a>
+                                            class="fas fa-chevron-left"></i> Önceki</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadMaterials(1)">1</a>
@@ -448,7 +449,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                         totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage + 1)">Next
+                                    <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage + 1)">Sonraki
                                         <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
