@@ -973,6 +973,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
                             </div>
                         </a>
+                        <a href="analiz_dinamik.php" class="module-card">
+                            <div class="icon"><i class="fas fa-chart-line"></i></div>
+                            <div class="card-content">
+                                <span class="title">Dinamik Üretim Analizi</span>
+                                <p class="description">Otomatik üretim planı ve sipariş analizleri.</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
