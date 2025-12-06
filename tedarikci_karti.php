@@ -19,7 +19,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
 }
 
 // Get supplier ID from URL parameter
-$tedarikci_id = isset($_GET['tedarikci_id']) ? (int)$_GET['tedarikci_id'] : 0;
+$tedarikci_id = isset($_GET['tedarikci_id']) ? (int) $_GET['tedarikci_id'] : 0;
 
 if ($tedarikci_id <= 0) {
     // If no supplier ID provided, show supplier selection
@@ -30,125 +30,153 @@ if ($tedarikci_id <= 0) {
         $suppliers[] = $supplier;
     }
     ?>
-<!DOCTYPE html>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Tedarikçi Kartı Seçimi - Parfüm ERP</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
-            --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-            --transition: all 0.3s ease;
-        }
-        
-        body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-        }
-        
-        .container {
-            padding: 30px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .card {
-            background: var(--card-bg);
-            border-radius: 10px;
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-        
-        .card-header {
-            padding: 18px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        
-        .card-header h2 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin: 0;
-        }
-        
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-        
-        .btn {
-            padding: 8px 14px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: var(--transition);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.825rem;
-        }
-        
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background-color: var(--secondary);
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="card">
-            <div class="card-header">
-                <h2><i class="fas fa-id-card"></i> Tedarikçi Kartı Seçimi</h2>
-            </div>
-            <div class="card-body">
-                <form action="tedarikci_karti.php" method="get">
-                    <div class="form-group">
-                        <label for="tedarikci_id">Tedarikçi Seçin:</label>
-                        <select name="tedarikci_id" id="tedarikci_id" class="form-control" required>
-                            <option value="">-- Tedarikçi Seçin --</option>
-                            <?php foreach ($suppliers as $supplier): ?>
-                                <option value="<?php echo $supplier['tedarikci_id']; ?>"><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Tedarikçi Kartını Görüntüle</button>
-                    <a href="navigation.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri Dön</a>
-                </form>
+    <!DOCTYPE html>
+    <html lang="tr">
+
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+        <title>Tedarikçi Kartı Seçimi - Parfüm ERP</title>
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+            rel="stylesheet">
+        <style>
+            :root {
+                --primary: #7c3aed;
+                --primary-light: #a855f7;
+                --secondary: #6b7280;
+                --success: #10b981;
+                --warning: #f59e0b;
+                --danger: #ef4444;
+                --bg: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+                --card-bg: #ffffff;
+                --border: #e9d5ff;
+                --text-primary: #1f2937;
+                --text-secondary: #6b7280;
+            }
+
+            body {
+                font-family: 'Inter', sans-serif;
+                background: var(--bg);
+                color: var(--text-primary);
+                font-size: 14px;
+            }
+
+            .container {
+                max-width: 800px;
+                padding: 30px 15px;
+            }
+
+            .card {
+                background: var(--card-bg);
+                border-radius: 8px;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+                border: 1px solid var(--border);
+                overflow: hidden;
+            }
+
+            .card-header {
+                background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+                padding: 16px 20px;
+                border: none;
+            }
+
+            .card-header h2 {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 0;
+                color: white;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+            }
+
+            .card-body {
+                padding: 24px;
+            }
+
+            .form-group label {
+                font-weight: 600;
+                font-size: 13px;
+                color: var(--text-primary);
+                margin-bottom: 6px;
+            }
+
+            .form-control {
+                padding: 10px 12px;
+                border: 1px solid var(--border);
+                border-radius: 6px;
+                font-size: 14px;
+            }
+
+            .form-control:focus {
+                border-color: var(--primary);
+                box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+            }
+
+            .btn {
+                padding: 10px 18px;
+                font-size: 13px;
+                font-weight: 600;
+                border-radius: 6px;
+                transition: all 0.2s;
+            }
+
+            .btn-primary {
+                background: var(--primary);
+                border: none;
+                color: white;
+            }
+
+            .btn-primary:hover {
+                background: var(--primary-light);
+                transform: translateY(-1px);
+            }
+
+            .btn-secondary {
+                background: white;
+                border: 1px solid var(--border);
+                color: var(--text-primary);
+            }
+
+            .btn-secondary:hover {
+                background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+            }
+        </style>
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="card">
+                <div class="card-header">
+                    <h2><i class="fas fa-truck"></i> Tedarikçi Kartı Seçimi</h2>
+                </div>
+                <div class="card-body">
+                    <form action="tedarikci_karti.php" method="get">
+                        <div class="form-group">
+                            <label for="tedarikci_id">Tedarikçi Seçin:</label>
+                            <select name="tedarikci_id" id="tedarikci_id" class="form-control" required>
+                                <option value="">-- Tedarikçi Seçin --</option>
+                                <?php foreach ($suppliers as $supplier): ?>
+                                    <option value="<?php echo $supplier['tedarikci_id']; ?>">
+                                        <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Görüntüle</button>
+                        <a href="navigation.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri</a>
+                    </form>
+                </div>
             </div>
         </div>
-    </div>
-</body>
-</html>
+    </body>
+
+    </html>
     <?php
     exit;
 }
@@ -173,8 +201,22 @@ $contracts_stmt->execute();
 $contracts_result = $contracts_stmt->get_result();
 
 $contracts = [];
+$total_contracts = 0;
+$active_contracts = 0;
+$total_contract_value = 0;
+
 while ($contract = $contracts_result->fetch_assoc()) {
     $contracts[] = $contract;
+    $total_contracts++;
+
+    // Check if contract is active
+    $today = date('Y-m-d');
+    if ($contract['baslangic_tarihi'] <= $today && $contract['bitis_tarihi'] >= $today) {
+        $active_contracts++;
+    }
+
+    // Calculate total contract value
+    $total_contract_value += ($contract['birim_fiyat'] * $contract['limit_miktar']);
 }
 $contracts_stmt->close();
 
@@ -186,13 +228,24 @@ $expenses_stmt->execute();
 $expenses_result = $expenses_stmt->get_result();
 
 $expenses = [];
+$total_expenses = 0;
+$total_expense_amount = 0;
+$last_expense_date = null;
+
 while ($expense = $expenses_result->fetch_assoc()) {
     $expenses[] = $expense;
+    $total_expenses++;
+    $total_expense_amount += $expense['tutar'];
+
+    if (!$last_expense_date || $expense['tarih'] > $last_expense_date) {
+        $last_expense_date = $expense['tarih'];
+    }
 }
 $expenses_stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -203,350 +256,628 @@ $expenses_stmt->close();
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
     <style>
         :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
+            --primary: #7c3aed;
+            --primary-dark: #6d28d9;
+            --primary-light: #a855f7;
+            --accent: #f59e0b;
+            --accent-light: #fbbf24;
+            --secondary: #6b7280;
+            --success: #10b981;
+            --success-light: #34d399;
+            --warning: #f97316;
+            --warning-light: #fb923c;
+            --danger: #ef4444;
+            --info: #06b6d4;
+            --info-light: #22d3ee;
+            --bg: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
             --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
-            --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
-            --transition: all 0.3s ease;
+            --border: #e9d5ff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-muted: #9ca3af;
         }
-        
+
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background-color: var(--bg-color);
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
             color: var(--text-primary);
+            font-size: 13px;
+            line-height: 1.5;
         }
-        
-        .print-container {
-            padding: 20px;
-            max-width: 210mm; /* A4 width */
-            margin: 0 auto;
-            background-color: white;
-            min-height: 297mm; /* A4 height */
-        }
-        
-        .supplier-header {
-            text-align: center;
-            padding: 20px 0;
-            border-bottom: 2px solid var(--primary);
-            margin-bottom: 30px;
-        }
-        
-        .supplier-header h1 {
-            font-size: 1.8rem;
-            color: var(--primary);
-            margin: 0;
-        }
-        
-        .supplier-info {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border-left: 4px solid var(--primary);
-        }
-        
-        .info-row {
-            margin-bottom: 12px;
-            display: flex;
-        }
-        
-        .info-label {
-            font-weight: bold;
-            width: 150px;
-            color: var(--primary);
-            flex-shrink: 0;
-        }
-        
-        .contract-card, .expense-card {
-            background-color: white;
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            box-shadow: var(--shadow);
-        }
-        
-        .contract-header, .expense-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .contract-title, .expense-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-        
-        .contract-details, .expense-details {
-            margin-bottom: 15px;
-        }
-        
-        .contract-detail-row, .expense-detail-row {
-            margin-bottom: 8px;
-            display: flex;
-        }
-        
-        .detail-label {
-            font-weight: bold;
-            color: var(--text-secondary);
-            width: 120px;
-            flex-shrink: 0;
-        }
-        
-        .contract-items, .expense-items {
-            margin-top: 15px;
-        }
-        
-        .items-header {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--primary);
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 1px solid var(--border-color);
-        }
-        
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 15px;
-        }
-        
-        .items-table th, .items-table td {
-            border: 1px solid var(--border-color);
-            padding: 8px;
-            text-align: center;
-        }
-        
-        .items-table th {
-            background-color: var(--primary);
-            color: white;
-        }
-        
-        .items-table .item-name {
-            text-align: left;
-            width: 40%;
-        }
-        
-        .items-table .item-quantity, .items-table .item-unit {
-            width: 15%;
-        }
-        
-        .items-table .item-price, .items-table .item-total {
-            width: 15%;
-        }
-        
-        .no-items {
-            text-align: center;
-            padding: 30px;
-            color: var(--text-secondary);
-            font-style: italic;
-        }
-        
+
         .print-btn {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 1000;
-            background-color: var(--primary);
-            color: white;
-            border: none;
-            border-radius: 50%;
             width: 50px;
             height: 50px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3);
+            transition: all 0.2s;
+        }
+
+        .print-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
+        }
+
+        .container {
+            max-width: 1400px;
+            padding: 20px 15px;
+        }
+
+        /* Header kompakt */
+        .customer-header {
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            border-radius: 8px;
+            padding: 20px 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
+        }
+
+        .customer-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: white;
+            margin: 0 0 4px 0;
+            letter-spacing: -0.5px;
+        }
+
+        .customer-header .subtitle {
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+        }
+
+        /* Özet bilgi kartları */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .summary-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .summary-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            font-size: 1.2rem;
+            font-size: 18px;
+            flex-shrink: 0;
         }
-        
-        .print-btn:hover {
-            background-color: var(--secondary);
-            transform: scale(1.05);
+
+        .summary-icon.primary {
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
         }
-        
+
+        .summary-icon.gold {
+            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
+        }
+
+        .summary-icon.success {
+            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+        }
+
+        .summary-icon.warning {
+            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+        }
+
+        .summary-icon.info {
+            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
+        }
+
+        .summary-content {
+            flex: 1;
+        }
+
+        .summary-label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .summary-value {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Tedarikçi bilgileri kompakt */
+        .customer-info {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 18px 20px;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid transparent;
+            border-image: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%);
+            border-image-slice: 1;
+            display: inline-block;
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+        }
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .info-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.2);
+        }
+
+        .info-content {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .info-label {
+            font-size: 10px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 1px;
+        }
+
+        .info-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        /* Kart bölümü */
+        .contract-card,
+        .expense-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px 18px;
+            margin-bottom: 14px;
+            transition: all 0.2s;
+        }
+
+        .contract-card:hover,
+        .expense-card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transform: translateY(-2px);
+        }
+
+        .contract-header,
+        .expense-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .contract-title,
+        .expense-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .contract-details,
+        .expense-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 8px;
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 11px;
+        }
+
+        .detail-value {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .no-items {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
+            border-radius: 8px;
+            border: 2px dashed var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px 10px;
+            }
+
+            .summary-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contract-details,
+            .expense-details {
+                grid-template-columns: 1fr;
+            }
+        }
+
         @media print {
             .print-btn {
-                display: none;
+                display: none !important;
             }
-            
+
             body {
-                background-color: white;
+                background: white !important;
             }
-            
-            .print-container {
+
+            .contract-card:hover,
+            .expense-card:hover {
+                transform: none;
                 box-shadow: none;
-                padding: 0;
-                max-width: 100%;
             }
         }
     </style>
 </head>
+
 <body>
     <button class="print-btn" onclick="window.print()">
         <i class="fas fa-print"></i>
     </button>
-    
-    <div class="print-container">
-        <div class="supplier-header">
-            <h1>TEDARİKÇİ KARTI</h1>
-            <h2><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></h2>
+
+    <div class="container">
+        <!-- Header -->
+        <div class="customer-header">
+            <h1><i class="fas fa-truck"></i> <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></h1>
+            <div class="subtitle">Tedarikçi Detay Kartı</div>
         </div>
-        
-        <div class="supplier-info">
-            <div class="info-row">
-                <span class="info-label">Tedarikçi Adı:</span>
-                <span><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></span>
+
+        <!-- Özet Bilgiler -->
+        <div class="summary-cards">
+            <div class="summary-card">
+                <div class="summary-icon primary">
+                    <i class="fas fa-file-contract"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Toplam Sözleşme</div>
+                    <div class="summary-value"><?php echo $total_contracts; ?></div>
+                </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">Vergi/TC No:</span>
-                <span><?php echo htmlspecialchars($supplier['vergi_no_tc'] ?: '-'); ?></span>
+            <div class="summary-card">
+                <div class="summary-icon success">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Aktif Sözleşme</div>
+                    <div class="summary-value"><?php echo $active_contracts; ?></div>
+                </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">Telefon:</span>
-                <span><?php echo htmlspecialchars($supplier['telefon'] ?: '-'); ?></span>
+            <div class="summary-card">
+                <div class="summary-icon gold">
+                    <i class="fas fa-receipt"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Toplam Gider</div>
+                    <div class="summary-value"><?php echo $total_expenses; ?></div>
+                </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">Telefon 2:</span>
-                <span><?php echo htmlspecialchars($supplier['telefon_2'] ?: '-'); ?></span>
+            <div class="summary-card">
+                <div class="summary-icon warning">
+                    <i class="fas fa-lira-sign"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Gider Tutarı</div>
+                    <div class="summary-value"><?php echo number_format($total_expense_amount, 0, ',', '.'); ?> ₺</div>
+                </div>
             </div>
-            <div class="info-row">
-                <span class="info-label">E-posta:</span>
-                <span><?php echo htmlspecialchars($supplier['e_posta'] ?: '-'); ?></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Yetkili Kişi:</span>
-                <span><?php echo htmlspecialchars($supplier['yetkili_kisi'] ?: '-'); ?></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Adres:</span>
-                <span><?php echo htmlspecialchars($supplier['adres'] ?: '-'); ?></span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Açıklama:</span>
-                <span><?php echo htmlspecialchars($supplier['aciklama_notlar'] ?: '-'); ?></span>
+            <div class="summary-card">
+                <div class="summary-icon info">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Son Gider</div>
+                    <div class="summary-value">
+                        <?php echo $last_expense_date ? date('d.m.Y', strtotime($last_expense_date)) : '-'; ?></div>
+                </div>
             </div>
         </div>
-        
-        <h3 style="color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">
-            Çerçeve Sözleşmeler
-        </h3>
-        
-        <?php if (count($contracts) > 0): ?>
-            <?php foreach ($contracts as $contract): ?>
-                <div class="contract-card">
-                    <div class="contract-header">
-                        <div class="contract-title">Sözleşme No: <?php echo $contract['sozlesme_id']; ?></div>
+
+        <!-- Tedarikçi Bilgileri -->
+        <div class="customer-info">
+            <div class="section-title"><i class="fas fa-info-circle"></i> Tedarikçi Bilgileri</div>
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-building"></i>
                     </div>
-                    
-                    <div class="contract-details">
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Malzeme:</span>
-                            <span><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></span>
+                    <div class="info-content">
+                        <div class="info-label">Tedarikçi Adı</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Vergi/TC No</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['vergi_no_tc'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-phone"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Telefon</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['telefon'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Telefon 2</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['telefon_2'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-envelope"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">E-posta</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['e_posta'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Yetkili Kişi</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['yetkili_kisi'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <div class="info-icon">
+                        <i class="fas fa-map-marker-alt"></i>
+                    </div>
+                    <div class="info-content">
+                        <div class="info-label">Adres</div>
+                        <div class="info-value"><?php echo htmlspecialchars($supplier['adres'] ?: '-'); ?></div>
+                    </div>
+                </div>
+                <?php if ($supplier['aciklama_notlar']): ?>
+                    <div class="info-item" style="grid-column: 1 / -1;">
+                        <div class="info-icon">
+                            <i class="fas fa-sticky-note"></i>
                         </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Birim Fiyat:</span>
-                            <span><?php echo number_format($contract['birim_fiyat'], 2, ',', '.'); ?> <?php echo $contract['para_birimi']; ?></span>
+                        <div class="info-content">
+                            <div class="info-label">Açıklama</div>
+                            <div class="info-value"><?php echo htmlspecialchars($supplier['aciklama_notlar']); ?></div>
                         </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Limit Miktar:</span>
-                            <span><?php echo $contract['limit_miktar']; ?></span>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <!-- Sözleşmeler -->
+        <div style="margin-top: 20px;">
+            <div class="section-title"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</div>
+
+            <?php if (count($contracts) > 0): ?>
+                <?php foreach ($contracts as $contract): ?>
+                    <div class="contract-card">
+                        <div class="contract-header">
+                            <div class="contract-title">
+                                <i class="fas fa-file-alt"></i> Sözleşme #<?php echo $contract['sozlesme_id']; ?>
+                            </div>
                         </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Ödenen Miktar:</span>
-                            <span><?php echo $contract['toplu_odenen_miktar'] ?: 0; ?></span>
-                        </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Başlangıç Tarihi:</span>
-                            <span><?php echo $contract['baslangic_tarihi'] ? date('d.m.Y', strtotime($contract['baslangic_tarihi'])) : '-'; ?></span>
-                        </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Bitiş Tarihi:</span>
-                            <span><?php echo $contract['bitis_tarihi'] ? date('d.m.Y', strtotime($contract['bitis_tarihi'])) : '-'; ?></span>
-                        </div>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Öncelik:</span>
-                            <span><?php echo $contract['oncelik']; ?></span>
+                        <div class="contract-details">
+                            <div class="detail-item">
+                                <i class="fas fa-box" style="color: var(--primary);"></i>
+                                <span class="detail-label">Malzeme:</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-lira-sign" style="color: var(--success);"></i>
+                                <span class="detail-label">Birim Fiyat:</span>
+                                <span class="detail-value"><?php echo number_format($contract['birim_fiyat'], 2, ',', '.'); ?>
+                                    <?php echo $contract['para_birimi']; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-hashtag" style="color: var(--warning);"></i>
+                                <span class="detail-label">Limit:</span>
+                                <span class="detail-value"><?php echo $contract['limit_miktar']; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                                <span class="detail-label">Ödenen:</span>
+                                <span class="detail-value"><?php echo $contract['toplu_odenen_miktar'] ?: 0; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-alt" style="color: var(--info);"></i>
+                                <span class="detail-label">Başlangıç:</span>
+                                <span
+                                    class="detail-value"><?php echo $contract['baslangic_tarihi'] ? date('d.m.Y', strtotime($contract['baslangic_tarihi'])) : '-'; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-calendar-times" style="color: var(--danger);"></i>
+                                <span class="detail-label">Bitiş:</span>
+                                <span
+                                    class="detail-value"><?php echo $contract['bitis_tarihi'] ? date('d.m.Y', strtotime($contract['bitis_tarihi'])) : '-'; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-star" style="color: var(--warning);"></i>
+                                <span class="detail-label">Öncelik:</span>
+                                <span class="detail-value"><?php echo $contract['oncelik']; ?></span>
+                            </div>
                         </div>
                         <?php if ($contract['aciklama']): ?>
-                        <div class="contract-detail-row">
-                            <span class="detail-label">Açıklama:</span>
-                            <span><?php echo htmlspecialchars($contract['aciklama']); ?></span>
-                        </div>
+                            <div class="detail-item" style="margin-top: 8px; width: 100%;">
+                                <i class="fas fa-comment" style="color: var(--info);"></i>
+                                <span class="detail-label">Not:</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($contract['aciklama']); ?></span>
+                            </div>
                         <?php endif; ?>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="no-items">
+                    <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <div style="font-size: 14px; font-weight: 600;">Bu tedarikçiye ait sözleşme bulunmamaktadır.</div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="no-items">Bu tedarikçiye ait çerçeve sözleşme bulunmamaktadır.</div>
-        <?php endif; ?>
-        
-        <h3 style="color: var(--primary); margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-top: 30px;">
-            Gider Geçmişi
-        </h3>
-        
-        <?php if (count($expenses) > 0): ?>
-            <?php foreach ($expenses as $expense): ?>
-                <div class="expense-card">
-                    <div class="expense-header">
-                        <div class="expense-title">Gider No: <?php echo $expense['gider_id']; ?></div>
-                    </div>
-                    
-                    <div class="expense-details">
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Tarih:</span>
-                            <span><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></span>
+            <?php endif; ?>
+        </div>
+
+        <!-- Giderler -->
+        <div style="margin-top: 30px;">
+            <div class="section-title"><i class="fas fa-receipt"></i> Gider Geçmişi</div>
+
+            <?php if (count($expenses) > 0): ?>
+                <?php foreach ($expenses as $expense): ?>
+                    <div class="expense-card">
+                        <div class="expense-header">
+                            <div class="expense-title">
+                                <i class="fas fa-file-invoice-dollar"></i> Gider #<?php echo $expense['gider_id']; ?>
+                            </div>
                         </div>
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Tutar:</span>
-                            <span><?php echo number_format($expense['tutar'], 2, ',', '.'); ?> <?php echo $expense['para_birimi'] ?? 'TRY'; ?></span>
+                        <div class="expense-details">
+                            <div class="detail-item">
+                                <i class="fas fa-calendar" style="color: var(--primary);"></i>
+                                <span class="detail-label">Tarih:</span>
+                                <span class="detail-value"><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-lira-sign" style="color: var(--success);"></i>
+                                <span class="detail-label">Tutar:</span>
+                                <span class="detail-value"><?php echo number_format($expense['tutar'], 2, ',', '.'); ?>
+                                    <?php echo $expense['para_birimi'] ?? 'TRY'; ?></span>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-tags" style="color: var(--warning);"></i>
+                                <span class="detail-label">Kategori:</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($expense['kategori']); ?></span>
+                            </div>
+                            <?php if ($expense['fatura_no']): ?>
+                                <div class="detail-item">
+                                    <i class="fas fa-file-invoice" style="color: var(--info);"></i>
+                                    <span class="detail-label">Fatura No:</span>
+                                    <span class="detail-value"><?php echo htmlspecialchars($expense['fatura_no']); ?></span>
+                                </div>
+                            <?php endif; ?>
+                            <?php if ($expense['odeme_tipi']): ?>
+                                <div class="detail-item">
+                                    <i class="fas fa-credit-card" style="color: var(--primary);"></i>
+                                    <span class="detail-label">Ödeme Tipi:</span>
+                                    <span class="detail-value"><?php echo htmlspecialchars($expense['odeme_tipi']); ?></span>
+                                </div>
+                            <?php endif; ?>
                         </div>
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Kategori:</span>
-                            <span><?php echo htmlspecialchars($expense['kategori']); ?></span>
-                        </div>
-                        <?php if ($expense['fatura_no']): ?>
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Fatura No:</span>
-                            <span><?php echo htmlspecialchars($expense['fatura_no']); ?></span>
-                        </div>
-                        <?php endif; ?>
-                        <?php if ($expense['odeme_tipi']): ?>
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Ödeme Tipi:</span>
-                            <span><?php echo htmlspecialchars($expense['odeme_tipi']); ?></span>
-                        </div>
-                        <?php endif; ?>
                         <?php if ($expense['aciklama']): ?>
-                        <div class="expense-detail-row">
-                            <span class="detail-label">Açıklama:</span>
-                            <span><?php echo htmlspecialchars($expense['aciklama']); ?></span>
-                        </div>
+                            <div class="detail-item" style="margin-top: 8px; width: 100%;">
+                                <i class="fas fa-comment" style="color: var(--info);"></i>
+                                <span class="detail-label">Açıklama:</span>
+                                <span class="detail-value"><?php echo htmlspecialchars($expense['aciklama']); ?></span>
+                            </div>
                         <?php endif; ?>
                     </div>
+                <?php endforeach; ?>
+            <?php else: ?>
+                <div class="no-items">
+                    <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                    <div style="font-size: 14px; font-weight: 600;">Bu tedarikçiye ait gider kaydı bulunmamaktadır.</div>
                 </div>
-            <?php endforeach; ?>
-        <?php else: ?>
-            <div class="no-items">Bu tedarikçiye ait gider kaydı bulunmamaktadır.</div>
-        <?php endif; ?>
+            <?php endif; ?>
+        </div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->
@@ -554,4 +885,5 @@ $expenses_stmt->close();
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
+
 </html>
