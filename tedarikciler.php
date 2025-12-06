@@ -337,6 +337,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                         <button @click="deleteSupplier(supplier.tedarikci_id)"
                                             class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                     <?php endif; ?>
+                                    <a :href="'tedarikci_karti.php?tedarikci_id=' + supplier.tedarikci_id" class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
                                 </td>
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
                                 <td>{{ supplier.vergi_no_tc || '-' }}</td>

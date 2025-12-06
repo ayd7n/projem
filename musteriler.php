@@ -268,6 +268,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                     <?php if (yetkisi_var('action:musteriler:delete')): ?>
                                         <button @click="deleteCustomer(customer.musteri_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                     <?php endif; ?>
+                                    <a :href="'musteri_karti.php?musteri_id=' + customer.musteri_id" class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
                                 </td>
                                 <td>
                                     <span v-if="customer.giris_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
