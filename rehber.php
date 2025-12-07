@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -23,7 +24,8 @@
             background-color: var(--bg-color);
             color: var(--text-color);
             margin: 0;
-            padding-top: 70px; /* Navbar height */
+            padding-top: 70px;
+            /* Navbar height */
         }
 
         /* Top Navbar */
@@ -35,7 +37,7 @@
             left: 0;
             right: 0;
             z-index: 1000;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
             padding: 0 2rem;
@@ -56,7 +58,7 @@
         }
 
         .btn-home {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
             padding: 8px 20px;
             border-radius: 20px;
@@ -66,7 +68,7 @@
         }
 
         .btn-home:hover {
-            background: rgba(255,255,255,0.2);
+            background: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
         }
 
@@ -77,6 +79,12 @@
             margin: 0 auto;
             padding: 2rem;
             gap: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0;
+            }
         }
 
         /* Sidebar Navigation */
@@ -90,7 +98,7 @@
             background: white;
             border-radius: 15px;
             padding: 1.5rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
         }
 
         .nav-menu {
@@ -119,7 +127,8 @@
             color: var(--secondary);
         }
 
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             background: rgba(124, 42, 153, 0.1);
             color: var(--primary);
         }
@@ -131,7 +140,8 @@
         /* Main Content */
         .content {
             flex: 1;
-            min-width: 0; /* Prevent overflow */
+            min-width: 0;
+            /* Prevent overflow */
         }
 
         .section-card {
@@ -139,7 +149,7 @@
             border-radius: 15px;
             padding: 2.5rem;
             margin-bottom: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
             scroll-margin-top: 100px;
         }
 
@@ -176,7 +186,8 @@
             margin-bottom: 1rem;
         }
 
-        ul, ol {
+        ul,
+        ol {
             color: #636e72;
             line-height: 1.7;
             padding-left: 1.5rem;
@@ -208,14 +219,15 @@
         .table-responsive {
             overflow-x: auto;
         }
-        
+
         .table {
             width: 100%;
             border-collapse: collapse;
             margin: 1rem 0;
         }
 
-        .table th, .table td {
+        .table th,
+        .table td {
             padding: 12px;
             border: 1px solid #e0e0e0;
             text-align: left;
@@ -234,11 +246,31 @@
             font-size: 0.85rem;
             font-weight: 500;
         }
-        .bg-success { background-color: #d4edda; color: #155724; }
-        .bg-warning { background-color: #fff3cd; color: #856404; }
-        .bg-danger { background-color: #f8d7da; color: #721c24; }
-        .bg-info { background-color: #d1ecf1; color: #0c5460; }
-        .bg-secondary { background-color: #e2e3e5; color: #383d41; }
+
+        .bg-success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+
+        .bg-warning {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
+        .bg-danger {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+
+        .bg-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .bg-secondary {
+            background-color: #e2e3e5;
+            color: #383d41;
+        }
 
         /* FAQ Accordion */
         .faq-item {
@@ -315,16 +347,20 @@
         }
 
         @media (max-width: 992px) {
-            .container { flex-direction: column; }
-            .sidebar { 
-                width: 100%; 
-                height: auto; 
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
                 position: static;
                 margin-bottom: 1rem;
             }
         }
     </style>
 </head>
+
 <body>
 
     <header class="top-bar-wrapper">
@@ -341,26 +377,46 @@
     <div class="container">
         <aside class="sidebar">
             <ul class="nav-menu">
-                <li class="nav-item"><a href="#giris" class="nav-link active"><i class="fas fa-star"></i> Genel Bakış</a></li>
-                <li class="nav-item"><a href="#yonetim" class="nav-link"><i class="fas fa-user-shield"></i> Sistem Yönetimi</a></li>
-                <li class="nav-item"><a href="#crm" class="nav-link"><i class="fas fa-users"></i> İlişkiler (CRM)</a></li>
-                <li class="nav-item"><a href="#musteri-paneli" class="nav-link"><i class="fas fa-user-tag"></i> Müşteri Paneli</a></li>
-                <li class="nav-item"><a href="#stok" class="nav-link"><i class="fas fa-boxes"></i> Stok & Envanter</a></li>
-                <li class="nav-item"><a href="#lokasyon" class="nav-link"><i class="fas fa-map-marker-alt"></i> Lokasyonlar</a></li>
-                <li class="nav-item"><a href="#urun-agaci" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün Ağaçları</a></li>
-                <li class="nav-item"><a href="#satis" class="nav-link"><i class="fas fa-shopping-cart"></i> Satış & Sipariş</a></li>
-                <li class="nav-item"><a href="#uretim" class="nav-link"><i class="fas fa-industry"></i> Üretim İşleyişi</a></li>
-                <li class="nav-item"><a href="#is-merkezleri" class="nav-link"><i class="fas fa-industry"></i> İş Merkezleri</a></li>
-                <li class="nav-item"><a href="#stok-operasyon" class="nav-link"><i class="fas fa-exchange-alt"></i> Manuel Stok Operasyonları</a></li>
-                <li class="nav-item"><a href="#stok-hareketleri" class="nav-link"><i class="fas fa-exchange-alt"></i> Stok Hareketleri</a></li>
-                <li class="nav-item"><a href="#finans" class="nav-link"><i class="fas fa-wallet"></i> Finans & Maliyet</a></li>
-                <li class="nav-item"><a href="#gider" class="nav-link"><i class="fas fa-money-bill-wave"></i> Gider Yönetimi</a></li>
-                <li class="nav-item"><a href="#cerceve-sozlesmeler" class="nav-link"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</a></li>
-                <li class="nav-item"><a href="#raporlama" class="nav-link"><i class="fas fa-chart-bar"></i> Raporlama</a></li>
-                <li class="nav-item"><a href="#raporlar" class="nav-link"><i class="fas fa-chart-pie"></i> Raporlar</a></li>
-                <li class="nav-item"><a href="#siparis-takibi" class="nav-link"><i class="fas fa-clipboard-list"></i> Sipariş Takibi</a></li>
-                <li class="nav-item"><a href="#malzeme-siparisleri" class="nav-link"><i class="fas fa-box-open"></i> Malzeme Siparişleri</a></li>
-                <li class="nav-item"><a href="#urun-akisi" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün Akışı</a></li>
+                <li class="nav-item"><a href="#giris" class="nav-link active"><i class="fas fa-star"></i> Genel
+                        Bakış</a></li>
+                <li class="nav-item"><a href="#yonetim" class="nav-link"><i class="fas fa-user-shield"></i> Sistem
+                        Yönetimi</a></li>
+                <li class="nav-item"><a href="#crm" class="nav-link"><i class="fas fa-users"></i> İlişkiler (CRM)</a>
+                </li>
+                <li class="nav-item"><a href="#musteri-paneli" class="nav-link"><i class="fas fa-user-tag"></i> Müşteri
+                        Paneli</a></li>
+                <li class="nav-item"><a href="#stok" class="nav-link"><i class="fas fa-boxes"></i> Stok & Envanter</a>
+                </li>
+                <li class="nav-item"><a href="#lokasyon" class="nav-link"><i class="fas fa-map-marker-alt"></i>
+                        Lokasyonlar</a></li>
+                <li class="nav-item"><a href="#urun-agaci" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün
+                        Ağaçları</a></li>
+                <li class="nav-item"><a href="#satis" class="nav-link"><i class="fas fa-shopping-cart"></i> Satış &
+                        Sipariş</a></li>
+                <li class="nav-item"><a href="#uretim" class="nav-link"><i class="fas fa-industry"></i> Üretim
+                        İşleyişi</a></li>
+                <li class="nav-item"><a href="#is-merkezleri" class="nav-link"><i class="fas fa-industry"></i> İş
+                        Merkezleri</a></li>
+                <li class="nav-item"><a href="#stok-operasyon" class="nav-link"><i class="fas fa-exchange-alt"></i>
+                        Manuel Stok Operasyonları</a></li>
+                <li class="nav-item"><a href="#stok-hareketleri" class="nav-link"><i class="fas fa-exchange-alt"></i>
+                        Stok Hareketleri</a></li>
+                <li class="nav-item"><a href="#finans" class="nav-link"><i class="fas fa-wallet"></i> Finans &
+                        Maliyet</a></li>
+                <li class="nav-item"><a href="#gider" class="nav-link"><i class="fas fa-money-bill-wave"></i> Gider
+                        Yönetimi</a></li>
+                <li class="nav-item"><a href="#cerceve-sozlesmeler" class="nav-link"><i
+                            class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</a></li>
+                <li class="nav-item"><a href="#raporlama" class="nav-link"><i class="fas fa-chart-bar"></i>
+                        Raporlama</a></li>
+                <li class="nav-item"><a href="#raporlar" class="nav-link"><i class="fas fa-chart-pie"></i> Raporlar</a>
+                </li>
+                <li class="nav-item"><a href="#siparis-takibi" class="nav-link"><i class="fas fa-clipboard-list"></i>
+                        Sipariş Takibi</a></li>
+                <li class="nav-item"><a href="#malzeme-siparisleri" class="nav-link"><i class="fas fa-box-open"></i>
+                        Malzeme Siparişleri</a></li>
+                <li class="nav-item"><a href="#urun-akisi" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün
+                        Akışı</a></li>
                 <li class="nav-item"><a href="#sss" class="nav-link"><i class="fas fa-question-circle"></i> SSS</a></li>
             </ul>
         </aside>
@@ -369,79 +425,102 @@
             <!-- Giriş -->
             <section id="giris" class="section-card">
                 <h2 class="section-title"><i class="fas fa-star"></i> Sisteme Genel Bakış</h2>
-                <p>IDO KOZMETIK Kurumsal Kaynak Planlama (ERP) sistemi, hammadde tedariğinden nihai ürün satışına kadar olan tüm süreci entegre bir şekilde yönetmenizi sağlar.</p>
-                
+                <p>IDO KOZMETIK Kurumsal Kaynak Planlama (ERP) sistemi, hammadde tedariğinden nihai ürün satışına kadar
+                    olan tüm süreci entegre bir şekilde yönetmenizi sağlar.</p>
+
                 <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Temel Prensip:</strong> 
-                    Sistem "Entegre Stok Yönetimi" prensibiyle çalışır. Bir üretim emri verildiğinde hammaddeler stoktan otomatik düşer, üretim bittiğinde ise nihai ürün stoğa otomatik eklenir. Manuel müdahale minimuma indirilmiştir.
+                    <strong><i class="fas fa-info-circle"></i> Temel Prensip:</strong>
+                    Sistem "Entegre Stok Yönetimi" prensibiyle çalışır. Bir üretim emri verildiğinde hammaddeler stoktan
+                    otomatik düşer, üretim bittiğinde ise nihai ürün stoğa otomatik eklenir. Manuel müdahale minimuma
+                    indirilmiştir.
                 </div>
             </section>
 
             <!-- Sistem Yönetimi -->
             <section id="yonetim" class="section-card">
                 <h2 class="section-title"><i class="fas fa-user-shield"></i> Sistem Yönetimi</h2>
-                <p>Bu bölüm, sistemin genel ayarlarının, kullanıcı yetkilerinin ve veri güvenliğinin yönetildiği alandır.</p>
+                <p>Bu bölüm, sistemin genel ayarlarının, kullanıcı yetkilerinin ve veri güvenliğinin yönetildiği
+                    alandır.</p>
 
                 <h3>1. Personel ve Yetki Yönetimi</h3>
                 <p>Sisteme erişecek her kullanıcı için bir personel kaydı oluşturulmalıdır.</p>
                 <ul>
-                    <li><strong>Personel Ekleme:</strong> Ad, Soyad, Pozisyon, Departman ve iletişim bilgileri girilir.</li>
-                    <li><strong>Şifre İşlemleri:</strong> Personel eklerken veya düzenlerken "Şifre" alanından personelin sisteme giriş şifresi belirlenir. Boş bırakılırsa mevcut şifre değişmez.</li>
-                    <li><strong>Yetkilendirme:</strong> Her personelin erişebileceği sayfalar ve yapabileceği işlemler (Ekleme, Silme, Düzenleme) detaylı olarak "Yetki Yönetimi" ekranından ayarlanır.</li>
-                    <li><strong>Admin Kullanıcısı:</strong> Sistemde silinemeyen ve tüm yetkilere sahip özel bir "Admin" hesabı bulunur.</li>
+                    <li><strong>Personel Ekleme:</strong> Ad, Soyad, Pozisyon, Departman ve iletişim bilgileri girilir.
+                    </li>
+                    <li><strong>Şifre İşlemleri:</strong> Personel eklerken veya düzenlerken "Şifre" alanından
+                        personelin sisteme giriş şifresi belirlenir. Boş bırakılırsa mevcut şifre değişmez.</li>
+                    <li><strong>Yetkilendirme:</strong> Her personelin erişebileceği sayfalar ve yapabileceği işlemler
+                        (Ekleme, Silme, Düzenleme) detaylı olarak "Yetki Yönetimi" ekranından ayarlanır.</li>
+                    <li><strong>Admin Kullanıcısı:</strong> Sistemde silinemeyen ve tüm yetkilere sahip özel bir "Admin"
+                        hesabı bulunur.</li>
                 </ul>
 
                 <h3>2. Sistem Ayarları</h3>
                 <ul>
-                    <li><strong>Bakım Modu:</strong> Sistemde güncelleme yapılırken "Bakım Modu" açılabilir. Bu modda sadece yöneticiler sisteme giriş yapabilir.</li>
-                    <li><strong>Döviz Kurları:</strong> Maliyet hesaplamalarında kullanılmak üzere USD ve EUR kurları buradan güncellenir. Kurlar manuel girilebilir veya "Otomatik Çek" butonu ile güncel piyasa verileri alınabilir.</li>
-                    <li><strong>Yedekleme:</strong> Veri kaybını önlemek için veritabanı yedekleri alınabilir. Yedekler bilgisayara indirilebilir veya sistemden geri yüklenebilir.</li>
+                    <li><strong>Bakım Modu:</strong> Sistemde güncelleme yapılırken "Bakım Modu" açılabilir. Bu modda
+                        sadece yöneticiler sisteme giriş yapabilir.</li>
+                    <li><strong>Döviz Kurları:</strong> Maliyet hesaplamalarında kullanılmak üzere USD ve EUR kurları
+                        buradan güncellenir. Kurlar manuel girilebilir veya "Otomatik Çek" butonu ile güncel piyasa
+                        verileri alınabilir.</li>
+                    <li><strong>Yedekleme:</strong> Veri kaybını önlemek için veritabanı yedekleri alınabilir. Yedekler
+                        bilgisayara indirilebilir veya sistemden geri yüklenebilir.</li>
                 </ul>
             </section>
 
             <!-- CRM -->
             <section id="crm" class="section-card">
                 <h2 class="section-title"><i class="fas fa-users"></i> İlişkiler ve Sözleşme Yönetimi</h2>
-                
+
                 <h3>1. Müşteriler</h3>
-                <p>Ürün satışı yapılan firmalar veya şahıslardır. Sipariş oluşturabilmek için önce müşteri kaydı yapılmalıdır.</p>
+                <p>Ürün satışı yapılan firmalar veya şahıslardır. Sipariş oluşturabilmek için önce müşteri kaydı
+                    yapılmalıdır.</p>
 
                 <h3>2. Tedarikçiler</h3>
-                <p>Hammadde veya ambalaj malzemesi satın alınan firmalardır. "Mal Kabul" işlemi yapabilmek için tedarikçi ile aktif bir sözleşme (veya sistemde tanım) olması gerekir.</p>
+                <p>Hammadde veya ambalaj malzemesi satın alınan firmalardır. "Mal Kabul" işlemi yapabilmek için
+                    tedarikçi ile aktif bir sözleşme (veya sistemde tanım) olması gerekir.</p>
 
                 <h3>3. Çerçeve Sözleşmeler</h3>
                 <p>Tedarikçilerle yapılan malzeme alım anlaşmalarının yönetildiği alandır.</p>
                 <ul>
-                    <li><strong>Sözleşme Tanımlama:</strong> Hangi tedarikçiden, hangi malzemenin, hangi fiyattan ve ne kadar (limit) alınacağı belirlenir.</li>
-                    <li><strong>Takip:</strong> "Ödenen Miktar" ve "Mal Kabul Miktarı" takip edilerek sözleşmenin doluluk oranı izlenir.</li>
-                    <li><strong>Geçerlilik:</strong> Sözleşmelerin başlangıç ve bitiş tarihleri vardır. Süresi dolan veya limiti biten sözleşmeler otomatik olarak pasif duruma düşer.</li>
+                    <li><strong>Sözleşme Tanımlama:</strong> Hangi tedarikçiden, hangi malzemenin, hangi fiyattan ve ne
+                        kadar (limit) alınacağı belirlenir.</li>
+                    <li><strong>Takip:</strong> "Ödenen Miktar" ve "Mal Kabul Miktarı" takip edilerek sözleşmenin
+                        doluluk oranı izlenir.</li>
+                    <li><strong>Geçerlilik:</strong> Sözleşmelerin başlangıç ve bitiş tarihleri vardır. Süresi dolan
+                        veya limiti biten sözleşmeler otomatik olarak pasif duruma düşer.</li>
                 </ul>
             </section>
 
             <!-- Müşteri Paneli ve Yetkilendirme -->
             <section id="musteri-paneli" class="section-card">
                 <h2 class="section-title"><i class="fas fa-user-tag"></i> Müşteri Paneli ve Yetkilendirme</h2>
-                <p>Sistem, sadece şirket personeli için değil, müşterileriniz için de özel bir sipariş paneli sunar. Müşterileriniz kendi hesaplarına giriş yaparak sipariş verebilirler.</p>
+                <p>Sistem, sadece şirket personeli için değil, müşterileriniz için de özel bir sipariş paneli sunar.
+                    Müşterileriniz kendi hesaplarına giriş yaparak sipariş verebilirler.</p>
 
                 <h3>1. Müşteriye Giriş Yetkisi Verme</h3>
                 <p>Bir müşterinin sisteme girebilmesi için şu adımları izleyin:</p>
                 <ol>
                     <li>"Müşteriler" sayfasına gidin.</li>
-                    <li>Yeni müşteri eklerken veya mevcut bir müşteriyi düzenlerken <strong>"Sisteme Giriş Yetkisi"</strong> kutucuğunu işaretleyin.</li>
+                    <li>Yeni müşteri eklerken veya mevcut bir müşteriyi düzenlerken <strong>"Sisteme Giriş
+                            Yetkisi"</strong> kutucuğunu işaretleyin.</li>
                     <li>Açılan <strong>"Şifre"</strong> alanına müşterinin kullanacağı şifreyi girin.</li>
                     <li>Kaydedin.</li>
                 </ol>
                 <div class="info-box">
                     <strong><i class="fas fa-key"></i> Giriş Bilgileri:</strong><br>
-                    Müşteri, sisteme giriş yaparken <strong>Kullanıcı Adı</strong> olarak kayıtlı <u>E-posta Adresini</u> veya <u>Telefon Numarasını</u>, <strong>Şifre</strong> olarak ise sizin belirlediğiniz şifreyi kullanacaktır.
+                    Müşteri, sisteme giriş yaparken <strong>Kullanıcı Adı</strong> olarak kayıtlı <u>E-posta
+                        Adresini</u> veya <u>Telefon Numarasını</u>, <strong>Şifre</strong> olarak ise sizin
+                    belirlediğiniz şifreyi kullanacaktır.
                 </div>
 
                 <h3>2. Müşteri Paneli Özellikleri</h3>
                 <p>Giriş yapan bir müşteri şunları yapabilir:</p>
                 <ul>
-                    <li><strong>Ürün Kataloğu:</strong> Stokta bulunan ürünleri görüntüleyebilir ve arama yapabilir.</li>
+                    <li><strong>Ürün Kataloğu:</strong> Stokta bulunan ürünleri görüntüleyebilir ve arama yapabilir.
+                    </li>
                     <li><strong>Sepet İşlemleri:</strong> Ürünleri sepete ekleyip sipariş oluşturabilir.</li>
-                    <li><strong>Sipariş Takibi:</strong> Geçmiş siparişlerinin durumunu (Beklemede, Onaylandı, Tamamlandı) takip edebilir.</li>
+                    <li><strong>Sipariş Takibi:</strong> Geçmiş siparişlerinin durumunu (Beklemede, Onaylandı,
+                        Tamamlandı) takip edebilir.</li>
                     <li><strong>Profil:</strong> Kendi şifresini değiştirebilir.</li>
                 </ul>
             </section>
@@ -450,7 +529,7 @@
             <section id="stok" class="section-card">
                 <h2 class="section-title"><i class="fas fa-boxes"></i> Stok & Envanter Yönetimi</h2>
                 <p>Sistemde üç ana stok kalemi bulunur:</p>
-                
+
                 <div class="row">
                     <div class="col-md-4">
                         <h4><i class="fas fa-vial"></i> Malzemeler</h4>
@@ -470,7 +549,8 @@
             <!-- Lokasyonlar -->
             <section id="lokasyon" class="section-card">
                 <h2 class="section-title"><i class="fas fa-map-marker-alt"></i> Lokasyonlar ve Depolama Yönetimi</h2>
-                <p>Sistemdeki tüm stok kalemleri bir lokasyonda (Depo, Raf veya Tank) bulunmak zorundadır. Bu sayede stokların nerede bulundukları ve ihtiyaç duyulduğunda kolayca bulunabilmesi sağlanır.</p>
+                <p>Sistemdeki tüm stok kalemleri bir lokasyonda (Depo, Raf veya Tank) bulunmak zorundadır. Bu sayede
+                    stokların nerede bulundukları ve ihtiyaç duyulduğunda kolayca bulunabilmesi sağlanır.</p>
 
                 <h3>1. Lokasyon Tanımlama</h3>
                 <p>Sistemde farklı tipte lokasyonlar tanımlanabilir:</p>
@@ -483,7 +563,8 @@
                 <h3>2. Lokasyon Takibi</h3>
                 <div class="warning-box">
                     <strong><i class="fas fa-map-marker-alt"></i> Lokasyon Takibi:</strong>
-                    Her stok kalemi bir lokasyonda (Depo, Raf veya Tank) bulunmalıdır. Transfer işlemleri ile ürünlerin yerini değiştirebilirsiniz.
+                    Her stok kalemi bir lokasyonda (Depo, Raf veya Tank) bulunmalıdır. Transfer işlemleri ile ürünlerin
+                    yerini değiştirebilirsiniz.
                 </div>
                 <p>Stok takibi yapılırken her ürünün bulunduğu fiziksel konum bilgisi önemlidir. Bu sayede:</p>
                 <ul>
@@ -493,7 +574,8 @@
                 </ul>
 
                 <h3>3. Transfer İşlemleri</h3>
-                <p>Farklı lokasyonlar arasında stok taşımak için "Manuel Stok Operasyonları" bölümünden transfer işlemi yapılmalıdır:</p>
+                <p>Farklı lokasyonlar arasında stok taşımak için "Manuel Stok Operasyonları" bölümünden transfer işlemi
+                    yapılmalıdır:</p>
                 <ul>
                     <li><strong>Kaynak Lokasyon:</strong> Stokların alınacağı başlangıç noktası</li>
                     <li><strong>Hedef Lokasyon:</strong> Stokların taşınacağı yeni konum</li>
@@ -504,17 +586,21 @@
             <!-- Ürün Ağaçları -->
             <section id="urun-agaci" class="section-card">
                 <h2 class="section-title"><i class="fas fa-project-diagram"></i> Ürün Ağaçları (Reçeteler)</h2>
-                <p>Bir ürünün veya esansın üretilmesi için gereken "Formül"dür. Maliyet hesaplaması ve stok düşüşleri bu reçeteye göre yapılır.</p>
+                <p>Bir ürünün veya esansın üretilmesi için gereken "Formül"dür. Maliyet hesaplaması ve stok düşüşleri bu
+                    reçeteye göre yapılır.</p>
 
                 <h3>Temel Kavramlar</h3>
                 <ul>
-                    <li><strong>Esans Reçetesi:</strong> Sadece hammaddelerden (Yağlar, Alkol vb.) oluşur. Çıktısı "Esans"tır.</li>
-                    <li><strong>Ürün Reçetesi:</strong> Mutlaka <u>1 adet Esans</u> ve <u>Ambalaj Malzemelerinden</u> (Şişe, Kapak, Kutu) oluşur. Çıktısı "Nihai Ürün"dür.</li>
+                    <li><strong>Esans Reçetesi:</strong> Sadece hammaddelerden (Yağlar, Alkol vb.) oluşur. Çıktısı
+                        "Esans"tır.</li>
+                    <li><strong>Ürün Reçetesi:</strong> Mutlaka <u>1 adet Esans</u> ve <u>Ambalaj Malzemelerinden</u>
+                        (Şişe, Kapak, Kutu) oluşur. Çıktısı "Nihai Ürün"dür.</li>
                 </ul>
 
                 <div class="info-box">
                     <strong><i class="fas fa-lightbulb"></i> İpucu:</strong>
-                    Üretim emri vermeden önce ilgili ürünün reçetesinin tanımlı olduğundan emin olun. Reçetesiz üretim yapılamaz.
+                    Üretim emri vermeden önce ilgili ürünün reçetesinin tanımlı olduğundan emin olun. Reçetesiz üretim
+                    yapılamaz.
                 </div>
             </section>
 
@@ -535,7 +621,8 @@
                     <div class="step-item">
                         <span class="step-title">3. Tamamlandı (Sevkiyat)</span>
                         Ürünler müşteriye sevk edildiğinde durum "Tamamlandı"ya çekilir.
-                        <br><span class="badge bg-danger">Stok Etkisi:</span> Siparişteki ürün adedi stoktan <strong>otomatik olarak düşer</strong>.
+                        <br><span class="badge bg-danger">Stok Etkisi:</span> Siparişteki ürün adedi stoktan
+                        <strong>otomatik olarak düşer</strong>.
                     </div>
                     <div class="step-item">
                         <span class="step-title">4. İptal / İade</span>
@@ -552,8 +639,10 @@
                 <h3>1. Tank Yönetimi</h3>
                 <p>Esansların üretildiği ve saklandığı tankların tanımlandığı bölümdür.</p>
                 <ul>
-                    <li><strong>Tank Tanımlama:</strong> Her tankın bir kodu (Örn: TANK001), ismi ve litre cinsinden kapasitesi vardır.</li>
-                    <li><strong>Kullanım:</strong> Esans iş emirleri oluşturulurken, üretilecek esansın hangi tankta demleneceği seçilir.</li>
+                    <li><strong>Tank Tanımlama:</strong> Her tankın bir kodu (Örn: TANK001), ismi ve litre cinsinden
+                        kapasitesi vardır.</li>
+                    <li><strong>Kullanım:</strong> Esans iş emirleri oluşturulurken, üretilecek esansın hangi tankta
+                        demleneceği seçilir.</li>
                 </ul>
 
                 <h3>2. Esans Üretimi (İş Emirleri)</h3>
@@ -569,8 +658,10 @@
                 <p>Hazır esansın şişelenip nihai ürüne dönüştürülmesidir.</p>
                 <ol>
                     <li><strong>Planlama:</strong> Üretilecek Parfüm ve Adet seçilir.</li>
-                    <li><strong>Kaynak Seçimi:</strong> Esansın çekileceği Tank ve üretimin yapılacağı İş Merkezi seçilir.</li>
-                    <li><strong>Başlatma (Üretimde):</strong> Esans (Tanktan) ve Ambalaj Malzemeleri (Depodan) stoktan düşer.</li>
+                    <li><strong>Kaynak Seçimi:</strong> Esansın çekileceği Tank ve üretimin yapılacağı İş Merkezi
+                        seçilir.</li>
+                    <li><strong>Başlatma (Üretimde):</strong> Esans (Tanktan) ve Ambalaj Malzemeleri (Depodan) stoktan
+                        düşer.</li>
                     <li><strong>Tamamlama:</strong> Nihai ürün (Parfüm) ana stoğa eklenir.</li>
                 </ol>
 
@@ -593,12 +684,14 @@
                             <tr>
                                 <td><span class="badge bg-warning text-dark">Üretimde</span></td>
                                 <td>Üretim başladı.</td>
-                                <td><span class="text-danger"><i class="fas fa-arrow-down"></i> Girdiler Stoktan Düşer</span></td>
+                                <td><span class="text-danger"><i class="fas fa-arrow-down"></i> Girdiler Stoktan
+                                        Düşer</span></td>
                             </tr>
                             <tr>
                                 <td><span class="badge bg-success">Tamamlandı</span></td>
                                 <td>Üretim bitti.</td>
-                                <td><span class="text-success"><i class="fas fa-arrow-up"></i> Çıktı Ürünü Stoğa Girer</span></td>
+                                <td><span class="text-success"><i class="fas fa-arrow-up"></i> Çıktı Ürünü Stoğa
+                                        Girer</span></td>
                             </tr>
                         </tbody>
                     </table>
@@ -608,7 +701,8 @@
             <!-- İş Merkezleri -->
             <section id="is-merkezleri" class="section-card">
                 <h2 class="section-title"><i class="fas fa-industry"></i> İş Merkezleri</h2>
-                <p>İş merkezleri, montaj ve dolum gibi işlemlerin yapıldığı üretim hatlarını veya iş istasyonlarını temsil eder.</p>
+                <p>İş merkezleri, montaj ve dolum gibi işlemlerin yapıldığı üretim hatlarını veya iş istasyonlarını
+                    temsil eder.</p>
 
                 <h3>İş Merkezi Tanımlama</h3>
                 <p>Yeni bir iş merkezi oluşturmak için:</p>
@@ -634,10 +728,13 @@
                 <p>Otomatik süreçler (Üretim/Satış) dışındaki stok hareketleri buradan yapılır.</p>
 
                 <ul>
-                    <li><strong>Mal Kabul:</strong> Tedarikçiden gelen malların stoğa girişidir. Fatura/İrsaliye no girilmelidir.</li>
+                    <li><strong>Mal Kabul:</strong> Tedarikçiden gelen malların stoğa girişidir. Fatura/İrsaliye no
+                        girilmelidir.</li>
                     <li><strong>Transfer:</strong> Ürünlerin depolar veya raflar arası yer değişimidir.</li>
-                    <li><strong>Sayım Fazlası:</strong> Fiziksel sayımda sistemden fazla ürün çıkarsa stoğu artırmak için kullanılır.</li>
-                    <li><strong>Fire / Sayım Eksiği:</strong> Kırılan, bozulan veya kaybolan ürünleri stoktan düşmek için kullanılır. Gider olarak kaydedilir.</li>
+                    <li><strong>Sayım Fazlası:</strong> Fiziksel sayımda sistemden fazla ürün çıkarsa stoğu artırmak
+                        için kullanılır.</li>
+                    <li><strong>Fire / Sayım Eksiği:</strong> Kırılan, bozulan veya kaybolan ürünleri stoktan düşmek
+                        için kullanılır. Gider olarak kaydedilir.</li>
                 </ul>
             </section>
 
@@ -656,7 +753,8 @@
                 </ul>
 
                 <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Otomatik Hareketler:</strong> Üretim ve satış süreçleri sırasında stok değişiklikleri otomatik olarak kaydedilir.
+                    <strong><i class="fas fa-info-circle"></i> Otomatik Hareketler:</strong> Üretim ve satış süreçleri
+                    sırasında stok değişiklikleri otomatik olarak kaydedilir.
                 </div>
             </section>
 
@@ -668,9 +766,11 @@
                 <p>Sistem, ürün maliyetlerini hesaplarken <strong>Son Satın Alma Fiyatı</strong> yöntemini kullanır.</p>
                 <div class="info-box">
                     <strong>Formül:</strong><br>
-                    Bir ürünün maliyeti = (Bileşen 1 Miktarı x Son Alış Fiyatı) + (Bileşen 2 Miktarı x Son Alış Fiyatı) + ...
+                    Bir ürünün maliyeti = (Bileşen 1 Miktarı x Son Alış Fiyatı) + (Bileşen 2 Miktarı x Son Alış Fiyatı)
+                    + ...
                 </div>
-                <p>Eğer alış fiyatları döviz (USD/EUR) cinsinden ise, "Ayarlar" menüsündeki güncel kurlar kullanılarak TL'ye çevrilir.</p>
+                <p>Eğer alış fiyatları döviz (USD/EUR) cinsinden ise, "Ayarlar" menüsündeki güncel kurlar kullanılarak
+                    TL'ye çevrilir.</p>
             </section>
 
             <!-- Gider Yönetimi -->
@@ -699,14 +799,16 @@
                 </ul>
 
                 <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Raporlama:</strong> Kayıtlı giderler "Raporlar" menüsünden aylık ve kategorik olarak analiz edilebilir.
+                    <strong><i class="fas fa-info-circle"></i> Raporlama:</strong> Kayıtlı giderler "Raporlar"
+                    menüsünden aylık ve kategorik olarak analiz edilebilir.
                 </div>
             </section>
 
             <!-- Çerçeve Sözleşmeler -->
             <section id="cerceve-sozlesmeler" class="section-card">
                 <h2 class="section-title"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</h2>
-                <p>Tedarikçilerle yapılan malzeme alım anlaşmalarının detaylarını içerir. Limit ve ödeme planlamaları yapılır.</p>
+                <p>Tedarikçilerle yapılan malzeme alım anlaşmalarının detaylarını içerir. Limit ve ödeme planlamaları
+                    yapılır.</p>
 
                 <h3>Sözleşme Tanımlama</h3>
                 <p>Yeni bir çerçeve sözleşme oluşturmak için:</p>
@@ -729,7 +831,8 @@
                 </ul>
 
                 <div class="warning-box">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Limit ve Geçerlilik:</strong> Sözleşme limiti dolunca veya bitiş tarihi geçmişse otomatik olarak pasif duruma geçer.
+                    <strong><i class="fas fa-exclamation-triangle"></i> Limit ve Geçerlilik:</strong> Sözleşme limiti
+                    dolunca veya bitiş tarihi geçmişse otomatik olarak pasif duruma geçer.
                 </div>
             </section>
 
@@ -761,9 +864,12 @@
                 <p>Karar destek mekanizması olarak sunulan raporlar şunlardır:</p>
 
                 <ul>
-                    <li><strong>Gider Raporları:</strong> Aylık harcamaları ve kategori bazlı dağılımları gösterir. Anormal artışları (%2 üzeri sapma) otomatik tespit eder.</li>
-                    <li><strong>Kritik Stok Raporu:</strong> Stoğu belirlenen seviyenin altına düşen ürün ve malzemeleri listeler. Satın alma planlaması için kritiktir.</li>
-                    <li><strong>Eksik Bileşen Analizi:</strong> Reçetesi tanımlanmamış veya eksik tanımlanmış ürünleri tespit eder.</li>
+                    <li><strong>Gider Raporları:</strong> Aylık harcamaları ve kategori bazlı dağılımları gösterir.
+                        Anormal artışları (%2 üzeri sapma) otomatik tespit eder.</li>
+                    <li><strong>Kritik Stok Raporu:</strong> Stoğu belirlenen seviyenin altına düşen ürün ve malzemeleri
+                        listeler. Satın alma planlaması için kritiktir.</li>
+                    <li><strong>Eksik Bileşen Analizi:</strong> Reçetesi tanımlanmamış veya eksik tanımlanmış ürünleri
+                        tespit eder.</li>
                     <li><strong>Ağaçsız Esanslar:</strong> Üretim reçetesi olmayan esansları listeler.</li>
                 </ul>
             </section>
@@ -794,7 +900,8 @@
             <!-- Malzeme Siparişleri -->
             <section id="malzeme-siparisleri" class="section-card">
                 <h2 class="section-title"><i class="fas fa-box-open"></i> Malzeme Siparişleri</h2>
-                <p>Tedarikçilere verilen hammadde ve ambalaj malzemesi siparişlerinin takip edildiği bölümdür. Sistemde malzeme ihtiyaçları tespit edildikçe bu alanda tedarikçilere sipariş verilebilir.</p>
+                <p>Tedarikçilere verilen hammadde ve ambalaj malzemesi siparişlerinin takip edildiği bölümdür. Sistemde
+                    malzeme ihtiyaçları tespit edildikçe bu alanda tedarikçilere sipariş verilebilir.</p>
 
                 <h3>1. Malzeme Siparişi Oluşturma</h3>
                 <p>Yeni bir malzeme siparişi oluşturmak için:</p>
@@ -802,7 +909,8 @@
                     <li>"Operasyonlar" menüsünden "Malzeme Siparişleri" sayfasına gidin.</li>
                     <li>"Yeni Sipariş Ekle" butonuna tıklayın.</li>
                     <li>Malzeme seçin (Sistemde tanımlı olan hammaddeler, ambalaj malzemeleri vb.).</li>
-                    <li>Eşleşen tedarikçiyi seçin (Malzemeyle ilişkili olan veya uygun fiyat teklifi veren tedarikçi).</li>
+                    <li>Eşleşen tedarikçiyi seçin (Malzemeyle ilişkili olan veya uygun fiyat teklifi veren tedarikçi).
+                    </li>
                     <li>Gerekli miktarı girin (Ondalıklı girişe izin verilir).</li>
                     <li>Teslim edileceği bildirilen tarihi seçin (Planlama için önemlidir).</li>
                     <li>İsteğe bağlı açıklama ekleyin.</li>
@@ -847,16 +955,20 @@
                 <h3>3. Sipariş Takibi ve Yönetimi</h3>
                 <p>Malzeme siparişlerinin takibi şu şekilde yapılır:</p>
                 <ul>
-                    <li><strong>Arama ve Filtreleme:</strong> Malzeme adı, tedarikçi, sipariş numarası gibi kriterlere göre arama yapılabilir.</li>
-                    <li><strong>Durum Güncelleme:</strong> Siparişlerin durumu ilerledikçe güncellenmelidir (Sipariş Verildi → Teslim Edildi).</li>
-                    <li><strong>Listeleme ve Sayfalandırma:</strong> Sayfa başına 10, 25, 50 veya 100 kayıtlık görüntüleme seçeneği mevcuttur.</li>
+                    <li><strong>Arama ve Filtreleme:</strong> Malzeme adı, tedarikçi, sipariş numarası gibi kriterlere
+                        göre arama yapılabilir.</li>
+                    <li><strong>Durum Güncelleme:</strong> Siparişlerin durumu ilerledikçe güncellenmelidir (Sipariş
+                        Verildi → Teslim Edildi).</li>
+                    <li><strong>Listeleme ve Sayfalandırma:</strong> Sayfa başına 10, 25, 50 veya 100 kayıtlık
+                        görüntüleme seçeneği mevcuttur.</li>
                 </ul>
 
                 <h3>4. Malzeme ve Tedarikçi Seçimi</h3>
                 <p>Sipariş oluştururken:</p>
                 <ul>
                     <li>Sistemde daha önceden tanımlanmış malzemeler listelenir.</li>
-                    <li>Bir malzeme seçildiğinde, o malzeme ile sözleşme (çerçeve sözleşme) olan tedarikçiler otomatik olarak listelenir.</li>
+                    <li>Bir malzeme seçildiğinde, o malzeme ile sözleşme (çerçeve sözleşme) olan tedarikçiler otomatik
+                        olarak listelenir.</li>
                     <li>Bu sayede uygun tedarikçi seçimini kolaylaştırır.</li>
                 </ul>
 
@@ -869,40 +981,58 @@
                 </ul>
 
                 <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Entegrasyon:</strong> Malzeme siparişlerinden teslim alınan ürünler "Manuel Stok Operasyonları" sayfasındaki "Mal Kabul" işlemi ile sisteme stoğa dahil edilmelidir. Bu işlem, sipariş durumu "Teslim Edildi" yapıldığında otomatik olarak gerçekleşmez.
+                    <strong><i class="fas fa-info-circle"></i> Entegrasyon:</strong> Malzeme siparişlerinden teslim
+                    alınan ürünler "Manuel Stok Operasyonları" sayfasındaki "Mal Kabul" işlemi ile sisteme stoğa dahil
+                    edilmelidir. Bu işlem, sipariş durumu "Teslim Edildi" yapıldığında otomatik olarak gerçekleşmez.
                 </div>
 
                 <div class="warning-box">
-                    <strong><i class="fas fa-exclamation-triangle"></i> Önemli:</strong> Sipariş verilen malzemelerin üretimde kullanılabilmesi için mutlaka "Mal Kabul" işlemiyle sisteme alınması gerekir. Aksi takdirde üretim planları aksamış olur.
+                    <strong><i class="fas fa-exclamation-triangle"></i> Önemli:</strong> Sipariş verilen malzemelerin
+                    üretimde kullanılabilmesi için mutlaka "Mal Kabul" işlemiyle sisteme alınması gerekir. Aksi takdirde
+                    üretim planları aksamış olur.
                 </div>
             </section>
 
             <!-- Ürün Akışı -->
             <section id="urun-akisi" class="section-card">
-                <h2 class="section-title"><i class="fas fa-project-diagram"></i> Ürün Oluşumundan Satışa Kadar Olan Süreç</h2>
-                <p>Sistemde bir ürünün yaratılışından satışına kadar geçen tüm süreci anlatır. Bu süreç malzeme/esans tanımlama, ürün tanımlama, ürün/esans ağacı oluşturma, sözleşme oluşturma, üretim planlama ve satış süreçlerini kapsar.</p>
+                <h2 class="section-title"><i class="fas fa-project-diagram"></i> Ürün Oluşumundan Satışa Kadar Olan
+                    Süreç</h2>
+                <p>Sistemde bir ürünün yaratılışından satışına kadar geçen tüm süreci anlatır. Bu süreç malzeme/esans
+                    tanımlama, ürün tanımlama, ürün/esans ağacı oluşturma, sözleşme oluşturma, üretim planlama ve satış
+                    süreçlerini kapsar.</p>
 
                 <h3>1. Lokasyon, Tedarikçi Tanımı, Malzeme Tanımı ve Çerçeve Sözleşme Oluşturma</h3>
                 <p>Ürün ve esans üretiminde kullanılan temel girdi maddelerinin tanımlandığı aşamadır:</p>
                 <ul>
-                    <li><strong>Lokasyonlar</strong> sayfasında depolar ve raflar tanımlanır (Depo: Parfüm Üretim Depo 1, Raf: A01, B02 vb.).</li>
-                    <li><strong>Tedarikçiler</strong> sayfasında tedarikçi bilgileri tanımlanır (firma adı, iletişim bilgileri).</li>
-                    <li><strong>Malzemeler</strong> sayfasında hammaddeler, ambalaj malzemeleri (şişe, kapak, etiket, pompa vb.) tanımlanır.</li>
-                    <li>Her malzeme için tür (şişe, kutu, etiket, iç ambalaj, pompa, diğer), birim (kg, lt, adet), depo ve raf bilgileri girilir (depolar ve raflar önceden tanımlanmış olmalıdır).</li>
-                    <li>Tedarikçi ve malzeme kayıtları oluşturulduktan sonra, <strong>Çerçeve Sözleşmeler</strong> sayfasında sözleşme oluşturulur.</li>
-                    <li>Çerçeve sözleşme oluşturulurken: Hangi tedarikçiden hangi malzeme ne kadar ve hangi fiyattan alınacak bilgileri girilir.</li>
-                    <li>Sözleşmelerde başlangıç ve bitiş tarihi belirlenir, öncelik seviyesi atanır (1=en yüksek, 5=en düşük).</li>
-                    <li>Sözleşmede tanımlanan limit miktarı dolduğunda sözleşme otomatik olarak pasif hale gelir.</li>
+                    <li><strong>Lokasyonlar</strong> sayfasında depolar ve raflar tanımlanır (Depo: Parfüm Üretim Depo
+                        1, Raf: A01, B02 vb.).</li>
+                    <li><strong>Tedarikçiler</strong> sayfasında tedarikçi bilgileri tanımlanır (firma adı, iletişim
+                        bilgileri).</li>
+                    <li><strong>Malzemeler</strong> sayfasında hammaddeler, ambalaj malzemeleri (şişe, kapak, etiket,
+                        pompa vb.) tanımlanır.</li>
+                    <li>Her malzeme için tür (şişe, kutu, etiket, iç ambalaj, pompa, diğer), birim (kg, lt, adet), depo
+                        ve raf bilgileri girilir (depolar ve raflar önceden tanımlanmış olmalıdır).</li>
+                    <li>Tedarikçi ve malzeme kayıtları oluşturulduktan sonra, <strong>Çerçeve Sözleşmeler</strong>
+                        sayfasında sözleşme oluşturulur.</li>
+                    <li>Çerçeve sözleşme oluşturulurken: Hangi tedarikçiden hangi malzeme ne kadar ve hangi fiyattan
+                        alınacak bilgileri girilir.</li>
+                    <li>Sözleşmelerde başlangıç ve bitiş tarihi belirlenir, öncelik seviyesi atanır (1=en yüksek, 5=en
+                        düşük).</li>
+                    <li>Sözleşme tanımlanan limit miktarı dolduğunda sözleşme otomatik olarak pasif hale gelir.</li>
                 </ul>
 
                 <h3>2. Tank, Esans Tanımı ve Esans Ağacı Oluşturma</h3>
                 <p>Parfüm üretiminde kullanılan esansların tanımlandığı ve reçetelerinin çıkarıldığı aşamadır:</p>
                 <ul>
                     <li><strong>Tanklar</strong> sayfasında tanklar tanımlanır (Tank: TANK-01, TANK-02 vb.).</li>
-                    <li><strong>Esanslar</strong> sayfasında yeni bir esans tanımlanır (örneğin Gül Esansı, Lavanta Esansı).</li>
+                    <li><strong>Esanslar</strong> sayfasında yeni bir esans tanımlanır (örneğin Gül Esansı, Lavanta
+                        Esansı).</li>
                     <li>Her esans için hangi tankta saklanacağı belirlenir (tanklar önceden tanımlanmış olmalıdır).</li>
-                    <li>Esans tanımı oluşturulduktan sonra, <strong>Ürün Ağaçları</strong> sayfasında "Esans Ağaçları" sekmesi altından esansın bileşenleri tanımlanır (örneğin: Yüzde 60 Saf Alkol, Yüzde 30 Saf Su, Yüzde 10 Gül Özü).</li>
-                    <li>Esans ağacı; esansın hangi malzemelerden (yukarıda tanımlanan) hangi oranlarda üretileceği bilgilerini içerir.</li>
+                    <li>Esans tanımı oluşturulduktan sonra, <strong>Ürün Ağaçları</strong> sayfasında "Esans Ağaçları"
+                        sekmesi altından esansın bileşenleri tanımlanır (örneğin: Yüzde 60 Saf Alkol, Yüzde 30 Saf Su,
+                        Yüzde 10 Gül Özü).</li>
+                    <li>Esans ağacı; esansın hangi malzemelerden (yukarıda tanımlanan) hangi oranlarda üretileceği
+                        bilgilerini içerir.</li>
                     <li>Demlenme süresi gibi özel üretim süreçleri de burada belirlenir.</li>
                 </ul>
 
@@ -910,61 +1040,93 @@
                 <p>Elde edilecek nihai ürünün tanımlandığı ve üretim reçetesinin çıkarıldığı aşamadır:</p>
                 <ul>
                     <li><strong>Ürünler</strong> sayfasında nihai ürün tanımlanır (örneğin: 50 ml Gül Parfümü).</li>
-                    <li>Ürün için stok miktarı, kritik seviye, satış fiyatı, depo ve raf bilgileri girilir (depolar ve raflar önceden tanımlanmış olmalıdır).</li>
-                    <li>Ürün tanımı oluşturulduktan sonra, <strong>Ürün Ağaçları</strong> sayfasında "Ürün Ağaçları" sekmesi altından ürünün bileşenleri tanımlanır (örneğin: 10 ml Gül Esansı, 1 adet 50 ml Şişe, 1 adet Pompa).</li>
-                    <li>Esans içeren ürünler için, ürün ağacında esans bileşeni tanımlanır ve daha önce tanımlanmış olan esans ağacı kullanılır.</li>
+                    <li>Ürün için stok miktarı, kritik seviye, satış fiyatı, depo ve raf bilgileri girilir (depolar ve
+                        raflar önceden tanımlanmış olmalıdır).</li>
+                    <li>Ürün tanımı oluşturulduktan sonra, <strong>Ürün Ağaçları</strong> sayfasında "Ürün Ağaçları"
+                        sekmesi altından ürünün bileşenleri tanımlanır (örneğin: 10 ml Gül Esansı, 1 adet 50 ml Şişe, 1
+                        adet Pompa).</li>
+                    <li>Esans içeren ürünler için, ürün ağacında esans bileşeni tanımlanır ve daha önce tanımlanmış olan
+                        esans ağacı kullanılır.</li>
                     <li>Ürün ağacı, ürünün hangi malzeme ve esanslardan hangi miktarlarda üretileceğini gösterir.</li>
                 </ul>
 
                 <h3>4. Mal Kabul ve Stok Hareketleri</h3>
-                <p>Tedarikten gelen malzemelerin sisteme giriş yapıldığı ve stok seviyelerinin güncellendiği aşamadır:</p>
+                <p>Tedarikten gelen malzemelerin sisteme giriş yapıldığı ve stok seviyelerinin güncellendiği aşamadır:
+                </p>
                 <ul>
                     <li><strong>Manuel Stok Operasyonları</strong> sayfasında "Mal Kabul" işlemi yapılır.</li>
                     <li>Mevcut çerçeve sözleşmelerden uygun olanı sistem tarafından otomatik seçilir.</li>
                     <li>Malzeme stok miktarı artırılır, stok hareket kaydı oluşturulur.</li>
-                    <li>Mal kabul işlemi, malzeme fiyat bilgilerinin sistemde güncel olmasında kritik rol oynar (maliyet hesaplamaları için).</li>
+                    <li>Mal kabul işlemi, malzeme fiyat bilgilerinin sistemde güncel olmasında kritik rol oynar (maliyet
+                        hesaplamaları için).</li>
                     <li>Mal kabul sırasında tedarikçiden gelen fatura bilgileri de sisteme işlenebilir.</li>
                 </ul>
 
                 <h3>5. İş Merkezleri, Üretim Planlama (Esans ve Montaj)</h3>
                 <p>Esans ve nihai ürün üretim işlemlerinin yapıldığı aşamadır:</p>
                 <ul>
-                    <li><strong>İş Merkezleri</strong> sayfasında üretim yapılacak iş merkezleri tanımlanır (İş Merkezi: Montaj Bölümü, Karışım Ünitesi vb.).</li>
-                    <li>Esans üretimi için <strong>Esans İş Emirleri</strong> sayfasına gidilir (esans ve esans ağacı önceden tanımlanmış olmalıdır).</li>
-                    <li>Yeni esans iş emri oluşturulur: Hangi esans üretilecek, ne kadar üretilecek, hangi tankta üretilecek bilgileri girilir.</li>
-                    <li>İş emri <strong>"Başlat"</strong> durumuna getirilir: Bu işlem esnasında gerekli malzeme stoğu otomatik olarak düşülür (örneğin: Saf Alkol, Saf Su ve gerekli özler).</li>
-                    <li>İş emri <strong>"Tamamla"</strong> durumuna getirilir: Esans stoğu artırılır, tank bilgisi güncellenir.</li>
-                    <li>Ürün montajı için <strong>Montaj İş Emirleri</strong> sayfası kullanılır. Montaj iş emri oluşturulur: Hangi ürün, ne kadar üretilecek (ürün ve ürün ağacı önceden tanımlanmış olmalıdır).</li>
-                    <li>Bu aşamada üretim yapılacak iş merkezi de belirlenir (iş merkezleri önceden tanımlanmış olmalıdır).</li>
-                    <li>Montaj iş emri <strong>"Başlat"</strong> komutu verilir: Bu işlem esnasında gerekli bileşenlerin stoğu düşülür (örneğin: Esans, Şişe, Pompa).</li>
+                    <li><strong>İş Merkezleri</strong> sayfasında üretim yapılacak iş merkezleri tanımlanır (İş Merkezi:
+                        Montaj Bölümü, Karışım Ünitesi vb.).</li>
+                    <li>Esans üretimi için <strong>Esans İş Emirleri</strong> sayfasına gidilir (esans ve esans ağacı
+                        önceden tanımlanmış olmalıdır).</li>
+                    <li>Yeni esans iş emri oluşturulur: Hangi esans üretilecek, ne kadar üretilecek, hangi tankta
+                        üretilecek bilgileri girilir.</li>
+                    <li>İş emri <strong>"Başlat"</strong> durumuna getirilir: Bu işlem esnasında gerekli malzeme stoğu
+                        otomatik olarak düşülür (örneğin: Saf Alkol, Saf Su ve gerekli özler).</li>
+                    <li>İş emri <strong>"Tamamla"</strong> durumuna getirilir: Esans stoğu artırılır, tank bilgisi
+                        güncellenir.</li>
+                    <li>Ürün montajı için <strong>Montaj İş Emirleri</strong> sayfası kullanılır. Montaj iş emri
+                        oluşturulur: Hangi ürün, ne kadar üretilecek (ürün ve ürün ağacı önceden tanımlanmış olmalıdır).
+                    </li>
+                    <li>Bu aşamada üretim yapılacak iş merkezi de belirlenir (iş merkezleri önceden tanımlanmış
+                        olmalıdır).</li>
+                    <li>Montaj iş emri <strong>"Başlat"</strong> komutu verilir: Bu işlem esnasında gerekli bileşenlerin
+                        stoğu düşülür (örneğin: Esans, Şişe, Pompa).</li>
                     <li>Montaj iş emri <strong>"Tamamla"</strong> durumuna getirilir: Nihai ürün stoğu artırılır.</li>
                 </ul>
 
                 <h3>6. Satış ve Sipariş Süreci</h3>
                 <p>Müşteri siparişlerinin işlendiği ve satış sürecinin yürütüldüğü aşamadır:</p>
                 <ul>
-                    <li>Önce <strong>Müşteriler</strong> sayfasında müşteri tanımlanır (firma bilgileri, iletişim bilgileri).</li>
-                    <li>Müşteriye giriş yetkisi verilirse, <strong>Müşteri Paneli</strong> aracılığıyla kendi siparişlerini oluşturabilir.</li>
+                    <li>Önce <strong>Müşteriler</strong> sayfasında müşteri tanımlanır (firma bilgileri, iletişim
+                        bilgileri).</li>
+                    <li>Müşteriye giriş yetkisi verilirse, <strong>Müşteri Paneli</strong> aracılığıyla kendi
+                        siparişlerini oluşturabilir.</li>
                     <li>Var olan müşteriler sistemde tanımlıdır, yeni müşteri tanımı yapılmadan sipariş verilemez.</li>
                     <li>Müşteri panelinde ürün kataloğu görüntülenir, stok durumuna göre sepete ürün eklenir.</li>
-                    <li><strong>Müşteri Siparişleri</strong> sayfasında oluşturulan siparişler görünür. Siparişlerin başlangıç durumu <strong>"Beklemede"</strong> durumudur.</li>
-                    <li><strong>"Beklemede"</strong> durumunda olan sipariş onaylanmamıştır. Bu durumda sipariş hazırlanmaz ve stok etkilemez.</li>
-                    <li>Sipariş <strong>"Onaylandı"</strong> durumuna getirilir: Bu işlem hazırlık sürecini başlatır ama stok düşüşüne neden olmaz. Bu durum, siparişin hazırlandığını ve fatura düzenlemesi için uygun olduğunu gösterir.</li>
-                    <li>Siparişin <strong>"Tamamlandı"</strong> durumuna getirilmesi için siparişteki ürünlerin stokta mevcut olması gerekir.</li>
-                    <li><strong>"Tamamlandı"</strong> durumuna getirildiğinde, siparişteki ürünlerin stoğu sistem otomatik olarak düşer.</li>
-                    <li>Bir siparişin <strong>"Tamamlandı"</strong> olarak işaretlenmesi için, önce <strong>"Onaylandı"</strong> durumuna getirilmiş olması gerekir.</li>
-                    <li><strong>"İptal Edildi"</strong> durumuna getirilen siparişler için stok ekleme işlemi yapılır (geri planlama).</li>
-                    <li>İlgili ürünlerin stokta yeterli miktarda bulunmaması durumunda, üretim planlama ekibi tarafından ilgili esans ve montaj iş emirleri planlanır.</li>
+                    <li><strong>Müşteri Siparişleri</strong> sayfasında oluşturulan siparişler görünür. Siparişlerin
+                        başlangıç durumu <strong>"Beklemede"</strong> durumudur.</li>
+                    <li><strong>"Beklemede"</strong> durumunda olan sipariş onaylanmamıştır. Bu durumda sipariş
+                        hazırlanmaz ve stok etkilemez.</li>
+                    <li>Sipariş <strong>"Onaylandı"</strong> durumuna getirilir: Bu işlem hazırlık sürecini başlatır ama
+                        stok düşüşüne neden olmaz. Bu durum, siparişin hazırlandığını ve fatura düzenlemesi için uygun
+                        olduğunu gösterir.</li>
+                    <li>Siparişin <strong>"Tamamlandı"</strong> durumuna getirilmesi için siparişteki ürünlerin stokta
+                        mevcut olması gerekir.</li>
+                    <li><strong>"Tamamlandı"</strong> durumuna getirildiğinde, siparişteki ürünlerin stoğu sistem
+                        otomatik olarak düşer.</li>
+                    <li>Bir siparişin <strong>"Tamamlandı"</strong> olarak işaretlenmesi için, önce
+                        <strong>"Onaylandı"</strong> durumuna getirilmiş olması gerekir.
+                    </li>
+                    <li><strong>"İptal Edildi"</strong> durumuna getirilen siparişler için stok ekleme işlemi yapılır
+                        (geri planlama).</li>
+                    <li>İlgili ürünlerin stokta yeterli miktarda bulunmaması durumunda, üretim planlama ekibi tarafından
+                        ilgili esans ve montaj iş emirleri planlanır.</li>
                 </ul>
 
                 <h3>7. Stok Takibi ve Manuel Hareketler</h3>
                 <p>Stok seviyelerinin takip edildiği ve gerekli düzeltmelerin yapıldığı aşamadır:</p>
                 <ul>
                     <li>Tüm stok hareketleri <strong>Stok Hareketleri</strong> sayfasından takip edilebilir.</li>
-                    <li>Stok sayımı sırasında fazla çıkan ürünler için <strong>"Sayım Fazlası"</strong> hareketi girilir.</li>
-                    <li>Stok sayımı sırasında eksik çıkan ürünler için <strong>"Fire / Sayım Eksigi"</strong> hareketi girilir.</li>
-                    <li><strong>Önemli:</strong> "Fire" seçeneği ile yapılan çıkışlar, sistem tarafından otomatik olarak maliyetlendirilir ve "Fire Gideri" olarak giderlere eklenir. "Sayım Eksiği" ise sadece stoktan düşer, gider oluşturmaz.</li>
-                    <li>Farklı depolar veya raflar arasında <strong>Transfer</strong> işlemleri yapılır (depolar ve raflar önceden tanımlanmış olmalıdır).</li>
+                    <li>Stok sayımı sırasında fazla çıkan ürünler için <strong>"Sayım Fazlası"</strong> hareketi
+                        girilir.</li>
+                    <li>Stok sayımı sırasında eksik çıkan ürünler için <strong>"Fire / Sayım Eksigi"</strong> hareketi
+                        girilir.</li>
+                    <li><strong>Önemli:</strong> "Fire" seçeneği ile yapılan çıkışlar, sistem tarafından otomatik olarak
+                        maliyetlendirilir ve "Fire Gideri" olarak giderlere eklenir. "Sayım Eksiği" ise sadece stoktan
+                        düşer, gider oluşturmaz.</li>
+                    <li>Farklı depolar veya raflar arasında <strong>Transfer</strong> işlemleri yapılır (depolar ve
+                        raflar önceden tanımlanmış olmalıdır).</li>
                     <li>Stok seviyeleri <strong>Kritik Stok Raporları</strong> ile takip edilir.</li>
                     <li>Stok seviyeleri düşük olan ürünler için otomatik uyarı sistemlerinden yararlanılır.</li>
                     <li>Manuel stok hareketlerine <strong>Manuel Stok Hareket</strong> sayfasından erişilir.</li>
@@ -975,17 +1137,22 @@
                 <ul>
                     <li>Esans iş emri başlatıldığında gerekli malzeme stoğu otomatik düşülür.</li>
                     <li>Esans iş emri tamamlandığında esans stoğu otomatik artar.</li>
-                    <li>Montaj iş emri başlatıldığında gerekli bileşenlerin stoğu (esans, ambalaj malzemeleri) otomatik düşülür.</li>
+                    <li>Montaj iş emri başlatıldığında gerekli bileşenlerin stoğu (esans, ambalaj malzemeleri) otomatik
+                        düşülür.</li>
                     <li>Montaj iş emri tamamlandığında nihai ürün stoğu otomatik artar.</li>
                     <li>Müşteri siparişi "Tamamlandı" yapıldığında nihai ürünler stoğundan otomatik düşülür.</li>
                     <li>Müşteri siparişi iptal edildiğinde ilgili ürünler stoğa otomatik olarak eklenir.</li>
                     <li>Maliyet hesaplamaları ürün ağacı ve çerçeve sözleşme fiyatları ile yapılır.</li>
                     <li>Tüm süreçlerde stok hareket kayıtları otomatik olarak oluşturulur ve takip edilir.</li>
-                    <li>Sistem, olası hataları ve eksiklikleri otomatik olarak saptayabilir (örneğin: Ürün ağacı olmayan ürünler).</li>
+                    <li>Sistem, olası hataları ve eksiklikleri otomatik olarak saptayabilir (örneğin: Ürün ağacı olmayan
+                        ürünler).</li>
                 </ul>
 
                 <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> İş Akışı Sırası:</strong> Ürün üretiminde iş akışı sırası önemlidir: Önce lokasyon (depo/raf), tedarikçi, tank, iş merkezi gibi altyapı tanımlamaları yapılmalıdır, sonra malzeme/esans tanımlanabilir, ardından ürün ve ürün ağacı oluşturulabilir, daha sonra üretim planlaması yapılabilir ve son olarak satış süreci başlatılabilir.
+                    <strong><i class="fas fa-info-circle"></i> İş Akışı Sırası:</strong> Ürün üretiminde iş akışı sırası
+                    önemlidir: Önce lokasyon (depo/raf), tedarikçi, tank, iş merkezi gibi altyapı tanımlamaları
+                    yapılmalıdır, sonra malzeme/esans tanımlanabilir, ardından ürün ve ürün ağacı oluşturulabilir, daha
+                    sonra üretim planlaması yapılabilir ve son olarak satış süreci başlatılabilir.
                 </div>
             </section>
 
@@ -999,7 +1166,9 @@
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        Sistem operasyonel süreklilik için eksi stoğa izin verir. Bu genellikle, fiziksel olarak malın geldiği ama sisteme "Mal Kabul" işleminin henüz girilmediği durumlarda, o malzemenin üretimde kullanılmasıyla oluşur. Çözüm: Geçmiş tarihli Mal Kabul kaydı girmektir.
+                        Sistem operasyonel süreklilik için eksi stoğa izin verir. Bu genellikle, fiziksel olarak malın
+                        geldiği ama sisteme "Mal Kabul" işleminin henüz girilmediği durumlarda, o malzemenin üretimde
+                        kullanılmasıyla oluşur. Çözüm: Geçmiş tarihli Mal Kabul kaydı girmektir.
                     </div>
                 </div>
 
@@ -1011,7 +1180,8 @@
                     <div class="faq-answer">
                         Maliyet hesaplanabilmesi için iki şart gereklidir:
                         1. Ürünün reçetesi (Ürün Ağacı) tanımlı olmalı.
-                        2. Reçetedeki malzemelerin sistemde en az bir kere "Mal Kabul" işlemi yapılmış olmalı (Fiyat bilgisi için).
+                        2. Reçetedeki malzemelerin sistemde en az bir kere "Mal Kabul" işlemi yapılmış olmalı (Fiyat
+                        bilgisi için).
                     </div>
                 </div>
 
@@ -1021,7 +1191,9 @@
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        "Personeller" sayfasına gidin, ilgili personelin yanındaki "Yetki" (Kalkan ikonu) butonuna tıklayın. Açılan sayfadan personelin görmesini istemediğiniz modüllerin tikini kaldırıp kaydedin.
+                        "Personeller" sayfasına gidin, ilgili personelin yanındaki "Yetki" (Kalkan ikonu) butonuna
+                        tıklayın. Açılan sayfadan personelin görmesini istemediğiniz modüllerin tikini kaldırıp
+                        kaydedin.
                     </div>
                 </div>
 
@@ -1031,7 +1203,8 @@
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        Bu normaldir. "Onaylandı" durumu sadece hazırlık sürecini başlatır. Stok düşüşü, sipariş durumu <strong>"Tamamlandı"</strong> yapıldığında gerçekleşir.
+                        Bu normaldir. "Onaylandı" durumu sadece hazırlık sürecini başlatır. Stok düşüşü, sipariş durumu
+                        <strong>"Tamamlandı"</strong> yapıldığında gerçekleşir.
                     </div>
                 </div>
             </section>
@@ -1044,7 +1217,7 @@
         function toggleFaq(element) {
             const answer = element.nextElementSibling;
             const icon = element.querySelector('i');
-            
+
             // Close other open FAQs
             document.querySelectorAll('.faq-answer.open').forEach(item => {
                 if (item !== answer) {
@@ -1066,14 +1239,14 @@
         document.querySelectorAll('.nav-link').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
                 e.preventDefault();
-                
+
                 // Update active state
                 document.querySelectorAll('.nav-link').forEach(link => link.classList.remove('active'));
                 this.classList.add('active');
 
                 const targetId = this.getAttribute('href');
                 const targetSection = document.querySelector(targetId);
-                
+
                 if (targetSection) {
                     const headerOffset = 90;
                     const elementPosition = targetSection.getBoundingClientRect().top;
@@ -1140,4 +1313,5 @@
         });
     </script>
 </body>
+
 </html>
