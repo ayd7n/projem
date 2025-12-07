@@ -296,6 +296,26 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Urun
                         Ekle</button>
                 <?php endif; ?>
+
+                <div class="d-flex align-items-center mb-3">
+                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary" :class="{ active: productTypeFilter === '' }">
+                            <input type="radio" @click="setProductTypeFilter('')" :checked="productTypeFilter === ''">
+                            <i class="fas fa-th-list mr-1"></i>Tümü
+                        </label>
+                        <label class="btn btn-outline-primary" :class="{ active: productTypeFilter === 'uretilen' }">
+                            <input type="radio" @click="setProductTypeFilter('uretilen')"
+                                :checked="productTypeFilter === 'uretilen'">
+                            <i class="fas fa-industry mr-1"></i>Üretilen
+                        </label>
+                        <label class="btn btn-outline-success"
+                            :class="{ active: productTypeFilter === 'hazir_alinan' }">
+                            <input type="radio" @click="setProductTypeFilter('hazir_alinan')"
+                                :checked="productTypeFilter === 'hazir_alinan'">
+                            <i class="fas fa-shopping-cart mr-1"></i>Hazır Alınan
+                        </label>
+                    </div>
+                </div>
             </div>
             <div class="col-md-4">
                 <div class="row">
@@ -367,15 +387,16 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <?php endif; ?>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
                                 <th><i class="fas fa-cube"></i> Raf</th>
+                                <th><i class="fas fa-cogs"></i> Urun Tipi</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="10" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="products.length === 0">
-                                <td colspan="10" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
+                                <td colspan="11" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu">
                                 <td class="actions">
@@ -417,6 +438,13 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <?php endif; ?>
                                 <td>{{ product.depo }}</td>
                                 <td>{{ product.raf }}</td>
+                                <td>
+                                    <span v-if="product.urun_tipi === 'uretilen'"
+                                        class="badge badge-primary">Üretilen</span>
+                                    <span v-else-if="product.urun_tipi === 'hazir_alinan'"
+                                        class="badge badge-success">Hazır Alınan</span>
+                                    <span v-else class="badge badge-secondary">{{ product.urun_tipi }}</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -570,6 +598,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                     <option value="">Once Depo Secin</option>
                                                     <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}
                                                     </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Ürün Tipi *</label>
+                                                <select class="form-control" v-model="modal.data.urun_tipi" required>
+                                                    <option value="uretilen">Üretilen Ürün</option>
+                                                    <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -730,6 +767,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     totalProducts: <?php echo $total_products; ?>,
                     criticalProducts: <?php echo $critical_products; ?>,
                     limit: 10,
+                    productTypeFilter: '',
                     modal: { title: '', data: {} },
                     depoList: [],
                     rafList: [],
@@ -779,6 +817,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     if (this.criticalStockFilterEnabled) {
                         url += '&filter=critical';
                     }
+                    if (this.productTypeFilter) {
+                        url += `&urun_tipi=${this.productTypeFilter}`;
+                    }
                     fetch(url)
                         .then(response => response.json())
                         .then(response => {
@@ -796,6 +837,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             this.loading = false;
                         });
                 },
+                setProductTypeFilter(filter) {
+                    this.productTypeFilter = filter;
+                    this.currentPage = 1; // Reset to first page when filtering
+                    this.loadProducts(1);
+                },
                 openModal(product) {
                     this.rafList = []; // Clear raf list
                     this.productPhotos = []; // Clear photos
@@ -811,7 +857,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet' };
+                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen' };
                     }
                     $('#productModal').modal('show');
                 },

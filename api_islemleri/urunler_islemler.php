@@ -26,17 +26,38 @@ if (isset($_GET['action'])) {
             $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
             $search = isset($_GET['search']) ? $_GET['search'] : '';
             $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
+            $urun_tipi = isset($_GET['urun_tipi']) ? $_GET['urun_tipi'] : '';
             $offset = ($page - 1) * $limit;
             $search_term = '%' . $search . '%';
 
+            // Build WHERE conditions
+            $where_conditions = [];
+            $params = [];
+            $param_types = '';
+
+            if (!empty($search)) {
+                $where_conditions[] = "(urun_ismi LIKE ? OR urun_kodu LIKE ?)";
+                $params[] = $search_term;
+                $params[] = $search_term;
+                $param_types .= 'ss';
+            }
+
             if ($filter === 'critical') {
-                $count_query = "SELECT COUNT(*) as total FROM urunler WHERE (urun_ismi LIKE ? OR urun_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
-                $stmt_count = $connection->prepare($count_query);
-                $stmt_count->bind_param('ss', $search_term, $search_term);
-            } else {
-                $count_query = "SELECT COUNT(*) as total FROM urunler WHERE urun_ismi LIKE ? OR urun_kodu LIKE ?";
-                $stmt_count = $connection->prepare($count_query);
-                $stmt_count->bind_param('ss', $search_term, $search_term);
+                $where_conditions[] = "stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+            }
+
+            if (!empty($urun_tipi)) {
+                $where_conditions[] = "urun_tipi = ?";
+                $params[] = $urun_tipi;
+                $param_types .= 's';
+            }
+
+            $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
+
+            $count_query = "SELECT COUNT(*) as total FROM urunler {$where_clause}";
+            $stmt_count = $connection->prepare($count_query);
+            if (!empty($params)) {
+                $stmt_count->bind_param($param_types, ...$params);
             }
             $stmt_count->execute();
             $count_result = $stmt_count->get_result()->fetch_assoc();
@@ -45,36 +66,23 @@ if (isset($_GET['action'])) {
             $stmt_count->close();
 
             $can_view_cost = yetkisi_var('action:urunler:view_cost');
-            // Get paginated data with optional critical stock filter
-            if ($filter === 'critical') {
-                $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
-                $query = "
-                    SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
-                    FROM urunler u
-                    " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
-                    LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu
-                    WHERE (u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?)
-                    AND u.stok_miktari <= u.kritik_stok_seviyesi
-                    AND u.kritik_stok_seviyesi > 0
-                    GROUP BY u.urun_kodu
-                    ORDER BY u.urun_ismi
-                    LIMIT ? OFFSET ?";
-                $stmt_data = $connection->prepare($query);
-                $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
-            } else {
-                $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
-                $query = "
-                    SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
-                    FROM urunler u
-                    " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
-                    LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu
-                    WHERE u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?
-                    GROUP BY u.urun_kodu
-                    ORDER BY u.urun_ismi
-                    LIMIT ? OFFSET ?";
-                $stmt_data = $connection->prepare($query);
-                $stmt_data->bind_param('ssii', $search_term, $search_term, $limit, $offset);
-            }
+            $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
+            $query = "
+                SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
+                FROM urunler u
+                " . ($can_view_cost ? "LEFT JOIN v_urun_maliyetleri vum ON u.urun_kodu = vum.urun_kodu" : "") . "
+                LEFT JOIN urun_fotograflari uf ON u.urun_kodu = uf.urun_kodu
+                {$where_clause}
+                GROUP BY u.urun_kodu
+                ORDER BY u.urun_ismi
+                LIMIT ? OFFSET ?";
+
+            $params[] = $limit;
+            $params[] = $offset;
+            $param_types .= 'ii';
+
+            $stmt_data = $connection->prepare($query);
+            $stmt_data->bind_param($param_types, ...$params);
             $stmt_data->execute();
             $result = $stmt_data->get_result();
 
@@ -176,6 +184,7 @@ if (isset($_GET['action'])) {
     $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
+    $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
 
     if ($action == 'add_product') {
         if (!yetkisi_var('action:urunler:create')) {
@@ -185,9 +194,9 @@ if (isset($_GET['action'])) {
         if (empty($urun_ismi)) {
             $response = ['status' => 'error', 'message' => 'Ürün ismi boş olamaz.'];
         } else {
-            $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssisdiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf);
+            $stmt->bind_param('ssisdiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi);
 
             if ($stmt->execute()) {
                 // Log ekleme
@@ -217,9 +226,9 @@ if (isset($_GET['action'])) {
             $old_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
             $old_stmt->close();
 
-            $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ? WHERE urun_kodu = ?";
+            $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ?, urun_tipi = ? WHERE urun_kodu = ?";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssisdissi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_kodu);
+            $stmt->bind_param('ssisdiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi, $urun_kodu);
 
             if ($stmt->execute()) {
                 // Log ekleme
