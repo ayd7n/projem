@@ -105,7 +105,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_employees; ?></h3>
+                            <h3 style="font-size: 1.5rem; margin: 0;">{{ overallTotalEmployees }}</h3>
                             <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Personel</p>
                         </div>
                     </div>
@@ -115,7 +115,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Personel Listesi</h2>
+                <h2 class="mb-2 mb-md-0 text-nowrap mr-3"><i class="fas fa-list"></i> Personel Listesi</h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -220,7 +220,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage - 1)"><i
-                                            class="fas fa-chevron-left"></i> Previous</a>
+                                            class="fas fa-chevron-left"></i> Önceki</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadEmployees(1)">1</a>
@@ -240,7 +240,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                         totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage + 1)">Next
+                                    <a class="page-link" href="#"
+                                        @click.prevent="loadEmployees(currentPage + 1)">Sonraki
                                         <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
@@ -267,13 +268,13 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Ad Soyad *</label>
+                                        <label><i class="fas fa-user"></i> Ad Soyad *</label>
                                         <input type="text" class="form-control" v-model="modal.data.ad_soyad" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Pozisyon</label>
+                                        <label><i class="fas fa-briefcase"></i> Pozisyon</label>
                                         <input type="text" class="form-control" v-model="modal.data.pozisyon">
                                     </div>
                                 </div>
@@ -281,13 +282,13 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Departman</label>
+                                        <label><i class="fas fa-building"></i> Departman</label>
                                         <input type="text" class="form-control" v-model="modal.data.departman">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>İşe Giriş Tarihi</label>
+                                        <label><i class="fas fa-calendar-plus"></i> İşe Giriş Tarihi</label>
                                         <input type="date" class="form-control" v-model="modal.data.ise_giris_tarihi">
                                     </div>
                                 </div>
@@ -299,29 +300,31 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                             <input type="checkbox" class="form-check-input"
                                                 v-model="modal.data.bordrolu_calisan_mi" id="bordrolu_calisan_mi"
                                                 true-value="1" false-value="0">
-                                            <label class="form-check-label" for="bordrolu_calisan_mi">Bordrolu Çalışan
+                                            <label class="form-check-label" for="bordrolu_calisan_mi"><i
+                                                    class="fas fa-wallet"></i> Bordrolu Çalışan
                                                 Mı?</label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Aylık Brüt Ücret (₺)</label>
+                                        <label><i class="fas fa-money-bill-wave"></i> Aylık Brüt Ücret (₺)</label>
                                         <input type="number" step="0.01" class="form-control"
-                                            v-model="modal.data.aylik_brut_ucret" placeholder="0.00">
+                                            v-model="modal.data.aylik_brut_ucret" placeholder="0.00"
+                                            :disabled="!modal.data.bordrolu_calisan_mi">
                                     </div>
                                 </div>
                             </div>
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Telefon</label>
+                                        <label><i class="fas fa-phone"></i> Telefon</label>
                                         <input type="text" class="form-control" v-model="modal.data.telefon">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Telefon 2</label>
+                                        <label><i class="fas fa-phone"></i> Telefon 2</label>
                                         <input type="text" class="form-control" v-model="modal.data.telefon_2">
                                     </div>
                                 </div>
@@ -329,7 +332,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>E-posta</label>
+                                        <label><i class="fas fa-envelope"></i> E-posta</label>
                                         <input type="email" class="form-control" v-model="modal.data.e_posta">
                                     </div>
                                 </div>
@@ -337,28 +340,28 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>TC Kimlik No</label>
+                                        <label><i class="fas fa-id-card"></i> TC Kimlik No</label>
                                         <input type="text" class="form-control" v-model="modal.data.tc_kimlik_no">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
-                                        <label>Doğum Tarihi *</label>
+                                        <label><i class="fas fa-birthday-cake"></i> Doğum Tarihi *</label>
                                         <input type="date" class="form-control" v-model="modal.data.dogum_tarihi"
                                             required>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group mb-3">
-                                <label>Adres</label>
+                                <label><i class="fas fa-map-marker-alt"></i> Adres</label>
                                 <textarea class="form-control" v-model="modal.data.adres" rows="2"></textarea>
                             </div>
                             <div class="form-group mb-3">
-                                <label>Notlar</label>
+                                <label><i class="fas fa-sticky-note"></i> Notlar</label>
                                 <textarea class="form-control" v-model="modal.data.notlar" rows="2"></textarea>
                             </div>
                             <div class="form-group mb-3">
-                                <label>Şifre</label>
+                                <label><i class="fas fa-lock"></i> Şifre</label>
                                 <input type="password" class="form-control" v-model="modal.data.sifre"
                                     placeholder="Yeni şifre (boş bırakırsanız değişmez)">
                             </div>
@@ -393,6 +396,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                     currentPage: 1,
                     totalPages: 1,
                     totalEmployees: 0,
+                    overallTotalEmployees: <?php echo $total_employees; ?>,
                     limit: 10,
                     modal: {
                         title: '',
@@ -447,6 +451,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 this.employees = response.data;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalEmployees = response.pagination.total_employees;
+                                this.overallTotalEmployees = response.pagination.overall_total_employees;
                             } else {
                                 this.showAlert('Personeller yüklenirken hata oluştu.', 'danger');
                             }
@@ -470,34 +475,6 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         this.modal.data = {};
                     }
                     $('#employeeModal').modal('show');
-                },
-                saveEmployee() {
-                    let action = this.modal.data.personel_id ? 'update_employee' : 'add_employee';
-                    let formData = new FormData();
-                    for (let key in this.modal.data) {
-                        if (this.modal.data[key] !== undefined && this.modal.data[key] !== null) {
-                            formData.append(key, this.modal.data[key]);
-                        }
-                    }
-                    formData.append('action', action);
-
-                    fetch('api_islemleri/personeller_islemler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.showAlert(response.message, 'success');
-                                $('#employeeModal').modal('hide');
-                                this.loadEmployees(this.currentPage);
-                            } else {
-                                this.showAlert(response.message, 'danger');
-                            }
-                        })
-                        .catch(error => {
-                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                        });
                 },
                 deleteEmployee(id) {
                     const employee = this.employees.find(emp => emp.personel_id === id);
@@ -540,29 +517,11 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         }
                     })
                 },
-                validatePayrollFields() {
-                    // If not a payroll employee, set salary to 0
-                    if (!this.modal.data.bordrolu_calisan_mi || this.modal.data.bordrolu_calisan_mi == '0') {
-                        this.modal.data.bordrolu_calisan_mi = 0;
-                        this.modal.data.aylik_brut_ucret = '0.00';
-                    }
-                    // If payroll employee, ensure salary is greater than 0
-                    else if (this.modal.data.bordrolu_calisan_mi == '1' || this.modal.data.bordrolu_calisan_mi == 1) {
-                        this.modal.data.bordrolu_calisan_mi = 1;
-                        if (!this.modal.data.aylik_brut_ucret || parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
-                            Swal.fire({
-                                title: 'Uyarı!',
-                                text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
-                                icon: 'warning',
-                                confirmButtonText: 'Tamam'
-                            });
-                        }
-                    }
-                },
                 saveEmployee() {
                     // Validate payroll fields before saving
                     if (this.modal.data.bordrolu_calisan_mi) {
-                        if (parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
+                        const salary = parseFloat(this.modal.data.aylik_brut_ucret);
+                        if (isNaN(salary) || salary <= 0) {
                             Swal.fire({
                                 title: 'Hata!',
                                 text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
@@ -611,13 +570,16 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                     if (!newVal || newVal == '0') {
                         this.modal.data.bordrolu_calisan_mi = 0;
                         this.modal.data.aylik_brut_ucret = '0.00';
-                    } else if (newVal == '1' && parseFloat(this.modal.data.aylik_brut_ucret) <= 0) {
-                        Swal.fire({
-                            title: 'Uyarı!',
-                            text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
-                            icon: 'warning',
-                            confirmButtonText: 'Tamam'
-                        });
+                    } else if (newVal == '1') {
+                        const salary = parseFloat(this.modal.data.aylik_brut_ucret);
+                        if (isNaN(salary) || salary <= 0) {
+                            Swal.fire({
+                                title: 'Uyarı!',
+                                text: 'Bordrolu çalışan için aylık brüt ücret 0\'dan büyük olmalıdır.',
+                                icon: 'warning',
+                                confirmButtonText: 'Tamam'
+                            });
+                        }
                     }
                 }
             }

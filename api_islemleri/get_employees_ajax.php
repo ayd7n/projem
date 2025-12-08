@@ -31,10 +31,15 @@ if (!empty($search)) {
     $where_clause .= " AND (ad_soyad LIKE '$search_param' OR e_posta LIKE '$search_param' OR departman LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param')";
 }
 
-// Get total count
+// Get total count for current filter
 $count_query = "SELECT COUNT(*) as total FROM personeller " . $where_clause;
 $result = $connection->query($count_query);
 $total_employees = $result->fetch_assoc()['total'];
+
+// Get overall total count (excluding admins, no search)
+$overall_count_query = "SELECT COUNT(*) as total FROM personeller WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')";
+$overall_result = $connection->query($overall_count_query);
+$overall_total_employees = $overall_result->fetch_assoc()['total'];
 
 // Calculate total pages
 $total_pages = $limit > 0 ? ceil($total_employees / $limit) : 0;
@@ -55,6 +60,7 @@ $response = [
         'current_page' => $page,
         'total_pages' => $total_pages,
         'total_employees' => $total_employees,
+        'overall_total_employees' => $overall_total_employees,
         'limit' => $limit
     ]
 ];
