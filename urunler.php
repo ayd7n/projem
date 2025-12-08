@@ -563,9 +563,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
-                                                <label>Satis Fiyati (₺)</label>
+                                                <label>Satis Fiyati (₺) *</label>
                                                 <input type="number" step="0.01" class="form-control"
-                                                    v-model="modal.data.satis_fiyati" min="0">
+                                                    v-model="modal.data.satis_fiyati" min="0" required>
                                             </div>
                                         </div>
                                     </div>
@@ -608,6 +608,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                     <option value="uretilen">Üretilen Ürün</option>
                                                     <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Alış Fiyatı (₺)</label>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    v-model="modal.data.alis_fiyati" min="0">
                                             </div>
                                         </div>
                                     </div>
@@ -857,7 +866,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen' };
+                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, alis_fiyati: 0.0 };
                     }
                     $('#productModal').modal('show');
                 },
