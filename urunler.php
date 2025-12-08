@@ -130,7 +130,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         .card-header h2 {
             font-size: 1.1rem;
             font-weight: 700;
-            margin: 0;
+            margin: 0 15px 0 0;
+            white-space: nowrap;
         }
 
         .btn {
@@ -836,6 +837,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 this.products = response.data;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalProducts = response.pagination.total_products;
+                                // Update stats
+                                if (response.stats) {
+                                    this.totalProducts = response.stats.total_products;
+                                    this.criticalProducts = response.stats.critical_products;
+                                }
                             } else {
                                 this.showAlert('Urunler yüklenirken hata oluştu.', 'danger');
                             }
@@ -868,7 +874,16 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.modal.title = 'Yeni Urun Ekle';
                         this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, alis_fiyati: 0.0 };
                     }
-                    $('#productModal').modal('show');
+
+                    // Modal'ı kapatıp açmak için kontrol et
+                    if ($('#productModal').hasClass('show')) {
+                        $('#productModal').modal('hide');
+                        setTimeout(() => {
+                            $('#productModal').modal('show');
+                        }, 300);
+                    } else {
+                        $('#productModal').modal('show');
+                    }
                 },
                 saveProduct() {
                     let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
@@ -1274,6 +1289,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                 this.loadProducts();
                 this.loadDepoList();
                 this.loadOperatingCostMetrics();
+
+                // Modal açıldığında tab'ı Ürün Bilgileri'ne sıfırla
+                $('#productModal').on('shown.bs.modal', () => {
+                    $('#info-tab').tab('show');
+                });
             }
         });
         app.mount('#app');

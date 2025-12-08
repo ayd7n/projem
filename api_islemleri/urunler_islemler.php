@@ -97,6 +97,15 @@ if (isset($_GET['action'])) {
             }
             $stmt_data->close();
 
+            // Calculate stats for all products (unfiltered)
+            $stats_query = "SELECT COUNT(*) as total FROM urunler";
+            $stats_result = $connection->query($stats_query);
+            $total_all_products = $stats_result->fetch_assoc()['total'] ?? 0;
+
+            $critical_stats_query = "SELECT COUNT(*) as total FROM urunler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+            $critical_stats_result = $connection->query($critical_stats_query);
+            $total_critical_products = $critical_stats_result->fetch_assoc()['total'] ?? 0;
+
             $response = [
                 'status' => 'success',
                 'data' => $products,
@@ -104,6 +113,10 @@ if (isset($_GET['action'])) {
                     'total_pages' => $total_pages,
                     'total_products' => $total_products,
                     'current_page' => $page
+                ],
+                'stats' => [
+                    'total_products' => $total_all_products,
+                    'critical_products' => $total_critical_products
                 ]
             ];
         } catch (Throwable $t) {

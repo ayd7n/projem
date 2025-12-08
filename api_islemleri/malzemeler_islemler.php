@@ -163,7 +163,7 @@ if (isset($_GET['action'])) {
             $query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, not_bilgisi, stok_miktari, birim, alis_fiyati, para_birimi, termin_suresi, depo, raf, kritik_stok_seviyesi) 
                       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $stmt = $connection->prepare($query);
-            $stmt->bind_param('sssdsdissii', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi);
+            $stmt->bind_param('sssdsdsissi', $malzeme_ismi, $malzeme_turu, $not_bilgisi, $stok_miktari, $birim, $alis_fiyati, $para_birimi, $termin_suresi, $depo, $raf, $kritik_stok_seviyesi);
 
             if ($stmt->execute()) {
                 // Log ekleme
