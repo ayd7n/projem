@@ -811,6 +811,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                 this.materials = response.data;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalMaterials = response.pagination.total_materials;
+                                this.criticalMaterials = response.pagination.critical_materials;
                             } else {
                                 this.showAlert('Malzemeler yüklenirken hata oluştu.', 'danger');
                             }

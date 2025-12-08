@@ -88,13 +88,19 @@ if (isset($_GET['action'])) {
         }
         $stmt->close();
 
+        // Calculate critical materials count (always the total, not filtered)
+        $critical_query = "SELECT COUNT(*) as total FROM malzemeler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+        $critical_result = $connection->query($critical_query);
+        $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
+
         $response = [
             'status' => 'success',
             'data' => $materials,
             'pagination' => [
                 'total_pages' => $total_pages,
                 'total_materials' => $total_materials,
-                'current_page' => $page
+                'current_page' => $page,
+                'critical_materials' => $critical_materials
             ]
         ];
     } elseif ($action == 'get_material' && isset($_GET['id'])) {
