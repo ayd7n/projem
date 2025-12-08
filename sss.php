@@ -1395,20 +1395,19 @@
 
                 <div class="faq-item">
                     <div class="faq-question">
-                        <span>Login işlemi başarısız oluyor, neden olabilir?</span>
+                        <span>Giriş yapamıyorum, ne yapmalıyım?</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>Login işlemi başarısız olmasının olası nedenleri:</p>
-                        <ol>
-                            <li><strong>Yanlış kullanıcı adı veya şifre:</strong> Bilgilerin doğruluğunu kontrol edin</li>
-                            <li><strong>Oturum (session) sorunları:</strong> Tarayıcı çerezlerini temizleyin</li>
-                            <li><strong>Veritabanı bağlantısı sorunu:</strong> <code>config.php</code> dosyasındaki veritabanı ayarlarını kontrol edin</li>
-                            <li><strong>PHP eklentisi eksikliği:</strong> php-mysql eklentisinin yüklü olduğundan emin olun</li>
-                            <li><strong>Güvenlik duvarı veya proxy:</strong> Ağ yapılandırmasının erişimi engellemediğinden emin olun</li>
-                        </ol>
-                        <p>Debug yapmak için:</p>
-                        <pre><code>echo "Login attempt: " . $username . " - " . $password;</code></pre>
+                        <p>Giriş yapamıyorsanız aşağıdaki adımları deneyin:</p>
+                        <ul>
+                            <li>Kullanıcı adı ve şifrenizin doğru olduğundan emin olun</li>
+                            <li>Büyük/küçük harfe duyarlı olduğundan emin olun</li>
+                            <li>Tarayıcınızın çerezlerini temizleyin</li>
+                            <li>Farklı bir tarayıcı ile deneyin</li>
+                            <li>Giriş bilgilerinizin geçerli olduğundan emin olun</li>
+                        </ul>
+                        <p>Şifrenizi unuttuysanız sistem yöneticinizden yeni bir şifre talep edebilirsiniz.</p>
                     </div>
                 </div>
 
