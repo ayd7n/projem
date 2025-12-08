@@ -18,13 +18,14 @@ if (!yetkisi_var('page:view:personeller')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
-// Calculate total employees
-$total_result = $connection->query("SELECT COUNT(*) as total FROM personeller");
+// Calculate total employees (excluding admin users)
+$total_result = $connection->query("SELECT COUNT(*) as total FROM personeller WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')");
 $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
 ?>
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,17 +36,22 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!-- Vue.js 3 CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <link rel="stylesheet" href="assets/css/stil.css">
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -57,8 +63,10 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -85,18 +93,20 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="row">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:personeller:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Personel Ekle</button>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Personel
+                        Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
                     <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                        <div class="stat-icon"
+                            style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-info">
                             <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_employees; ?></h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Personel</p>
+                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Personel</p>
                         </div>
                     </div>
                 </div>
@@ -111,7 +121,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadEmployees(1)" placeholder="Personel ara...">
+                        <input type="text" class="form-control" v-model="search" @input="loadEmployees(1)"
+                            placeholder="Personel ara...">
                     </div>
                 </div>
             </div>
@@ -136,25 +147,37 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                    Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="employees.length === 0">
                                 <td colspan="11" class="text-center p-4">Henüz kayıtlı personel bulunmuyor.</td>
                             </tr>
-                            <tr v-for="employee in employees" :key="employee.personel_id" :class="employee.ad_soyad === 'Admin User' ? 'disabled-row' : ''">
+                            <tr v-for="employee in employees" :key="employee.personel_id"
+                                :class="employee.ad_soyad === 'Admin User' ? 'disabled-row' : ''">
                                 <td class="actions">
                                     <?php if (yetkisi_var('action:personeller:edit')): ?>
-                                        <button @click="openModal(employee)" class="btn btn-primary btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : ''">
+                                        <button @click="openModal(employee)" class="btn btn-primary btn-sm"
+                                            :class="{'disabled': employee.ad_soyad === 'Admin User'}"
+                                            :disabled="employee.ad_soyad === 'Admin User'"
+                                            :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : ''">
                                             <i class="fas fa-edit"></i>
                                         </button>
                                     <?php endif; ?>
                                     <?php if (yetkisi_var('action:personeller:permissions')): ?>
-                                        <a :href="'personel_yetki.php?id=' + employee.personel_id" class="btn btn-info btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : 'Yetkileri Düzenle'">
+                                        <a :href="'personel_yetki.php?id=' + employee.personel_id"
+                                            class="btn btn-info btn-sm"
+                                            :class="{'disabled': employee.ad_soyad === 'Admin User'}"
+                                            :disabled="employee.ad_soyad === 'Admin User'"
+                                            :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı düzenlenemez' : 'Yetkileri Düzenle'">
                                             <i class="fas fa-shield-alt"></i>
                                         </a>
                                     <?php endif; ?>
                                     <?php if (yetkisi_var('action:personeller:delete')): ?>
-                                        <button @click="deleteEmployee(employee.personel_id)" class="btn btn-danger btn-sm" :class="{'disabled': employee.ad_soyad === 'Admin User'}" :disabled="employee.ad_soyad === 'Admin User'" :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı silinemez' : ''">
+                                        <button @click="deleteEmployee(employee.personel_id)" class="btn btn-danger btn-sm"
+                                            :class="{'disabled': employee.ad_soyad === 'Admin User'}"
+                                            :disabled="employee.ad_soyad === 'Admin User'"
+                                            :title="employee.ad_soyad === 'Admin User' ? 'Bu kullanıcı silinemez' : ''">
                                             <i class="fas fa-trash"></i>
                                         </button>
                                     <?php endif; ?>
@@ -172,7 +195,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                     <span v-if="employee.bordrolu_calisan_mi" class="badge badge-success">Evet</span>
                                     <span v-else class="badge badge-danger">Hayır</span>
                                 </td>
-                                <td>{{ employee.aylik_brut_ucret ? '₺' + parseFloat(employee.aylik_brut_ucret).toFixed(2) : '-' }}</td>
+                                <td>{{ employee.aylik_brut_ucret ? '₺' +
+                                    parseFloat(employee.aylik_brut_ucret).toFixed(2) : '-' }}</td>
                             </tr>
                         </tbody>
                     </table>
@@ -180,7 +204,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
                     <div class="records-per-page mb-2 mb-md-0 w-100 w-md-auto">
                         <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
-                        <select v-model="limit" @change="loadEmployees(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                        <select v-model="limit" @change="loadEmployees(1)" class="form-control d-inline-block"
+                            style="width: auto; margin-left: 8px;">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -194,7 +219,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         <nav>
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage - 1)"><i class="fas fa-chevron-left"></i> Previous</a>
+                                    <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage - 1)"><i
+                                            class="fas fa-chevron-left"></i> Previous</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadEmployees(1)">1</a>
@@ -202,17 +228,20 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <li v-if="currentPage > 4" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
-                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                <li v-for="page in pageNumbers" :key="page" class="page-item"
+                                    :class="{ active: page === currentPage }">
                                     <a class="page-link" href="#" @click.prevent="loadEmployees(page)">{{ page }}</a>
                                 </li>
                                 <li v-if="currentPage < totalPages - 3" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
                                 <li v-if="currentPage < totalPages - 2" class="page-item">
-                                    <a class="page-link" href="#" @click.prevent="loadEmployees(totalPages)">{{ totalPages }}</a>
+                                    <a class="page-link" href="#" @click.prevent="loadEmployees(totalPages)">{{
+                                        totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></a>
+                                    <a class="page-link" href="#" @click.prevent="loadEmployees(currentPage + 1)">Next
+                                        <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
                         </nav>
@@ -226,7 +255,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <form @submit.prevent="saveEmployee">
-                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <div class="modal-header"
+                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
                             <h5 class="modal-title">{{ modal.title }}</h5>
                             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -266,15 +296,19 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" v-model="modal.data.bordrolu_calisan_mi" id="bordrolu_calisan_mi" true-value="1" false-value="0">
-                                            <label class="form-check-label" for="bordrolu_calisan_mi">Bordrolu Çalışan Mı?</label>
+                                            <input type="checkbox" class="form-check-input"
+                                                v-model="modal.data.bordrolu_calisan_mi" id="bordrolu_calisan_mi"
+                                                true-value="1" false-value="0">
+                                            <label class="form-check-label" for="bordrolu_calisan_mi">Bordrolu Çalışan
+                                                Mı?</label>
                                         </div>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Aylık Brüt Ücret (₺)</label>
-                                        <input type="number" step="0.01" class="form-control" v-model="modal.data.aylik_brut_ucret" placeholder="0.00">
+                                        <input type="number" step="0.01" class="form-control"
+                                            v-model="modal.data.aylik_brut_ucret" placeholder="0.00">
                                     </div>
                                 </div>
                             </div>
@@ -310,7 +344,8 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Doğum Tarihi *</label>
-                                        <input type="date" class="form-control" v-model="modal.data.dogum_tarihi" required>
+                                        <input type="date" class="form-control" v-model="modal.data.dogum_tarihi"
+                                            required>
                                     </div>
                                 </div>
                             </div>
@@ -324,11 +359,13 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                             <div class="form-group mb-3">
                                 <label>Şifre</label>
-                                <input type="password" class="form-control" v-model="modal.data.sifre" placeholder="Yeni şifre (boş bırakırsanız değişmez)">
+                                <input type="password" class="form-control" v-model="modal.data.sifre"
+                                    placeholder="Yeni şifre (boş bırakırsanız değişmez)">
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                    class="fas fa-times"></i> İptal</button>
                             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
                         </div>
                     </form>
@@ -448,19 +485,19 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
-                    .then(response => {
-                        if (response.status === 'success') {
-                            this.showAlert(response.message, 'success');
-                            $('#employeeModal').modal('hide');
-                            this.loadEmployees(this.currentPage);
-                        } else {
-                            this.showAlert(response.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                    });
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                $('#employeeModal').modal('hide');
+                                this.loadEmployees(this.currentPage);
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                        });
                 },
                 deleteEmployee(id) {
                     const employee = this.employees.find(emp => emp.personel_id === id);
@@ -488,18 +525,18 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 method: 'POST',
                                 body: formData
                             })
-                            .then(response => response.json())
-                            .then(response => {
-                                if (response.status === 'success') {
-                                    this.showAlert(response.message, 'success');
-                                    this.loadEmployees(this.currentPage);
-                                } else {
-                                    this.showAlert(response.message, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                            });
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        this.showAlert(response.message, 'success');
+                                        this.loadEmployees(this.currentPage);
+                                    } else {
+                                        this.showAlert(response.message, 'danger');
+                                    }
+                                })
+                                .catch(error => {
+                                    this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                });
                         }
                     })
                 },
@@ -551,19 +588,19 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
-                    .then(response => {
-                        if (response.status === 'success') {
-                            this.showAlert(response.message, 'success');
-                            $('#employeeModal').modal('hide');
-                            this.loadEmployees(this.currentPage);
-                        } else {
-                            this.showAlert(response.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                    });
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                $('#employeeModal').modal('hide');
+                                this.loadEmployees(this.currentPage);
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                        });
                 }
             },
             mounted() {
@@ -588,4 +625,5 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
         app.mount('#app');
     </script>
 </body>
+
 </html>
