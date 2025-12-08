@@ -293,7 +293,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Tedarikçi Listesi</h2>
+                <h2 class="mb-2 mb-md-0 mr-3" style="white-space: nowrap;"><i class="fas fa-list"></i> Tedarikçi Listesi
+                </h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group">
                         <div class="input-group-prepend">
@@ -337,7 +338,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                         <button @click="deleteSupplier(supplier.tedarikci_id)"
                                             class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                     <?php endif; ?>
-                                    <a :href="'tedarikci_karti.php?tedarikci_id=' + supplier.tedarikci_id" class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
+                                    <a :href="'tedarikci_karti.php?tedarikci_id=' + supplier.tedarikci_id"
+                                        class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
                                 </td>
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
                                 <td>{{ supplier.vergi_no_tc || '-' }}</td>
@@ -371,7 +373,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
                                     <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage - 1)"><i
-                                            class="fas fa-chevron-left"></i> Previous</a>
+                                            class="fas fa-chevron-left"></i> Önceki</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadSuppliers(1)">1</a>
@@ -391,7 +393,8 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                                         totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadSuppliers(currentPage + 1)">Next
+                                    <a class="page-link" href="#"
+                                        @click.prevent="loadSuppliers(currentPage + 1)">Sonraki
                                         <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>

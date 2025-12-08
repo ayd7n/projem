@@ -464,34 +464,30 @@ $work_centers_result = $connection->query($work_centers_query);
             </div>
         </div>
 
+        <div class="alert alert-info shadow-sm border-0 d-flex align-items-center" role="alert"
+            style="background-color: #e3f2fd; color: #0d47a1;">
+            <i class="fas fa-info-circle mr-3" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Bilgi:</strong> Burada tanımladığınız iş merkezleri, <a href="montaj_is_emirleri.php"
+                    class="alert-link" style="text-decoration: underline;">Montaj İş Emirleri</a> sayfasında üretim ve
+                montaj alanı olarak kullanılacaktır.
+            </div>
+        </div>
+
         <div id="alert-placeholder"></div>
 
         <div class="row">
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <?php if (yetkisi_var('action:is_merkezleri:create')): ?>
                     <button id="addWorkCenterBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni İş Merkezi
                         Ekle</button>
                 <?php endif; ?>
             </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon"
-                            style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-industry"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_work_centers; ?></h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam İş Merkezi</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> İş Merkezi Listesi</h2>
+                <h2 class="mb-2 mb-md-0 text-nowrap mr-md-3"><i class="fas fa-list"></i> İş Merkezi Listesi</h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group">
                         <div class="input-group-prepend">

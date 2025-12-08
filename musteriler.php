@@ -25,6 +25,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -35,51 +36,70 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
         :root {
-            --primary: #4a0e63; /* Deep Purple */
-            --secondary: #7c2a99; /* Lighter Purple */
-            --accent: #d4af37; /* Gold */
+            --primary: #4a0e63;
+            /* Deep Purple */
+            --secondary: #7c2a99;
+            /* Lighter Purple */
+            --accent: #d4af37;
+            /* Gold */
             --success: #28a745;
             --danger: #dc3545;
             --warning: #ffc107;
             --info: #17a2b8;
-            --bg-color: #fdf8f5; /* Soft Cream */
+            --bg-color: #fdf8f5;
+            /* Soft Cream */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #111827; /* Dark Gray/Black */
-            --text-secondary: #6b7280; /* Medium Gray */
+            --text-primary: #111827;
+            /* Dark Gray/Black */
+            --text-secondary: #6b7280;
+            /* Medium Gray */
             --shadow: 0 10px 25px rgba(0, 0, 0, 0.07);
             --transition: all 0.3s ease;
         }
+
         html {
             font-size: 15px;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Ubuntu', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
         }
+
         .main-content {
             padding: 20px;
         }
+
         .page-header {
             margin-bottom: 25px;
         }
+
         .page-header h1 {
             font-size: 1.7rem;
             font-weight: 700;
             margin-bottom: 5px;
             color: var(--text-primary);
         }
+
         .page-header p {
             color: var(--text-secondary);
             font-size: 1rem;
         }
+
         .card {
             background: var(--card-bg);
             border-radius: 10px;
@@ -88,6 +108,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             margin-bottom: 25px;
             overflow: hidden;
         }
+
         .card-header {
             padding: 18px 20px;
             border-bottom: 1px solid var(--border-color);
@@ -95,11 +116,13 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             align-items: center;
             justify-content: space-between;
         }
+
         .card-header h2 {
             font-size: 1.1rem;
             font-weight: 700;
             margin: 0;
         }
+
         .btn {
             padding: 8px 14px;
             border: none;
@@ -113,17 +136,21 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             gap: 8px;
             font-size: 0.825rem;
         }
+
         .btn:hover {
-             transform: translateY(-2px);
+            transform: translateY(-2px);
         }
+
         .btn-primary {
             background-color: var(--primary);
             color: white;
         }
+
         .btn-primary:hover {
             background-color: var(--secondary);
             box-shadow: 0 10px 20px rgba(74, 14, 99, 0.2);
         }
+
         .table th {
             border-top: none;
             border-bottom: 2px solid var(--border-color);
@@ -131,14 +158,17 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             color: var(--text-primary);
             white-space: nowrap;
         }
+
         .table th i {
             margin-right: 6px;
         }
+
         .table td {
             vertical-align: middle;
             color: var(--text-secondary);
             white-space: nowrap;
         }
+
         /* Specific styling for long text fields */
         .table td.address-cell,
         .table td.description-cell {
@@ -147,26 +177,33 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
+
         .actions {
             display: flex;
             gap: 8px;
             justify-content: center;
         }
+
         .actions .btn {
             padding: 6px 10px;
             border-radius: 18px;
         }
+
         .search-container {
             max-width: 300px;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
@@ -178,8 +215,10 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -206,13 +245,15 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         <div class="row">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:musteriler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Müşteri Ekle</button>
+                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Müşteri
+                        Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="card mb-3">
                     <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                        <div class="stat-icon"
+                            style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
                             <i class="fas fa-users"></i>
                         </div>
                         <div class="stat-info">
@@ -232,7 +273,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadCustomers(1)" placeholder="Müşteri ara...">
+                        <input type="text" class="form-control" v-model="search" @input="loadCustomers(1)"
+                            placeholder="Müşteri ara...">
                     </div>
                 </div>
             </div>
@@ -255,7 +297,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="8" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</td>
+                                <td colspan="8" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                    Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="customers.length === 0">
                                 <td colspan="8" class="text-center p-4">Henüz kayıtlı müşteri bulunmuyor.</td>
@@ -263,19 +306,24 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                             <tr v-for="customer in customers" :key="customer.musteri_id">
                                 <td class="actions">
                                     <?php if (yetkisi_var('action:musteriler:edit')): ?>
-                                        <button @click="openModal(customer)" class="btn btn-primary btn-sm"><i class="fas fa-edit"></i></button>
+                                        <button @click="openModal(customer)" class="btn btn-primary btn-sm"><i
+                                                class="fas fa-edit"></i></button>
                                     <?php endif; ?>
                                     <?php if (yetkisi_var('action:musteriler:delete')): ?>
-                                        <button @click="deleteCustomer(customer.musteri_id)" class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
+                                        <button @click="deleteCustomer(customer.musteri_id)"
+                                            class="btn btn-danger btn-sm"><i class="fas fa-trash"></i></button>
                                     <?php endif; ?>
-                                    <a :href="'musteri_karti.php?musteri_id=' + customer.musteri_id" class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
+                                    <a :href="'musteri_karti.php?musteri_id=' + customer.musteri_id"
+                                        class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
                                 </td>
                                 <td>
-                                    <span v-if="customer.giris_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
+                                    <span v-if="customer.giris_yetkisi == 1"
+                                        style="color: green; font-weight: bold;">✓</span>
                                     <span v-else style="color: red; font-weight: bold;">✗</span>
                                 </td>
                                 <td>
-                                    <span v-if="customer.stok_goruntuleme_yetkisi == 1" style="color: green; font-weight: bold;">✓</span>
+                                    <span v-if="customer.stok_goruntuleme_yetkisi == 1"
+                                        style="color: green; font-weight: bold;">✓</span>
                                     <span v-else style="color: red; font-weight: bold;">✗</span>
                                 </td>
                                 <td><strong>{{ customer.musteri_adi }}</strong></td>
@@ -292,7 +340,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                 <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
                     <div class="records-per-page mb-2 mb-md-0 w-100 w-md-auto">
                         <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
-                        <select v-model="limit" @change="loadCustomers(1)" class="form-control d-inline-block" style="width: auto; margin-left: 8px;">
+                        <select v-model="limit" @change="loadCustomers(1)" class="form-control d-inline-block"
+                            style="width: auto; margin-left: 8px;">
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
@@ -306,7 +355,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                         <nav>
                             <ul class="pagination justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <a class="page-link" href="#" @click.prevent="loadCustomers(currentPage - 1)"><i class="fas fa-chevron-left"></i> Previous</a>
+                                    <a class="page-link" href="#" @click.prevent="loadCustomers(currentPage - 1)"><i
+                                            class="fas fa-chevron-left"></i> Önceki</a>
                                 </li>
                                 <li v-if="currentPage > 3" class="page-item">
                                     <a class="page-link" href="#" @click.prevent="loadCustomers(1)">1</a>
@@ -314,17 +364,21 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <li v-if="currentPage > 4" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
-                                <li v-for="page in pageNumbers" :key="page" class="page-item" :class="{ active: page === currentPage }">
+                                <li v-for="page in pageNumbers" :key="page" class="page-item"
+                                    :class="{ active: page === currentPage }">
                                     <a class="page-link" href="#" @click.prevent="loadCustomers(page)">{{ page }}</a>
                                 </li>
                                 <li v-if="currentPage < totalPages - 3" class="page-item disabled">
                                     <span class="page-link">...</span>
                                 </li>
                                 <li v-if="currentPage < totalPages - 2" class_="page-item">
-                                    <a class="page-link" href="#" @click.prevent="loadCustomers(totalPages)">{{ totalPages }}</a>
+                                    <a class="page-link" href="#" @click.prevent="loadCustomers(totalPages)">{{
+                                        totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadCustomers(currentPage + 1)">Next <i class="fas fa-chevron-right"></i></a>
+                                    <a class="page-link" href="#"
+                                        @click.prevent="loadCustomers(currentPage + 1)">Sonraki
+                                        <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
                         </nav>
@@ -338,7 +392,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <form @submit.prevent="saveCustomer">
-                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <div class="modal-header"
+                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
                             <h5 class="modal-title">{{ modal.title }}</h5>
                             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -350,7 +405,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Müşteri Adı *</label>
-                                        <input type="text" class="form-control" v-model="modal.data.musteri_adi" required>
+                                        <input type="text" class="form-control" v-model="modal.data.musteri_adi"
+                                            required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
@@ -390,19 +446,23 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" v-model="modal.data.giris_yetkisi" @change="validateForm">
+                                            <input type="checkbox" class="form-check-input"
+                                                v-model="modal.data.giris_yetkisi" @change="validateForm">
                                             <label class="form-check-label">Sisteme Giriş Yetkisi</label>
                                         </div>
-                                        <small class="form-text text-muted">Müşterinin sistemde oturum açmasına izin ver</small>
+                                        <small class="form-text text-muted">Müşterinin sistemde oturum açmasına izin
+                                            ver</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <div class="form-check">
-                                            <input type="checkbox" class="form-check-input" v-model="modal.data.stok_goruntuleme_yetkisi">
+                                            <input type="checkbox" class="form-check-input"
+                                                v-model="modal.data.stok_goruntuleme_yetkisi">
                                             <label class="form-check-label">Stok Görüntüleme Yetkisi</label>
                                         </div>
-                                        <small class="form-text text-muted">Müşterinin ürün stok miktarlarını görmesine izin ver</small>
+                                        <small class="form-text text-muted">Müşterinin ürün stok miktarlarını görmesine
+                                            izin ver</small>
                                     </div>
                                 </div>
                             </div>
@@ -410,7 +470,9 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label>Şifre <span v-if="modal.data.giris_yetkisi">*</span></label>
-                                        <input type="password" class="form-control" v-model="modal.data.sifre" :required="modal.data.giris_yetkisi && !modal.data.musteri_id" :placeholder="modal.data.musteri_id ? 'Şifrenin değişmesini istemiyorsanız boş bırakın' : 'Şifre giriniz'">
+                                        <input type="password" class="form-control" v-model="modal.data.sifre"
+                                            :required="modal.data.giris_yetkisi && !modal.data.musteri_id"
+                                            :placeholder="modal.data.musteri_id ? 'Şifrenin değişmesini istemiyorsanız boş bırakın' : 'Şifre giriniz'">
                                     </div>
                                 </div>
                             </div>
@@ -420,7 +482,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                    class="fas fa-times"></i> İptal</button>
                             <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
                         </div>
                     </form>
@@ -544,19 +607,19 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                         method: 'POST',
                         body: formData
                     })
-                    .then(response => response.json())
-                    .then(response => {
-                        if (response.status === 'success') {
-                            this.showAlert(response.message, 'success');
-                            $('#customerModal').modal('hide');
-                            this.loadCustomers(this.currentPage);
-                        } else {
-                            this.showAlert(response.message, 'danger');
-                        }
-                    })
-                    .catch(error => {
-                        this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                    });
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                $('#customerModal').modal('hide');
+                                this.loadCustomers(this.currentPage);
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
+                        });
                 },
                 validateForm() {
                     // Only show warning for new customer creation
@@ -584,18 +647,18 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 method: 'POST',
                                 body: formData
                             })
-                            .then(response => response.json())
-                            .then(response => {
-                                if (response.status === 'success') {
-                                    this.showAlert(response.message, 'success');
-                                    this.loadCustomers(this.currentPage);
-                                } else {
-                                    this.showAlert(response.message, 'danger');
-                                }
-                            })
-                            .catch(error => {
-                                this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                            });
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        this.showAlert(response.message, 'success');
+                                        this.loadCustomers(this.currentPage);
+                                    } else {
+                                        this.showAlert(response.message, 'danger');
+                                    }
+                                })
+                                .catch(error => {
+                                    this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                });
                         }
                     })
                 }
@@ -607,4 +670,5 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         app.mount('#app');
     </script>
 </body>
+
 </html>

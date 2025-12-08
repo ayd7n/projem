@@ -35,7 +35,8 @@ switch ($action) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
 }
 
-function getCustomers() {
+function getCustomers()
+{
     global $connection;
 
     if (!yetkisi_var('page:view:musteriler')) {
@@ -43,8 +44,8 @@ function getCustomers() {
         return;
     }
 
-    $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-    $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
+    $page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+    $limit = isset($_GET['limit']) ? max(1, min(100, (int) $_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $offset = ($page - 1) * $limit;
 
@@ -83,7 +84,8 @@ function getCustomers() {
     echo json_encode($response);
 }
 
-function getCustomer() {
+function getCustomer()
+{
     global $connection;
 
     if (!yetkisi_var('page:view:musteriler')) {
@@ -109,7 +111,8 @@ function getCustomer() {
     }
 }
 
-function addCustomer() {
+function addCustomer()
+{
     global $connection;
 
     if (!yetkisi_var('action:musteriler:create')) {
@@ -121,6 +124,7 @@ function addCustomer() {
     $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
     $adres = $connection->real_escape_string($_POST['adres'] ?? '');
     $telefon = $connection->real_escape_string($_POST['telefon'] ?? '');
+    $telefon_2 = $connection->real_escape_string($_POST['telefon_2'] ?? '');
     $e_posta = $connection->real_escape_string($_POST['e_posta'] ?? '');
     $sifre = $_POST['sifre'] ?? '';
     $aciklama_notlar = $connection->real_escape_string($_POST['aciklama_notlar'] ?? '');
@@ -162,7 +166,8 @@ function addCustomer() {
     }
 }
 
-function updateCustomer() {
+function updateCustomer()
+{
     global $connection;
 
     if (!yetkisi_var('action:musteriler:edit')) {
@@ -170,7 +175,7 @@ function updateCustomer() {
         return;
     }
 
-    $musteri_id = (int)($_POST['musteri_id'] ?? '');
+    $musteri_id = (int) ($_POST['musteri_id'] ?? '');
     $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
     $vergi_no_tc = $connection->real_escape_string($_POST['vergi_no_tc'] ?? '');
     $adres = $connection->real_escape_string($_POST['adres'] ?? '');
@@ -217,7 +222,8 @@ function updateCustomer() {
     }
 }
 
-function deleteCustomer() {
+function deleteCustomer()
+{
     global $connection;
 
     if (!yetkisi_var('action:musteriler:delete')) {
@@ -225,7 +231,7 @@ function deleteCustomer() {
         return;
     }
 
-    $musteri_id = (int)($_POST['musteri_id'] ?? '');
+    $musteri_id = (int) ($_POST['musteri_id'] ?? '');
     if (empty($musteri_id)) {
         echo json_encode(['status' => 'error', 'message' => 'Müşteri ID gerekli.']);
         return;

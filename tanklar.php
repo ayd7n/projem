@@ -24,6 +24,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -34,17 +35,22 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/tanklar.css">
 </head>
+
 <body>
     <div id="app">
         <!-- Navbar -->
-        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+        <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+            style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
             <div class="container-fluid">
-                <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+                <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;"
+                    href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                    aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
 
@@ -57,12 +63,14 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                             <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                         </li>
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                                data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                 <i class="fas fa-user-circle"></i>
                                 {{ user_name || 'Kullanıcı' }}
                             </a>
                             <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
-                                <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
+                                <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış
+                                    Yap</a>
                             </div>
                         </li>
                     </ul>
@@ -73,7 +81,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
         <!-- Main Content -->
         <div class="main-content">
             <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-            
+
             <div class="page-header">
                 <div>
                     <h1>Tanklar Yönetimi</h1>
@@ -81,8 +89,20 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                 </div>
             </div>
 
+            <div class="alert alert-info shadow-sm border-0 d-flex align-items-center" role="alert"
+                style="background-color: #e3f2fd; color: #0d47a1;">
+                <i class="fas fa-info-circle mr-3" style="font-size: 1.5rem;"></i>
+                <div>
+                    <strong>Bilgi:</strong> Burada tanımladığınız tanklar, <a href="esanslar.php" class="alert-link"
+                        style="text-decoration: underline;">Esanslar</a> ve <a href="esans_is_emirleri.php"
+                        class="alert-link" style="text-decoration: underline;">Esans İş Emirleri</a> sayfalarında
+                    esansların depolanması süreçlerinde kullanılacaktır.
+                </div>
+            </div>
+
             <div id="alert-placeholder">
-                <div v-if="alert.message" :class="['alert', 'alert-' + alert.type, 'alert-dismissible', 'fade', 'show']" role="alert">
+                <div v-if="alert.message" :class="['alert', 'alert-' + alert.type, 'alert-dismissible', 'fade', 'show']"
+                    role="alert">
                     <i class="fas" :class="alert.type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'"></i>
                     {{ alert.message }}
                     <button type="button" class="close" @click="clearAlert" aria-label="Close">
@@ -92,23 +112,11 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
             </div>
 
             <div class="row">
-                <div class="col-md-8">
+                <div class="col-md-12">
                     <?php if (yetkisi_var('action:tanklar:create')): ?>
-                    <button class="btn btn-primary mb-3" @click="openTankModal()"><i class="fas fa-plus"></i> Yeni Tank Ekle</button>
+                        <button class="btn btn-primary mb-3" @click="openTankModal()"><i class="fas fa-plus"></i> Yeni Tank
+                            Ekle</button>
                     <?php endif; ?>
-                </div>
-                <div class="col-md-4">
-                    <div class="card mb-3">
-                        <div class="card-body d-flex align-items-center">
-                            <div class="stat-icon" style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                                <i class="fas fa-database"></i>
-                            </div>
-                            <div class="stat-info">
-                                <h3 style="font-size: 1.5rem; margin: 0;">{{ total_tanks }}</h3>
-                                <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Tank</p>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
 
@@ -140,14 +148,14 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                 <tr v-else v-for="tank in paginatedTanks" :key="tank.tank_id">
                                     <td class="actions">
                                         <?php if (yetkisi_var('action:tanklar:edit')): ?>
-                                        <button class="btn btn-primary btn-sm" @click="editTank(tank)">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
+                                            <button class="btn btn-primary btn-sm" @click="editTank(tank)">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
                                         <?php endif; ?>
                                         <?php if (yetkisi_var('action:tanklar:delete')): ?>
-                                        <button class="btn btn-danger btn-sm" @click="deleteTank(tank.tank_id)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+                                            <button class="btn btn-danger btn-sm" @click="deleteTank(tank.tank_id)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
                                         <?php endif; ?>
                                     </td>
                                     <td><strong>{{ tank.tank_kodu }}</strong></td>
@@ -158,11 +166,13 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                             </tbody>
                         </table>
                     </div>
-                    <div v-if="filtered_tanks.length > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                    <div v-if="filtered_tanks.length > 0"
+                        class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
                         <div class="d-flex flex-column flex-md-row align-items-center w-100 w-md-auto mt-2 mt-md-0">
                             <div class="records-per-page mr-0 mr-md-3 mb-2 mb-md-0">
                                 <label for="tank-page-size"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
-                                <select id="tank-page-size" class="form-control d-inline-block ml-2" style="width: auto;" v-model.number="limit" @change="handleLimitChange">
+                                <select id="tank-page-size" class="form-control d-inline-block ml-2"
+                                    style="width: auto;" v-model.number="limit" @change="handleLimitChange">
                                     <option :value="10">10</option>
                                     <option :value="25">25</option>
                                     <option :value="50">50</option>
@@ -173,12 +183,15 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                         <nav aria-label="Tanklar sayfalama">
                             <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0">
                                 <li class="page-item" :class="{ disabled: currentPage === 1 }">
-                                    <a class="page-link" href="#" @click.prevent="changePage(currentPage - 1)">Onceki</a>
+                                    <a class="page-link" href="#"
+                                        @click.prevent="changePage(currentPage - 1)">Onceki</a>
                                 </li>
-                                <li class="page-item" v-for="page in pageNumbers" :key="'page-' + page" :class="{ active: page === currentPage }">
+                                <li class="page-item" v-for="page in pageNumbers" :key="'page-' + page"
+                                    :class="{ active: page === currentPage }">
                                     <a class="page-link" href="#" @click.prevent="changePage(page)">{{ page }}</a>
                                 </li>
-                                <li class="page-item" :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
+                                <li class="page-item"
+                                    :class="{ disabled: currentPage === totalPages || totalPages === 0 }">
                                     <a class="page-link" href="#" @click.prevent="changePage(currentPage + 1)">Next</a>
                                 </li>
                             </ul>
@@ -189,14 +202,13 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
         </div>
 
         <!-- Tank Modal -->
-        <div class="modal fade" :class="{ show: tankModalVisible }" 
-             :style="{ display: tankModalVisible ? 'block' : 'none' }" 
-             style="z-index: 1050" 
-             @click="closeTankModal">
+        <div class="modal fade" :class="{ show: tankModalVisible }"
+            :style="{ display: tankModalVisible ? 'block' : 'none' }" style="z-index: 1050" @click="closeTankModal">
             <div class="modal-dialog modal-lg" @click.stop>
                 <div class="modal-content">
                     <form @submit.prevent="saveTank">
-                        <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <div class="modal-header"
+                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
                             <h5 class="modal-title">{{ tankModalTitle }}</h5>
                             <button type="button" class="close text-white" @click="closeTankModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -222,7 +234,8 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label for="kapasite">Kapasite (Litre) *</label>
-                                        <input type="number" class="form-control" v-model.number="tankForm.kapasite" min="0" step="0.01" required>
+                                        <input type="number" class="form-control" v-model.number="tankForm.kapasite"
+                                            min="0" step="0.01" required>
                                     </div>
                                 </div>
                             </div>
@@ -232,9 +245,11 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeTankModal"><i class="fas fa-times"></i> İptal</button>
+                            <button type="button" class="btn btn-secondary" @click="closeTankModal"><i
+                                    class="fas fa-times"></i> İptal</button>
                             <button type="submit" class="btn btn-primary" :disabled="isSubmitting">
-                                <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                                <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status"
+                                    aria-hidden="true"></span>
                                 <i v-else class="fas fa-save"></i>
                                 {{ submitButtonText }}
                             </button>
@@ -254,18 +269,19 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    
+
     <!-- Axios -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    
+
     <!-- Vue.js 2 -->
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
-    
+
     <script>
         // PHP'den gelen kullanıcı adını JavaScript değişkenine atayalım
         var session_kullanici_adi = <?php echo json_encode($user_name); ?>;
     </script>
-    
+
     <script src="assets/js/tanklar.js"></script>
 </body>
+
 </html>

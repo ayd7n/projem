@@ -276,6 +276,17 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
 
+        <div class="alert alert-info shadow-sm border-0 d-flex align-items-center" role="alert"
+            style="background-color: #e3f2fd; color: #0d47a1;">
+            <i class="fas fa-info-circle mr-3" style="font-size: 1.5rem;"></i>
+            <div>
+                <strong>Bilgi:</strong> Burada tanımladığınız lokasyonlar, <a href="urunler.php" class="alert-link"
+                    style="text-decoration: underline;">Ürünler</a> ve <a href="malzemeler.php" class="alert-link"
+                    style="text-decoration: underline;">Malzemeler</a> sayfalarında depo/raf bilgisi olarak
+                kullanılacaktır.
+            </div>
+        </div>
+
         <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert" style="text-align: left;">
             {{ alert.message }}
         </div>
@@ -289,7 +300,8 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Lokasyon Listesi</h2>
+                <h2 class="mb-2 mb-md-0 mr-3" style="white-space: nowrap;"><i class="fas fa-list"></i> Lokasyon Listesi
+                </h2>
                 <div class="search-container w-100 w-md-25">
                     <div class="input-group">
                         <div class="input-group-prepend">
