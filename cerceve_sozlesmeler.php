@@ -26,7 +26,8 @@ $pending_payment_count = $pending_payment_result->fetch_assoc()['total'] ?? 0;
 $suppliers_result = $connection->query("SELECT tedarikci_id, tedarikci_adi FROM tedarikciler ORDER BY tedarikci_adi");
 $materials_result = $connection->query("SELECT malzeme_kodu, malzeme_ismi FROM malzemeler ORDER BY malzeme_ismi");
 
-function display_date($date_string) {
+function display_date($date_string)
+{
     if (empty($date_string) || $date_string === '0000-00-00' || $date_string === null) {
         return '-';
     }
@@ -39,6 +40,7 @@ function display_date($date_string) {
 ?>
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,16 +51,21 @@ function display_date($date_string) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css">
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -71,8 +78,10 @@ function display_date($date_string) {
                         <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -86,103 +95,132 @@ function display_date($date_string) {
     <!-- Main Content -->
     <div class="main-content">
         <button class="mobile-menu-btn"><i class="fas fa-bars"></i></button>
-        
+
         <div class="page-header">
             <div>
-                <h1>Çerçeve Sözleşmeler <button class="btn btn-info btn-sm ml-2" data-toggle="modal" data-target="#bilgiModal"><i class="fas fa-info-circle"></i> Sistem Nasıl Çalışır?</button></h1>
+                <h1>Çerçeve Sözleşmeler</h1>
                 <p>Çerçeve sözleşmeleri yönetin ve izleyin</p>
             </div>
         </div>
 
-        <div class="row mb-3">
-            <div class="col-md-4 mb-2 mb-md-0">
-                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
-                                 style="width: 42px; height: 42px; background: rgba(102, 126, 234, 0.1); color: #667eea;">
-                                <i class="fas fa-boxes"></i>
+        <!-- Bütünleşik Bilgi Paneli -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card border-0 shadow-sm"
+                    style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 16px; overflow: hidden;">
+                    <div class="card-body p-0">
+                        <div class="row no-gutters">
+                            <!-- Limit Bilgisi -->
+                            <div class="col-md-4 info-panel-item" style="border-right: 1px solid rgba(0,0,0,0.05);">
+                                <div class="d-flex align-items-center p-3">
+                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
+                                        <i class="fas fa-boxes"></i>
+                                    </div>
+                                    <div class="ml-3 flex-grow-1">
+                                        <h6 class="mb-1 font-weight-bold"
+                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
+                                            <i class="fas fa-chart-bar mr-1" style="color: #667eea;"></i> Limit
+                                        </h6>
+                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                            Sözleşmede belirlenen <strong style="color: #667eea;">toplam
+                                                miktar</strong>dır. Tedarikçiyle yapılan anlaşmanın üst sınırını
+                                            gösterir.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Limit</h6>
-                        </div>
-                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
-                            Sözleşmede belirlenen <strong style="color: #667eea;">toplam adet</strong> miktarıdır. 
-                            Tedarikçiyle 100 adet malzeme temini için anlaşma yapıldığını gösterir.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4 mb-2 mb-md-0">
-                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
-                                 style="width: 42px; height: 42px; background: rgba(246, 173, 85, 0.1); color: #f6ad55;">
-                                <i class="fas fa-money-bill-wave"></i>
+
+                            <!-- Ödenen Bilgisi -->
+                            <div class="col-md-4 info-panel-item" style="border-right: 1px solid rgba(0,0,0,0.05);">
+                                <div class="d-flex align-items-center p-3">
+                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(246, 173, 85, 0.3);">
+                                        <i class="fas fa-money-bill-wave"></i>
+                                    </div>
+                                    <div class="ml-3 flex-grow-1">
+                                        <h6 class="mb-1 font-weight-bold"
+                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
+                                            <i class="fas fa-check-circle mr-1" style="color: #f6ad55;"></i> Ödenen
+                                        </h6>
+                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                            Limitin <strong style="color: #f6ad55;">peşin ödeme yapılan</strong>
+                                            kısmıdır. Kalan miktar için ödeme beklenmektedir.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Ödenen</h6>
-                        </div>
-                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
-                            Limitin <strong style="color: #f6ad55;">peşin ödenen</strong> kısmıdır. 
-                            Örneğin 60 adet ödenmişse, kalan 40 adet için ödeme henüz yapılmamıştır.
-                        </p>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="col-md-4">
-                <div class="card h-100 border-0 shadow-sm hover-scale" style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <div class="d-flex align-items-center mb-2">
-                            <div class="icon-wrapper d-flex align-items-center justify-content-center rounded-circle" 
-                                 style="width: 42px; height: 42px; background: rgba(72, 187, 120, 0.1); color: #48bb78;">
-                                <i class="fas fa-calendar-check"></i>
+
+                            <!-- Geçerlilik Bilgisi -->
+                            <div class="col-md-4 info-panel-item">
+                                <div class="d-flex align-items-center p-3">
+                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
+                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);">
+                                        <i class="fas fa-calendar-check"></i>
+                                    </div>
+                                    <div class="ml-3 flex-grow-1">
+                                        <h6 class="mb-1 font-weight-bold"
+                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
+                                            <i class="fas fa-clock mr-1" style="color: #48bb78;"></i> Geçerlilik
+                                        </h6>
+                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
+                                            <strong style="color: #48bb78;">Limite ulaşılana</strong> veya <strong
+                                                style="color: #48bb78;">süre dolana</strong> kadar geçerlidir.
+                                        </p>
+                                    </div>
+                                </div>
                             </div>
-                            <h6 class="mb-0 ml-3 font-weight-bold" style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">Geçerlilik</h6>
                         </div>
-                        <p class="text-muted mb-0" style="font-size: 0.85rem; line-height: 1.4;">
-                            Sözleşme, <strong style="color: #48bb78;">toplam limite</strong> ulaşılana kadar veya <strong style="color: #48bb78;">bitiş tarihi</strong> dolana kadar geçerli kalır.
-                        </p>
                     </div>
                 </div>
             </div>
         </div>
-        
+
         <style>
-            .hover-scale {
+            .info-panel-item {
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             }
-            .hover-scale:hover {
-                transform: translateY(-5px);
-                box-shadow: 0 15px 30px rgba(0,0,0,0.08) !important;
+
+            .info-panel-item:hover {
+                background: rgba(102, 126, 234, 0.03);
+            }
+
+            @media (max-width: 767.98px) {
+                .info-panel-item {
+                    border-right: none !important;
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+                }
+
+                .info-panel-item:last-child {
+                    border-bottom: none;
+                }
             }
         </style>
 
         <div id="alert-placeholder"></div>
 
-        <div class="row">
-            <div class="col-md-6">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+            <div>
                 <?php if (yetkisi_var('action:cerceve_sozlesmeler:create')): ?>
-                <button id="addContractBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Sözleşme Ekle</button>
+                    <button id="addContractBtn" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Yeni Sözleşme
+                        Ekle</button>
                 <?php endif; ?>
+                <button class="btn btn-info btn-sm ml-1" data-toggle="modal" data-target="#bilgiModal"><i
+                        class="fas fa-info-circle"></i> Nasıl Çalışır?</button>
             </div>
-            <div class="col-md-3">
-                <div class="stat-card mb-3">
-                    <div class="stat-icon" style="background: var(--primary)"><i class="fas fa-file-contract"></i></div>
-                    <div class="stat-info">
-                        <h3><?php echo $total_contracts; ?></h3>
-                        <p>Toplam Sözleşme</p>
-                    </div>
+            <div class="d-flex flex-wrap">
+                <div class="stat-card-mini mr-2 mb-1"
+                    style="padding: 6px 12px; border-radius: 8px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; box-shadow: 0 2px 8px rgba(74,14,99,0.2);">
+                    <i class="fas fa-file-contract mr-2" style="font-size: 0.9rem;"></i>
+                    <span style="font-weight: 600; font-size: 0.85rem;"><?php echo $total_contracts; ?></span>
+                    <span class="ml-1" style="font-size: 0.75rem; opacity: 0.9;">Sözleşme</span>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card mb-3" id="filterPendingPayment" style="cursor: pointer;" title="Ödeme bekleyenleri filtrele">
-                    <div class="stat-icon" style="background: #f6ad55;"><i class="fas fa-hourglass-half"></i></div>
-                    <div class="stat-info">
-                        <h3><?php echo $pending_payment_count; ?></h3>
-                        <p>Ödeme Bekleyen</p>
-                    </div>
+                <div class="stat-card-mini mb-1" id="filterPendingPayment"
+                    style="padding: 6px 12px; border-radius: 8px; background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; display: inline-flex; align-items: center; cursor: pointer; box-shadow: 0 2px 8px rgba(246,173,85,0.3);"
+                    title="Ödeme bekleyenleri filtrele">
+                    <i class="fas fa-hourglass-half mr-2" style="font-size: 0.9rem;"></i>
+                    <span style="font-weight: 600; font-size: 0.85rem;"><?php echo $pending_payment_count; ?></span>
+                    <span class="ml-1" style="font-size: 0.75rem; opacity: 0.9;">Bekleyen</span>
                 </div>
             </div>
         </div>
@@ -218,90 +256,98 @@ function display_date($date_string) {
                         </thead>
                         <tbody>
                             <?php if ($contracts_result && $contracts_result->num_rows > 0): ?>
-                                <?php while ($contract = $contracts_result->fetch_assoc()): 
+                                <?php while ($contract = $contracts_result->fetch_assoc()):
                                     $odenen = $contract['toplu_odenen_miktar'] ?? 0;
                                     $kabul = $contract['toplam_mal_kabul_miktari'] ?? 0;
                                     $fark = $kabul - $odenen;
                                     $has_pending_payment = $fark > 0;
-                                    
+
                                     $row_class = $contract['gecerli_mi'] ? 'table-success' : 'table-danger';
                                     $payment_class = $has_pending_payment ? 'has-pending-payment' : '';
-                                ?>
-                                <tr class="<?php echo $row_class; ?> <?php echo $payment_class; ?>">
-                                    <td class="actions">
-                                        <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
-                                        <button class="btn btn-primary btn-sm edit-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        <?php if (yetkisi_var('action:cerceve_sozlesmeler:delete')): ?>
-                                        <button class="btn btn-danger btn-sm delete-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                        <?php endif; ?>
-                                        <button class="btn btn-info btn-sm detail-btn" data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                            <i class="fas fa-info-circle"></i>
-                                        </button>
-                                    </td>
-                                    <td><strong>#<?php echo $contract['sozlesme_id']; ?></strong></td>
-                                    <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
-                                    <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
-                                    <td><strong><?php echo number_format($contract['birim_fiyat'], 2); ?></strong></td>
-                                    <td>
-                                        <?php 
-                                        $curr = $contract['para_birimi'];
-                                        if ($curr === 'TL') echo '<span class="badge badge-info">₺ TRY</span>';
-                                        elseif ($curr === 'USD') echo '<span class="badge badge-success">$ USD</span>';
-                                        elseif ($curr === 'EUR') echo '<span class="badge badge-warning">€ EUR</span>';
-                                        ?>
-                                    </td>
-                                    <td><?php echo $contract['limit_miktar']; ?></td>
-                                    <td><?php echo $contract['toplu_odenen_miktar'] ?? 0; ?></td>
-                                    <td>
-                                        <?php
-                                        if ($has_pending_payment) {
-                                            echo '<button class="btn btn-primary btn-sm make-payment-btn" 
+                                    ?>
+                                    <tr class="<?php echo $row_class; ?> <?php echo $payment_class; ?>">
+                                        <td class="actions">
+                                            <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
+                                                <button class="btn btn-primary btn-sm edit-btn"
+                                                    data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <?php if (yetkisi_var('action:cerceve_sozlesmeler:delete')): ?>
+                                                <button class="btn btn-danger btn-sm delete-btn"
+                                                    data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                    <i class="fas fa-trash"></i>
+                                                </button>
+                                            <?php endif; ?>
+                                            <button class="btn btn-info btn-sm detail-btn"
+                                                data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                <i class="fas fa-info-circle"></i>
+                                            </button>
+                                        </td>
+                                        <td><strong>#<?php echo $contract['sozlesme_id']; ?></strong></td>
+                                        <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
+                                        <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
+                                        <td><strong><?php echo number_format($contract['birim_fiyat'], 2); ?></strong></td>
+                                        <td>
+                                            <?php
+                                            $curr = $contract['para_birimi'];
+                                            if ($curr === 'TL')
+                                                echo '<span class="badge badge-info">₺ TRY</span>';
+                                            elseif ($curr === 'USD')
+                                                echo '<span class="badge badge-success">$ USD</span>';
+                                            elseif ($curr === 'EUR')
+                                                echo '<span class="badge badge-warning">€ EUR</span>';
+                                            ?>
+                                        </td>
+                                        <td><?php echo $contract['limit_miktar']; ?></td>
+                                        <td><?php echo $contract['toplu_odenen_miktar'] ?? 0; ?></td>
+                                        <td>
+                                            <?php
+                                            if ($has_pending_payment) {
+                                                echo '<button class="btn btn-primary btn-sm make-payment-btn" 
                                                             data-id="' . $contract['sozlesme_id'] . '" 
                                                             data-quantity="' . $fark . '"
                                                             data-price="' . $contract['birim_fiyat'] . '"
                                                             data-currency="' . $contract['para_birimi'] . '">
                                                             <i class="fas fa-money-bill-wave"></i> ' . $fark . ' Adet Ödeme Yap
                                                     </button>';
-                                        } else {
-                                            echo '<span class="text-success"><i class="fas fa-check"></i> Tamamlandı</span>';
-                                        }
-                                        ?>
-                                    </td>
-                                    <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
-                                    <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
-                                    <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
-                                    <td>
-                                        <span class="badge badge-info"><?php echo $contract['oncelik']; ?></span>
-                                    </td>
-                                    <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
-                                    <td><?php echo $contract['kalan_miktar']; ?></td>
-                                    <td>
-                                        <?php 
-                                        $status_class = $contract['gecerlilik_durumu'] === 'Gecerli' ? 'badge-success' : 'badge-danger';
-                                        echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
-                                        ?>
-                                    </td>
-                                    <td>
-                                        <?php 
-                                        $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
-                                        $usage_text = $contract['gecerli_mi'] ? 'Kullanilabilir' : 'Kullanilamaz';
-                                        echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
-                                        ?>
-                                    </td>
-                                    <td><?php echo htmlspecialchars($contract['aciklama']); ?></td>
-                                </tr>
+                                            } else {
+                                                echo '<span class="text-success"><i class="fas fa-check"></i> Tamamlandı</span>';
+                                            }
+                                            ?>
+                                        </td>
+                                        <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
+                                        <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
+                                        <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
+                                        <td>
+                                            <span class="badge badge-info"><?php echo $contract['oncelik']; ?></span>
+                                        </td>
+                                        <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
+                                        <td><?php echo $contract['kalan_miktar']; ?></td>
+                                        <td>
+                                            <?php
+                                            $status_class = $contract['gecerlilik_durumu'] === 'Gecerli' ? 'badge-success' : 'badge-danger';
+                                            echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
+                                            ?>
+                                        </td>
+                                        <td>
+                                            <?php
+                                            $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
+                                            $usage_text = $contract['gecerli_mi'] ? 'Kullanilabilir' : 'Kullanilamaz';
+                                            echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
+                                            ?>
+                                        </td>
+                                        <td><?php echo htmlspecialchars($contract['aciklama']); ?></td>
+                                    </tr>
                                 <?php endwhile; ?>
                             <?php else: ?>
                                 <tr class="no-contracts-row">
                                     <td colspan="18" class="text-center p-4">
-                                        <i class="fas fa-file-contract fa-3x mb-3" style="color: var(--text-secondary);"></i>
+                                        <i class="fas fa-file-contract fa-3x mb-3"
+                                            style="color: var(--text-secondary);"></i>
                                         <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
-                                        <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle" butonunu kullanabilirsiniz.</p>
+                                        <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle"
+                                            butonunu kullanabilirsiniz.</p>
                                     </td>
                                 </tr>
                             <?php endif; ?>
@@ -326,16 +372,17 @@ function display_date($date_string) {
                     <div class="modal-body">
                         <input type="hidden" id="sozlesme_id" name="sozlesme_id">
                         <input type="hidden" id="action" name="action">
-                        
+
                         <div class="form-row">
                             <div class="form-group col-12 col-lg-4">
                                 <label for="tedarikci_id"><i class="fas fa-building"></i> Tedarikçi</label>
                                 <select class="form-control" id="tedarikci_id" name="tedarikci_id" required>
                                     <option value="">Seçin</option>
-                                    <?php 
+                                    <?php
                                     mysqli_data_seek($suppliers_result, 0);
-                                    while($supplier = $suppliers_result->fetch_assoc()): ?>
-                                        <option value="<?php echo $supplier['tedarikci_id']; ?>"><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
+                                    while ($supplier = $suppliers_result->fetch_assoc()): ?>
+                                        <option value="<?php echo $supplier['tedarikci_id']; ?>">
+                                            <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
@@ -343,16 +390,19 @@ function display_date($date_string) {
                                 <label for="malzeme_kodu"><i class="fas fa-box"></i> Malzeme</label>
                                 <select class="form-control" id="malzeme_kodu" name="malzeme_kodu" required>
                                     <option value="">Seçin</option>
-                                    <?php 
+                                    <?php
                                     mysqli_data_seek($materials_result, 0);
-                                    while($material = $materials_result->fetch_assoc()): ?>
-                                        <option value="<?php echo $material['malzeme_kodu']; ?>"><?php echo $material['malzeme_kodu'] . ' - ' . htmlspecialchars($material['malzeme_ismi']); ?></option>
+                                    while ($material = $materials_result->fetch_assoc()): ?>
+                                        <option value="<?php echo $material['malzeme_kodu']; ?>">
+                                            <?php echo $material['malzeme_kodu'] . ' - ' . htmlspecialchars($material['malzeme_ismi']); ?>
+                                        </option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
                             <div class="form-group col-12 col-lg-4">
                                 <label for="birim_fiyat"><i class="fas fa-tag"></i> Birim Fiyat</label>
-                                <input type="number" class="form-control" id="birim_fiyat" name="birim_fiyat" step="0.01" min="0" required placeholder="0.00">
+                                <input type="number" class="form-control" id="birim_fiyat" name="birim_fiyat"
+                                    step="0.01" min="0" required placeholder="0.00">
                             </div>
                             <div class="form-group col-12 col-lg-4">
                                 <label for="para_birimi"><i class="fas fa-coins"></i> Para Birimi</label>
@@ -364,11 +414,13 @@ function display_date($date_string) {
                             </div>
                             <div class="form-group col-12 col-lg-4">
                                 <label for="limit_miktar"><i class="fas fa-chart-bar"></i> Limit</label>
-                                <input type="number" class="form-control" id="limit_miktar" name="limit_miktar" step="1" min="0" required placeholder="0">
+                                <input type="number" class="form-control" id="limit_miktar" name="limit_miktar" step="1"
+                                    min="0" required placeholder="0">
                             </div>
                             <div class="form-group col-12 col-lg-4">
                                 <label for="toplu_odenen_miktar"><i class="fas fa-check"></i> Ödenen Miktar</label>
-                                <input type="number" class="form-control" id="toplu_odenen_miktar" name="toplu_odenen_miktar" step="1" min="0" value="0" placeholder="0">
+                                <input type="number" class="form-control" id="toplu_odenen_miktar"
+                                    name="toplu_odenen_miktar" step="1" min="0" value="0" placeholder="0">
                             </div>
                             <div class="form-group col-12 col-lg-4">
                                 <label for="baslangic_tarihi"><i class="fas fa-calendar-plus"></i> Başlangıç</label>
@@ -409,7 +461,7 @@ function display_date($date_string) {
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <!-- SweetAlert2 JS -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-    
+
     <!-- Simple Custom Styles for SweetAlert -->
     <style>
         /* Disable word wrap for all table cells */
@@ -419,29 +471,34 @@ function display_date($date_string) {
             overflow: hidden;
             text-overflow: ellipsis;
         }
+
         .stat-card {
             transition: all 0.2s ease-in-out;
         }
-        .stat-card .stat-info p { /* Target the specific paragraph */
+
+        .stat-card .stat-info p {
+            /* Target the specific paragraph */
             white-space: nowrap;
         }
+
         .stat-card.active-filter {
             border: 2px solid #4a0e63;
             box-shadow: 0 0 15px rgba(74, 14, 99, 0.4);
             transform: translateY(-3px);
         }
+
         /* SweetAlert2 stilleri kaldırıldı, artık Bootstrap modal kullanılıyor */
     </style>
-    
+
     <!-- Custom Styles for SweetAlert -->
     <style>
         .swal2-popup {
             max-width: 90vw !important;
             border-radius: 12px !important;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.25) !important;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25) !important;
             font-family: 'Ubuntu', sans-serif !important;
         }
-        
+
         .swal2-title {
             font-size: 1.3rem !important;
             font-weight: 700 !important;
@@ -451,22 +508,22 @@ function display_date($date_string) {
             border-bottom: 2px solid #f0f0f0 !important;
             margin-bottom: 15px !important;
         }
-        
+
         .swal2-content {
             max-height: 80vh !important;
             overflow-y: hidden !important;
             padding: 0 25px 15px 25px !important;
         }
-        
+
         .my-swal-container .swal2-popup {
             max-height: 90vh !important;
         }
-        
+
         .my-swal-content {
             max-height: 75vh !important;
             overflow-y: auto !important;
         }
-        
+
         /* Table styles inside SweetAlert */
         .swal2-popup table {
             border-collapse: collapse;
@@ -475,10 +532,10 @@ function display_date($date_string) {
             background-color: #fff;
             border-radius: 8px;
             overflow: hidden;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
             border: 1px solid #e0e0e0;
         }
-        
+
         .swal2-popup table th,
         .swal2-popup table td {
             border: 1px solid #e0e0e0;
@@ -487,7 +544,7 @@ function display_date($date_string) {
             font-size: 0.95rem;
             text-align: center;
         }
-        
+
         .swal2-popup table th {
             background: linear-gradient(135deg, #4a0e63 0%, #7c2a99 100%);
             color: white;
@@ -495,17 +552,17 @@ function display_date($date_string) {
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        
+
         .swal2-popup table tbody tr:nth-child(even) {
             background-color: #fafafa;
         }
-        
+
         .swal2-popup table tbody tr:hover {
             background-color: #f0e6f7;
             transform: scale(1.01);
             transition: all 0.2s ease;
         }
-        
+
         .swal2-popup table thead th {
             position: sticky;
             top: 0;
@@ -515,27 +572,27 @@ function display_date($date_string) {
             font-weight: 600;
             padding: 1rem;
         }
-        
+
         /* Scrollbar styling */
         .swal2-popup ::-webkit-scrollbar {
             width: 10px;
             height: 10px;
         }
-        
+
         .swal2-popup ::-webkit-scrollbar-track {
             background: #f1f1f1;
             border-radius: 5px;
         }
-        
+
         .swal2-popup ::-webkit-scrollbar-thumb {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 5px;
         }
-        
+
         .swal2-popup ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
         }
-        
+
         /* Confirm button styling */
         .swal2-confirm {
             background: linear-gradient(135deg, #4a0e63 0%, #7c2a99 100%) !important;
@@ -591,258 +648,266 @@ function display_date($date_string) {
             justify-content: center !important;
             gap: 10px !important;
         }
-        
+
         /* Responsive adjustments */
         @media (max-width: 768px) {
             .swal2-popup {
                 max-width: 95vw !important;
                 margin: 15px;
             }
-            
+
             .swal2-popup table th,
             .swal2-popup table td {
                 padding: 0.6rem;
                 font-size: 0.9rem;
             }
-            
+
             .swal2-title {
                 font-size: 1.1rem !important;
             }
-            
+
             .swal2-confirm {
                 padding: 10px 30px !important;
                 font-size: 0.95rem !important;
             }
         }
-        
+
         @media (max-width: 480px) {
+
             .swal2-popup table th,
             .swal2-popup table td {
                 padding: 0.5rem;
                 font-size: 0.85rem;
             }
-            
+
             .swal2-popup table thead th {
                 padding: 0.7rem;
                 font-size: 0.8rem;
             }
         }
-        
+
         /* Loading popup style */
         .swal2-loading-popup {
             border-radius: 15px !important;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2) !important;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2) !important;
         }
-        
+
         .swal2-loading-popup .swal2-title {
             border-bottom: none !important;
             margin-bottom: 0 !important;
             padding-bottom: 5px !important;
         }
-        
+
         /* Animation effects */
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
-        
+
         .swal2-popup {
             animation: fadeIn 0.3s ease-out;
         }
-        
+
         /* Ensure proper backdrop handling */
         .swal2-container {
             z-index: 9999 !important;
         }
-        
+
         .swal2-backdrop {
             background-color: rgba(0, 0, 0, 0.4) !important;
         }
-        
+
         /* Ensure swal2-hide properly hides elements and removes backdrop */
         .swal2-container {
             z-index: 9999 !important;
         }
-        
+
         .swal2-backdrop-show {
             background: rgba(0, 0, 0, 0.4) !important;
         }
-        
+
         .swal2-backdrop-hide {
             background: transparent !important;
         }
     </style>
 
     <script>
-    $(document).ready(function() {
-        
-        function showAlert(message, type) {
-            $('#alert-placeholder').html(
-                `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
+        $(document).ready(function () {
+
+            function showAlert(message, type) {
+                $('#alert-placeholder').html(
+                    `<div class="alert alert-${type} alert-dismissible fade show" role="alert">
                     ${message}
                     <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>`
-            );
-        }
+                );
+            }
 
-        // Open modal for adding a new contract
-        $('#addContractBtn').on('click', function() {
-            $('#contractForm')[0].reset();
-            $('#modalTitle').text('Yeni Sözleşme Ekle');
-            $('#action').val('add_contract');
-            $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
-            $('#contractModal').modal('show');
-        });
-
-        // Open modal for editing a contract
-        $('.edit-btn').on('click', function() {
-            var contractId = $(this).data('id');
-            
-            $.ajax({
-                url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                type: 'POST',
-                data: { action: 'get_contract', id: contractId },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var contract = response.data;
-                        $('#contractForm')[0].reset();
-                        $('#modalTitle').text('Sözleşmeyi Düzenle');
-                        $('#action').val('update_contract');
-                        $('#sozlesme_id').val(contract.sozlesme_id);
-                        $('#tedarikci_id').val(contract.tedarikci_id);
-                        $('#malzeme_kodu').val(contract.malzeme_kodu);
-                        $('#birim_fiyat').val(contract.birim_fiyat);
-                        $('#para_birimi').val(contract.para_birimi);
-                        $('#limit_miktar').val(contract.limit_miktar);
-                        $('#toplu_odenen_miktar').val(contract.toplu_odenen_miktar || 0);
-                        $('#baslangic_tarihi').val(contract.baslangic_tarihi);
-                        $('#bitis_tarihi').val(contract.bitis_tarihi);
-                        $('#aciklama').val(contract.aciklama);
-                        $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
-                        $('#contractModal').modal('show');
-                    } else {
-                        showAlert(response.message, 'danger');
-                    }
-                },
-                error: function() {
-                    showAlert('Sözleşme bilgileri alınırken bir hata oluştu.', 'danger');
-                }
+            // Open modal for adding a new contract
+            $('#addContractBtn').on('click', function () {
+                $('#contractForm')[0].reset();
+                $('#modalTitle').text('Yeni Sözleşme Ekle');
+                $('#action').val('add_contract');
+                $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
+                $('#contractModal').modal('show');
             });
-        });
 
-        // Handle form submission
-        $('#contractForm').on('submit', function(e) {
-            e.preventDefault();
-            var btn = $('#submitBtn');
-            btn.prop('disabled', true).text('Kaydediliyor...').addClass('btn-secondary').removeClass('btn-primary btn-success');
-            
-            var formData = $(this).serialize();
-            
-            $.ajax({
-                url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                type: 'POST',
-                data: formData,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        $('#contractModal').modal('hide');
-                        showAlert(response.message, 'success');
-                        // Reload page to see changes
-                        setTimeout(function() {
-                            location.reload();
-                        }, 1000);
-                    } else {
-                        showAlert(response.message, 'danger');
+            // Open modal for editing a contract
+            $('.edit-btn').on('click', function () {
+                var contractId = $(this).data('id');
+
+                $.ajax({
+                    url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                    type: 'POST',
+                    data: { action: 'get_contract', id: contractId },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var contract = response.data;
+                            $('#contractForm')[0].reset();
+                            $('#modalTitle').text('Sözleşmeyi Düzenle');
+                            $('#action').val('update_contract');
+                            $('#sozlesme_id').val(contract.sozlesme_id);
+                            $('#tedarikci_id').val(contract.tedarikci_id);
+                            $('#malzeme_kodu').val(contract.malzeme_kodu);
+                            $('#birim_fiyat').val(contract.birim_fiyat);
+                            $('#para_birimi').val(contract.para_birimi);
+                            $('#limit_miktar').val(contract.limit_miktar);
+                            $('#toplu_odenen_miktar').val(contract.toplu_odenen_miktar || 0);
+                            $('#baslangic_tarihi').val(contract.baslangic_tarihi);
+                            $('#bitis_tarihi').val(contract.bitis_tarihi);
+                            $('#aciklama').val(contract.aciklama);
+                            $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
+                            $('#contractModal').modal('show');
+                        } else {
+                            showAlert(response.message, 'danger');
+                        }
+                    },
+                    error: function () {
+                        showAlert('Sözleşme bilgileri alınırken bir hata oluştu.', 'danger');
+                    }
+                });
+            });
+
+            // Handle form submission
+            $('#contractForm').on('submit', function (e) {
+                e.preventDefault();
+                var btn = $('#submitBtn');
+                btn.prop('disabled', true).text('Kaydediliyor...').addClass('btn-secondary').removeClass('btn-primary btn-success');
+
+                var formData = $(this).serialize();
+
+                $.ajax({
+                    url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                    type: 'POST',
+                    data: formData,
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            $('#contractModal').modal('hide');
+                            showAlert(response.message, 'success');
+                            // Reload page to see changes
+                            setTimeout(function () {
+                                location.reload();
+                            }, 1000);
+                        } else {
+                            showAlert(response.message, 'danger');
+                            btn.prop('disabled', false).text('Kaydet').addClass('btn-primary');
+                        }
+                    },
+                    error: function () {
+                        showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                         btn.prop('disabled', false).text('Kaydet').addClass('btn-primary');
                     }
-                },
-                error: function() {
-                    showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                    btn.prop('disabled', false).text('Kaydet').addClass('btn-primary');
-                }
+                });
             });
-        });
 
-        // Handle contract deletion
-        $('.delete-btn').on('click', function() {
-            var contractId = $(this).data('id');
+            // Handle contract deletion
+            $('.delete-btn').on('click', function () {
+                var contractId = $(this).data('id');
 
-            Swal.fire({
-                title: 'Emin misiniz?',
-                text: 'Bu sözleşmeyi silmek istediğinizden emin misiniz?',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Evet, sil!',
-                cancelButtonText: 'İptal',
-                allowOutsideClick: true
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    $.ajax({
-                        url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'delete_contract',
-                            sozlesme_id: contractId
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                showAlert(response.message, 'success');
-                                setTimeout(function() {
-                                    location.reload();
-                                }, 1000);
-                            } else {
-                                showAlert(response.message, 'danger');
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu sözleşmeyi silmek istediğinizden emin misiniz?',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Evet, sil!',
+                    cancelButtonText: 'İptal',
+                    allowOutsideClick: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.ajax({
+                            url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                            type: 'POST',
+                            data: {
+                                action: 'delete_contract',
+                                sozlesme_id: contractId
+                            },
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    showAlert(response.message, 'success');
+                                    setTimeout(function () {
+                                        location.reload();
+                                    }, 1000);
+                                } else {
+                                    showAlert(response.message, 'danger');
+                                }
+                            },
+                            error: function () {
+                                showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
                             }
-                        },
-                        error: function() {
-                            showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                        }
-                    });
-                } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
-                    // Ensure complete cleanup when cancelled or clicked outside
-                    setTimeout(() => {
-                        $('body').removeClass('swal2-no-backdrop swal2-shown');
-                        $('.swal2-container').remove();
-                    }, 100);
-                } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
-                    // Additional cleanup for other dismissal methods
-                    setTimeout(() => {
-                        $('body').removeClass('swal2-no-backdrop swal2-shown');
-                        $('.swal2-container').remove();
-                    }, 100);
-                }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
+                        // Ensure complete cleanup when cancelled or clicked outside
+                        setTimeout(() => {
+                            $('body').removeClass('swal2-no-backdrop swal2-shown');
+                            $('.swal2-container').remove();
+                        }, 100);
+                    } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
+                        // Additional cleanup for other dismissal methods
+                        setTimeout(() => {
+                            $('body').removeClass('swal2-no-backdrop swal2-shown');
+                            $('.swal2-container').remove();
+                        }, 100);
+                    }
+                });
             });
-        });
 
-        // Handle contract detail view with Bootstrap modal
-        $(document).on('click', '.detail-btn', function() {
-            var contractId = $(this).data('id');
-            
-            // Show loading in modal
-            $('#detailModal .modal-title').html('Mal Kabul Geçmişi - Sözleşme ID: ' + contractId);
-            $('#detailModal .modal-body').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Yükleniyor...</span></div><p class="mt-2">Mal Kabul geçmişi alınıyor...</p></div>');
-            $('#detailModal').modal('show');
-            
-            $.ajax({
-                url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                type: 'POST',
-                data: {
-                    action: 'get_contract_movements',
-                    sozlesme_id: contractId
-                },
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        var tableHtml = '';
-                        
-                        if (response.movements && response.movements.length > 0) {
-                            tableHtml = `
+            // Handle contract detail view with Bootstrap modal
+            $(document).on('click', '.detail-btn', function () {
+                var contractId = $(this).data('id');
+
+                // Show loading in modal
+                $('#detailModal .modal-title').html('Mal Kabul Geçmişi - Sözleşme ID: ' + contractId);
+                $('#detailModal .modal-body').html('<div class="text-center"><div class="spinner-border" role="status"><span class="sr-only">Yükleniyor...</span></div><p class="mt-2">Mal Kabul geçmişi alınıyor...</p></div>');
+                $('#detailModal').modal('show');
+
+                $.ajax({
+                    url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                    type: 'POST',
+                    data: {
+                        action: 'get_contract_movements',
+                        sozlesme_id: contractId
+                    },
+                    dataType: 'json',
+                    success: function (response) {
+                        if (response.status === 'success') {
+                            var tableHtml = '';
+
+                            if (response.movements && response.movements.length > 0) {
+                                tableHtml = `
                                 <div class="table-responsive">
                                     <table class="table table-striped table-bordered">
                                         <thead>
@@ -865,35 +930,35 @@ function display_date($date_string) {
                                         </tbody>
                                     </table>
                                 </div>`;
+                            } else {
+                                tableHtml = '<div class="alert alert-info">Bu sözleşmeye ait mal kabul hareketi bulunmamaktadır.</div>';
+                            }
+
+                            $('#detailModal .modal-body').html(tableHtml);
                         } else {
-                            tableHtml = '<div class="alert alert-info">Bu sözleşmeye ait mal kabul hareketi bulunmamaktadır.</div>';
+                            $('#detailModal .modal-body').html('<div class="alert alert-danger">' + response.message + '</div>');
                         }
-                        
-                        $('#detailModal .modal-body').html(tableHtml);
-                    } else {
-                        $('#detailModal .modal-body').html('<div class="alert alert-danger">' + response.message + '</div>');
+                    },
+                    error: function () {
+                        $('#detailModal .modal-body').html('<div class="alert alert-danger">Veriler alınırken bir hata oluştu.</div>');
                     }
-                },
-                error: function() {
-                    $('#detailModal .modal-body').html('<div class="alert alert-danger">Veriler alınırken bir hata oluştu.</div>');
-                }
+                });
             });
-        });
 
-        // Handle Make Payment Button
-        $(document).on('click', '.make-payment-btn', function() {
-            var contractId = $(this).data('id');
-            var maxQuantity = $(this).data('quantity');
-            var price = $(this).data('price');
-            var currency = $(this).data('currency');
-            
-            var currencySymbol = '₺';
-            if (currency === 'USD') currencySymbol = '$';
-            else if (currency === 'EUR') currencySymbol = '€';
+            // Handle Make Payment Button
+            $(document).on('click', '.make-payment-btn', function () {
+                var contractId = $(this).data('id');
+                var maxQuantity = $(this).data('quantity');
+                var price = $(this).data('price');
+                var currency = $(this).data('currency');
 
-            Swal.fire({
-                title: 'Ödeme Yap',
-                html: `
+                var currencySymbol = '₺';
+                if (currency === 'USD') currencySymbol = '$';
+                else if (currency === 'EUR') currencySymbol = '€';
+
+                Swal.fire({
+                    title: 'Ödeme Yap',
+                    html: `
                     <div class="text-left">
                         <div class="form-group">
                             <label>Ödenecek Miktar (Adet)</label>
@@ -905,106 +970,106 @@ function display_date($date_string) {
                         <p class="text-muted mt-2 small">Bu işlem onaylandığında Giderler tablosuna "Ara Ödeme" olarak kaydedilecektir.</p>
                     </div>
                 `,
-                icon: 'question',
-                showCancelButton: true,
-                confirmButtonColor: '#28a745',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ödeme Yap',
-                cancelButtonText: 'İptal',
-                allowOutsideClick: false,
-                allowEscapeKey: false,
-                didOpen: () => {
-                    const input = Swal.getPopup().querySelector('#payment-amount');
-                    const totalSpan = Swal.getPopup().querySelector('#total-amount');
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonColor: '#28a745',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ödeme Yap',
+                    cancelButtonText: 'İptal',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    didOpen: () => {
+                        const input = Swal.getPopup().querySelector('#payment-amount');
+                        const totalSpan = Swal.getPopup().querySelector('#total-amount');
 
-                    input.oninput = () => {
-                        let val = parseFloat(input.value) || 0;
-                        if (val > maxQuantity) {
-                            val = maxQuantity;
-                            input.value = maxQuantity;
-                        }
-                        if (val < 0) {
-                            val = 0;
-                            input.value = 0;
-                        }
-                        totalSpan.textContent = (val * price).toFixed(2) + ' ' + currencySymbol;
-                    };
-                },
-                preConfirm: () => {
-                    const quantity = Swal.getPopup().querySelector('#payment-amount').value;
-                    if (!quantity || quantity <= 0) {
-                        Swal.showValidationMessage('Lütfen geçerli bir miktar giriniz');
-                    }
-                    return { quantity: quantity };
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const quantity = result.value.quantity;
-
-                    $.ajax({
-                        url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
-                        type: 'POST',
-                        data: {
-                            action: 'make_payment',
-                            sozlesme_id: contractId,
-                            quantity: quantity
-                        },
-                        dataType: 'json',
-                        success: function(response) {
-                            if (response.status === 'success') {
-                                Swal.fire('Başarılı!', response.message, 'success')
-                                .then(() => {
-                                    location.reload();
-                                });
-                            } else {
-                                Swal.fire('Hata!', response.message, 'error');
+                        input.oninput = () => {
+                            let val = parseFloat(input.value) || 0;
+                            if (val > maxQuantity) {
+                                val = maxQuantity;
+                                input.value = maxQuantity;
                             }
-                        },
-                        error: function() {
-                            Swal.fire('Hata!', 'İşlem sırasında bir hata oluştu.', 'error');
+                            if (val < 0) {
+                                val = 0;
+                                input.value = 0;
+                            }
+                            totalSpan.textContent = (val * price).toFixed(2) + ' ' + currencySymbol;
+                        };
+                    },
+                    preConfirm: () => {
+                        const quantity = Swal.getPopup().querySelector('#payment-amount').value;
+                        if (!quantity || quantity <= 0) {
+                            Swal.showValidationMessage('Lütfen geçerli bir miktar giriniz');
                         }
-                    });
-                } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
-                    // Ensure complete cleanup when cancelled or clicked outside
-                    setTimeout(() => {
-                        $('body').removeClass('swal2-no-backdrop swal2-shown');
-                        $('.swal2-container').remove();
-                    }, 100);
-                } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
-                    // Additional cleanup for other dismissal methods
-                    setTimeout(() => {
-                        $('body').removeClass('swal2-no-backdrop swal2-shown');
-                        $('.swal2-container').remove();
-                    }, 100);
+                        return { quantity: quantity };
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        const quantity = result.value.quantity;
+
+                        $.ajax({
+                            url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
+                            type: 'POST',
+                            data: {
+                                action: 'make_payment',
+                                sozlesme_id: contractId,
+                                quantity: quantity
+                            },
+                            dataType: 'json',
+                            success: function (response) {
+                                if (response.status === 'success') {
+                                    Swal.fire('Başarılı!', response.message, 'success')
+                                        .then(() => {
+                                            location.reload();
+                                        });
+                                } else {
+                                    Swal.fire('Hata!', response.message, 'error');
+                                }
+                            },
+                            error: function () {
+                                Swal.fire('Hata!', 'İşlem sırasında bir hata oluştu.', 'error');
+                            }
+                        });
+                    } else if (result.dismiss === Swal.DismissReason.cancel || result.dismiss === Swal.DismissReason.backdrop) {
+                        // Ensure complete cleanup when cancelled or clicked outside
+                        setTimeout(() => {
+                            $('body').removeClass('swal2-no-backdrop swal2-shown');
+                            $('.swal2-container').remove();
+                        }, 100);
+                    } else if (result.dismiss === Swal.DismissReason.close || result.dismiss === Swal.DismissReason.escape) {
+                        // Additional cleanup for other dismissal methods
+                        setTimeout(() => {
+                            $('body').removeClass('swal2-no-backdrop swal2-shown');
+                            $('.swal2-container').remove();
+                        }, 100);
+                    }
+                });
+            });
+
+            var isFiltered = false;
+            $('#filterPendingPayment').on('click', function () {
+                var $this = $(this);
+                isFiltered = !isFiltered;
+
+                var $rows = $('tbody tr');
+
+                $('.no-filter-results').remove();
+
+                if (isFiltered) {
+                    $this.addClass('active-filter');
+                    $rows.hide();
+                    var $filteredRows = $rows.filter('.has-pending-payment');
+                    $filteredRows.show();
+
+                    if ($filteredRows.length === 0 && $('.no-contracts-row').length === 0) {
+                        $('tbody').append('<tr class="no-filter-results"><td colspan="18" class="text-center p-4">Filtreyle eşleşen ödeme bekleyen sözleşme bulunamadı.</td></tr>');
+                    }
+                } else {
+                    $this.removeClass('active-filter');
+                    $rows.show();
                 }
             });
+
         });
-
-        var isFiltered = false;
-        $('#filterPendingPayment').on('click', function() {
-            var $this = $(this);
-            isFiltered = !isFiltered;
-            
-            var $rows = $('tbody tr');
-            
-            $('.no-filter-results').remove();
-
-            if (isFiltered) {
-                $this.addClass('active-filter');
-                $rows.hide();
-                var $filteredRows = $rows.filter('.has-pending-payment');
-                $filteredRows.show();
-
-                if ($filteredRows.length === 0 && $('.no-contracts-row').length === 0) {
-                    $('tbody').append('<tr class="no-filter-results"><td colspan="18" class="text-center p-4">Filtreyle eşleşen ödeme bekleyen sözleşme bulunamadı.</td></tr>');
-                }
-            } else {
-                $this.removeClass('active-filter');
-                $rows.show();
-            }
-        });
-
-    });
     </script>
 
     <!-- Bilgi Modal -->
@@ -1020,16 +1085,19 @@ function display_date($date_string) {
                 <div class="modal-body">
                     <div class="alert alert-info">
                         <h6><i class="fas fa-exclamation-circle"></i> Sistem Özeti</h6>
-                        <p>Çerçeve sözleşme sistemi, tedarikçinizle yaptığınız anlaşmaları takip etmenizi ve Mal Kabul işlemlerinde bu anlaşmaları otomatik olarak kullanmanızı sağlar.</p>
+                        <p>Çerçeve sözleşme sistemi, tedarikçinizle yaptığınız anlaşmaları takip etmenizi ve Mal Kabul
+                            işlemlerinde bu anlaşmaları otomatik olarak kullanmanızı sağlar.</p>
                     </div>
-                    
+
                     <h6><i class="fas fa-star"></i> Öncelik Sistemi</h6>
                     <p>Her çerçeve sözleşmesine 1-5 arasında bir öncelik seviyesi verilir:</p>
                     <ul>
-                        <li><strong>1 - En Yüksek Öncelik</strong>: Bu sözleşmeler Mal Kabul sırasında ilk olarak kullanılır</li>
-                        <li><strong>2-5 - Daha Düşük Öncelik</strong>: Daha yüksek öncelikli sözleşmeler tükenince kullanılır</li>
+                        <li><strong>1 - En Yüksek Öncelik</strong>: Bu sözleşmeler Mal Kabul sırasında ilk olarak
+                            kullanılır</li>
+                        <li><strong>2-5 - Daha Düşük Öncelik</strong>: Daha yüksek öncelikli sözleşmeler tükenince
+                            kullanılır</li>
                     </ul>
-                    
+
                     <h6><i class="fas fa-exchange-alt"></i> Bölünmüş Mal Kabul</h6>
                     <p>Sistem, tek bir Mal Kabul işlemini birden fazla sözleşme kullanarak bölerek tamamlayabilir:</p>
                     <ul>
@@ -1038,15 +1106,17 @@ function display_date($date_string) {
                         <li>Kalan 700 birimi öncelik 2 olan sözleşme ile tamamlar</li>
                         <li>Bu sayede tüm Mal Kabul işlemleri takip edilebilir olur</li>
                     </ul>
-                    
+
                     <h6><i class="fas fa-search"></i> Takip ve Raporlama</h6>
                     <p>Sistem her Mal Kabul işlemini hangi sözleşmeyle yaptığını kaydeder:</p>
                     <ul>
                         <li><strong>Kalan Miktar:</strong> Her sözleşme için kalan limit doğru şekilde hesaplanır</li>
-                        <li><strong>Görsel Gösterim:</strong> Geçerli, Limit Dolmuş, Süresi Dolmuş durumları farklı renklerle gösterilir</li>
-                        <li><strong>Sipariş Takibi:</strong> Mal Kabul sırasında hangi sözleşmeyle işlem yapıldığı bilgisi saklanır</li>
+                        <li><strong>Görsel Gösterim:</strong> Geçerli, Limit Dolmuş, Süresi Dolmuş durumları farklı
+                            renklerle gösterilir</li>
+                        <li><strong>Sipariş Takibi:</strong> Mal Kabul sırasında hangi sözleşmeyle işlem yapıldığı
+                            bilgisi saklanır</li>
                     </ul>
-                    
+
                     <h6><i class="fas fa-check-circle"></i> Mal Kabul İşlemi</h6>
                     <p>Mal Kabul sırasında sistem şu adımları uygular:</p>
                     <ol>
@@ -1056,7 +1126,7 @@ function display_date($date_string) {
                         <li>Her dağıtım için ayrı bir stok hareketi oluşturur</li>
                         <li>Her hareketi hangi sözleşmeyle yapıldığına göre kaydeder</li>
                     </ol>
-                    
+
                     <h6><i class="fas fa-bell"></i> Geçerlilik Kontrolleri</h6>
                     <p>Sistem Mal Kabul sırasında şu kontrolleri yapar:</p>
                     <ul>
@@ -1065,10 +1135,11 @@ function display_date($date_string) {
                         <li>Toplam kalan limit kullanıcı miktarını karşılayabiliyor mu?</li>
                         <li>Geçerli sözleşme var mı?</li>
                     </ul>
-                    
+
                     <div class="alert alert-success mt-3">
                         <h6><i class="fas fa-lightbulb"></i> Uygulama Önerisi</h6>
-                        <p>En çok kullandığınız tedarikçi anlaşmalarına daha yüksek (düşük sayı) öncelik vererek sistemden en iyi şekilde yararlanabilirsiniz.</p>
+                        <p>En çok kullandığınız tedarikçi anlaşmalarına daha yüksek (düşük sayı) öncelik vererek
+                            sistemden en iyi şekilde yararlanabilirsiniz.</p>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1098,5 +1169,5 @@ function display_date($date_string) {
         </div>
     </div>
 </body>
-</html>
 
+</html>

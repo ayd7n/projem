@@ -405,6 +405,7 @@
                         Maliyet</a></li>
                 <li class="nav-item"><a href="#gider" class="nav-link"><i class="fas fa-money-bill-wave"></i> Gider
                         Yönetimi</a></li>
+                <li class="nav-item"><a href="#loglar" class="nav-link"><i class="fas fa-clipboard-list"></i> Sistem Günlükleri</a></li>
                 <li class="nav-item"><a href="#cerceve-sozlesmeler" class="nav-link"><i
                             class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</a></li>
                 <li class="nav-item"><a href="#raporlama" class="nav-link"><i class="fas fa-chart-bar"></i>
@@ -417,6 +418,9 @@
                         Malzeme Siparişleri</a></li>
                 <li class="nav-item"><a href="#urun-akisi" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün
                         Akışı</a></li>
+                <li class="nav-item"><a href="#api" class="nav-link"><i class="fas fa-code"></i> API ve Entegrasyonlar</a></li>
+                <li class="nav-item"><a href="#komut-satiri" class="nav-link"><i class="fas fa-terminal"></i> Komut Satırı Erişimi</a></li>
+                <li class="nav-item"><a href="#yedekleme" class="nav-link"><i class="fas fa-database"></i> Yedekleme ve Kurtarma</a></li>
                 <li class="nav-item"><a href="#sss" class="nav-link"><i class="fas fa-question-circle"></i> SSS</a></li>
             </ul>
         </aside>
@@ -465,6 +469,19 @@
                     <li><strong>Yedekleme:</strong> Veri kaybını önlemek için veritabanı yedekleri alınabilir. Yedekler
                         bilgisayara indirilebilir veya sistemden geri yüklenebilir.</li>
                 </ul>
+
+                <h3>3. Sistem Gereksinimleri ve Kurulum</h3>
+                <p>Sistemin düzgün çalışması için aşağıdaki PHP eklentileri gereklidir:</p>
+                <ul>
+                    <li><strong>php-curl:</strong> Telegram bildirimleri için</li>
+                    <li><strong>php-mbstring:</strong> Excel dışa aktarımı için</li>
+                    <li><strong>php-mysql:</strong> Veritabanı bağlantısı için</li>
+                </ul>
+                <p>Bu eklentileri kurmak için aşağıdaki komutları kullanabilirsiniz:</p>
+                <pre><code>sudo apt-get update
+sudo apt-get install -y php-curl php-mbstring</code></pre>
+                <p>Kurulumdan sonra PHP servisini yeniden başlatmanız gerekir:</p>
+                <pre><code>sudo systemctl restart php8.1-fpm</code></pre>
             </section>
 
             <!-- CRM -->
@@ -489,6 +506,24 @@
                     <li><strong>Geçerlilik:</strong> Sözleşmelerin başlangıç ve bitiş tarihleri vardır. Süresi dolan
                         veya limiti biten sözleşmeler otomatik olarak pasif duruma düşer.</li>
                 </ul>
+
+                <h3>4. Kullanıcı Kimlik Doğrulama ve Oturum Yönetimi</h3>
+                <p>Sistemde iki farklı kullanıcı türü vardır:</p>
+                <ul>
+                    <li><strong>Personel:</strong> Şirket personeli, tam yetkili kullanıcılar</li>
+                    <li><strong>Müşteri:</strong> Harici kullanıcılar, sınırlı erişim</li>
+                </ul>
+
+                <h4>Giriş Süreci:</h4>
+                <p>Kullanıcılar e-posta adresi veya telefon numarası ile şifrelerini kullanarak sisteme giriş yapabilir.</p>
+                <ul>
+                    <li><strong>Personel Girişi:</strong> admin@parfum.com ve admin2@parfum.com hesapları özel yönetici ayrıcalıklarına sahiptir</li>
+                    <li><strong>Müşteri Girişi:</strong> Giriş yetkisi olan müşteriler sistemdeki ürünleri görebilir ve sipariş verebilir</li>
+                </ul>
+
+                <div class="info-box">
+                    <strong><i class="fas fa-shield-alt"></i> Güvenlik Notu:</strong> Şifreler veritabanında hashlenmiş (şifrelenmiş) olarak saklanır. Sistemde oturum açan kullanıcılar için oturum yönetimi yapılır.
+                </div>
             </section>
 
             <!-- Müşteri Paneli ve Yetkilendirme -->
@@ -523,6 +558,16 @@
                         Tamamlandı) takip edebilir.</li>
                     <li><strong>Profil:</strong> Kendi şifresini değiştirebilir.</li>
                 </ul>
+
+                <h3>3. Müşteri Paneli API İşlemleri</h3>
+                <p>Müşteri paneli, arka planda birkaç farklı API endpoint'ini kullanır:</p>
+                <ul>
+                    <li><strong>Cart Operations:</strong> Sepet işlemleri (ürün ekleme, kaldırma, içerik alma)</li>
+                    <li><strong>Order Operations:</strong> Sipariş oluşturma işlemleri</li>
+                    <li><strong>Search Products:</strong> Ürün arama ve filtreleme</li>
+                    <li><strong>Get Cart Contents:</strong> Sepetteki ürünleri listeleme</li>
+                </ul>
+                <p>Bu API'ler JSON formatında çalışır ve sadece yetkili müşteriler erişebilir. Tüm işlemler müşteri oturumu üzerinden doğrulanır.</p>
             </section>
 
             <!-- Stok -->
@@ -802,6 +847,42 @@
                     <strong><i class="fas fa-info-circle"></i> Raporlama:</strong> Kayıtlı giderler "Raporlar"
                     menüsünden aylık ve kategorik olarak analiz edilebilir.
                 </div>
+            </section>
+
+            <!-- Sistem Günlükleri ve İzleme -->
+            <section id="loglar" class="section-card">
+                <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Sistem Günlükleri ve İzleme</h2>
+                <p>Sistem, tüm kullanıcı etkileşimlerini ve kritik işlemleri log olarak kaydeder. Bu loglar sistem güvenliği ve izleme açısından önemlidir.</p>
+
+                <h3>1. Loglama Sistemi</h3>
+                <p>Sistemde aşağıdaki işlemler otomatik olarak loglanır:</p>
+                <ul>
+                    <li>Kullanıcı giriş ve çıkışları</li>
+                    <li>Veri ekleme, düzenleme ve silme işlemleri</li>
+                    <li>Sipariş oluşturma ve durum değişiklikleri</li>
+                    <li>Üretim başlatma ve tamamlama işlemleri</li>
+                    <li>Yedekleme ve kurtarma işlemleri</li>
+                    <li>Sistem ayarlarında yapılan değişiklikler</li>
+                </ul>
+
+                <h3>2. Log Takibi</h3>
+                <p>Tüm loglar <code>log_tablosu</code> adlı veritabanı tablosunda saklanır. Loglar şu bilgileri içerir:</p>
+                <ul>
+                    <li><strong>Kullanıcı Adı:</strong> İşlemi yapan kullanıcı</li>
+                    <li><strong>Log Metni:</strong> Gerçekleşen işlem açıklaması</li>
+                    <li><strong>İşlem Türü:</strong> CREATE, UPDATE, DELETE, LOGIN vb.</li>
+                    <li><strong>Tarih:</strong> İşlemin gerçekleştiği tarih ve saat</li>
+                </ul>
+
+                <h3>3. Telegram Bildirimleri</h3>
+                <p>Kritik işlemler sistem ayarlarında tanımlı Telegram bot aracılığıyla bildirilir:</p>
+                <ul>
+                    <li>Yeni müşteri siparişi oluşturulması</li>
+                    <li>Otomatik günlük yedekleme</li>
+                    <li>Sistem erişimleri</li>
+                    <li>Önemli sistem değişiklikleri</li>
+                </ul>
+                <p>Bildirimler ayarlar sayfasından yapılandırılabilir.</p>
             </section>
 
             <!-- Çerçeve Sözleşmeler -->
@@ -1156,6 +1237,144 @@
                 </div>
             </section>
 
+            <!-- API Dökümantasyonu -->
+            <section id="api" class="section-card">
+                <h2 class="section-title"><i class="fas fa-code"></i> API ve Entegrasyonlar</h2>
+                <p>Sistem, dış uygulamalarla entegrasyon yapabilmek için JSON tabanlı API endpoint'lerine sahiptir. Tüm API işlemleri oturum kontrolleriyle korunmuştur ve sadece yetkili kullanıcılar tarafından erişilebilir.</p>
+
+                <h3>1. Genel API Kullanımı</h3>
+                <p>API endpoint'leri <code>/api_islemleri</code> dizininde yer alır. Tüm API'ler JSON formatında çalışır ve yanıt verir.</p>
+
+                <ul>
+                    <li><strong>Yetkilendirme:</strong> Session kontrolleri ile sağlanır. API'leri kullanmak için kullanıcı girişi zorunludur.</li>
+                    <li><strong>Yanıt Formatı:</strong> Tüm API'ler JSON formatında yanıt verir.</li>
+                    <li><strong>Hata Yönetimi:</strong> Hatalar JSON formatında <code>{status: 'error', message: 'Hata açıklaması'}</code> şeklinde döner.</li>
+                </ul>
+
+                <h3>2. Ana API Endpoint'leri</h3>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>İşlevi</th>
+                                <th>Parametreler</th>
+                                <th>Yanıt</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>/api_islemleri/musteriler_islemler.php</code></td>
+                                <td>Müşteri CRUD işlemleri</td>
+                                <td>action (get_customers, add_customer, update_customer, delete_customer)</td>
+                                <td>Müşteri listesi veya işlem sonucu</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api_islemleri/order_operations.php</code></td>
+                                <td>Müşteri sipariş işlemleri</td>
+                                <td>action (submit_order), ürün kodları, adetler</td>
+                                <td>Sipariş oluşturuldu mesajı</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api_islemleri/cart_operations.php</code></td>
+                                <td>Sepet işlemleri</td>
+                                <td>action (add_to_cart, remove_from_cart, get_cart_contents)</td>
+                                <td>Sepet içeriği veya işlem sonucu</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api_islemleri/get_employees_ajax.php</code></td>
+                                <td>Personel listeleme</td>
+                                <td>page, limit, search</td>
+                                <td>Personel listesi ve sayfalama bilgisi</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api_islemleri/urunler_islemler.php</code></td>
+                                <td>Ürün CRUD işlemleri</td>
+                                <td>action (get_products, add_product, update_product, delete_product)</td>
+                                <td>Ürün listesi veya işlem sonucu</td>
+                            </tr>
+                            <tr>
+                                <td><code>/api_islemleri/sistem_ozet_api.php</code></td>
+                                <td>Sistem özet bilgileri</td>
+                                <td>Yok</td>
+                                <td>Sistemdeki veri özetleri</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h3>3. Müşteri Paneli API'leri</h3>
+                <p>Müşteri paneli ile ilgili API'ler sepet ve sipariş işlemlerini içerir:</p>
+                <ul>
+                    <li><strong>Cart Operations:</strong> Sepet işlemleri (ürün ekle, kaldır, içeriği getir)</li>
+                    <li><strong>Order Operations:</strong> Sipariş işlemleri (sipariş oluştur)</li>
+                    <li><strong>Search Products:</strong> Ürün arama ve listeleme</li>
+                </ul>
+
+                <h3>4. Yetkilendirme ve Güvenlik</h3>
+                <p>Tüm API'ler aşağıdaki güvenlik kontrollerini içerir:</p>
+                <ul>
+                    <li>Oturum kontrolü (session)</li>
+                    <li>Kullanıcı türü kontrolü (personel veya müşteri)</li>
+                    <li>Yetki kontrolü (erkek erişim için)</li>
+                    <li>Günlük kayıt (log_islem fonksiyonu ile)</li>
+                </ul>
+            </section>
+
+            <!-- Komut Satırı Erişimi -->
+            <section id="komut-satiri" class="section-card">
+                <h2 class="section-title"><i class="fas fa-terminal"></i> Komut Satırı Erişimi</h2>
+                <p>Sistem komut satırı üzerinden de erişilebilir. Bu erişim, otomasyon, test ve hata ayıklama amaçlı kullanılabilir.</p>
+
+                <h3>1. Siteye Erişim</h3>
+                <p>Terminal veya komut satırı üzerinden sisteme erişmek için aşağıdaki komutu kullanın:</p>
+                <pre><code>curl http://localhost/projem/</code></pre>
+
+                <h3>2. Giriş İşlemi</h3>
+                <p>Curl komutu ile giriş yapmak için aşağıdaki komutu kullanabilirsiniz:</p>
+                <pre><code>curl -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php</code></pre>
+                <div class="info-box">
+                    <strong><i class="fas fa-info-circle"></i> Not:</strong> Buradaki kullanıcı bilgileri örnek amaçlıdır. Gerçek sistemdeki doğru kullanıcı adı ve şifre kullanılmalıdır.
+                </div>
+
+                <h3>3. Veritabanına Erişim</h3>
+                <p>MySQL veritabanına doğrudan erişim için aşağıdaki komutu kullanabilirsiniz:</p>
+                <pre><code>mysql -h localhost -u root parfum_erp</code></pre>
+                <p>Bu komut, sistemde MySQL sunucusunun localhost'ta çalıştığını ve parfum_erp adında bir veritabanı olduğunu varsayar.</p>
+
+                <h3>4. Sunucu Hataları</h3>
+                <p>Sunucu hatalarını kontrol etmek için aşağıdaki dizindeki log dosyalarını inceleyebilirsiniz:</p>
+                <pre><code>C:\xampp\apache\logs</code></pre>
+            </section>
+
+            <!-- Yedekleme ve Kurtarma -->
+            <section id="yedekleme" class="section-card">
+                <h2 class="section-title"><i class="fas fa-database"></i> Yedekleme ve Kurtarma İşlemleri</h2>
+                <p>Sistem, veri güvenliğini sağlamak için otomatik yedekleme ve acil durum kurtarma işlemleri içerir.</p>
+
+                <h3>1. Otomatik Yedekleme</h3>
+                <p>Sistem her gün 00:00 itibariyle otomatik olarak veritabanı yedekleri alır. Yedekler <code>/yedekler</code> dizinine kaydedilir ve Telegram aracılığıyla bildirilir.</p>
+                <ul>
+                    <li><strong>Yedekleme Zamanı:</strong> Günlük saat 00:00</li>
+                    <li><strong>Yedek Formatı:</strong> SQL dosyası</li>
+                    <li><strong>Yedek Konumu:</strong> <code>/yedekler</code> dizini</li>
+                    <li><strong>Bildirim:</strong> Telegram kanalına yedekleme raporu gönderilir</li>
+                </ul>
+
+                <h3>2. Elle Yedekleme</h3>
+                <p>İsteğe bağlı olarak elle yedekleme işlemi "Ayarlar" sayfasından yapılabilir.</p>
+
+                <h3>3. Acil Durum Kurtarma</h3>
+                <p>Acil durum kurtarma işlemleri için özel bir kullanıcı bilgisi kullanılır:</p>
+                <ul>
+                    <li><strong>Kullanıcı Adı:</strong> restore@sistem.com</li>
+                    <li><strong>Şifre:</strong> _!ERp*R3sT0rE_99!</li>
+                </ul>
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Uyarı:</strong> Kurtarma işlemi sistemdeki tüm verilerin en son yedekleme noktasına geri döndürülmesine neden olur. Bu işlem geri alınamaz!
+                </div>
+            </section>
+
             <!-- SSS -->
             <section id="sss" class="section-card">
                 <h2 class="section-title"><i class="fas fa-question-circle"></i> Sıkça Sorulan Sorular</h2>
@@ -1205,6 +1424,28 @@
                     <div class="faq-answer">
                         Bu normaldir. "Onaylandı" durumu sadece hazırlık sürecini başlatır. Stok düşüşü, sipariş durumu
                         <strong>"Tamamlandı"</strong> yapıldığında gerçekleşir.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        Sistem API'lerine nasıl erişebilirim?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        API'ler <code>/api_islemleri</code> dizininde yer alır. Kullanıcı oturumu açık olmalıdır.
+                        JSON formatında istekler gönderilir ve JSON yanıtlar alınır. Her işlem için yetkilendirme
+                        kontrolleri yapılır.
+                    </div>
+                </div>
+
+                <div class="faq-item">
+                    <div class="faq-question" onclick="toggleFaq(this)">
+                        Komut satırı üzerinden sisteme nasıl erişirim?
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="faq-answer">
+                        curl komutu ile siteye erişebilir ve giriş yapabilirsiniz. Veritabanına doğrudan erişim için mysql komutlarını kullanabilirsiniz. Detaylar için "Komut Satırı Erişimi" bölümüne bakın.
                     </div>
                 </div>
             </section>

@@ -1045,6 +1045,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Sistemin nasıl çalıştığını ve süreçleri öğrenin.</p>
                             </div>
                         </a>
+                        <a href="sss.php" class="module-card">
+                            <div class="icon"><i class="fas fa-question-circle"></i></div>
+                            <div class="card-content">
+                                <span class="title">Sık Sorulan Sorular</span>
+                                <p class="description">Sistemi kullanırken karşılaştığınız soruların cevapları.</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
