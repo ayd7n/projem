@@ -5,7 +5,7 @@ include 'config.php';
 // This must be after config.php is included and before any other output.
 $maintenance_mode = get_setting($connection, 'maintenance_mode');
 // Use the email from session for a reliable admin check
-$is_admin = isset($_SESSION['email']) && $_SESSION['email'] === 'admin@parfum.com';
+$is_admin = isset($_SESSION['email']) && ($_SESSION['email'] === 'admin@parfum.com' || $_SESSION['email'] === 'admin2@parfum.com');
 $current_page = basename($_SERVER['PHP_SELF']);
 
 if ($maintenance_mode === 'on' && !$is_admin && $current_page !== 'maintenance.php' && $current_page !== 'login.php') {

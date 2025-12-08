@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['izinler'] = []; // Default to empty array
 
                 // Set a flag for the admin user
-                if ($username === 'admin@parfum.com') {
+                if ($username === 'admin@parfum.com' || $username === 'admin2@parfum.com') {
                     $_SESSION['is_admin'] = true;
                 } else {
                     // For non-admin staff, load their specific permissions
@@ -215,7 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             points: 10.00,
             maxDistance: 20.00,
             spacing: 15.00
-    });
+        });
     </script>
 </body>
 

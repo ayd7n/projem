@@ -18,7 +18,7 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_employee' && isset($_GET['id'])) {
-        $personel_id = (int)$_GET['id'];
+        $personel_id = (int) $_GET['id'];
         try {
             // Don't include password in the response for security
             $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller WHERE personel_id = $personel_id";
@@ -37,8 +37,7 @@ if (isset($_GET['action'])) {
         } catch (mysqli_sql_exception $e) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
-    }
-    elseif ($action == 'get_all_employees') {
+    } elseif ($action == 'get_all_employees') {
         try {
             // Don't include password in the response for security
             $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller ORDER BY ad_soyad";
@@ -99,7 +98,7 @@ if (isset($_GET['action'])) {
             }
         }
     } elseif ($action == 'update_employee' && isset($_POST['personel_id'])) {
-        $personel_id = (int)$_POST['personel_id'];
+        $personel_id = (int) $_POST['personel_id'];
 
         // Check if this is the protected user
         $check_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
@@ -161,7 +160,7 @@ if (isset($_GET['action'])) {
             }
         }
     } elseif ($action == 'delete_employee' && isset($_POST['personel_id'])) {
-        $personel_id = (int)$_POST['personel_id'];
+        $personel_id = (int) $_POST['personel_id'];
 
         // Check if this is the protected user
         $check_query = "SELECT ad_soyad FROM personeller WHERE personel_id = $personel_id";
@@ -192,15 +191,14 @@ if (isset($_GET['action'])) {
         } catch (mysqli_sql_exception $e) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
-    }
-    elseif ($action == 'update_permissions' && isset($_POST['personel_id'])) {
+    } elseif ($action == 'update_permissions' && isset($_POST['personel_id'])) {
         // Only the super-admin can change permissions
         if (!isset($_SESSION['is_admin']) || $_SESSION['is_admin'] !== true) {
             echo json_encode(['status' => 'error', 'message' => 'Bu işlemi yapma yetkiniz yok.']);
             exit;
         }
 
-        $personel_id = (int)$_POST['personel_id'];
+        $personel_id = (int) $_POST['personel_id'];
         $permissions = $_POST['permissions'] ?? [];
 
         // Prevent changing admin's permissions
@@ -208,7 +206,7 @@ if (isset($_GET['action'])) {
         $check_result = $connection->query($check_query);
         if ($check_result && $check_result->num_rows > 0) {
             $user_to_check = $check_result->fetch_assoc();
-            if ($user_to_check['e_posta'] === 'admin@parfum.com') {
+            if ($user_to_check['e_posta'] === 'admin@parfum.com' || $user_to_check['e_posta'] === 'admin2@parfum.com') {
                 echo json_encode(['status' => 'error', 'message' => 'Admin kullanıcısının yetkileri değiştirilemez.']);
                 exit;
             }
@@ -236,7 +234,7 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'success', 'message' => 'Personel yetkileri başarıyla güncellendi.'];
 
             // Reload permissions if the updated user is the current user
-            if (isset($_SESSION['user_id']) && (int)$personel_id === (int)$_SESSION['user_id']) {
+            if (isset($_SESSION['user_id']) && (int) $personel_id === (int) $_SESSION['user_id']) {
                 require_once __DIR__ . '/../includes/auth_functions.php';
                 reload_permissions($personel_id, $connection);
             }

@@ -15,8 +15,12 @@ if (isset($_GET['action']) && $_GET['action'] == 'list_tables') {
     if ($result) {
         while ($row = $result->fetch_array()) {
             $tableName = $row[0];
-            // Get row count
-            $countResult = $connection->query("SELECT COUNT(*) as count FROM `$tableName`");
+            // Get row count - exclude admin users for personeller table
+            if ($tableName === 'personeller') {
+                $countResult = $connection->query("SELECT COUNT(*) as count FROM `$tableName` WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')");
+            } else {
+                $countResult = $connection->query("SELECT COUNT(*) as count FROM `$tableName`");
+            }
             $count = 0;
             if ($countResult) {
                 $countRow = $countResult->fetch_assoc();
@@ -47,18 +51,28 @@ if (isset($_POST['action']) && $_POST['action'] == 'clear_tables') {
     foreach ($tablesToClear as $table) {
         // Sanitize table name (basic protection, though input comes from trusted staff session)
         $table = $connection->real_escape_string($table);
-        
-        // Use TRUNCATE for faster and cleaner removal (resets auto_increment)
-        // If TRUNCATE fails (e.g. view), try DELETE
-        if ($connection->query("TRUNCATE TABLE `$table`")) {
-            $successCount++;
+
+        // Special handling for personeller table - don't delete admin users
+        if ($table === 'personeller') {
+            // Delete all personeller except admin users
+            if ($connection->query("DELETE FROM `$table` WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')")) {
+                $successCount++;
+            } else {
+                $errors[] = "$table: " . $connection->error;
+            }
         } else {
-             // Fallback to DELETE if TRUNCATE fails (e.g. due to view or locking)
-             if ($connection->query("DELETE FROM `$table`")) {
-                 $successCount++;
-             } else {
-                 $errors[] = "$table: " . $connection->error;
-             }
+            // Use TRUNCATE for faster and cleaner removal (resets auto_increment)
+            // If TRUNCATE fails (e.g. view), try DELETE
+            if ($connection->query("TRUNCATE TABLE `$table`")) {
+                $successCount++;
+            } else {
+                // Fallback to DELETE if TRUNCATE fails (e.g. due to view or locking)
+                if ($connection->query("DELETE FROM `$table`")) {
+                    $successCount++;
+                } else {
+                    $errors[] = "$table: " . $connection->error;
+                }
+            }
         }
     }
 
@@ -84,19 +98,29 @@ if (isset($_GET['action']) && $_GET['action'] == 'get_table_data') {
     }
 
     $table = $connection->real_escape_string($_GET['table']);
-    
+
     // Fetch columns
     $columns = [];
     $colResult = $connection->query("SHOW COLUMNS FROM `$table`");
     if ($colResult) {
         while ($row = $colResult->fetch_assoc()) {
+            // For personeller table, exclude sistem_sifresi column for security
+            if ($table === 'personeller' && $row['Field'] === 'sistem_sifresi') {
+                continue;
+            }
             $columns[] = $row['Field'];
         }
     }
 
     // Fetch data (limit 1000)
     $data = [];
-    $result = $connection->query("SELECT * FROM `$table` LIMIT 1000");
+    if ($table === 'personeller') {
+        // For personeller table, exclude admin users and sistem_sifresi column
+        $result = $connection->query("SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM `$table` WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com') LIMIT 1000");
+    } else {
+        $result = $connection->query("SELECT * FROM `$table` LIMIT 1000");
+    }
+
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             $data[] = $row;

@@ -16,19 +16,19 @@ if ($_SESSION['taraf'] !== 'personel') {
 }
 
 // Get parameters
-$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-$limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10; // Default 10 items per page, max 100
+$page = isset($_GET['page']) ? max(1, (int) $_GET['page']) : 1;
+$limit = isset($_GET['limit']) ? max(1, min(100, (int) $_GET['limit'])) : 10; // Default 10 items per page, max 100
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
 
 // Calculate offset
 $offset = ($page - 1) * $limit;
 
-// Prepare query with search functionality
-$where_clause = "";
+// Prepare query with search functionality (excluding admin users)
+$where_clause = "WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')";
 if (!empty($search)) {
     $search_escaped = $connection->real_escape_string($search);
     $search_param = '%' . $search_escaped . '%';
-    $where_clause = "WHERE ad_soyad LIKE '$search_param' OR e_posta LIKE '$search_param' OR departman LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
+    $where_clause .= " AND (ad_soyad LIKE '$search_param' OR e_posta LIKE '$search_param' OR departman LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param')";
 }
 
 // Get total count
