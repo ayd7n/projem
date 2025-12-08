@@ -1413,40 +1413,36 @@
 
                 <div class="faq-item">
                     <div class="faq-question">
-                        <span>Sayfalar yavaş yüklüyor, nasıl hızlandırılabilir?</span>
+                        <span>Sayfalar yavaş açılıyor, ne yapabilirim?</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>Sayfa yükleme hızını artırmak için:</p>
+                        <p>Sayfaların yavaş açılmasının birkaç nedeni olabilir:</p>
                         <ul>
-                            <li><strong>Veritabanı sorguları:</strong> Sık kullanılan sorgulara indeks ekleyin</li>
-                            <li><strong>Önbellekleme:</strong> PHP opcache ve diğer önbellekleme yöntemlerini kullanın</li>
-                            <li><strong>Görüntü optimizasyonu:</strong> Büyük görselleri sıkıştırın veya CDN kullanın</li>
-                            <li><strong>CSS/JS dosyaları:</strong> Minification ve birleştirme işlemi yapın</li>
-                            <li><strong>Apache/Nginx ayarları:</strong> Sunucu yapılandırmalarını optimize edin</li>
+                            <li>Bağlantı hızınız düşük olabilir</li>
+                            <li>Aynı anda çok sayıda işlem yapılıyor olabilir</li>
+                            <li>İnternet bağlantınızı kontrol edin</li>
+                            <li>Farklı bir tarayıcı kullanmayı deneyin</li>
+                            <li>Tarayıcı çerezlerinizi temizleyin</li>
                         </ul>
-                        <p>Performans testi için:</p>
-                        <pre><code>ab -n 100 -c 10 http://localhost/projem/dashboard.php</code></pre>
+                        <p>Sistem performansı genel olarak sistem yöneticileri tarafından optimize edilmektedir.</p>
                     </div>
                 </div>
 
                 <div class="faq-item">
                     <div class="faq-question">
-                        <span>Sunucu 500 Internal Server Error veriyor, nasıl düzeltilir?</span>
+                        <span>Sistemde "Sunucu Hatası" mesajı alıyorum, ne yapmalıyım?</span>
                         <i class="fas fa-chevron-down"></i>
                     </div>
                     <div class="faq-answer">
-                        <p>500 Internal Server Error vermesinin yaygın nedenleri:</p>
+                        <p>Bu tür hatalar genellikle sistem yöneticileri tarafından otomatik olarak tespit edilir ve düzeltilir. Siz şu adımları deneyebilirsiniz:</p>
                         <ul>
-                            <li><strong>Syntax hatası:</strong> PHP dosyasında yazım hatası olabilir</li>
-                            <li><strong>İzin sorunları:</strong> Dosya/klasör izinlerinin doğru olduğundan emin olun (genellikle 755 dizinler, 644 dosyalar)</li>
-                            <li><strong>PHP hata ayarları:</strong> <code>display_errors = On</code> ve <code>log_errors = On</code> ayarlarını kontrol edin</li>
-                            <li><strong>Modül eksiklikleri:</strong> Gerekli PHP eklentilerinin yüklü olduğundan emin olun</li>
-                            <li><strong>.htaccess sorunları:</strong> Hatalı .htaccess kuralları hataya neden olabilir</li>
+                            <li>Sayfayı yenileyin (F5 tuşu)</li>
+                            <li>Tarayıcınızı kapatıp tekrar açın</li>
+                            <li>Bilgisayarınızı yeniden başlatın</li>
+                            <li>Sorun devam ederse sistem yöneticinize bildirin</li>
                         </ul>
-                        <p>Hata ayıklama için:</p>
-                        <pre><code>php -l dosya_adi.php  # Syntax kontrolü
-tail -f /var/log/apache2/error.log  # Hata loglarını izle</code></pre>
+                        <p>Teknik hatalar sistem yöneticileri tarafından izlenmekte ve gerekli önlemler alınmaktadır.</p>
                     </div>
                 </div>
             </div>
