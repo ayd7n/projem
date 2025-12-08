@@ -449,7 +449,8 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                         totalPages }}</a>
                                 </li>
                                 <li class="page-item" :class="{ disabled: currentPage === totalPages }">
-                                    <a class="page-link" href="#" @click.prevent="loadMaterials(currentPage + 1)">Sonraki
+                                    <a class="page-link" href="#"
+                                        @click.prevent="loadMaterials(currentPage + 1)">Sonraki
                                         <i class="fas fa-chevron-right"></i></a>
                                 </li>
                             </ul>
@@ -513,6 +514,12 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                                     <option value="numune_sisesi">Numune Şişesi</option>
                                                     <option value="kapak">Kapak</option>
                                                     <option value="kimyasal_madde">Kimyasal Madde</option>
+                                                    <option value="alkol">Alkol</option>
+                                                    <option value="saf_su">Saf Su</option>
+                                                    <option value="esans">Esans</option>
+                                                    <option value="renklendirici">Renklendirici</option>
+                                                    <option value="cozucu">Çözücü</option>
+                                                    <option value="koruyucu">Koruyucu</option>
                                                     <option value="karton_ara_bolme">Karton Ara Bölme</option>
                                                     <option value="diger">Diğer</option>
                                                 </select>
