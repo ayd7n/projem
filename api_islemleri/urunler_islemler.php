@@ -66,7 +66,7 @@ if (isset($_GET['action'])) {
             $stmt_count->close();
 
             $can_view_cost = yetkisi_var('action:urunler:view_cost');
-            $cost_column = $can_view_cost ? ", (CASE WHEN u.urun_tipi = 'hazir_alinan' THEN u.alis_fiyati ELSE vum.teorik_maliyet END) as teorik_maliyet" : "";
+            $cost_column = $can_view_cost ? ", vum.teorik_maliyet" : "";
             $query = "
                 SELECT u.* {$cost_column}, COUNT(uf.fotograf_id) as foto_sayisi
                 FROM urunler u
@@ -295,6 +295,13 @@ if (isset($_GET['action'])) {
             }
         }
         $photo_stmt->close();
+
+        // Ürüne ait fotoğraf kayıtlarını veritabanından sil
+        $delete_photos_query = "DELETE FROM urun_fotograflari WHERE urun_kodu = ?";
+        $delete_photos_stmt = $connection->prepare($delete_photos_query);
+        $delete_photos_stmt->bind_param('i', $urun_kodu);
+        $delete_photos_stmt->execute();
+        $delete_photos_stmt->close();
 
         $query = "DELETE FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);
