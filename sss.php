@@ -1254,26 +1254,7 @@
                 </div>
             </div>
 
-            <div class="faq-category" id="api">
-                <h2 class="category-header"><i class="fas fa-code"></i> API ve Entegrasyonlar</h2>
 
-                <div class="faq-item">
-                    <div class="faq-question">
-                        <span>Sistem API ile entegre olabilir mi?</span>
-                        <i class="fas fa-chevron-down"></i>
-                    </div>
-                    <div class="faq-answer">
-                        <p>Evet, sistem API arayüzü ile diğer sistemlerle entegre olabilir:</p>
-                        <ul>
-                            <li>Stok durumu sorgulama</li>
-                            <li>Sipariş takibi</li>
-                            <li>Müşteri bilgileri senkronizasyonu</li>
-                            <li>Rapor alma</li>
-                        </ul>
-                        <p>API entegrasyonları için sistem yöneticinizle iletişime geçin.</p>
-                    </div>
-                </div>
-            </div>
 
             <div class="faq-category" id="yardim-destek">
                 <h2 class="category-header"><i class="fas fa-headset"></i> Yardım & Destek</h2>

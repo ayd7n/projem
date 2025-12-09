@@ -259,7 +259,7 @@ $current_month = date('n');
                     <form @submit.prevent="saveOdeme">
                         <div class="modal-header"
                             style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                            <h5 class="modal-title"><i class="fas fa-calendar-check"></i> {{ odemeData.odeme_id ? 'Ödeme Düzenle' : 'Yeni Ödeme Tanýmla' }}</h5>
+                            <h5 class="modal-title"><i class="fas fa-calendar-check"></i> {{ odemeData.odeme_id ? 'Ã–deme DÃ¼zenle' : 'Yeni Ã–deme TanÄ±mla' }}</h5>
                             <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>

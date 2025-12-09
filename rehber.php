@@ -418,8 +418,6 @@
                         Malzeme Siparişleri</a></li>
                 <li class="nav-item"><a href="#urun-akisi" class="nav-link"><i class="fas fa-project-diagram"></i> Ürün
                         Akışı</a></li>
-                <li class="nav-item"><a href="#api" class="nav-link"><i class="fas fa-code"></i> API ve Entegrasyonlar</a></li>
-                <li class="nav-item"><a href="#komut-satiri" class="nav-link"><i class="fas fa-terminal"></i> Komut Satırı Erişimi</a></li>
                 <li class="nav-item"><a href="#yedekleme" class="nav-link"><i class="fas fa-database"></i> Yedekleme ve Kurtarma</a></li>
                 <li class="nav-item"><a href="#sss" class="nav-link"><i class="fas fa-question-circle"></i> SSS</a></li>
             </ul>
@@ -1237,115 +1235,9 @@ sudo apt-get install -y php-curl php-mbstring</code></pre>
                 </div>
             </section>
 
-            <!-- API Dökümantasyonu -->
-            <section id="api" class="section-card">
-                <h2 class="section-title"><i class="fas fa-code"></i> API ve Entegrasyonlar</h2>
-                <p>Sistem, dış uygulamalarla entegrasyon yapabilmek için JSON tabanlı API endpoint'lerine sahiptir. Tüm API işlemleri oturum kontrolleriyle korunmuştur ve sadece yetkili kullanıcılar tarafından erişilebilir.</p>
 
-                <h3>1. Genel API Kullanımı</h3>
-                <p>API endpoint'leri <code>/api_islemleri</code> dizininde yer alır. Tüm API'ler JSON formatında çalışır ve yanıt verir.</p>
 
-                <ul>
-                    <li><strong>Yetkilendirme:</strong> Session kontrolleri ile sağlanır. API'leri kullanmak için kullanıcı girişi zorunludur.</li>
-                    <li><strong>Yanıt Formatı:</strong> Tüm API'ler JSON formatında yanıt verir.</li>
-                    <li><strong>Hata Yönetimi:</strong> Hatalar JSON formatında <code>{status: 'error', message: 'Hata açıklaması'}</code> şeklinde döner.</li>
-                </ul>
 
-                <h3>2. Ana API Endpoint'leri</h3>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Endpoint</th>
-                                <th>İşlevi</th>
-                                <th>Parametreler</th>
-                                <th>Yanıt</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td><code>/api_islemleri/musteriler_islemler.php</code></td>
-                                <td>Müşteri CRUD işlemleri</td>
-                                <td>action (get_customers, add_customer, update_customer, delete_customer)</td>
-                                <td>Müşteri listesi veya işlem sonucu</td>
-                            </tr>
-                            <tr>
-                                <td><code>/api_islemleri/order_operations.php</code></td>
-                                <td>Müşteri sipariş işlemleri</td>
-                                <td>action (submit_order), ürün kodları, adetler</td>
-                                <td>Sipariş oluşturuldu mesajı</td>
-                            </tr>
-                            <tr>
-                                <td><code>/api_islemleri/cart_operations.php</code></td>
-                                <td>Sepet işlemleri</td>
-                                <td>action (add_to_cart, remove_from_cart, get_cart_contents)</td>
-                                <td>Sepet içeriği veya işlem sonucu</td>
-                            </tr>
-                            <tr>
-                                <td><code>/api_islemleri/get_employees_ajax.php</code></td>
-                                <td>Personel listeleme</td>
-                                <td>page, limit, search</td>
-                                <td>Personel listesi ve sayfalama bilgisi</td>
-                            </tr>
-                            <tr>
-                                <td><code>/api_islemleri/urunler_islemler.php</code></td>
-                                <td>Ürün CRUD işlemleri</td>
-                                <td>action (get_products, add_product, update_product, delete_product)</td>
-                                <td>Ürün listesi veya işlem sonucu</td>
-                            </tr>
-                            <tr>
-                                <td><code>/api_islemleri/sistem_ozet_api.php</code></td>
-                                <td>Sistem özet bilgileri</td>
-                                <td>Yok</td>
-                                <td>Sistemdeki veri özetleri</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <h3>3. Müşteri Paneli API'leri</h3>
-                <p>Müşteri paneli ile ilgili API'ler sepet ve sipariş işlemlerini içerir:</p>
-                <ul>
-                    <li><strong>Cart Operations:</strong> Sepet işlemleri (ürün ekle, kaldır, içeriği getir)</li>
-                    <li><strong>Order Operations:</strong> Sipariş işlemleri (sipariş oluştur)</li>
-                    <li><strong>Search Products:</strong> Ürün arama ve listeleme</li>
-                </ul>
-
-                <h3>4. Yetkilendirme ve Güvenlik</h3>
-                <p>Tüm API'ler aşağıdaki güvenlik kontrollerini içerir:</p>
-                <ul>
-                    <li>Oturum kontrolü (session)</li>
-                    <li>Kullanıcı türü kontrolü (personel veya müşteri)</li>
-                    <li>Yetki kontrolü (erkek erişim için)</li>
-                    <li>Günlük kayıt (log_islem fonksiyonu ile)</li>
-                </ul>
-            </section>
-
-            <!-- Komut Satırı Erişimi -->
-            <section id="komut-satiri" class="section-card">
-                <h2 class="section-title"><i class="fas fa-terminal"></i> Komut Satırı Erişimi</h2>
-                <p>Sistem komut satırı üzerinden de erişilebilir. Bu erişim, otomasyon, test ve hata ayıklama amaçlı kullanılabilir.</p>
-
-                <h3>1. Siteye Erişim</h3>
-                <p>Terminal veya komut satırı üzerinden sisteme erişmek için aşağıdaki komutu kullanın:</p>
-                <pre><code>curl http://localhost/projem/</code></pre>
-
-                <h3>2. Giriş İşlemi</h3>
-                <p>Curl komutu ile giriş yapmak için aşağıdaki komutu kullanabilirsiniz:</p>
-                <pre><code>curl -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php</code></pre>
-                <div class="info-box">
-                    <strong><i class="fas fa-info-circle"></i> Not:</strong> Buradaki kullanıcı bilgileri örnek amaçlıdır. Gerçek sistemdeki doğru kullanıcı adı ve şifre kullanılmalıdır.
-                </div>
-
-                <h3>3. Veritabanına Erişim</h3>
-                <p>MySQL veritabanına doğrudan erişim için aşağıdaki komutu kullanabilirsiniz:</p>
-                <pre><code>mysql -h localhost -u root parfum_erp</code></pre>
-                <p>Bu komut, sistemde MySQL sunucusunun localhost'ta çalıştığını ve parfum_erp adında bir veritabanı olduğunu varsayar.</p>
-
-                <h3>4. Sunucu Hataları</h3>
-                <p>Sunucu hatalarını kontrol etmek için aşağıdaki dizindeki log dosyalarını inceleyebilirsiniz:</p>
-                <pre><code>C:\xampp\apache\logs</code></pre>
-            </section>
 
             <!-- Yedekleme ve Kurtarma -->
             <section id="yedekleme" class="section-card">

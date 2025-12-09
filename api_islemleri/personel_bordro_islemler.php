@@ -43,7 +43,8 @@ if (isset($_REQUEST['action'])) {
     echo json_encode($response);
 }
 
-function getBordroPersoneller() {
+function getBordroPersoneller()
+{
     global $connection;
 
     try {
@@ -51,9 +52,9 @@ function getBordroPersoneller() {
                   FROM personeller 
                   WHERE bordrolu_calisan_mi = 1 
                   ORDER BY ad_soyad";
-        
+
         $result = $connection->query($query);
-        
+
         if ($result) {
             $personeller = [];
             while ($row = $result->fetch_assoc()) {
@@ -68,14 +69,15 @@ function getBordroPersoneller() {
     }
 }
 
-function getAylikBordroOzeti() {
+function getAylikBordroOzeti()
+{
     global $connection;
 
-    $yil = isset($_GET['yil']) ? (int)$_GET['yil'] : date('Y');
-    $ay = isset($_GET['ay']) ? (int)$_GET['ay'] : date('n');
+    $yil = isset($_GET['yil']) ? (int) $_GET['yil'] : date('Y');
+    $ay = isset($_GET['ay']) ? (int) $_GET['ay'] : date('n');
 
     try {
-        // Bordrolu personelleri ve avans bilgilerini getir
+        // Bordrolu personelleri ve avans bilgilerini getir (kullanılmamış avanslar)
         $query = "SELECT 
                     p.personel_id,
                     p.ad_soyad,
@@ -86,6 +88,7 @@ function getAylikBordroOzeti() {
                     (p.aylik_brut_ucret - COALESCE(SUM(a.avans_tutari), 0)) as net_odenecek,
                     o.odeme_id,
                     o.net_odenen,
+                    o.avans_toplami as kullanilan_avans,
                     o.odeme_tarihi
                   FROM personeller p
                   LEFT JOIN personel_avanslar a ON p.personel_id = a.personel_id 
@@ -98,35 +101,51 @@ function getAylikBordroOzeti() {
                   WHERE p.bordrolu_calisan_mi = 1
                   GROUP BY p.personel_id
                   ORDER BY p.ad_soyad";
-        
+
         $result = $connection->query($query);
-        
+
         if ($result) {
             $bordro = [];
             $toplam_brut = 0;
             $toplam_odenen = 0;
             $toplam_kalan = 0;
-            
+
+            // Önce bu dönemde verilen toplam avansları hesapla (gider olarak kaydedilmiş olanlar)
+            $avans_query = "SELECT COALESCE(SUM(avans_tutari), 0) as toplam_avans 
+                           FROM personel_avanslar 
+                           WHERE donem_yil = $yil AND donem_ay = $ay";
+            $avans_result = $connection->query($avans_query);
+            $toplam_verilen_avans = 0;
+            if ($avans_result && $avans_row = $avans_result->fetch_assoc()) {
+                $toplam_verilen_avans = floatval($avans_row['toplam_avans']);
+            }
+
             while ($row = $result->fetch_assoc()) {
                 $toplam_brut += $row['aylik_brut_ucret'];
-                
+
                 if ($row['odeme_id']) {
                     $row['odeme_durumu'] = 'odendi';
+                    // Maaş ödemesi yapıldığında: net_odenen + kullanılan avans = brüt ücret
                     $toplam_odenen += $row['net_odenen'];
                 } else {
                     $row['odeme_durumu'] = 'bekliyor';
                     $toplam_kalan += $row['net_odenecek'];
                 }
-                
+
                 $bordro[] = $row;
             }
-            
+
+            // Toplam ödenen = maaş ödemeleri + verilen avanslar
+            $gercek_toplam_odenen = $toplam_odenen + $toplam_verilen_avans;
+
             echo json_encode([
-                'status' => 'success', 
+                'status' => 'success',
                 'data' => $bordro,
                 'ozet' => [
                     'toplam_brut' => $toplam_brut,
-                    'toplam_odenen' => $toplam_odenen,
+                    'toplam_odenen' => $gercek_toplam_odenen,
+                    'toplam_avans' => $toplam_verilen_avans,
+                    'toplam_maas' => $toplam_odenen,
                     'toplam_kalan' => $toplam_kalan,
                     'personel_sayisi' => count($bordro)
                 ]
@@ -139,10 +158,11 @@ function getAylikBordroOzeti() {
     }
 }
 
-function getPersonelOdemeGecmisi() {
+function getPersonelOdemeGecmisi()
+{
     global $connection;
 
-    $personel_id = isset($_GET['personel_id']) ? (int)$_GET['personel_id'] : 0;
+    $personel_id = isset($_GET['personel_id']) ? (int) $_GET['personel_id'] : 0;
 
     if ($personel_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz personel ID.']);
@@ -153,9 +173,9 @@ function getPersonelOdemeGecmisi() {
         $query = "SELECT * FROM personel_maas_odemeleri 
                   WHERE personel_id = $personel_id 
                   ORDER BY donem_yil DESC, donem_ay DESC";
-        
+
         $result = $connection->query($query);
-        
+
         if ($result) {
             $odemeler = [];
             while ($row = $result->fetch_assoc()) {
@@ -170,10 +190,11 @@ function getPersonelOdemeGecmisi() {
     }
 }
 
-function getPersonelAvanslar() {
+function getPersonelAvanslar()
+{
     global $connection;
 
-    $personel_id = isset($_GET['personel_id']) ? (int)$_GET['personel_id'] : 0;
+    $personel_id = isset($_GET['personel_id']) ? (int) $_GET['personel_id'] : 0;
 
     if ($personel_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz personel ID.']);
@@ -184,9 +205,9 @@ function getPersonelAvanslar() {
         $query = "SELECT * FROM personel_avanslar 
                   WHERE personel_id = $personel_id 
                   ORDER BY donem_yil DESC, donem_ay DESC, avans_tarihi DESC";
-        
+
         $result = $connection->query($query);
-        
+
         if ($result) {
             $avanslar = [];
             while ($row = $result->fetch_assoc()) {
@@ -201,13 +222,14 @@ function getPersonelAvanslar() {
     }
 }
 
-function kaydetMaasOdemesi() {
+function kaydetMaasOdemesi()
+{
     global $connection;
 
-    $personel_id = isset($_POST['personel_id']) ? (int)$_POST['personel_id'] : 0;
+    $personel_id = isset($_POST['personel_id']) ? (int) $_POST['personel_id'] : 0;
     $personel_adi = $connection->real_escape_string($_POST['personel_adi'] ?? '');
-    $donem_yil = isset($_POST['donem_yil']) ? (int)$_POST['donem_yil'] : date('Y');
-    $donem_ay = isset($_POST['donem_ay']) ? (int)$_POST['donem_ay'] : date('n');
+    $donem_yil = isset($_POST['donem_yil']) ? (int) $_POST['donem_yil'] : date('Y');
+    $donem_ay = isset($_POST['donem_ay']) ? (int) $_POST['donem_ay'] : date('n');
     $aylik_brut_ucret = floatval($_POST['aylik_brut_ucret'] ?? 0);
     $avans_toplami = floatval($_POST['avans_toplami'] ?? 0);
     $net_odenen = floatval($_POST['net_odenen'] ?? 0);
@@ -226,7 +248,7 @@ function kaydetMaasOdemesi() {
     $check_query = "SELECT odeme_id FROM personel_maas_odemeleri 
                     WHERE personel_id = $personel_id AND donem_yil = $donem_yil AND donem_ay = $donem_ay";
     $check_result = $connection->query($check_query);
-    
+
     if ($check_result && $check_result->num_rows > 0) {
         echo json_encode(['status' => 'error', 'message' => 'Bu personel için bu dönemde zaten maaş ödemesi yapılmış.']);
         return;
@@ -242,11 +264,11 @@ function kaydetMaasOdemesi() {
                         ('$odeme_tarihi', $net_odenen, 'Personel Gideri', 
                          '$personel_adi - $donem_yil/$donem_ay dönemi maaş ödemesi. $aciklama', 
                          $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi')";
-        
+
         if (!$connection->query($gider_query)) {
             throw new Exception('Gider kaydı oluşturulamadı: ' . $connection->error);
         }
-        
+
         $gider_kayit_id = $connection->insert_id;
 
         // 2. Maaş ödeme kaydı oluştur
@@ -258,7 +280,7 @@ function kaydetMaasOdemesi() {
                         ($personel_id, '$personel_adi', $donem_yil, $donem_ay, $aylik_brut_ucret, $avans_toplami, 
                          $net_odenen, '$odeme_tarihi', '$odeme_tipi', '$aciklama', $kaydeden_personel_id, 
                          '$kaydeden_personel_adi', $gider_kayit_id)";
-        
+
         if (!$connection->query($odeme_query)) {
             throw new Exception('Maaş ödeme kaydı oluşturulamadı: ' . $connection->error);
         }
@@ -271,7 +293,7 @@ function kaydetMaasOdemesi() {
                             AND donem_yil = $donem_yil 
                             AND donem_ay = $donem_ay 
                             AND maas_odemesinde_kullanildi = 0";
-            
+
             if (!$connection->query($avans_update)) {
                 throw new Exception('Avanslar güncellenemedi: ' . $connection->error);
             }
@@ -280,9 +302,12 @@ function kaydetMaasOdemesi() {
         $connection->commit();
 
         // Log kaydı
-        log_islem($connection, $_SESSION['kullanici_adi'], 
-                  "$personel_adi personeline $donem_yil/$donem_ay dönemi için $net_odenen TL maaş ödemesi yapıldı", 
-                  'CREATE');
+        log_islem(
+            $connection,
+            $_SESSION['kullanici_adi'],
+            "$personel_adi personeline $donem_yil/$donem_ay dönemi için $net_odenen TL maaş ödemesi yapıldı",
+            'CREATE'
+        );
 
         echo json_encode(['status' => 'success', 'message' => 'Maaş ödemesi başarıyla kaydedildi.']);
 
@@ -292,15 +317,16 @@ function kaydetMaasOdemesi() {
     }
 }
 
-function kaydetAvans() {
+function kaydetAvans()
+{
     global $connection;
 
-    $personel_id = isset($_POST['personel_id']) ? (int)$_POST['personel_id'] : 0;
+    $personel_id = isset($_POST['personel_id']) ? (int) $_POST['personel_id'] : 0;
     $personel_adi = $connection->real_escape_string($_POST['personel_adi'] ?? '');
     $avans_tutari = floatval($_POST['avans_tutari'] ?? 0);
     $avans_tarihi = $connection->real_escape_string($_POST['avans_tarihi'] ?? date('Y-m-d'));
-    $donem_yil = isset($_POST['donem_yil']) ? (int)$_POST['donem_yil'] : date('Y');
-    $donem_ay = isset($_POST['donem_ay']) ? (int)$_POST['donem_ay'] : date('n');
+    $donem_yil = isset($_POST['donem_yil']) ? (int) $_POST['donem_yil'] : date('Y');
+    $donem_ay = isset($_POST['donem_ay']) ? (int) $_POST['donem_ay'] : date('n');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Nakit');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $kaydeden_personel_id = $_SESSION['user_id'];
@@ -311,35 +337,58 @@ function kaydetAvans() {
         return;
     }
 
+    $connection->begin_transaction();
+
     try {
+        // 1. Gider kaydı oluştur
+        $gider_aciklama = "$personel_adi - $donem_yil/$donem_ay dönemi avans ödemesi. $aciklama";
+        $gider_query = "INSERT INTO gider_yonetimi 
+                        (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma) 
+                        VALUES 
+                        ('$avans_tarihi', $avans_tutari, 'Personel Avansı', '$gider_aciklama', 
+                         $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi')";
+
+        if (!$connection->query($gider_query)) {
+            throw new Exception('Gider kaydı oluşturulamadı: ' . $connection->error);
+        }
+
+        // 2. Avans kaydı oluştur
         $query = "INSERT INTO personel_avanslar 
                   (personel_id, personel_adi, avans_tutari, avans_tarihi, donem_yil, donem_ay, 
                    odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
                   VALUES 
                   ($personel_id, '$personel_adi', $avans_tutari, '$avans_tarihi', $donem_yil, $donem_ay, 
                    '$odeme_tipi', '$aciklama', $kaydeden_personel_id, '$kaydeden_personel_adi')";
-        
-        if ($connection->query($query)) {
-            // Log kaydı
-            log_islem($connection, $_SESSION['kullanici_adi'], 
-                      "$personel_adi personeline $avans_tutari TL avans verildi ($donem_yil/$donem_ay)", 
-                      'CREATE');
 
-            echo json_encode(['status' => 'success', 'message' => 'Avans başarıyla kaydedildi.']);
-        } else {
-            echo json_encode(['status' => 'error', 'message' => 'Avans kaydedilemedi: ' . $connection->error]);
+        if (!$connection->query($query)) {
+            throw new Exception('Avans kaydı oluşturulamadı: ' . $connection->error);
         }
-    } catch (mysqli_sql_exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
+
+        $connection->commit();
+
+        // Log kaydı
+        log_islem(
+            $connection,
+            $_SESSION['kullanici_adi'],
+            "$personel_adi personeline $avans_tutari TL avans verildi ($donem_yil/$donem_ay)",
+            'CREATE'
+        );
+
+        echo json_encode(['status' => 'success', 'message' => 'Avans başarıyla kaydedildi.']);
+
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 
-function getDonemAvanslar() {
+function getDonemAvanslar()
+{
     global $connection;
 
-    $personel_id = isset($_GET['personel_id']) ? (int)$_GET['personel_id'] : 0;
-    $yil = isset($_GET['yil']) ? (int)$_GET['yil'] : date('Y');
-    $ay = isset($_GET['ay']) ? (int)$_GET['ay'] : date('n');
+    $personel_id = isset($_GET['personel_id']) ? (int) $_GET['personel_id'] : 0;
+    $yil = isset($_GET['yil']) ? (int) $_GET['yil'] : date('Y');
+    $ay = isset($_GET['ay']) ? (int) $_GET['ay'] : date('n');
 
     if ($personel_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz personel ID.']);
@@ -353,9 +402,9 @@ function getDonemAvanslar() {
                   AND donem_ay = $ay 
                   AND maas_odemesinde_kullanildi = 0
                   ORDER BY avans_tarihi DESC";
-        
+
         $result = $connection->query($query);
-        
+
         if ($result) {
             $avanslar = [];
             $toplam = 0;

@@ -476,6 +476,15 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                 <li><strong>Çerçeve Sözleşme Ödemeleri:</strong> Tedarikçilerle yapılan çerçeve sözleşmeleri için "Ön
                     Ödeme" veya "Ara Ödeme" yapıldığında, bu ödemeler otomatik olarak "Malzeme Gideri" kategorisinde
                     buraya kaydedilir.</li>
+                <li><strong>Fire Kayıtları:</strong> Manuel Stok Hareket sayfasından "Fire / Sayım Eksigi" işlemi ile
+                    fire kaydı yapıldığında, fire edilen malzeme/esans/ürünün teorik maliyeti hesaplanarak otomatik
+                    olarak "Fire Gideri" kategorisinde buraya kaydedilir.</li>
+                <li><strong>Personel Maaş Ödemeleri ve Avanslar:</strong> Personel Bordro sayfasından maaş ödemesi
+                    yapıldığında "Personel Gideri", avans verildiğinde ise "Personel Avansı" kategorisinde buraya
+                    kaydedilir.</li>
+                <li><strong>Tekrarlı Ödemeler:</strong> Tekrarlı Ödeme Hatırlatma sayfasından kira, elektrik, su,
+                    internet gibi periyodik ödemeler yapıldığında, ödeme tipine göre ilgili kategoride buraya
+                    kaydedilir.</li>
             </ul>
         </div>
 
@@ -496,7 +505,8 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                         </div>
                         <div class="stat-info">
                             <h3 id="overallTotal" style="font-size: 1.5rem; margin: 0;">
-                                <?php echo number_format($total_expenses, 2, ',', '.'); ?> TL</h3>
+                                <?php echo number_format($total_expenses, 2, ',', '.'); ?> TL
+                            </h3>
                             <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Bu Ayın Toplam Gideri
                             </p>
                         </div>
