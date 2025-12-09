@@ -53,18 +53,29 @@ while ($row = $result->fetch_assoc()) {
     $gelecek_esans[$row['esans_kodu']] = ($gelecek_esans[$row['esans_kodu']] ?? 0) + $row['planlanan_miktar'];
 }
 
-// Esans stokları
+// Esans stokları ve isimleri
 $esans_stoklar = [];
-$result = $conn->query("SELECT esans_kodu, stok_miktari FROM esanslar");
+$esans_isimleri = [];
+$result = $conn->query("SELECT esans_kodu, esans_ismi, stok_miktari FROM esanslar");
 while ($row = $result->fetch_assoc()) {
     $esans_stoklar[$row['esans_kodu']] = $row['stok_miktari'];
+    $esans_isimleri[$row['esans_kodu']] = $row['esans_ismi'];
 }
 
-// Malzeme stokları
+// Malzeme stokları ve isimleri
 $malzeme_stoklar = [];
-$result = $conn->query("SELECT malzeme_kodu, stok_miktari FROM malzemeler");
+$malzeme_isimleri = [];
+$result = $conn->query("SELECT malzeme_kodu, malzeme_ismi, stok_miktari FROM malzemeler");
 while ($row = $result->fetch_assoc()) {
     $malzeme_stoklar[$row['malzeme_kodu']] = $row['stok_miktari'];
+    $malzeme_isimleri[$row['malzeme_kodu']] = $row['malzeme_ismi'];
+}
+
+// Ürün isimleri
+$urun_isimleri = [];
+$result = $conn->query("SELECT urun_kodu, urun_ismi FROM urunler");
+while ($row = $result->fetch_assoc()) {
+    $urun_isimleri[$row['urun_kodu']] = $row['urun_ismi'];
 }
 
 // Mevcut malzeme siparişleri
@@ -277,16 +288,18 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                             $mevcut_siparis = $malzeme_siparisler[$malzeme_kodu] ?? 0;
                                             $mevcut_stok = $malzeme_stoklar[$malzeme_kodu] ?? 0;
                                             $yeni_siparis = max(0, $ihtiyac - $mevcut_siparis - $mevcut_stok);
+                                            $malzeme_ismi = $malzeme_isimleri[$malzeme_kodu] ?? $malzeme_kodu;
                                             if ($yeni_siparis > 0) {
-                                                echo "<li class='text-sm'><strong>Malzeme $malzeme_kodu</strong>: $yeni_siparis birim (toplam ihtiyaç " . number_format($ihtiyac, 2) . " - mevcut sipariş $mevcut_siparis - stok $mevcut_stok = $yeni_siparis).</li>";
+                                                echo "<li class='text-sm'><strong>$malzeme_ismi</strong>: $yeni_siparis birim (toplam ihtiyaç " . number_format($ihtiyac, 2) . " - mevcut sipariş $mevcut_siparis - stok $mevcut_stok = $yeni_siparis).</li>";
                                             }
                                         } ?>
                                         <?php foreach ($etiket_ihtiyaclari as $etiket_kodu => $ihtiyac) {
                                             $mevcut_siparis = $malzeme_siparisler[$etiket_kodu] ?? 0;
                                             $mevcut_stok = $malzeme_stoklar[$etiket_kodu] ?? 0;
                                             $yeni_siparis = max(0, $ihtiyac - $mevcut_siparis - $mevcut_stok);
+                                            $etiket_ismi = $malzeme_isimleri[$etiket_kodu] ?? $etiket_kodu;
                                             if ($yeni_siparis > 0) {
-                                                echo "<li class='text-sm'><strong>Etiket $etiket_kodu</strong>: $yeni_siparis birim (toplam ihtiyaç " . number_format($ihtiyac, 2) . " - mevcut sipariş $mevcut_siparis - stok $mevcut_stok = $yeni_siparis).</li>";
+                                                echo "<li class='text-sm'><strong>$etiket_ismi</strong>: $yeni_siparis birim (toplam ihtiyaç " . number_format($ihtiyac, 2) . " - mevcut sipariş $mevcut_siparis - stok $mevcut_stok = $yeni_siparis).</li>";
                                             }
                                         } ?>
                                     </ul>
@@ -307,7 +320,8 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                         foreach ($malzeme_siparisler as $malzeme_kodu => $miktar) {
                                             if ($miktar > 0) {
                                                 $siparis_var = true;
-                                                echo "<li class='text-sm'>Malzeme $malzeme_kodu: $miktar birim.</li>";
+                                                $malzeme_ismi = $malzeme_isimleri[$malzeme_kodu] ?? $malzeme_kodu;
+                                                echo "<li class='text-sm'>$malzeme_ismi: $miktar birim.</li>";
                                             }
                                         }
                                         if (!$siparis_var) {
@@ -332,13 +346,15 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                         foreach ($gelecek_esans as $esans_kodu => $miktar) {
                                             if ($miktar > 0) {
                                                 $emir_var = true;
-                                                echo "<li class='text-sm'><strong>Esans $esans_kodu</strong>: $miktar birim üretimi tamamlanmalı.</li>";
+                                                $esans_ismi = $esans_isimleri[$esans_kodu] ?? $esans_kodu;
+                                                echo "<li class='text-sm'><strong>$esans_ismi</strong>: $miktar birim üretimi tamamlanmalı.</li>";
                                             }
                                         } ?>
                                         <?php foreach ($gelecek_urun as $urun_kodu => $miktar) {
                                             if ($miktar > 0) {
                                                 $emir_var = true;
-                                                echo "<li class='text-sm'><strong>Ürün $urun_kodu</strong>: $miktar adet montajı tamamlanmalı.</li>";
+                                                $urun_ismi = $urun_isimleri[$urun_kodu] ?? $urun_kodu;
+                                                echo "<li class='text-sm'><strong>$urun_ismi</strong>: $miktar adet montajı tamamlanmalı.</li>";
                                             }
                                         }
                                         if (!$emir_var) {
@@ -373,12 +389,14 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                     <ul class="space-y-1">
                                         <?php foreach ($esans_uretilecek as $esans_kodu => $miktar) {
                                             if ($miktar > 0) {
-                                                echo "<li class='text-sm'><strong>Esans $esans_kodu</strong>: " . number_format($miktar, 2) . " birim.</li>";
+                                                $esans_ismi = $esans_isimleri[$esans_kodu] ?? $esans_kodu;
+                                                echo "<li class='text-sm'><strong>$esans_ismi</strong>: " . number_format($miktar, 2) . " birim.</li>";
                                             }
                                         } ?>
                                         <?php foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                             if ($data['uretilecek'] > 0) {
-                                                echo "<li class='text-sm'><strong>Ürün $urun_kodu</strong>: " . $data['uretilecek'] . " adet.</li>";
+                                                $urun_ismi = $urun_isimleri[$urun_kodu] ?? $urun_kodu;
+                                                echo "<li class='text-sm'><strong>$urun_ismi</strong>: " . $data['uretilecek'] . " adet.</li>";
                                             }
                                         } ?>
                                     </ul>
@@ -408,11 +426,7 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                             <?php if ($data['uretilecek'] > 0): ?>
                             <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
                                 <h3 class="text-base font-bold text-gray-900 mb-3 pb-2 border-b-2 border-primary flex items-center gap-2">
-                                    <?php echo $urun_kodu; ?> (<?php
-                                        $result = $conn->query("SELECT urun_ismi FROM urunler WHERE urun_kodu = '$urun_kodu'");
-                                        $row = $result->fetch_assoc();
-                                        echo $row ? htmlspecialchars($row['urun_ismi']) : $urun_kodu;
-                                    ?>)
+                                    <?php echo $urun_isimleri[$urun_kodu] ?? $urun_kodu; ?>
                                 </h3>
                                 <ul class="space-y-2 mb-3">
                                     <li class="flex justify-between items-center text-sm">
@@ -467,7 +481,7 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                         <div class="space-y-1">
                                             <?php foreach ($malzeme_toplam as $malzeme_kodu => $miktar): ?>
                                                 <div class="bg-white border border-gray-200 rounded p-2 text-sm">
-                                                    <strong class="text-gray-900">Malzeme <?php echo $malzeme_kodu; ?>:</strong>
+                                                    <strong class="text-gray-900"><?php echo $malzeme_isimleri[$malzeme_kodu] ?? $malzeme_kodu; ?>:</strong>
                                                     <?php echo number_format($miktar, 2); ?> birim
                                                 </div>
                                             <?php endforeach; ?>
@@ -504,7 +518,7 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                         <div class="bg-gray-50 border border-gray-200 rounded p-3 text-sm">
                                             <div class="flex justify-between items-start">
                                                 <div>
-                                                    <strong class="text-gray-900"><?php echo $esans_kodu; ?></strong><br>
+                                                    <strong class="text-gray-900"><?php echo $esans_isimleri[$esans_kodu] ?? $esans_kodu; ?></strong><br>
                                                     <small class="text-gray-600 text-xs">Planlanan: <?php echo $miktar; ?> birim</small>
                                                 </div>
                                                 <div class="text-right">
@@ -538,7 +552,7 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                         <div class="bg-gray-50 border border-gray-200 rounded p-3 text-sm">
                                             <div class="flex justify-between items-start">
                                                 <div>
-                                                    <strong class="text-gray-900"><?php echo $urun_kodu; ?></strong><br>
+                                                    <strong class="text-gray-900"><?php echo $urun_isimleri[$urun_kodu] ?? $urun_kodu; ?></strong><br>
                                                     <small class="text-gray-600 text-xs">Planlanan: <?php echo $miktar; ?> adet</small>
                                                 </div>
                                                 <div class="text-right">
@@ -639,9 +653,10 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                 foreach ($gelecek_esans as $esans_kodu => $miktar):
                                     if ($miktar > 0) {
                                         $emir_tamamlanacak = true;
+                                        $esans_ismi = $esans_isimleri[$esans_kodu] ?? $esans_kodu;
                                         ?>
                                         <div class="bg-gray-50 border border-gray-200 rounded p-2 text-sm">
-                                            <i class="fas fa-flask text-orange-600 mr-1 text-xs"></i> <?php echo $miktar; ?> birim <?php echo $esans_kodu; ?> esansı üretimi tamamlanmalı
+                                            <i class="fas fa-flask text-orange-600 mr-1 text-xs"></i> <?php echo $miktar; ?> birim <?php echo $esans_ismi; ?> esansı üretimi tamamlanmalı
                                         </div>
                                         <?php
                                     }
@@ -649,9 +664,10 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                 <?php foreach ($gelecek_urun as $urun_kodu => $miktar):
                                     if ($miktar > 0) {
                                         $emir_tamamlanacak = true;
+                                        $urun_ismi = $urun_isimleri[$urun_kodu] ?? $urun_kodu;
                                         ?>
                                         <div class="bg-gray-50 border border-gray-200 rounded p-2 text-sm">
-                                            <i class="fas fa-industry text-blue-600 mr-1 text-xs"></i> <?php echo $miktar; ?> adet Ürün <?php echo $urun_kodu; ?> montajı tamamlanmalı
+                                            <i class="fas fa-industry text-blue-600 mr-1 text-xs"></i> <?php echo $miktar; ?> adet <?php echo $urun_ismi; ?> montajı tamamlanmalı
                                         </div>
                                         <?php
                                     }
@@ -675,9 +691,10 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                 foreach ($esans_uretilecek as $esans_kodu => $miktar):
                                     if ($miktar > 0) {
                                         $yeni_emir_var = true;
+                                        $esans_ismi = $esans_isimleri[$esans_kodu] ?? $esans_kodu;
                                         ?>
                                         <div class="bg-gray-50 border border-gray-200 rounded p-2 text-sm">
-                                            <i class="fas fa-flask text-orange-600 mr-1 text-xs"></i> <?php echo $esans_kodu; ?> için <?php echo number_format($miktar, 2); ?> birim. Yeni esans iş emri açılmalı.
+                                            <i class="fas fa-flask text-orange-600 mr-1 text-xs"></i> <?php echo $esans_ismi; ?> için <?php echo number_format($miktar, 2); ?> birim. Yeni esans iş emri açılmalı.
                                         </div>
                                         <?php
                                     }
@@ -685,9 +702,10 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                 <?php foreach ($uretim_ihtiyaclari as $urun_kodu => $data):
                                     if ($data['uretilecek'] > 0) {
                                         $yeni_emir_var = true;
+                                        $urun_ismi = $urun_isimleri[$urun_kodu] ?? $urun_kodu;
                                         ?>
                                         <div class="bg-gray-50 border border-gray-200 rounded p-2 text-sm">
-                                            <i class="fas fa-industry text-blue-600 mr-1 text-xs"></i> Ürün <?php echo $urun_kodu; ?> için <?php echo $data['uretilecek']; ?> adet. Yeni montaj iş emri açılmalı.
+                                            <i class="fas fa-industry text-blue-600 mr-1 text-xs"></i> <?php echo $urun_ismi; ?> için <?php echo $data['uretilecek']; ?> adet. Yeni montaj iş emri açılmalı.
                                         </div>
                                         <?php
                                     }
@@ -721,10 +739,11 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                         </div>
                         <?php foreach ($uretim_ihtiyaclari as $urun_kodu => $data): ?>
                             <?php if ($data['uretilecek'] > 0): ?>
+                                <?php $urun_ismi = $urun_isimleri[$urun_kodu] ?? $urun_kodu; ?>
                                 <div class="flex items-start gap-2">
                                     <i class="fas fa-box text-blue-600 mt-0.5 text-sm"></i>
                                     <div class="text-sm">
-                                        Toplam üretim ihtiyacı: Ürün <strong><?php echo $urun_kodu; ?></strong> için
+                                        Toplam üretim ihtiyacı: <strong><?php echo $urun_ismi; ?></strong> için
                                         <span class="inline-block px-2 py-1 bg-indigo-100 text-indigo-800 text-xs font-medium rounded-full"><?php echo $data['uretilecek']; ?> adet</span>
                                         (sipariş sonrası kritik seviye için).
                                     </div>
@@ -740,7 +759,8 @@ foreach ($uretim_ihtiyaclari as $urun_kodu => $data) {
                                     $esans_list = [];
                                     foreach ($esans_uretilecek as $esans_kodu => $miktar) {
                                         if ($miktar > 0) {
-                                            $esans_list[] = "<strong>" . $esans_kodu . "</strong> için <span class='inline-block px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full'>" . number_format($miktar, 2) . " birim</span>";
+                                            $esans_ismi = $esans_isimleri[$esans_kodu] ?? $esans_kodu;
+                                            $esans_list[] = "<strong>" . $esans_ismi . "</strong> için <span class='inline-block px-2 py-1 bg-orange-100 text-orange-800 text-xs font-medium rounded-full'>" . number_format($miktar, 2) . " birim</span>";
                                         }
                                     }
                                     echo implode(", ", $esans_list);
