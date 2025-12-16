@@ -1,3 +1,5 @@
+Bu kılavuzda bahsedilen 4 tablodaki veriler temizlenerek başlanır. Tablo isimleri: net_urun_ihtiyaclari, malzeme_ihtiyaclari, esans_ihtiyaclari, net_esans_ihtiyaclari
+
 # Aksiyon Planı
 
 Bu belge, proje yönetimi ve geliştirme süreciyle ilgili aksiyon planlarını ve açıklamaları içerir. Burada birlikte çalışarak detayları belirleyeceğiz.
@@ -256,3 +258,49 @@ Bu tablo, hesaplanan net esans ihtiyaçlarını saklar:
 7. Esans temini ve üretim planlaması için raporlar oluştur.
 
 Bu yaklaşım, esans stoklarının üretim ihtiyaçlarına göre dengelenmesini sağlar ve gereksiz stok birikimini önler.
+
+## Net Esanslardan Malzeme İhtiyaçları Tespiti
+
+Net esans ihtiyaçları belirlendikten sonra, sistem esansların kendi malzemelerini hesaplar. Esanslar da malzemelerden üretildiği için, esans üretiminde gereken hammaddeler belirlenir ve `malzeme_ihtiyaclari` tablosuna eklenir.
+
+### Hesaplama Mantığı
+1. `net_esans_ihtiyaclari` tablosundaki aktif kayıtlar alınır (durum = 'aktif').
+2. Her esans için `urun_agaci` tablosundan ilgili bileşenler çekilir:
+   - `agac_turu` = 'esans' olan kayıtlar
+   - `urun_kodu` = esans_id (int, esanslar tablosundaki esans_id ile eşleşir)
+3. Bileşenlerden `bilesenin_malzeme_turu` != 'esans' olanlar seçilir (malzemeler, çünkü esanslar alt bileşen olarak esans içermez).
+4. Gerekli miktar: `gercek_ihtiyac` × `bilesen_miktari`
+5. Sonuçlar `malzeme_ihtiyaclari` tablosuna kaydedilir (urun_kodu yerine esans_kodu, urun_ismi yerine esans_ismi olarak işaretlenir).
+
+### İlgili Tablolar
+
+#### Ürün Ağacı Tablosu (`urun_agaci`)
+- `urun_agaci_id` (int, primary key): Ağaç kaydının kimliği
+- `urun_kodu` (int): Ana ürün/esans kodu (esans için esans_id ile eşleşir)
+- `urun_ismi` (varchar): Ana ürün/esans adı
+- `bilesenin_malzeme_turu` (varchar): Bileşen türü ('esans', 'malzeme' vb.)
+- `bilesen_kodu` (varchar): Bileşen kodu
+- `bilesen_ismi` (varchar): Bileşen adı
+- `bilesen_miktari` (decimal): Birim için gereken bileşen miktarı
+- `agac_turu` (varchar, default 'urun'): Ağaç türü ('urun' veya 'esans')
+
+Esans malzemeleri için: `agac_turu = 'esans'` ve `urun_kodu = esans_id`
+
+#### Malzeme İhtiyaçları Tablosu (`malzeme_ihtiyaclari`)
+Bu tablo, hem ürünlerden hem esanslardan gelen malzeme ihtiyaçlarını birleştirir:
+- `ihtiyac_id` (int, primary key, auto_increment): İhtiyaç kaydının kimliği
+- `urun_kodu` (int, not null): İlgili ürün/esans kodu (ürün için urun_kodu, esans için esans_kodu olarak kaydedilir)
+- `bilesen_kodu` (varchar(50), not null): Bileşen (malzeme) kodu
+- `bilesen_ismi` (varchar(255), not null): Bileşen adı
+- `gereken_miktar` (decimal(10,2), not null): Toplam gereken miktar
+- `hesaplama_tarihi` (datetime, default current_timestamp): Hesaplama tarihi
+- `durum` (varchar(50), default 'aktif'): Kayıt durumu
+
+### Uygulama Adımları
+1. `net_esans_ihtiyaclari` tablosundan aktif esans ihtiyaçlarını çek.
+2. Her esans için `urun_agaci` tablosundan malzeme bileşenlerini al (`agac_turu = 'esans'`).
+3. Gerekli miktarı hesapla: `gercek_ihtiyac * bilesen_miktari`.
+4. Sonuçları `malzeme_ihtiyaclari` tablosuna kaydet (kaynak esans olarak işaretle).
+5. Malzeme temini ve üretim planlaması için raporlar oluştur.
+
+Bu yaklaşım, tedarik zincirinde esans üretiminin de malzemelerini kapsar ve tam malzeme görünürlüğü sağlar.
