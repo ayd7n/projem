@@ -336,8 +336,13 @@ if (!yetkisi_var('page:view:esanslar')) {
                                             @change="tankSecildi">
                                             <option value="">Seçiniz</option>
                                             <option v-for="tank in tanklarListesi" :value="tank.tank_kodu"
-                                                :key="tank.tank_id">
+                                                :key="tank.tank_id"
+                                                :disabled="tank.in_use && tank.used_by_essence_id != seciliEsans.esans_id">
                                                 {{ tank.tank_kodu }} - {{ tank.tank_ismi }}
+                                                <template
+                                                    v-if="tank.in_use && tank.used_by_essence_id != seciliEsans.esans_id">
+                                                    ({{ tank.used_by_essence_name }} tarafından kullanılıyor)
+                                                </template>
                                             </option>
                                         </select>
                                     </div>

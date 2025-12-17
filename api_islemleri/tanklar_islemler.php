@@ -41,13 +41,27 @@ switch ($action) {
 function getTanks() {
     global $connection;
 
-    $query = "SELECT tank_id, tank_kodu, tank_ismi, kapasite, not_bilgisi FROM tanklar ORDER BY tank_ismi";
+    // Get tanks with their assignment status to essences
+    $query = "SELECT t.tank_id, t.tank_kodu, t.tank_ismi, t.kapasite, t.not_bilgisi, 
+              e.esans_id, e.esans_ismi 
+              FROM tanklar t 
+              LEFT JOIN esanslar e ON t.tank_kodu = e.tank_kodu 
+              ORDER BY t.tank_ismi";
     $result = $connection->query($query);
 
     $tanks = [];
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
-            $tanks[] = $row;
+            $tanks[] = [
+                'tank_id' => $row['tank_id'],
+                'tank_kodu' => $row['tank_kodu'],
+                'tank_ismi' => $row['tank_ismi'],
+                'kapasite' => $row['kapasite'],
+                'not_bilgisi' => $row['not_bilgisi'],
+                'in_use' => !empty($row['esans_id']),
+                'used_by_essence_id' => $row['esans_id'],
+                'used_by_essence_name' => $row['esans_ismi']
+            ];
         }
     }
 

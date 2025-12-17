@@ -18,7 +18,7 @@ if ($_SESSION['taraf'] !== 'personel') {
 // Handle GET requests
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $action = $_GET['action'] ?? '';
-    
+
     switch ($action) {
         case 'get_all_essences':
             if (!yetkisi_var('page:view:esanslar')) {
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             }
             $essences_query = "SELECT * FROM esanslar ORDER BY esans_ismi";
             $essences_result = $connection->query($essences_query);
-            
+
             if ($essences_result) {
                 $essences = [];
                 while ($row = $essences_result->fetch_assoc()) {
@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 echo json_encode(['status' => 'error', 'error_code' => 'ES003', 'message' => 'Esanslar alınırken bir hata oluştu']);
             }
             break;
-            
+
         case 'get_essence':
             if (!yetkisi_var('page:view:esanslar')) {
                 echo json_encode(['status' => 'error', 'message' => 'Esans görüntüleme yetkiniz yok.']);
@@ -50,7 +50,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 $stmt->bind_param("i", $esans_id);
                 $stmt->execute();
                 $result = $stmt->get_result();
-                
+
                 if ($result->num_rows > 0) {
                     $essence = $result->fetch_assoc();
                     echo json_encode(['status' => 'success', 'data' => $essence]);
@@ -61,7 +61,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 echo json_encode(['status' => 'error', 'error_code' => 'ES005', 'message' => 'Geçersiz esans ID']);
             }
             break;
-            
+
+        case 'check_tank_unique':
+            if (!yetkisi_var('page:view:esanslar')) {
+                echo json_encode(['status' => 'error', 'message' => 'Tank kontrolü için yetkiniz yok.']);
+                exit;
+            }
+            $tank_kodu = $_GET['tank_kodu'] ?? null;
+            $current_esans_id = $_GET['esans_id'] ?? null;
+
+            if ($tank_kodu) {
+                // Check if tank is already assigned to another essence
+                if ($current_esans_id) {
+                    $check_query = "SELECT e.esans_ismi FROM esanslar e WHERE e.tank_kodu = ? AND e.esans_id != ?";
+                } else {
+                    $check_query = "SELECT e.esans_ismi FROM esanslar e WHERE e.tank_kodu = ?";
+                }
+
+                $check_stmt = $connection->prepare($check_query);
+                if ($current_esans_id) {
+                    $check_stmt->bind_param("si", $tank_kodu, $current_esans_id);
+                } else {
+                    $check_stmt->bind_param("s", $tank_kodu);
+                }
+                $check_stmt->execute();
+                $check_result = $check_stmt->get_result();
+
+                if ($check_result->num_rows > 0) {
+                    $existing_essence = $check_result->fetch_assoc();
+                    echo json_encode([
+                        'status' => 'error',
+                        'message' => "Bu tank zaten '{$existing_essence['esans_ismi']}' esansı tarafından kullanılıyor",
+                        'tank_in_use' => true,
+                        'conflicting_essence' => $existing_essence['esans_ismi']
+                    ]);
+                } else {
+                    echo json_encode([
+                        'status' => 'success',
+                        'message' => 'Tank kullanılabilir',
+                        'tank_in_use' => false
+                    ]);
+                }
+            } else {
+                echo json_encode(['status' => 'error', 'message' => 'Geçersiz tank kodu']);
+            }
+            break;
+
         default:
             echo json_encode(['status' => 'error', 'error_code' => 'ES006', 'message' => 'Geçersiz işlem']);
     }
@@ -94,22 +139,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $not_bilgisi = $input['not_bilgisi'] ?? '';
             $tank_kodu = $input['tank_kodu'] ?? null;
             $tank_ismi = $input['tank_ismi'] ?? null;
-            
+
             // Check if esans_kodu already exists
             $check_query = "SELECT esans_id FROM esanslar WHERE esans_kodu = ?";
             $check_stmt = $connection->prepare($check_query);
             $check_stmt->bind_param("s", $esans_kodu);
             $check_stmt->execute();
             $check_result = $check_stmt->get_result();
-            
+
             if ($check_result->num_rows > 0) {
                 echo json_encode(['status' => 'error', 'error_code' => 'ES007', 'message' => 'Bu esans kodu zaten mevcut']);
                 exit;
             }
-            
+
+            // Check if tank_kodu is already assigned to another essence
+            if (!empty($tank_kodu)) {
+                $tank_check_query = "SELECT esans_ismi FROM esanslar WHERE tank_kodu = ?";
+                $tank_check_stmt = $connection->prepare($tank_check_query);
+                $tank_check_stmt->bind_param("s", $tank_kodu);
+                $tank_check_stmt->execute();
+                $tank_check_result = $tank_check_stmt->get_result();
+
+                if ($tank_check_result->num_rows > 0) {
+                    $existing_essence = $tank_check_result->fetch_assoc();
+                    echo json_encode([
+                        'status' => 'error',
+                        'error_code' => 'ES015',
+                        'message' => "Bu tank zaten '{$existing_essence['esans_ismi']}' esansı tarafından kullanılıyor"
+                    ]);
+                    exit;
+                }
+            }
+
             $stmt = $connection->prepare("INSERT INTO esanslar (esans_kodu, esans_ismi, stok_miktari, birim, demlenme_suresi_gun, not_bilgisi, tank_kodu, tank_ismi) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->bind_param("ssdsssss", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi);
-            
+
             if ($stmt->execute()) {
                 // Log ekleme
                 log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı sisteme eklendi", 'CREATE');
@@ -133,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $not_bilgisi = $input['not_bilgisi'] ?? '';
             $tank_kodu = $input['tank_kodu'] ?? null;
             $tank_ismi = $input['tank_ismi'] ?? null;
-            
+
             if ($esans_id) {
                 // Check if another esans with the same code exists (excluding current esans)
                 $check_query = "SELECT esans_id FROM esanslar WHERE esans_kodu = ? AND esans_id != ?";
@@ -141,15 +205,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $check_stmt->bind_param("si", $esans_kodu, $esans_id);
                 $check_stmt->execute();
                 $check_result = $check_stmt->get_result();
-                
+
                 if ($check_result->num_rows > 0) {
                     echo json_encode(['status' => 'error', 'error_code' => 'ES009', 'message' => 'Bu esans kodu başka bir esans tarafından kullanılıyor']);
                     exit;
                 }
-                
+
+                // Check if tank_kodu is already assigned to another essence (excluding current esans)
+                if (!empty($tank_kodu)) {
+                    $tank_check_query = "SELECT esans_ismi FROM esanslar WHERE tank_kodu = ? AND esans_id != ?";
+                    $tank_check_stmt = $connection->prepare($tank_check_query);
+                    $tank_check_stmt->bind_param("si", $tank_kodu, $esans_id);
+                    $tank_check_stmt->execute();
+                    $tank_check_result = $tank_check_stmt->get_result();
+
+                    if ($tank_check_result->num_rows > 0) {
+                        $existing_essence = $tank_check_result->fetch_assoc();
+                        echo json_encode([
+                            'status' => 'error',
+                            'error_code' => 'ES016',
+                            'message' => "Bu tank zaten '{$existing_essence['esans_ismi']}' esansı tarafından kullanılıyor"
+                        ]);
+                        exit;
+                    }
+                }
+
                 $stmt = $connection->prepare("UPDATE esanslar SET esans_kodu = ?, esans_ismi = ?, stok_miktari = ?, birim = ?, demlenme_suresi_gun = ?, not_bilgisi = ?, tank_kodu = ?, tank_ismi = ? WHERE esans_id = ?");
                 $stmt->bind_param("ssdsssssi", $esans_kodu, $esans_ismi, $stok_miktari, $birim, $demlenme_suresi_gun, $not_bilgisi, $tank_kodu, $tank_ismi, $esans_id);
-                
+
                 if ($stmt->execute()) {
                     // Log ekleme
                     log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı güncellendi", 'UPDATE');

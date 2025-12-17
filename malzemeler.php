@@ -503,25 +503,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
-                                                <label>Malzeme Türü *</label>
+                                                <label>Malzeme Türü * <button type="button" @click="openTurModal"
+                                                        class="btn btn-sm btn-outline-primary ml-2"
+                                                        title="Türleri Düzenle"><i
+                                                            class="fas fa-cog"></i></button></label>
                                                 <select class="form-control" v-model="modal.data.malzeme_turu" required>
                                                     <option value="">Tür Seçin</option>
-                                                    <option value="sise">Şişe</option>
-                                                    <option value="kutu">Kutu</option>
-                                                    <option value="etiket">Etiket</option>
-                                                    <option value="pompa">Pompa</option>
-                                                    <option value="ic_ambalaj">İç Ambalaj</option>
-                                                    <option value="numune_sisesi">Numune Şişesi</option>
-                                                    <option value="kapak">Kapak</option>
-                                                    <option value="kimyasal_madde">Kimyasal Madde</option>
-                                                    <option value="alkol">Alkol</option>
-                                                    <option value="saf_su">Saf Su</option>
-                                                    <option value="esans">Esans</option>
-                                                    <option value="renklendirici">Renklendirici</option>
-                                                    <option value="cozucu">Çözücü</option>
-                                                    <option value="koruyucu">Koruyucu</option>
-                                                    <option value="karton_ara_bolme">Karton Ara Bölme</option>
-                                                    <option value="diger">Diğer</option>
+                                                    <option v-for="tur in malzemeTurleri" :key="tur.value"
+                                                        :value="tur.value">{{ tur.label }}</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -715,6 +704,70 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
 
+        <!-- Malzeme Türü Düzenleme Modal -->
+        <div class="modal fade" id="turModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-md" role="document">
+                <div class="modal-content">
+                    <div class="modal-header"
+                        style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-tags"></i> Malzeme Türlerini Düzenle</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label><strong>Yeni Tür Ekle</strong></label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" v-model="yeniTurValue"
+                                    placeholder="Tür değeri (ör: plastik_kap)">
+                                <input type="text" class="form-control" v-model="yeniTurLabel"
+                                    placeholder="Görünen isim (ör: Plastik Kap)">
+                                <div class="input-group-append">
+                                    <button type="button" class="btn btn-success" @click="addTur"
+                                        :disabled="!yeniTurValue || !yeniTurLabel">
+                                        <i class="fas fa-plus"></i> Ekle
+                                    </button>
+                                </div>
+                            </div>
+                            <small class="text-muted">Tür değeri küçük harf ve alt çizgi kullanmalıdır.</small>
+                        </div>
+                        <hr>
+                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                            <table class="table table-sm table-hover">
+                                <thead class="sticky-top bg-white">
+                                    <tr>
+                                        <th>Değer</th>
+                                        <th>Görünen İsim</th>
+                                        <th class="text-center">İşlem</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="(tur, index) in malzemeTurleri" :key="tur.value">
+                                        <td><code>{{ tur.value }}</code></td>
+                                        <td>
+                                            <input type="text" class="form-control form-control-sm" v-model="tur.label"
+                                                @blur="updateTur(tur)">
+                                        </td>
+                                        <td class="text-center">
+                                            <button type="button" class="btn btn-danger btn-sm"
+                                                @click="deleteTur(index)" title="Sil">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                class="fas fa-times"></i> Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Lightbox Modal -->
         <div v-if="lightbox.show" class="lightbox-overlay" @click="closeLightbox"
             style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center;">
@@ -775,7 +828,27 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     uploadProgress: 0,
                     lightbox: { show: false, currentIndex: 0 },
                     draggedIndex: null,
-                    dragOverIndex: null
+                    dragOverIndex: null,
+                    malzemeTurleri: [
+                        { value: 'sise', label: 'Şişe' },
+                        { value: 'kutu', label: 'Kutu' },
+                        { value: 'etiket', label: 'Etiket' },
+                        { value: 'pompa', label: 'Pompa' },
+                        { value: 'ic_ambalaj', label: 'İç Ambalaj' },
+                        { value: 'numune_sisesi', label: 'Numune Şişesi' },
+                        { value: 'kapak', label: 'Kapak' },
+                        { value: 'kimyasal_madde', label: 'Kimyasal Madde' },
+                        { value: 'alkol', label: 'Alkol' },
+                        { value: 'saf_su', label: 'Saf Su' },
+                        { value: 'esans', label: 'Esans' },
+                        { value: 'renklendirici', label: 'Renklendirici' },
+                        { value: 'cozucu', label: 'Çözücü' },
+                        { value: 'koruyucu', label: 'Koruyucu' },
+                        { value: 'karton_ara_bolme', label: 'Karton Ara Bölme' },
+                        { value: 'diger', label: 'Diğer' }
+                    ],
+                    yeniTurValue: '',
+                    yeniTurLabel: ''
                 }
             },
             computed: {
@@ -1218,11 +1291,107 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                 toggleCriticalStockFilter() {
                     this.criticalStockFilterEnabled = !this.criticalStockFilterEnabled;
                     this.loadMaterials(1);
+                },
+                openTurModal() {
+                    this.loadTurler();
+                    $('#turModal').modal('show');
+                },
+                loadTurler() {
+                    fetch('api_islemleri/malzeme_turleri_islemler.php?action=get_turler')
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.malzemeTurleri = response.data;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Türler yüklenirken hata:', error);
+                        });
+                },
+                updateTur(tur) {
+                    const formData = new FormData();
+                    formData.append('action', 'update_tur');
+                    formData.append('id', tur.id);
+                    formData.append('label', tur.label);
+
+                    fetch('api_islemleri/malzeme_turleri_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert('Tür güncellendi.', 'success');
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        });
+                },
+                addTur() {
+                    if (!this.yeniTurValue || !this.yeniTurLabel) return;
+
+                    const formData = new FormData();
+                    formData.append('action', 'add_tur');
+                    formData.append('value', this.yeniTurValue);
+                    formData.append('label', this.yeniTurLabel);
+
+                    fetch('api_islemleri/malzeme_turleri_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.malzemeTurleri.push(response.data);
+                                this.yeniTurValue = '';
+                                this.yeniTurLabel = '';
+                                this.showAlert('Yeni tür eklendi.', 'success');
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('Tür eklenirken hata oluştu.', 'danger');
+                        });
+                },
+                deleteTur(index) {
+                    const tur = this.malzemeTurleri[index];
+                    Swal.fire({
+                        title: 'Emin misiniz?',
+                        text: `"${tur.label}" türünü silmek istediğinizden emin misiniz?`,
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Evet, sil!',
+                        cancelButtonText: 'İptal'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            const formData = new FormData();
+                            formData.append('action', 'delete_tur');
+                            formData.append('id', tur.id);
+
+                            fetch('api_islemleri/malzeme_turleri_islemler.php', {
+                                method: 'POST',
+                                body: formData
+                            })
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        this.malzemeTurleri.splice(index, 1);
+                                        this.showAlert('Tür silindi.', 'success');
+                                    } else {
+                                        this.showAlert(response.message, 'danger');
+                                    }
+                                });
+                        }
+                    });
                 }
             },
             mounted() {
                 this.loadMaterials();
                 this.loadDepoList();
+                this.loadTurler();
             }
         });
         app.mount('#app');
