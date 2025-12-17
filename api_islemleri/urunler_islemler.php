@@ -195,6 +195,7 @@ if (isset($_GET['action'])) {
     $birim = $_POST['birim'] ?? 'adet';
     $birim = $_POST['birim'] ?? 'adet';
     $satis_fiyati = isset($_POST['satis_fiyati']) && $_POST['satis_fiyati'] !== '' ? (float) $_POST['satis_fiyati'] : 0.0;
+    $satis_fiyati_para_birimi = $_POST['satis_fiyati_para_birimi'] ?? 'TRY';
     $alis_fiyati = isset($_POST['alis_fiyati']) && $_POST['alis_fiyati'] !== '' ? (float) $_POST['alis_fiyati'] : 0.0;
     $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
     $depo = $_POST['depo'] ?? '';
@@ -220,9 +221,9 @@ if (isset($_GET['action'])) {
             if ($check_result->num_rows > 0) {
                 $response = ['status' => 'error', 'message' => 'Bu ürün ismi zaten mevcut. Lütfen farklı bir isim kullanın.'];
             } else {
-                $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, alis_fiyati, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = $connection->prepare($query);
-                $stmt->bind_param('ssisddisss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $alis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi);
+                $stmt->bind_param('ssisdsdisss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $satis_fiyati_para_birimi, $alis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi);
 
                 if ($stmt->execute()) {
                     // Log ekleme
@@ -264,9 +265,9 @@ if (isset($_GET['action'])) {
                 $old_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
                 $old_stmt->close();
 
-                $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, alis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ?, urun_tipi = ? WHERE urun_kodu = ?";
+                $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, satis_fiyati_para_birimi = ?, alis_fiyati = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ?, urun_tipi = ? WHERE urun_kodu = ?";
                 $stmt = $connection->prepare($query);
-                $stmt->bind_param('ssisddisssi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $alis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi, $urun_kodu);
+                $stmt->bind_param('ssisdsdisssi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $satis_fiyati_para_birimi, $alis_fiyati, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi, $urun_kodu);
 
                 if ($stmt->execute()) {
                     // Log ekleme

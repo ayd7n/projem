@@ -383,7 +383,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
-                                    <th>Teorik Maliyet (₺)</th>
+                                    <th>Teorik Maliyet</th>
 
                                 <?php endif; ?>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
@@ -432,9 +432,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 </td>
                                 <td>{{ product.kritik_stok_seviyesi }}</td>
                                 <td>{{ product.birim }}</td>
-                                <td>{{ formatCurrency(product.satis_fiyati) }}</td>
+                                <td>{{ formatPriceWithCurrency(product) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
-                                    <td>{{ formatCurrency(product.teorik_maliyet || 0) }}</td>
+                                    <td>{{ formatTeorikMaliyet(product) }}</td>
 
                                 <?php endif; ?>
                                 <td>{{ product.depo }}</td>
@@ -564,7 +564,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
-                                                <label>Satis Fiyati (₺) *</label>
+                                                <label>Satis Fiyati *</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.satis_fiyati" min="0" required>
                                             </div>
@@ -573,11 +573,24 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
+                                                <label>Para Birimi *</label>
+                                                <select class="form-control"
+                                                    v-model="modal.data.satis_fiyati_para_birimi">
+                                                    <option value="TRY">₺ Türk Lirası</option>
+                                                    <option value="USD">$ Amerikan Doları</option>
+                                                    <option value="EUR">€ Euro</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
                                                 <label>Kritik Stok Seviyesi</label>
                                                 <input type="number" class="form-control"
                                                     v-model="modal.data.kritik_stok_seviyesi" min="0">
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Depo *</label>
@@ -590,8 +603,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                 </select>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Raf *</label>
@@ -602,36 +613,39 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                 </select>
                                             </div>
                                         </div>
+                                    </div>
+                                    <div class="row">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Ürün Tipi *</label>
-                                                <select class="form-control" v-model="modal.data.urun_tipi" required>
+                                                <select class="form-control" v-model="modal.data.urun_tipi"
+                                                    required>
                                                     <option value="uretilen">Üretilen Ürün</option>
                                                     <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-3">
-                                                <label>Alış Fiyatı (₺)</label>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    v-model="modal.data.alis_fiyati" min="0">
+                                        <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
+                                            <div class="col-md-6">
+                                                <div class="form-group mb-3">
+                                                    <label>Alış Fiyatı (₺)</label>
+                                                    <input type="number" step="0.01" class="form-control"
+                                                        v-model="modal.data.alis_fiyati" min="0">
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="form-group mb-3">
-                                        <label>Not Bilgisi</label>
-                                        <textarea class="form-control" v-model="modal.data.not_bilgisi"
-                                            rows="3"></textarea>
-                                    </div>
-                                    <div class="text-right">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                                class="fas fa-times"></i> Iptal</button>
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
-                                            Kaydet</button>
-                                    </div>
+                                        <div class="form-group mb-3">
+                                            <label>Not Bilgisi</label>
+                                            <textarea class="form-control" v-model="modal.data.not_bilgisi"
+                                                rows="3"></textarea>
+                                        </div>
+                                        <div class="text-right">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                                    class="fas fa-times"></i> Iptal</button>
+                                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
+                                                Kaydet</button>
+                                        </div>
                                 </form>
                             </div>
 
@@ -792,7 +806,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     },
                     draggedIndex: null,
                     dragOverIndex: null,
-                    searchTimeout: null
+                    searchTimeout: null,
+                    kurlar: { dolar: 1, euro: 1 }
                 }
             },
             computed: {
@@ -880,7 +895,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, alis_fiyati: 0.0 };
+                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0 };
                     }
 
                     // Modal'ı kapatıp açmak için kontrol et
@@ -979,9 +994,28 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             }
                         });
                 },
-                formatCurrency(value) {
+                formatCurrency(value, currency = 'TRY') {
                     if (isNaN(value)) return '0,00 ₺';
-                    return parseFloat(value).toLocaleString('tr-TR', { style: 'currency', currency: 'TRY' });
+                    const num = parseFloat(value);
+                    const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€' };
+                    const symbol = currencySymbols[currency] || '₺';
+                    return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
+                },
+                formatPriceWithCurrency(product) {
+                    const price = parseFloat(product.satis_fiyati) || 0;
+                    const currency = product.satis_fiyati_para_birimi || 'TRY';
+                    return this.formatCurrency(price, currency);
+                },
+                formatTeorikMaliyet(product) {
+                    const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
+                    const currency = product.satis_fiyati_para_birimi || 'TRY';
+                    let convertedCost = teorikMaliyet;
+                    if (currency === 'USD' && this.kurlar.dolar > 0) {
+                        convertedCost = teorikMaliyet / this.kurlar.dolar;
+                    } else if (currency === 'EUR' && this.kurlar.euro > 0) {
+                        convertedCost = teorikMaliyet / this.kurlar.euro;
+                    }
+                    return this.formatCurrency(convertedCost, currency);
                 },
                 stockClass(product) {
                     const stok = parseFloat(product.stok_miktari);
@@ -1291,12 +1325,23 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     } else {
                         return `<span class="badge badge-danger" title="Tahmini Zarar: ${this.formatCurrency(Math.abs(diff))}">Zarar</span>`;
                     }
+                },
+                loadKurlar() {
+                    fetch('api_islemleri/ayarlar_islemler.php?action=get_settings')
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.kurlar.dolar = parseFloat(response.data.dolar_kuru) || 1;
+                                this.kurlar.euro = parseFloat(response.data.euro_kuru) || 1;
+                            }
+                        });
                 }
             },
             mounted() {
                 this.loadProducts();
                 this.loadDepoList();
                 this.loadOperatingCostMetrics();
+                this.loadKurlar();
 
                 // Modal açıldığında tab'ı Ürün Bilgileri'ne sıfırla
                 $('#productModal').on('shown.bs.modal', () => {
