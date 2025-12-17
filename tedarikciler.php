@@ -18,9 +18,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
-// Calculate total suppliers
-$total_result = $connection->query("SELECT COUNT(*) as total FROM tedarikciler");
-$total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
+
 ?>
 
 <!DOCTYPE html>
@@ -283,7 +281,7 @@ $total_suppliers = $total_result->fetch_assoc()['total'] ?? 0;
                             <i class="fas fa-truck"></i>
                         </div>
                         <div class="stat-info">
-                            <h3 style="font-size: 1.5rem; margin: 0;"><?php echo $total_suppliers; ?></h3>
+                            <h3 style="font-size: 1.5rem; margin: 0;">{{ totalSuppliers }}</h3>
                             <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Tedarikçi</p>
                         </div>
                     </div>

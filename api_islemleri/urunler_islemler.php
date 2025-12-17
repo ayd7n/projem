@@ -36,25 +36,25 @@ if (isset($_GET['action'])) {
             $param_types = '';
 
             if (!empty($search)) {
-                $where_conditions[] = "(urun_ismi LIKE ? OR urun_kodu LIKE ?)";
+                $where_conditions[] = "(u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?)";
                 $params[] = $search_term;
                 $params[] = $search_term;
                 $param_types .= 'ss';
             }
 
             if ($filter === 'critical') {
-                $where_conditions[] = "stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
+                $where_conditions[] = "u.stok_miktari <= u.kritik_stok_seviyesi AND u.kritik_stok_seviyesi > 0";
             }
 
             if (!empty($urun_tipi)) {
-                $where_conditions[] = "urun_tipi = ?";
+                $where_conditions[] = "u.urun_tipi = ?";
                 $params[] = $urun_tipi;
                 $param_types .= 's';
             }
 
             $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-            $count_query = "SELECT COUNT(*) as total FROM urunler {$where_clause}";
+            $count_query = "SELECT COUNT(*) as total FROM urunler u {$where_clause}";
             $stmt_count = $connection->prepare($count_query);
             if (!empty($params)) {
                 $stmt_count->bind_param($param_types, ...$params);

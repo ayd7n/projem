@@ -192,7 +192,7 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ formatDate(employee.dogum_tarihi) }}</td>
                                 <td>{{ formatDate(employee.ise_giris_tarihi) }}</td>
                                 <td>
-                                    <span v-if="employee.bordrolu_calisan_mi" class="badge badge-success">Evet</span>
+                                    <span v-if="employee.bordrolu_calisan_mi == 1" class="badge badge-success">Evet</span>
                                     <span v-else class="badge badge-danger">Hayır</span>
                                 </td>
                                 <td>{{ employee.aylik_brut_ucret ? '₺' +

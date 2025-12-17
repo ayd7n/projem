@@ -364,7 +364,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadProducts(1)"
+                        <input type="text" class="form-control" v-model="search" @input="onSearchInput"
                             placeholder="Urun ara...">
                     </div>
                 </div>
@@ -791,7 +791,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         currentIndex: 0
                     },
                     draggedIndex: null,
-                    dragOverIndex: null
+                    dragOverIndex: null,
+                    searchTimeout: null
                 }
             },
             computed: {
@@ -823,12 +824,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                 loadProducts(page = 1) {
                     this.loading = true;
                     this.currentPage = page;
-                    let url = `api_islemleri/urunler_islemler.php?action=get_products&page=${this.currentPage}&limit=${this.limit}&search=${this.search}`;
+                    let url = `api_islemleri/urunler_islemler.php?action=get_products&page=${this.currentPage}&limit=${this.limit}&search=${encodeURIComponent(this.search)}`;
                     if (this.criticalStockFilterEnabled) {
                         url += '&filter=critical';
                     }
                     if (this.productTypeFilter) {
-                        url += `&urun_tipi=${this.productTypeFilter}`;
+                        url += `&urun_tipi=${encodeURIComponent(this.productTypeFilter)}`;
                     }
                     fetch(url)
                         .then(response => response.json())
@@ -843,12 +844,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     this.criticalProducts = response.stats.critical_products;
                                 }
                             } else {
-                                this.showAlert('Urunler yüklenirken hata oluştu.', 'danger');
+                                this.showAlert('Ürünler yüklenirken hata oluştu: ' + response.message, 'danger');
                             }
                             this.loading = false;
                         })
                         .catch(error => {
-                            this.showAlert('Urunler yüklenirken bir hata oluştu.', 'danger');
+                            this.showAlert('Ürünler yüklenirken bir hata oluştu.', 'danger');
                             this.loading = false;
                         });
                 },
@@ -856,6 +857,13 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     this.productTypeFilter = filter;
                     this.currentPage = 1; // Reset to first page when filtering
                     this.loadProducts(1);
+                },
+                onSearchInput() {
+                    clearTimeout(this.searchTimeout);
+                    this.searchTimeout = setTimeout(() => {
+                        this.currentPage = 1; // Reset to first page when searching
+                        this.loadProducts(1);
+                    }, 500); // 500ms debounce
                 },
                 openModal(product) {
                     this.rafList = []; // Clear raf list
