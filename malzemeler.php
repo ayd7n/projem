@@ -926,6 +926,8 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                         };
                     }
                     this.$nextTick(() => {
+                        // Reset tabs to show "Malzeme Bilgileri" tab first
+                        $('#info-tab').tab('show');
                         $('#materialModal').modal('show');
                     });
                 },
