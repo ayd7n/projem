@@ -832,7 +832,6 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <th class="font-weight-normal text-right"><i class="fas fa-balance-scale"></i> Miktar
                                 </th>
                                 <th class="font-weight-normal"><i class="fas fa-ruler"></i> Birim</th>
-                                <th class="font-weight-normal"><i class="fas fa-file-contract"></i> Sözleşme</th>
                                 <th class="font-weight-normal text-right"><i class="fas fa-tag"></i> Birim Fiyat</th>
                                 <th class="font-weight-normal"><i class="fas fa-coins"></i> Para Birimi</th>
                                 <th class="font-weight-normal text-right"><i class="fas fa-calculator"></i> Toplam Tutar
@@ -854,7 +853,6 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                         <td><?php echo htmlspecialchars($row['isim'] ?? '-'); ?></td>
                                         <td class="text-right"><?php echo number_format($row['miktar'], 2, ',', '.'); ?></td>
                                         <td><?php echo htmlspecialchars($row['birim']); ?></td>
-                                        <td><?php echo $sozlesme_id ? htmlspecialchars($sozlesme_id) : '-'; ?></td>
                                         <td class="text-right">
                                             <?php echo $birim_fiyat !== '-' ? number_format($birim_fiyat, 2, ',', '.') : '-'; ?>
                                         </td>
@@ -1058,32 +1056,32 @@ while ($kur_row = $kur_result->fetch_assoc()) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    
+
     <script>
-    // Para birimi göster/gizle toggle
-    let currencyVisible = true;
-    
-    function toggleCurrencyView() {
-        currencyVisible = !currencyVisible;
-        const elements = document.querySelectorAll('.currency-toggle');
-        const btn = document.getElementById('toggleCurrencyBtn');
-        const icon = document.getElementById('toggleCurrencyIcon');
-        const text = document.getElementById('toggleCurrencyText');
-        
-        elements.forEach(el => {
-            el.style.display = currencyVisible ? '' : 'none';
-        });
-        
-        if (currencyVisible) {
-            btn.style.background = '#059669';
-            icon.className = 'fas fa-eye';
-            text.textContent = 'Gösteriliyor';
-        } else {
-            btn.style.background = '#64748b';
-            icon.className = 'fas fa-eye-slash';
-            text.textContent = 'Gizlendi';
+        // Para birimi göster/gizle toggle
+        let currencyVisible = true;
+
+        function toggleCurrencyView() {
+            currencyVisible = !currencyVisible;
+            const elements = document.querySelectorAll('.currency-toggle');
+            const btn = document.getElementById('toggleCurrencyBtn');
+            const icon = document.getElementById('toggleCurrencyIcon');
+            const text = document.getElementById('toggleCurrencyText');
+
+            elements.forEach(el => {
+                el.style.display = currencyVisible ? '' : 'none';
+            });
+
+            if (currencyVisible) {
+                btn.style.background = '#059669';
+                icon.className = 'fas fa-eye';
+                text.textContent = 'Gösteriliyor';
+            } else {
+                btn.style.background = '#64748b';
+                icon.className = 'fas fa-eye-slash';
+                text.textContent = 'Gizlendi';
+            }
         }
-    }
     </script>
 </body>
 
