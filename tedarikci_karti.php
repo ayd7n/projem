@@ -182,12 +182,33 @@ if (!$supplier) {
     die('Tedarikçi bulunamadı.');
 }
 
+// Tarih filtresi parametrelerini al
+$baslangic_tarihi = isset($_GET['baslangic']) && !empty($_GET['baslangic']) ? $_GET['baslangic'] : null;
+$bitis_tarihi = isset($_GET['bitis']) && !empty($_GET['bitis']) ? $_GET['bitis'] : null;
 
+// Get all expenses related to this supplier (with date filter)
+$expenses_query = "SELECT * FROM gider_yonetimi WHERE odeme_yapilan_firma = ?";
+if ($baslangic_tarihi) {
+    $expenses_query .= " AND DATE(tarih) >= ?";
+}
+if ($bitis_tarihi) {
+    $expenses_query .= " AND DATE(tarih) <= ?";
+}
+$expenses_query .= " ORDER BY tarih DESC";
 
-// Get all expenses related to this supplier
-$expenses_query = "SELECT * FROM gider_yonetimi WHERE odeme_yapilan_firma = ? ORDER BY tarih DESC";
 $expenses_stmt = $connection->prepare($expenses_query);
-$expenses_stmt->bind_param('s', $supplier['tedarikci_adi']);
+
+// Parametreleri bind et
+if ($baslangic_tarihi && $bitis_tarihi) {
+    $expenses_stmt->bind_param('sss', $supplier['tedarikci_adi'], $baslangic_tarihi, $bitis_tarihi);
+} elseif ($baslangic_tarihi) {
+    $expenses_stmt->bind_param('ss', $supplier['tedarikci_adi'], $baslangic_tarihi);
+} elseif ($bitis_tarihi) {
+    $expenses_stmt->bind_param('ss', $supplier['tedarikci_adi'], $bitis_tarihi);
+} else {
+    $expenses_stmt->bind_param('s', $supplier['tedarikci_adi']);
+}
+
 $expenses_stmt->execute();
 $expenses_result = $expenses_stmt->get_result();
 
@@ -588,19 +609,79 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             </div>
         </div>
 
+        <!-- Tarih Filtresi -->
+        <div style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 16px;">
+            <form method="GET" action="tedarikci_karti.php" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                <input type="hidden" name="tedarikci_id" value="<?php echo $tedarikci_id; ?>">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-filter" style="color: var(--text-secondary);"></i>
+                    <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Tarih Filtresi:</span>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 12px; color: var(--text-secondary);">Başlangıç:</label>
+                    <input type="date" name="baslangic" value="<?php echo htmlspecialchars($baslangic_tarihi ?? ''); ?>" 
+                           style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <label style="font-size: 12px; color: var(--text-secondary);">Bitiş:</label>
+                    <input type="date" name="bitis" value="<?php echo htmlspecialchars($bitis_tarihi ?? ''); ?>" 
+                           style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
+                </div>
+                <button type="submit" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;">
+                    <i class="fas fa-search"></i> Filtrele
+                </button>
+                <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
+                <a href="tedarikci_karti.php?tedarikci_id=<?php echo $tedarikci_id; ?>" 
+                   style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; text-decoration: none;">
+                    <i class="fas fa-times"></i> Temizle
+                </a>
+                <?php endif; ?>
+            </form>
+            <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
+            <div style="margin-top: 10px; font-size: 12px; color: #059669;">
+                <i class="fas fa-info-circle"></i> Filtre aktif: 
+                <?php if ($baslangic_tarihi): ?>
+                    <strong><?php echo date('d.m.Y', strtotime($baslangic_tarihi)); ?></strong>
+                <?php endif; ?>
+                <?php if ($baslangic_tarihi && $bitis_tarihi): ?> - <?php endif; ?>
+                <?php if ($bitis_tarihi): ?>
+                    <strong><?php echo date('d.m.Y', strtotime($bitis_tarihi)); ?></strong>
+                <?php endif; ?>
+            </div>
+            <?php endif; ?>
+        </div>
+
         <!-- Mal Kabul Kayıtları -->
         <?php
-        // Get acceptance records for this supplier from stok_hareket_kayitlari table
+        // Get acceptance records for this supplier from stok_hareket_kayitlari table (with date filter)
         $acceptance_query = "SELECT
                     shk.*,
                     m.malzeme_ismi
                 FROM stok_hareket_kayitlari shk
                 LEFT JOIN malzemeler m ON shk.kod = m.malzeme_kodu
-                WHERE shk.tedarikci_id = ?
-                ORDER BY shk.tarih DESC";
+                WHERE shk.tedarikci_id = ?";
+        
+        if ($baslangic_tarihi) {
+            $acceptance_query .= " AND DATE(shk.tarih) >= ?";
+        }
+        if ($bitis_tarihi) {
+            $acceptance_query .= " AND DATE(shk.tarih) <= ?";
+        }
+        $acceptance_query .= " ORDER BY shk.tarih DESC";
 
         $acceptance_stmt = $connection->prepare($acceptance_query);
-        $acceptance_stmt->bind_param('i', $tedarikci_id);
+        
+        // Parametreleri bind et
+        if ($baslangic_tarihi && $bitis_tarihi) {
+            $acceptance_stmt->bind_param('iss', $tedarikci_id, $baslangic_tarihi, $bitis_tarihi);
+        } elseif ($baslangic_tarihi) {
+            $acceptance_stmt->bind_param('is', $tedarikci_id, $baslangic_tarihi);
+        } elseif ($bitis_tarihi) {
+            $acceptance_stmt->bind_param('is', $tedarikci_id, $bitis_tarihi);
+        } else {
+            $acceptance_stmt->bind_param('i', $tedarikci_id);
+        }
+        
         $acceptance_stmt->execute();
         $acceptance_result = $acceptance_stmt->get_result();
 
