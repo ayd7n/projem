@@ -414,26 +414,34 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             color: var(--text-primary);
         }
 
-        /* Tablo başlığı */
+        /* Tablo başlığı - Kurumsal */
         .table-header {
-            background: white;
-            border: 1px solid var(--border);
-            border-bottom: none;
-            border-radius: 4px 4px 0 0;
-            padding: 10px 12px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            border: none;
+            border-radius: 6px 6px 0 0;
+            padding: 14px 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .table-header h5 {
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
-            color: var(--text-primary);
+            color: white;
             margin: 0;
+            letter-spacing: 0.3px;
+        }
+
+        .table-header h5 small {
+            color: rgba(255, 255, 255, 0.7) !important;
         }
 
         .card {
             background: white;
-            border: 1px solid var(--border);
-            border-radius: 0 0 4px 4px;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
         }
 
         .card-body {
@@ -442,33 +450,61 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         .table {
             margin: 0;
-            font-size: 12px;
+            font-size: 13px;
+            border-collapse: separate;
+            border-spacing: 0;
         }
 
         .table thead th {
-            background: #f9fafb;
-            border-bottom: 1px solid var(--border);
-            padding: 8px 10px;
-            font-weight: 500;
-            color: var(--text-secondary);
+            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+            border-bottom: 2px solid #cbd5e1;
+            padding: 12px 16px;
+            font-weight: 600;
+            color: #334155;
             font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
             white-space: nowrap;
         }
 
+        .table thead th i {
+            margin-right: 6px;
+            opacity: 0.7;
+        }
+
+        .table tbody tr {
+            transition: all 0.15s ease;
+        }
+
+        .table tbody tr:nth-child(even) {
+            background-color: #f8fafc;
+        }
+
+        .table tbody tr:hover {
+            background-color: #e0f2fe;
+        }
+
         .table tbody td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
-            color: var(--text-primary);
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #1e293b;
+            vertical-align: middle;
         }
 
         .table tbody tr:last-child td {
             border-bottom: none;
         }
 
+        .table tbody td.text-right {
+            font-family: 'Roboto Mono', 'Consolas', monospace;
+            font-weight: 500;
+        }
+
         .no-items {
             text-align: center;
-            padding: 32px 16px;
-            color: var(--text-secondary);
+            padding: 40px 20px;
+            color: #64748b;
+            font-style: italic;
         }
 
         @media (max-width: 768px) {
