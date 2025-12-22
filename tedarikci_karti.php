@@ -646,27 +646,32 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                     </div>
                     <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (TL)</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (TL)
+                            </div>
                             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-lira-sign" style="color: #059669;"></i>
                                 <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (USD)</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (USD)
+                            </div>
                             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-dollar-sign" style="color: #2563eb;"></i>
                                 <?php echo number_format($genel_toplam_usd, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 USD = <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 10px; color: var(--text-secondary);">(1 USD =
+                                <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (EUR)</div>
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (EUR)
+                            </div>
                             <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
                                 <i class="fas fa-euro-sign" style="color: #7c3aed;"></i>
                                 <?php echo number_format($genel_toplam_eur, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 EUR = <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 10px; color: var(--text-secondary);">(1 EUR =
+                                <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                     </div>
                 </div>
@@ -723,6 +728,103 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                             <?php else: ?>
                                 <tr>
                                     <td colspan="9" class="text-center text-muted py-4">Bu tedarikçi için mal kabul kaydı
+                                        bulunamadı.</td>
+                                </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ödeme Kayıtları -->
+        <?php
+        // Ödeme toplamları hesapla (TL olarak alınmış)
+        $odeme_toplam_tl = 0;
+        foreach ($expenses as $expense) {
+            $odeme_toplam_tl += $expense['tutar'];
+        }
+        $odeme_toplam_usd = $dolar_kuru > 0 ? $odeme_toplam_tl / $dolar_kuru : 0;
+        $odeme_toplam_eur = $euro_kuru > 0 ? $odeme_toplam_tl / $euro_kuru : 0;
+        ?>
+
+        <?php if (count($expenses) > 0): ?>
+            <!-- Ödeme Toplamları -->
+            <div
+                style="background: white; border: 1px solid var(--border); border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; margin-top: 24px;">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                    <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
+                        <i class="fas fa-money-bill-wave"></i> Ödeme Toplamları
+                    </div>
+                    <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+                        <div style="text-align: right;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (TL)
+                            </div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-lira-sign" style="color: #059669;"></i>
+                                <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (USD)
+                            </div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-dollar-sign" style="color: #2563eb;"></i>
+                                <?php echo number_format($odeme_toplam_usd, 2, ',', '.'); ?>
+                            </div>
+                            <small style="font-size: 10px; color: var(--text-secondary);">(1 USD =
+                                <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (EUR)
+                            </div>
+                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
+                                <i class="fas fa-euro-sign" style="color: #7c3aed;"></i>
+                                <?php echo number_format($odeme_toplam_eur, 2, ',', '.'); ?>
+                            </div>
+                            <small style="font-size: 10px; color: var(--text-secondary);">(1 EUR =
+                                <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+
+        <div class="table-header">
+            <h5>Ödeme Kayıtları</h5>
+        </div>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped">
+                        <thead class="thead-light">
+                            <tr class="small">
+                                <th class="font-weight-normal"><i class="fas fa-calendar-alt"></i> Tarih</th>
+                                <th class="font-weight-normal"><i class="fas fa-folder"></i> Kategori</th>
+                                <th class="font-weight-normal"><i class="fas fa-file-invoice"></i> Fatura No</th>
+                                <th class="font-weight-normal"><i class="fas fa-credit-card"></i> Ödeme Tipi</th>
+                                <th class="font-weight-normal"><i class="fas fa-comment"></i> Açıklama</th>
+                                <th class="font-weight-normal text-right"><i class="fas fa-lira-sign"></i> Tutar (TL)
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php if (count($expenses) > 0): ?>
+                                <?php foreach ($expenses as $expense): ?>
+                                    <tr>
+                                        <td><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></td>
+                                        <td><?php echo htmlspecialchars($expense['kategori'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($expense['fatura_no'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($expense['odeme_tipi'] ?? '-'); ?></td>
+                                        <td><?php echo htmlspecialchars($expense['aciklama'] ?? '-'); ?></td>
+                                        <td class="text-right"><?php echo number_format($expense['tutar'], 2, ',', '.'); ?> ₺
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-4">Bu tedarikçiye ödeme kaydı
                                         bulunamadı.</td>
                                 </tr>
                             <?php endif; ?>
