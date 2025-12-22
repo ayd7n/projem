@@ -636,41 +636,41 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         ?>
 
         <?php if (count($acceptance_rows) > 0): ?>
-            <!-- Toplam Özet - Tablonun Üstünde -->
+            <!-- Mal Kabul Toplamları -->
             <div
-                style="background: white; border: 1px solid var(--border); border-radius: 4px; padding: 12px 16px; margin-bottom: 12px;">
+                style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #22c55e; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px;">
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
-                        <i class="fas fa-chart-line"></i> Mal Kabul Toplamları
+                    <div>
+                        <div style="font-size: 14px; font-weight: 600; color: #166534;">
+                            <i class="fas fa-boxes"></i> Toplam Alım (Bu Tedarikçiden Alınan Mallar)
+                        </div>
+                        <div style="font-size: 11px; color: #15803d;">Aşağıdaki "Mal Kabul Kayıtları" tablosunun toplamı
+                        </div>
                     </div>
                     <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (TL)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-lira-sign" style="color: #059669;"></i>
-                                <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?>
+                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (TL)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <i class="fas fa-lira-sign"></i> <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (USD)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-dollar-sign" style="color: #2563eb;"></i>
+                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (USD)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <i class="fas fa-dollar-sign"></i>
                                 <?php echo number_format($genel_toplam_usd, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 USD =
+                            <small style="font-size: 10px; color: #15803d;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (EUR)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-euro-sign" style="color: #7c3aed;"></i>
+                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (EUR)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                                <i class="fas fa-euro-sign"></i>
                                 <?php echo number_format($genel_toplam_eur, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 EUR =
+                            <small style="font-size: 10px; color: #15803d;">(1 EUR =
                                 <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                     </div>
@@ -679,7 +679,9 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         <?php endif; ?>
 
         <div class="table-header">
-            <h5>Mal Kabul Kayıtları</h5>
+            <h5>Mal Kabul Kayıtları <small
+                    style="font-size: 12px; color: var(--text-secondary); font-weight: 400;">(<?php echo count($calculated_rows); ?>
+                    kayıt)</small></h5>
         </div>
         <div class="card">
             <div class="card-body">
@@ -751,39 +753,38 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         <?php if (count($expenses) > 0): ?>
             <!-- Ödeme Toplamları -->
             <div
-                style="background: white; border: 1px solid var(--border); border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; margin-top: 24px;">
+                style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; margin-top: 24px;">
                 <div
                     style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                    <div style="font-size: 13px; font-weight: 600; color: var(--text-primary);">
-                        <i class="fas fa-money-bill-wave"></i> Ödeme Toplamları
+                    <div>
+                        <div style="font-size: 14px; font-weight: 600; color: #991b1b;">
+                            <i class="fas fa-money-bill-wave"></i> Toplam Ödeme (Bu Tedarikçiye Yapılan Ödemeler)
+                        </div>
+                        <div style="font-size: 11px; color: #b91c1c;">Aşağıdaki "Ödeme Kayıtları" tablosunun toplamı</div>
                     </div>
                     <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (TL)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-lira-sign" style="color: #059669;"></i>
-                                <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?>
+                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (TL)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                                <i class="fas fa-lira-sign"></i> <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?>
                             </div>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (USD)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-dollar-sign" style="color: #2563eb;"></i>
+                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (USD)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                                <i class="fas fa-dollar-sign"></i>
                                 <?php echo number_format($odeme_toplam_usd, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 USD =
+                            <small style="font-size: 10px; color: #b91c1c;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: var(--text-secondary); margin-bottom: 2px;">Toplam (EUR)
-                            </div>
-                            <div style="font-size: 16px; font-weight: 600; color: var(--text-primary);">
-                                <i class="fas fa-euro-sign" style="color: #7c3aed;"></i>
+                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (EUR)</div>
+                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                                <i class="fas fa-euro-sign"></i>
                                 <?php echo number_format($odeme_toplam_eur, 2, ',', '.'); ?>
                             </div>
-                            <small style="font-size: 10px; color: var(--text-secondary);">(1 EUR =
+                            <small style="font-size: 10px; color: #b91c1c;">(1 EUR =
                                 <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                     </div>
@@ -792,7 +793,9 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         <?php endif; ?>
 
         <div class="table-header">
-            <h5>Ödeme Kayıtları</h5>
+            <h5>Ödeme Kayıtları <small
+                    style="font-size: 12px; color: var(--text-secondary); font-weight: 400;">(<?php echo count($expenses); ?>
+                    kayıt)</small></h5>
         </div>
         <div class="card">
             <div class="card-body">
@@ -801,9 +804,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <thead class="thead-light">
                             <tr class="small">
                                 <th class="font-weight-normal"><i class="fas fa-calendar-alt"></i> Tarih</th>
-                                <th class="font-weight-normal"><i class="fas fa-folder"></i> Kategori</th>
                                 <th class="font-weight-normal"><i class="fas fa-file-invoice"></i> Fatura No</th>
-                                <th class="font-weight-normal"><i class="fas fa-credit-card"></i> Ödeme Tipi</th>
                                 <th class="font-weight-normal"><i class="fas fa-comment"></i> Açıklama</th>
                                 <th class="font-weight-normal text-right"><i class="fas fa-lira-sign"></i> Tutar (TL)
                                 </th>
@@ -814,9 +815,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <?php foreach ($expenses as $expense): ?>
                                     <tr>
                                         <td><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['kategori'] ?? '-'); ?></td>
                                         <td><?php echo htmlspecialchars($expense['fatura_no'] ?? '-'); ?></td>
-                                        <td><?php echo htmlspecialchars($expense['odeme_tipi'] ?? '-'); ?></td>
                                         <td><?php echo htmlspecialchars($expense['aciklama'] ?? '-'); ?></td>
                                         <td class="text-right"><?php echo number_format($expense['tutar'], 2, ',', '.'); ?> ₺
                                         </td>
@@ -824,12 +823,94 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <?php endforeach; ?>
                             <?php else: ?>
                                 <tr>
-                                    <td colspan="6" class="text-center text-muted py-4">Bu tedarikçiye ödeme kaydı
+                                    <td colspan="4" class="text-center text-muted py-4">Bu tedarikçiye ödeme kaydı
                                         bulunamadı.</td>
                                 </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alacak/Verecek Bakiye Özeti -->
+        <?php
+        // Bakiye hesapla: Alım - Ödeme
+        // Pozitif bakiye = Tedarikçiye borcumuz var (daha fazla mal aldık, daha az ödedik)
+        // Negatif bakiye = Tedarikçiden alacaklıyız (daha fazla ödedik, daha az mal aldık)
+        $bakiye_tl = $genel_toplam_tl - $odeme_toplam_tl;
+        $bakiye_usd = $dolar_kuru > 0 ? $bakiye_tl / $dolar_kuru : 0;
+        $bakiye_eur = $euro_kuru > 0 ? $bakiye_tl / $euro_kuru : 0;
+
+        // Durum belirleme
+        if ($bakiye_tl > 0) {
+            $bakiye_durum = "Tedarikçiye borcumuz var";
+            $bakiye_renk = "#dc2626"; // Kırmızı - borç
+            $bakiye_bg = "#fef2f2";
+            $bakiye_border = "#ef4444";
+            $bakiye_ikon = "fa-exclamation-triangle";
+        } elseif ($bakiye_tl < 0) {
+            $bakiye_durum = "Tedarikçiden alacağımız var";
+            $bakiye_renk = "#059669"; // Yeşil - alacak
+            $bakiye_bg = "#f0fdf4";
+            $bakiye_border = "#22c55e";
+            $bakiye_ikon = "fa-check-circle";
+            $bakiye_tl = abs($bakiye_tl);
+            $bakiye_usd = abs($bakiye_usd);
+            $bakiye_eur = abs($bakiye_eur);
+        } else {
+            $bakiye_durum = "Hesap kapalı";
+            $bakiye_renk = "#6b7280"; // Gri - sıfır
+            $bakiye_bg = "#f9fafb";
+            $bakiye_border = "#d1d5db";
+            $bakiye_ikon = "fa-balance-scale";
+        }
+        ?>
+
+        <div
+            style="background: <?php echo $bakiye_bg; ?>; border: 2px solid <?php echo $bakiye_border; ?>; border-radius: 8px; padding: 20px; margin-top: 24px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <div
+                        style="font-size: 16px; font-weight: 700; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">
+                        <i class="fas <?php echo $bakiye_ikon; ?>"></i> Bakiye Durumu
+                    </div>
+                    <div style="font-size: 13px; color: <?php echo $bakiye_renk; ?>;"><?php echo $bakiye_durum; ?></div>
+                </div>
+                <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
+                            (TL)</div>
+                        <div style="font-size: 24px; font-weight: 700; color: <?php echo $bakiye_renk; ?>;">
+                            <?php echo number_format($bakiye_tl, 2, ',', '.'); ?> ₺
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
+                            (USD)</div>
+                        <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
+                            $ <?php echo number_format($bakiye_usd, 2, ',', '.'); ?>
+                        </div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
+                            (EUR)</div>
+                        <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
+                            € <?php echo number_format($bakiye_eur, 2, ',', '.'); ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div
+                style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed <?php echo $bakiye_border; ?>; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    <i class="fas fa-boxes" style="color: #22c55e;"></i> Toplam Alım: <strong
+                        style="color: #166534;"><?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?> ₺</strong>
+                </div>
+                <div style="font-size: 12px; color: var(--text-secondary);">
+                    <i class="fas fa-money-bill-wave" style="color: #ef4444;"></i> Toplam Ödeme: <strong
+                        style="color: #991b1b;"><?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?> ₺</strong>
                 </div>
             </div>
         </div>
