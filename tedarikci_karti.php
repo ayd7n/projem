@@ -164,7 +164,8 @@ if ($tedarikci_id <= 0) {
                                 <option value="">-- Tedarikçi Seçin --</option>
                                 <?php foreach ($suppliers as $supplier): ?>
                                     <option value="<?php echo $supplier['tedarikci_id']; ?>">
-                                        <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
+                                        <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
+                                    </option>
                                 <?php endforeach; ?>
                             </select>
                         </div>
@@ -242,6 +243,19 @@ while ($expense = $expenses_result->fetch_assoc()) {
     }
 }
 $expenses_stmt->close();
+
+// Get purchase summary for this supplier
+$purchase_summary_query = "SELECT COUNT(*) as total_purchases, COALESCE(SUM(shs.kullanilan_miktar * shs.birim_fiyat), 0) as total_purchase_amount
+    FROM stok_hareketleri_sozlesmeler shs
+    WHERE shs.tedarikci_id = ?";
+$purchase_summary_stmt = $connection->prepare($purchase_summary_query);
+$purchase_summary_stmt->bind_param('i', $tedarikci_id);
+$purchase_summary_stmt->execute();
+$purchase_summary_result = $purchase_summary_stmt->get_result();
+$purchase_summary = $purchase_summary_result->fetch_assoc();
+$summary_total_purchases = $purchase_summary['total_purchases'];
+$summary_total_purchase_amount = $purchase_summary['total_purchase_amount'];
+$purchase_summary_stmt->close();
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -639,6 +653,15 @@ $expenses_stmt->close();
                 </div>
             </div>
             <div class="summary-card">
+                <div class="summary-icon info">
+                    <i class="fas fa-boxes"></i>
+                </div>
+                <div class="summary-content">
+                    <div class="summary-label">Toplam Alım</div>
+                    <div class="summary-value"><?php echo $summary_total_purchases; ?> adet</div>
+                </div>
+            </div>
+            <div class="summary-card">
                 <div class="summary-icon gold">
                     <i class="fas fa-receipt"></i>
                 </div>
@@ -663,7 +686,8 @@ $expenses_stmt->close();
                 <div class="summary-content">
                     <div class="summary-label">Son Gider</div>
                     <div class="summary-value">
-                        <?php echo $last_expense_date ? date('d.m.Y', strtotime($last_expense_date)) : '-'; ?></div>
+                        <?php echo $last_expense_date ? date('d.m.Y', strtotime($last_expense_date)) : '-'; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -754,62 +778,80 @@ $expenses_stmt->close();
             <div class="section-title"><i class="fas fa-file-contract"></i> Çerçeve Sözleşmeler</div>
 
             <?php if (count($contracts) > 0): ?>
-                <?php foreach ($contracts as $contract): ?>
-                    <div class="contract-card">
-                        <div class="contract-header">
-                            <div class="contract-title">
-                                <i class="fas fa-file-alt"></i> Sözleşme #<?php echo $contract['sozlesme_id']; ?>
-                            </div>
-                        </div>
-                        <div class="contract-details">
-                            <div class="detail-item">
-                                <i class="fas fa-box" style="color: var(--primary);"></i>
-                                <span class="detail-label">Malzeme:</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-lira-sign" style="color: var(--success);"></i>
-                                <span class="detail-label">Birim Fiyat:</span>
-                                <span class="detail-value"><?php echo number_format($contract['birim_fiyat'], 2, ',', '.'); ?>
-                                    <?php echo $contract['para_birimi']; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-hashtag" style="color: var(--warning);"></i>
-                                <span class="detail-label">Limit:</span>
-                                <span class="detail-value"><?php echo $contract['limit_miktar']; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-check-circle" style="color: var(--success);"></i>
-                                <span class="detail-label">Ödenen:</span>
-                                <span class="detail-value"><?php echo $contract['toplu_odenen_miktar'] ?: 0; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-calendar-alt" style="color: var(--info);"></i>
-                                <span class="detail-label">Başlangıç:</span>
-                                <span
-                                    class="detail-value"><?php echo $contract['baslangic_tarihi'] ? date('d.m.Y', strtotime($contract['baslangic_tarihi'])) : '-'; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-calendar-times" style="color: var(--danger);"></i>
-                                <span class="detail-label">Bitiş:</span>
-                                <span
-                                    class="detail-value"><?php echo $contract['bitis_tarihi'] ? date('d.m.Y', strtotime($contract['bitis_tarihi'])) : '-'; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-star" style="color: var(--warning);"></i>
-                                <span class="detail-label">Öncelik:</span>
-                                <span class="detail-value"><?php echo $contract['oncelik']; ?></span>
-                            </div>
-                        </div>
-                        <?php if ($contract['aciklama']): ?>
-                            <div class="detail-item" style="margin-top: 8px; width: 100%;">
-                                <i class="fas fa-comment" style="color: var(--info);"></i>
-                                <span class="detail-label">Not:</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($contract['aciklama']); ?></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
+                <div class="table-responsive" style="overflow-x: auto;">
+                    <table class="contracts-table"
+                        style="width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%); color: white;">
+                                <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600;">#</th>
+                                <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600;">Malzeme
+                                </th>
+                                <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 600;">Birim
+                                    Fiyat</th>
+                                <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 600;">Limit
+                                </th>
+                                <th style="padding: 12px 16px; text-align: right; font-size: 12px; font-weight: 600;">Ödenen
+                                </th>
+                                <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600;">
+                                    Başlangıç</th>
+                                <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600;">Bitiş
+                                </th>
+                                <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600;">
+                                    Öncelik</th>
+                                <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600;">
+                                    Açıklama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php foreach ($contracts as $index => $contract): ?>
+                                <tr
+                                    style="border-bottom: 1px solid var(--border); <?php echo $index % 2 == 0 ? '' : 'background: rgba(124, 58, 237, 0.03);'; ?>">
+                                    <td style="padding: 12px 16px; font-size: 13px; font-weight: 600; color: var(--primary);">
+                                        <?php echo $contract['sozlesme_id']; ?>
+                                    </td>
+                                    <td style="padding: 12px 16px; font-size: 13px; font-weight: 500;">
+                                        <?php echo htmlspecialchars($contract['malzeme_ismi']); ?>
+                                    </td>
+                                    <td
+                                        style="padding: 12px 16px; font-size: 13px; text-align: right; font-weight: 600; color: var(--success);">
+                                        <?php echo number_format($contract['birim_fiyat'], 2, ',', '.'); ?>
+                                        <?php echo $contract['para_birimi']; ?>
+                                    </td>
+                                    <td style="padding: 12px 16px; font-size: 13px; text-align: right;">
+                                        <?php echo number_format($contract['limit_miktar'], 0, ',', '.'); ?>
+                                    </td>
+                                    <td
+                                        style="padding: 12px 16px; font-size: 13px; text-align: right; font-weight: 600; color: var(--info);">
+                                        <?php echo number_format($contract['toplu_odenen_miktar'] ?: 0, 0, ',', '.'); ?>
+                                    </td>
+                                    <td style="padding: 12px 16px; font-size: 12px; text-align: center;">
+                                        <?php echo $contract['baslangic_tarihi'] ? date('d.m.Y', strtotime($contract['baslangic_tarihi'])) : '-'; ?>
+                                    </td>
+                                    <td style="padding: 12px 16px; font-size: 12px; text-align: center;">
+                                        <?php echo $contract['bitis_tarihi'] ? date('d.m.Y', strtotime($contract['bitis_tarihi'])) : '-'; ?>
+                                    </td>
+                                    <td style="padding: 12px 16px; text-align: center;">
+                                        <span style="display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; 
+                                            <?php
+                                            if ($contract['oncelik'] == 1)
+                                                echo 'background: #fef2f2; color: #dc2626;';
+                                            elseif ($contract['oncelik'] == 2)
+                                                echo 'background: #fff7ed; color: #ea580c;';
+                                            else
+                                                echo 'background: #f0fdf4; color: #16a34a;';
+                                            ?>">
+                                            <?php echo $contract['oncelik']; ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 12px 16px; font-size: 12px; color: var(--text-secondary); max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"
+                                        title="<?php echo htmlspecialchars($contract['aciklama'] ?: '-'); ?>">
+                                        <?php echo htmlspecialchars($contract['aciklama'] ?: '-'); ?>
+                                    </td>
+                                </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             <?php else: ?>
                 <div class="no-items">
                     <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
@@ -818,66 +860,6 @@ $expenses_stmt->close();
             <?php endif; ?>
         </div>
 
-        <!-- Giderler -->
-        <div style="margin-top: 30px;">
-            <div class="section-title"><i class="fas fa-receipt"></i> Gider Geçmişi</div>
-
-            <?php if (count($expenses) > 0): ?>
-                <?php foreach ($expenses as $expense): ?>
-                    <div class="expense-card">
-                        <div class="expense-header">
-                            <div class="expense-title">
-                                <i class="fas fa-file-invoice-dollar"></i> Gider #<?php echo $expense['gider_id']; ?>
-                            </div>
-                        </div>
-                        <div class="expense-details">
-                            <div class="detail-item">
-                                <i class="fas fa-calendar" style="color: var(--primary);"></i>
-                                <span class="detail-label">Tarih:</span>
-                                <span class="detail-value"><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-lira-sign" style="color: var(--success);"></i>
-                                <span class="detail-label">Tutar:</span>
-                                <span class="detail-value"><?php echo number_format($expense['tutar'], 2, ',', '.'); ?>
-                                    <?php echo $expense['para_birimi'] ?? 'TRY'; ?></span>
-                            </div>
-                            <div class="detail-item">
-                                <i class="fas fa-tags" style="color: var(--warning);"></i>
-                                <span class="detail-label">Kategori:</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($expense['kategori']); ?></span>
-                            </div>
-                            <?php if ($expense['fatura_no']): ?>
-                                <div class="detail-item">
-                                    <i class="fas fa-file-invoice" style="color: var(--info);"></i>
-                                    <span class="detail-label">Fatura No:</span>
-                                    <span class="detail-value"><?php echo htmlspecialchars($expense['fatura_no']); ?></span>
-                                </div>
-                            <?php endif; ?>
-                            <?php if ($expense['odeme_tipi']): ?>
-                                <div class="detail-item">
-                                    <i class="fas fa-credit-card" style="color: var(--primary);"></i>
-                                    <span class="detail-label">Ödeme Tipi:</span>
-                                    <span class="detail-value"><?php echo htmlspecialchars($expense['odeme_tipi']); ?></span>
-                                </div>
-                            <?php endif; ?>
-                        </div>
-                        <?php if ($expense['aciklama']): ?>
-                            <div class="detail-item" style="margin-top: 8px; width: 100%;">
-                                <i class="fas fa-comment" style="color: var(--info);"></i>
-                                <span class="detail-label">Açıklama:</span>
-                                <span class="detail-value"><?php echo htmlspecialchars($expense['aciklama']); ?></span>
-                            </div>
-                        <?php endif; ?>
-                    </div>
-                <?php endforeach; ?>
-            <?php else: ?>
-                <div class="no-items">
-                    <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
-                    <div style="font-size: 14px; font-weight: 600;">Bu tedarikçiye ait gider kaydı bulunmamaktadır.</div>
-                </div>
-            <?php endif; ?>
-        </div>
     </div>
 
     <!-- jQuery and Bootstrap JS -->
