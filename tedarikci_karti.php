@@ -609,45 +609,65 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             </div>
         </div>
 
-        <!-- Tarih Filtresi -->
-        <div style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 16px;">
-            <form method="GET" action="tedarikci_karti.php" style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
-                <input type="hidden" name="tedarikci_id" value="<?php echo $tedarikci_id; ?>">
+        <!-- Tarih Filtresi ve Ayarlar -->
+        <div
+            style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 16px;">
+            <div
+                style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                <!-- Tarih Filtresi -->
+                <form method="GET" action="tedarikci_karti.php"
+                    style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+                    <input type="hidden" name="tedarikci_id" value="<?php echo $tedarikci_id; ?>">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-filter" style="color: var(--text-secondary);"></i>
+                        <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Tarih
+                            Filtresi:</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary);">Başlangıç:</label>
+                        <input type="date" name="baslangic"
+                            value="<?php echo htmlspecialchars($baslangic_tarihi ?? ''); ?>"
+                            style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <label style="font-size: 12px; color: var(--text-secondary);">Bitiş:</label>
+                        <input type="date" name="bitis" value="<?php echo htmlspecialchars($bitis_tarihi ?? ''); ?>"
+                            style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
+                    </div>
+                    <button type="submit"
+                        style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;">
+                        <i class="fas fa-search"></i> Filtrele
+                    </button>
+                    <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
+                        <a href="tedarikci_karti.php?tedarikci_id=<?php echo $tedarikci_id; ?>"
+                            style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; text-decoration: none;">
+                            <i class="fas fa-times"></i> Temizle
+                        </a>
+                    <?php endif; ?>
+                </form>
+
+                <!-- Para Birimi Toggle -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <i class="fas fa-filter" style="color: var(--text-secondary);"></i>
-                    <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Tarih Filtresi:</span>
+                    <span style="font-size: 12px; color: var(--text-secondary);">Döviz Karşılıkları:</span>
+                    <button type="button" id="toggleCurrencyBtn" onclick="toggleCurrencyView()"
+                        style="background: #059669; color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-eye" id="toggleCurrencyIcon"></i>
+                        <span id="toggleCurrencyText">Gösteriliyor</span>
+                    </button>
                 </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 12px; color: var(--text-secondary);">Başlangıç:</label>
-                    <input type="date" name="baslangic" value="<?php echo htmlspecialchars($baslangic_tarihi ?? ''); ?>" 
-                           style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
-                </div>
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <label style="font-size: 12px; color: var(--text-secondary);">Bitiş:</label>
-                    <input type="date" name="bitis" value="<?php echo htmlspecialchars($bitis_tarihi ?? ''); ?>" 
-                           style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
-                </div>
-                <button type="submit" style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;">
-                    <i class="fas fa-search"></i> Filtrele
-                </button>
-                <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
-                <a href="tedarikci_karti.php?tedarikci_id=<?php echo $tedarikci_id; ?>" 
-                   style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; text-decoration: none;">
-                    <i class="fas fa-times"></i> Temizle
-                </a>
-                <?php endif; ?>
-            </form>
-            <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
-            <div style="margin-top: 10px; font-size: 12px; color: #059669;">
-                <i class="fas fa-info-circle"></i> Filtre aktif: 
-                <?php if ($baslangic_tarihi): ?>
-                    <strong><?php echo date('d.m.Y', strtotime($baslangic_tarihi)); ?></strong>
-                <?php endif; ?>
-                <?php if ($baslangic_tarihi && $bitis_tarihi): ?> - <?php endif; ?>
-                <?php if ($bitis_tarihi): ?>
-                    <strong><?php echo date('d.m.Y', strtotime($bitis_tarihi)); ?></strong>
-                <?php endif; ?>
             </div>
+
+            <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
+                <div style="margin-top: 10px; font-size: 12px; color: #059669;">
+                    <i class="fas fa-info-circle"></i> Filtre aktif:
+                    <?php if ($baslangic_tarihi): ?>
+                        <strong><?php echo date('d.m.Y', strtotime($baslangic_tarihi)); ?></strong>
+                    <?php endif; ?>
+                    <?php if ($baslangic_tarihi && $bitis_tarihi): ?> - <?php endif; ?>
+                    <?php if ($bitis_tarihi): ?>
+                        <strong><?php echo date('d.m.Y', strtotime($bitis_tarihi)); ?></strong>
+                    <?php endif; ?>
+                </div>
             <?php endif; ?>
         </div>
 
@@ -660,7 +680,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                 FROM stok_hareket_kayitlari shk
                 LEFT JOIN malzemeler m ON shk.kod = m.malzeme_kodu
                 WHERE shk.tedarikci_id = ?";
-        
+
         if ($baslangic_tarihi) {
             $acceptance_query .= " AND DATE(shk.tarih) >= ?";
         }
@@ -670,7 +690,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         $acceptance_query .= " ORDER BY shk.tarih DESC";
 
         $acceptance_stmt = $connection->prepare($acceptance_query);
-        
+
         // Parametreleri bind et
         if ($baslangic_tarihi && $bitis_tarihi) {
             $acceptance_stmt->bind_param('iss', $tedarikci_id, $baslangic_tarihi, $bitis_tarihi);
@@ -681,7 +701,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         } else {
             $acceptance_stmt->bind_param('i', $tedarikci_id);
         }
-        
+
         $acceptance_stmt->execute();
         $acceptance_result = $acceptance_stmt->get_result();
 
@@ -772,7 +792,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <i class="fas fa-lira-sign"></i> <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?>
                             </div>
                         </div>
-                        <div style="text-align: right;">
+                        <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (USD)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
                                 <i class="fas fa-dollar-sign"></i>
@@ -781,7 +801,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                             <small style="font-size: 10px; color: #15803d;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
-                        <div style="text-align: right;">
+                        <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (EUR)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
                                 <i class="fas fa-euro-sign"></i>
@@ -886,7 +906,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <i class="fas fa-lira-sign"></i> <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?>
                             </div>
                         </div>
-                        <div style="text-align: right;">
+                        <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (USD)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
                                 <i class="fas fa-dollar-sign"></i>
@@ -895,7 +915,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                             <small style="font-size: 10px; color: #b91c1c;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
-                        <div style="text-align: right;">
+                        <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (EUR)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
                                 <i class="fas fa-euro-sign"></i>
@@ -1003,14 +1023,14 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                             <?php echo number_format($bakiye_tl, 2, ',', '.'); ?> ₺
                         </div>
                     </div>
-                    <div style="text-align: center;">
+                    <div style="text-align: center;" class="currency-toggle">
                         <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
                             (USD)</div>
                         <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
                             $ <?php echo number_format($bakiye_usd, 2, ',', '.'); ?>
                         </div>
                     </div>
-                    <div style="text-align: center;">
+                    <div style="text-align: center;" class="currency-toggle">
                         <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
                             (EUR)</div>
                         <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
@@ -1038,6 +1058,33 @@ while ($kur_row = $kur_result->fetch_assoc()) {
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+    // Para birimi göster/gizle toggle
+    let currencyVisible = true;
+    
+    function toggleCurrencyView() {
+        currencyVisible = !currencyVisible;
+        const elements = document.querySelectorAll('.currency-toggle');
+        const btn = document.getElementById('toggleCurrencyBtn');
+        const icon = document.getElementById('toggleCurrencyIcon');
+        const text = document.getElementById('toggleCurrencyText');
+        
+        elements.forEach(el => {
+            el.style.display = currencyVisible ? '' : 'none';
+        });
+        
+        if (currencyVisible) {
+            btn.style.background = '#059669';
+            icon.className = 'fas fa-eye';
+            text.textContent = 'Gösteriliyor';
+        } else {
+            btn.style.background = '#64748b';
+            icon.className = 'fas fa-eye-slash';
+            text.textContent = 'Gizlendi';
+        }
+    }
+    </script>
 </body>
 
 </html>
