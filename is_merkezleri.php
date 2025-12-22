@@ -632,13 +632,16 @@ $work_centers_result = $connection->query($work_centers_query);
                                     const row = `
                                     <tr>
                                         <td class="actions">
+                                            <a href="is_merkezi_karti.php?id=${workCenter.is_merkezi_id}" class="btn btn-info btn-sm" title="Kartı Görüntüle">
+                                                <i class="fas fa-id-card"></i>
+                                            </a>
                                             <?php if (yetkisi_var('action:is_merkezleri:edit')): ?>
-                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${workCenter.is_merkezi_id}">
+                                            <button class="btn btn-primary btn-sm edit-btn" data-id="${workCenter.is_merkezi_id}" title="Düzenle">
                                                 <i class="fas fa-edit"></i>
                                             </button>
                                             <?php endif; ?>
                                             <?php if (yetkisi_var('action:is_merkezleri:delete')): ?>
-                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${workCenter.is_merkezi_id}">
+                                            <button class="btn btn-danger btn-sm delete-btn" data-id="${workCenter.is_merkezi_id}" title="Sil">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                             <?php endif; ?>
