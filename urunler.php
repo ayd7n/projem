@@ -298,23 +298,56 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         Ekle</button>
                 <?php endif; ?>
 
-                <div class="d-flex align-items-center mb-3">
-                    <div class="btn-group btn-group-toggle" data-toggle="buttons">
-                        <label class="btn btn-outline-secondary" :class="{ active: productTypeFilter === '' }">
+                <!-- Kompakt Filtre Alanı -->
+                <div class="d-flex align-items-center flex-wrap mb-3 p-2"
+                    style="background: linear-gradient(135deg, rgba(74,14,99,0.05), rgba(124,42,153,0.08)); border-radius: 10px; gap: 12px;">
+                    <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary" :class="{ active: productTypeFilter === '' }"
+                            style="border-radius: 6px 0 0 6px; font-size: 0.8rem;">
                             <input type="radio" @click="setProductTypeFilter('')" :checked="productTypeFilter === ''">
-                            <i class="fas fa-th-list mr-1"></i>Tümü
+                            <i class="fas fa-th-list"></i> Tümü
                         </label>
-                        <label class="btn btn-outline-primary" :class="{ active: productTypeFilter === 'uretilen' }">
+                        <label class="btn btn-outline-primary" :class="{ active: productTypeFilter === 'uretilen' }"
+                            style="font-size: 0.8rem;">
                             <input type="radio" @click="setProductTypeFilter('uretilen')"
                                 :checked="productTypeFilter === 'uretilen'">
-                            <i class="fas fa-industry mr-1"></i>Üretilen
+                            <i class="fas fa-industry"></i> Üretilen
                         </label>
-                        <label class="btn btn-outline-success"
-                            :class="{ active: productTypeFilter === 'hazir_alinan' }">
+                        <label class="btn btn-outline-success" :class="{ active: productTypeFilter === 'hazir_alinan' }"
+                            style="border-radius: 0 6px 6px 0; font-size: 0.8rem;">
                             <input type="radio" @click="setProductTypeFilter('hazir_alinan')"
                                 :checked="productTypeFilter === 'hazir_alinan'">
-                            <i class="fas fa-shopping-cart mr-1"></i>Hazır Alınan
+                            <i class="fas fa-shopping-cart"></i> Hazır
                         </label>
+                    </div>
+                    <div class="d-flex align-items-center" style="gap: 8px;">
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"
+                                    style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                        class="fas fa-warehouse"></i></span>
+                            </div>
+                            <select class="form-control form-control-sm" v-model="depoFilter"
+                                @change="onDepoFilterChange"
+                                style="border-radius: 0 6px 6px 0; min-width: 120px; font-size: 0.8rem;">
+                                <option value="">Tüm Depolar</option>
+                                <option v-for="depo in productDepoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="input-group input-group-sm" style="width: auto;">
+                            <div class="input-group-prepend">
+                                <span class="input-group-text"
+                                    style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                        class="fas fa-cube"></i></span>
+                            </div>
+                            <select class="form-control form-control-sm" v-model="rafFilter" @change="loadProducts(1)"
+                                style="border-radius: 0 6px 6px 0; min-width: 100px; font-size: 0.8rem;"
+                                :disabled="!depoFilter">
+                                <option value="">{{ depoFilter ? 'Tüm Raflar' : 'Depo seçin' }}</option>
+                                <option v-for="raf in filterRafList" :value="raf.raf">{{ raf.raf }}</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -618,34 +651,33 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Ürün Tipi *</label>
-                                                <select class="form-control" v-model="modal.data.urun_tipi"
-                                                    required>
+                                                <select class="form-control" v-model="modal.data.urun_tipi" required>
                                                     <option value="uretilen">Üretilen Ürün</option>
                                                     <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
                                             </div>
                                         </div>
                                     </div>
-                                        <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
-                                            <div class="col-md-6">
-                                                <div class="form-group mb-3">
-                                                    <label>Alış Fiyatı (₺)</label>
-                                                    <input type="number" step="0.01" class="form-control"
-                                                        v-model="modal.data.alis_fiyati" min="0">
-                                                </div>
+                                    <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Alış Fiyatı (₺)</label>
+                                                <input type="number" step="0.01" class="form-control"
+                                                    v-model="modal.data.alis_fiyati" min="0">
                                             </div>
                                         </div>
-                                        <div class="form-group mb-3">
-                                            <label>Not Bilgisi</label>
-                                            <textarea class="form-control" v-model="modal.data.not_bilgisi"
-                                                rows="3"></textarea>
-                                        </div>
-                                        <div class="text-right">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                                    class="fas fa-times"></i> Iptal</button>
-                                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
-                                                Kaydet</button>
-                                        </div>
+                                    </div>
+                                    <div class="form-group mb-3">
+                                        <label>Not Bilgisi</label>
+                                        <textarea class="form-control" v-model="modal.data.not_bilgisi"
+                                            rows="3"></textarea>
+                                    </div>
+                                    <div class="text-right">
+                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                                class="fas fa-times"></i> Iptal</button>
+                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
+                                            Kaydet</button>
+                                    </div>
                                 </form>
                             </div>
 
@@ -796,6 +828,10 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     depoList: [],
                     rafList: [],
                     criticalStockFilterEnabled: false,
+                    depoFilter: '',
+                    rafFilter: '',
+                    filterRafList: [],
+                    productDepoList: [],
                     operatingCostMetrics: null,
                     productPhotos: [],
                     loadingPhotos: false,
@@ -846,6 +882,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     if (this.productTypeFilter) {
                         url += `&urun_tipi=${encodeURIComponent(this.productTypeFilter)}`;
                     }
+                    if (this.depoFilter) {
+                        url += `&depo=${encodeURIComponent(this.depoFilter)}`;
+                    }
+                    if (this.rafFilter) {
+                        url += `&raf=${encodeURIComponent(this.rafFilter)}`;
+                    }
                     fetch(url)
                         .then(response => response.json())
                         .then(response => {
@@ -879,6 +921,28 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.currentPage = 1; // Reset to first page when searching
                         this.loadProducts(1);
                     }, 500); // 500ms debounce
+                },
+                onDepoFilterChange() {
+                    this.rafFilter = ''; // Reset raf filter when depo changes
+                    if (this.depoFilter) {
+                        this.loadFilterRafList(this.depoFilter);
+                    } else {
+                        this.filterRafList = [];
+                    }
+                    this.loadProducts(1);
+                },
+                loadFilterRafList(depo) {
+                    if (!depo) {
+                        this.filterRafList = [];
+                        return;
+                    }
+                    fetch(`api_islemleri/urunler_islemler.php?action=get_product_raflar&depo=${encodeURIComponent(depo)}`)
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.filterRafList = response.data;
+                            }
+                        });
                 },
                 openModal(product) {
                     this.rafList = []; // Clear raf list
@@ -970,11 +1034,22 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     })
                 },
                 loadDepoList() {
+                    // Modal için tüm lokasyonlardan depo listesi
                     fetch('api_islemleri/urunler_islemler.php?action=get_depo_list')
                         .then(response => response.json())
                         .then(response => {
                             if (response.status === 'success') {
                                 this.depoList = response.data;
+                            }
+                        });
+                },
+                loadProductDepolar() {
+                    // Filtre için sadece ürünlerde kullanılan depolar
+                    fetch('api_islemleri/urunler_islemler.php?action=get_product_depolar')
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.productDepoList = response.data;
                             }
                         });
                 },
@@ -1340,6 +1415,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             mounted() {
                 this.loadProducts();
                 this.loadDepoList();
+                this.loadProductDepolar();
                 this.loadOperatingCostMetrics();
                 this.loadKurlar();
 

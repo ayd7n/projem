@@ -23,6 +23,8 @@ if (isset($_GET['action'])) {
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $search = isset($_GET['search']) ? $_GET['search'] : '';
         $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
+        $depo_filter = isset($_GET['depo']) ? $_GET['depo'] : '';
+        $raf_filter = isset($_GET['raf']) ? $_GET['raf'] : '';
         $order_by = isset($_GET['order_by']) ? $_GET['order_by'] : 'malzeme_ismi';
         $order_dir = isset($_GET['order_dir']) ? strtoupper($_GET['order_dir']) : 'ASC';
         $offset = ($page - 1) * $limit;
@@ -41,16 +43,33 @@ if (isset($_GET['action'])) {
 
         $search_term = '%' . $search . '%';
 
-        // Get total count for pagination
+        // Build WHERE conditions
+        $where_conditions = ["(m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ?)"];
+        $params = [$search_term, $search_term];
+        $param_types = 'ss';
+
         if ($filter === 'critical') {
-            $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE (malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?) AND stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
-            $stmt = $connection->prepare($count_query);
-            $stmt->bind_param('ss', $search_term, $search_term);
-        } else {
-            $count_query = "SELECT COUNT(*) as total FROM malzemeler WHERE malzeme_ismi LIKE ? OR malzeme_kodu LIKE ?";
-            $stmt = $connection->prepare($count_query);
-            $stmt->bind_param('ss', $search_term, $search_term);
+            $where_conditions[] = "m.stok_miktari <= m.kritik_stok_seviyesi AND m.kritik_stok_seviyesi > 0";
         }
+
+        if (!empty($depo_filter)) {
+            $where_conditions[] = "m.depo = ?";
+            $params[] = $depo_filter;
+            $param_types .= 's';
+        }
+
+        if (!empty($raf_filter)) {
+            $where_conditions[] = "m.raf = ?";
+            $params[] = $raf_filter;
+            $param_types .= 's';
+        }
+
+        $where_clause = 'WHERE ' . implode(' AND ', $where_conditions);
+
+        // Get total count for pagination
+        $count_query = "SELECT COUNT(*) as total FROM malzemeler m {$where_clause}";
+        $stmt = $connection->prepare($count_query);
+        $stmt->bind_param($param_types, ...$params);
         $stmt->execute();
         $count_result = $stmt->get_result()->fetch_assoc();
         $total_materials = $count_result['total'];
@@ -58,27 +77,19 @@ if (isset($_GET['action'])) {
         $stmt->close();
 
         // Get paginated data
-        if ($filter === 'critical') {
-            $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
-                      FROM malzemeler m 
-                      LEFT JOIN malzeme_fotograflari mf ON m.malzeme_kodu = mf.malzeme_kodu 
-                      WHERE (m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ?) 
-                      AND m.stok_miktari <= m.kritik_stok_seviyesi 
-                      AND m.kritik_stok_seviyesi > 0 
-                      GROUP BY m.malzeme_kodu 
-                      ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
-        } else {
-            $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
-                      FROM malzemeler m 
-                      LEFT JOIN malzeme_fotograflari mf ON m.malzeme_kodu = mf.malzeme_kodu 
-                      WHERE m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ? 
-                      GROUP BY m.malzeme_kodu 
-                      ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
-            $stmt = $connection->prepare($query);
-            $stmt->bind_param('ssii', $search_term, $search_term, $limit, $offset);
-        }
+        $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
+                  FROM malzemeler m 
+                  LEFT JOIN malzeme_fotograflari mf ON m.malzeme_kodu = mf.malzeme_kodu 
+                  {$where_clause}
+                  GROUP BY m.malzeme_kodu 
+                  ORDER BY {$order_by} {$order_dir} LIMIT ? OFFSET ?";
+
+        $params[] = $limit;
+        $params[] = $offset;
+        $param_types .= 'ii';
+
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param($param_types, ...$params);
         $stmt->execute();
         $result = $stmt->get_result();
 
@@ -88,10 +99,31 @@ if (isset($_GET['action'])) {
         }
         $stmt->close();
 
-        // Calculate critical materials count (always the total, not filtered)
-        $critical_query = "SELECT COUNT(*) as total FROM malzemeler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
-        $critical_result = $connection->query($critical_query);
-        $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
+        // Calculate filtered critical materials count
+        $critical_where_conditions = ["(m.malzeme_ismi LIKE ? OR m.malzeme_kodu LIKE ?)"];
+        $critical_params = [$search_term, $search_term];
+        $critical_param_types = 'ss';
+
+        $critical_where_conditions[] = "m.stok_miktari <= m.kritik_stok_seviyesi AND m.kritik_stok_seviyesi > 0";
+
+        if (!empty($depo_filter)) {
+            $critical_where_conditions[] = "m.depo = ?";
+            $critical_params[] = $depo_filter;
+            $critical_param_types .= 's';
+        }
+        if (!empty($raf_filter)) {
+            $critical_where_conditions[] = "m.raf = ?";
+            $critical_params[] = $raf_filter;
+            $critical_param_types .= 's';
+        }
+
+        $critical_where_clause = 'WHERE ' . implode(' AND ', $critical_where_conditions);
+        $critical_query = "SELECT COUNT(*) as total FROM malzemeler m {$critical_where_clause}";
+        $critical_stmt = $connection->prepare($critical_query);
+        $critical_stmt->bind_param($critical_param_types, ...$critical_params);
+        $critical_stmt->execute();
+        $critical_materials = $critical_stmt->get_result()->fetch_assoc()['total'] ?? 0;
+        $critical_stmt->close();
 
         $response = [
             'status' => 'success',
@@ -103,6 +135,43 @@ if (isset($_GET['action'])) {
                 'critical_materials' => $critical_materials
             ]
         ];
+    } elseif ($action == 'get_material_depolar') {
+        // Sadece malzemelerde kullanılan depolar
+        $query = "SELECT DISTINCT depo FROM malzemeler WHERE depo IS NOT NULL AND depo != '' ORDER BY depo";
+        $result = $connection->query($query);
+        $depolar = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $depolar[] = ['depo_ismi' => $row['depo']];
+            }
+            $response = ['status' => 'success', 'data' => $depolar];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Depo listesi alınamadı.'];
+        }
+    } elseif ($action == 'get_material_raflar') {
+        // Sadece malzemelerde kullanılan raflar (depoya göre filtrelenebilir)
+        $depo = $_GET['depo'] ?? '';
+        if (!empty($depo)) {
+            $query = "SELECT DISTINCT raf FROM malzemeler WHERE depo = ? AND raf IS NOT NULL AND raf != '' ORDER BY raf";
+            $stmt = $connection->prepare($query);
+            $stmt->bind_param('s', $depo);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $query = "SELECT DISTINCT raf FROM malzemeler WHERE raf IS NOT NULL AND raf != '' ORDER BY raf";
+            $result = $connection->query($query);
+        }
+        $raflar = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $raflar[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $raflar];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Raf listesi alınamadı.'];
+        }
+        if (isset($stmt))
+            $stmt->close();
     } elseif ($action == 'get_material' && isset($_GET['id'])) {
         if (!yetkisi_var('page:view:malzemeler')) {
             echo json_encode(['status' => 'error', 'message' => 'Malzeme görüntüleme yetkiniz yok.']);

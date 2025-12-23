@@ -27,6 +27,8 @@ if (isset($_GET['action'])) {
             $search = isset($_GET['search']) ? $_GET['search'] : '';
             $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
             $urun_tipi = isset($_GET['urun_tipi']) ? $_GET['urun_tipi'] : '';
+            $depo_filter = isset($_GET['depo']) ? $_GET['depo'] : '';
+            $raf_filter = isset($_GET['raf']) ? $_GET['raf'] : '';
             $offset = ($page - 1) * $limit;
             $search_term = '%' . $search . '%';
 
@@ -49,6 +51,18 @@ if (isset($_GET['action'])) {
             if (!empty($urun_tipi)) {
                 $where_conditions[] = "u.urun_tipi = ?";
                 $params[] = $urun_tipi;
+                $param_types .= 's';
+            }
+
+            if (!empty($depo_filter)) {
+                $where_conditions[] = "u.depo = ?";
+                $params[] = $depo_filter;
+                $param_types .= 's';
+            }
+
+            if (!empty($raf_filter)) {
+                $where_conditions[] = "u.raf = ?";
+                $params[] = $raf_filter;
                 $param_types .= 's';
             }
 
@@ -97,14 +111,47 @@ if (isset($_GET['action'])) {
             }
             $stmt_data->close();
 
-            // Calculate stats for all products (unfiltered)
-            $stats_query = "SELECT COUNT(*) as total FROM urunler";
-            $stats_result = $connection->query($stats_query);
-            $total_all_products = $stats_result->fetch_assoc()['total'] ?? 0;
+            // Calculate filtered critical stock count (apply same filters except critical filter itself)
+            $critical_where_conditions = $where_conditions;
+            $critical_params = [];
+            $critical_param_types = '';
 
-            $critical_stats_query = "SELECT COUNT(*) as total FROM urunler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0";
-            $critical_stats_result = $connection->query($critical_stats_query);
-            $total_critical_products = $critical_stats_result->fetch_assoc()['total'] ?? 0;
+            // Remove critical filter from conditions if it was added
+            $critical_where_conditions = array_filter($critical_where_conditions, function ($cond) {
+                return strpos($cond, 'kritik_stok_seviyesi') === false;
+            });
+
+            // Add critical stock condition
+            $critical_where_conditions[] = "u.stok_miktari <= u.kritik_stok_seviyesi AND u.kritik_stok_seviyesi > 0";
+
+            // Rebuild params without limit/offset and filter param
+            if (!empty($search)) {
+                $critical_params[] = $search_term;
+                $critical_params[] = $search_term;
+                $critical_param_types .= 'ss';
+            }
+            if (!empty($urun_tipi)) {
+                $critical_params[] = $urun_tipi;
+                $critical_param_types .= 's';
+            }
+            if (!empty($depo_filter)) {
+                $critical_params[] = $depo_filter;
+                $critical_param_types .= 's';
+            }
+            if (!empty($raf_filter)) {
+                $critical_params[] = $raf_filter;
+                $critical_param_types .= 's';
+            }
+
+            $critical_where_clause = !empty($critical_where_conditions) ? 'WHERE ' . implode(' AND ', $critical_where_conditions) : '';
+            $critical_count_query = "SELECT COUNT(*) as total FROM urunler u {$critical_where_clause}";
+            $stmt_critical = $connection->prepare($critical_count_query);
+            if (!empty($critical_params)) {
+                $stmt_critical->bind_param($critical_param_types, ...$critical_params);
+            }
+            $stmt_critical->execute();
+            $filtered_critical = $stmt_critical->get_result()->fetch_assoc()['total'] ?? 0;
+            $stmt_critical->close();
 
             $response = [
                 'status' => 'success',
@@ -115,8 +162,8 @@ if (isset($_GET['action'])) {
                     'current_page' => $page
                 ],
                 'stats' => [
-                    'total_products' => $total_all_products,
-                    'critical_products' => $total_critical_products
+                    'total_products' => $total_products,
+                    'critical_products' => $filtered_critical
                 ]
             ];
         } catch (Throwable $t) {
@@ -166,6 +213,43 @@ if (isset($_GET['action'])) {
         }
         $stmt->close();
         $response = ['status' => 'success', 'data' => $raflar];
+    } elseif ($action == 'get_product_depolar') {
+        // Sadece ürünlerde kullanılan depolar
+        $query = "SELECT DISTINCT depo FROM urunler WHERE depo IS NOT NULL AND depo != '' ORDER BY depo";
+        $result = $connection->query($query);
+        $depolar = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $depolar[] = ['depo_ismi' => $row['depo']];
+            }
+            $response = ['status' => 'success', 'data' => $depolar];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Depo listesi alınamadı.'];
+        }
+    } elseif ($action == 'get_product_raflar') {
+        // Sadece ürünlerde kullanılan raflar (depoya göre filtrelenebilir)
+        $depo = $_GET['depo'] ?? '';
+        if (!empty($depo)) {
+            $query = "SELECT DISTINCT raf FROM urunler WHERE depo = ? AND raf IS NOT NULL AND raf != '' ORDER BY raf";
+            $stmt = $connection->prepare($query);
+            $stmt->bind_param('s', $depo);
+            $stmt->execute();
+            $result = $stmt->get_result();
+        } else {
+            $query = "SELECT DISTINCT raf FROM urunler WHERE raf IS NOT NULL AND raf != '' ORDER BY raf";
+            $result = $connection->query($query);
+        }
+        $raflar = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $raflar[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $raflar];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Raf listesi alınamadı.'];
+        }
+        if (isset($stmt))
+            $stmt->close();
     } elseif ($action == 'get_all_products') {
         $can_view_cost = yetkisi_var('action:urunler:view_cost');
         $cost_column = $can_view_cost ? ", COALESCE(vum.teorik_maliyet, 0) as teorik_maliyet" : "";

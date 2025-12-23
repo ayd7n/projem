@@ -329,10 +329,38 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
         </div>
 
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center">
                 <h2 class="mb-2 mb-md-0 mr-md-3"><i class="fas fa-list"></i> Malzeme Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+                    <!-- Depo ve Raf Filtreleri -->
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"
+                                style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                    class="fas fa-warehouse"></i></span>
+                        </div>
+                        <select class="form-control form-control-sm" v-model="depoFilter" @change="onDepoFilterChange"
+                            style="border-radius: 0 6px 6px 0; min-width: 120px; font-size: 0.8rem;">
+                            <option value="">Tüm Depolar</option>
+                            <option v-for="depo in materialDepoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"
+                                style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                    class="fas fa-cube"></i></span>
+                        </div>
+                        <select class="form-control form-control-sm" v-model="rafFilter" @change="loadMaterials(1)"
+                            style="border-radius: 0 6px 6px 0; min-width: 100px; font-size: 0.8rem;"
+                            :disabled="!depoFilter">
+                            <option value="">{{ depoFilter ? 'Tüm Raflar' : 'Depo seçin' }}</option>
+                            <option v-for="raf in filterRafList" :value="raf.raf">{{ raf.raf }}</option>
+                        </select>
+                    </div>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group" style="width: auto; min-width: 200px;">
                         <div class="input-group-prepend">
                             <span class="input-group-text"><i class="fas fa-search"></i></span>
                         </div>
@@ -822,6 +850,10 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     modal: { title: '', data: {} },
                     depoList: [],
                     rafList: [],
+                    depoFilter: '',
+                    rafFilter: '',
+                    filterRafList: [],
+                    materialDepoList: [],
                     criticalStockFilterEnabled: false,
                     materialPhotos: [],
                     loadingPhotos: false,
@@ -883,6 +915,12 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     let url = `api_islemleri/malzemeler_islemler.php?action=get_materials&page=${this.currentPage}&limit=${this.limit}&search=${this.search}&order_by=malzeme_kodu&order_dir=desc`;
                     if (this.criticalStockFilterEnabled) {
                         url += '&filter=critical';
+                    }
+                    if (this.depoFilter) {
+                        url += `&depo=${encodeURIComponent(this.depoFilter)}`;
+                    }
+                    if (this.rafFilter) {
+                        url += `&raf=${encodeURIComponent(this.rafFilter)}`;
                     }
                     fetch(url)
                         .then(response => response.json())
@@ -998,6 +1036,38 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                         .then(response => {
                             if (response.status === 'success') {
                                 this.depoList = response.data;
+                            }
+                        });
+                },
+                loadMaterialDepolar() {
+                    // Filtre için sadece malzemelerde kullanılan depolar
+                    fetch('api_islemleri/malzemeler_islemler.php?action=get_material_depolar')
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.materialDepoList = response.data;
+                            }
+                        });
+                },
+                onDepoFilterChange() {
+                    this.rafFilter = ''; // Reset raf filter when depo changes
+                    if (this.depoFilter) {
+                        this.loadFilterRafList(this.depoFilter);
+                    } else {
+                        this.filterRafList = [];
+                    }
+                    this.loadMaterials(1);
+                },
+                loadFilterRafList(depo) {
+                    if (!depo) {
+                        this.filterRafList = [];
+                        return;
+                    }
+                    fetch(`api_islemleri/malzemeler_islemler.php?action=get_material_raflar&depo=${encodeURIComponent(depo)}`)
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.filterRafList = response.data;
                             }
                         });
                 },
@@ -1393,6 +1463,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             mounted() {
                 this.loadMaterials();
                 this.loadDepoList();
+                this.loadMaterialDepolar();
                 this.loadTurler();
             }
         });
