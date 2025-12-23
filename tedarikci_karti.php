@@ -308,7 +308,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         .container {
             max-width: 100%;
-            padding: 12px 16px;
+            padding: 8px 16px;
         }
 
         /* Header */
@@ -316,8 +316,8 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             background: white;
             border: 1px solid var(--border);
             border-radius: 4px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
+            padding: 8px 16px;
+            margin-bottom: 8px;
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -362,15 +362,15 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         .summary-cards {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
+            gap: 6px;
+            margin-bottom: 8px;
         }
 
         .summary-card {
             background: white;
             border: 1px solid var(--border);
             border-radius: 4px;
-            padding: 10px 12px;
+            padding: 6px 10px;
         }
 
         .summary-icon {
@@ -395,23 +395,23 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             background: white;
             border: 1px solid var(--border);
             border-radius: 4px;
-            padding: 12px 16px;
-            margin-bottom: 12px;
+            padding: 8px 14px;
+            margin-bottom: 8px;
         }
 
         .section-title {
             font-size: 13px;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            margin-bottom: 6px;
+            padding-bottom: 4px;
             border-bottom: 1px solid var(--border);
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 8px 16px;
+            gap: 4px 16px;
         }
 
         .info-item {
@@ -611,9 +611,9 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         <!-- Tarih Filtresi ve Ayarlar -->
         <div
-            style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 16px 20px; margin-bottom: 16px;">
+            style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; margin-bottom: 8px;">
             <div
-                style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+                style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
                 <!-- Tarih Filtresi -->
                 <form method="GET" action="tedarikci_karti.php"
                     style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">

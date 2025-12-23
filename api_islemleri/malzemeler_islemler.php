@@ -25,6 +25,7 @@ if (isset($_GET['action'])) {
         $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
         $depo_filter = isset($_GET['depo']) ? $_GET['depo'] : '';
         $raf_filter = isset($_GET['raf']) ? $_GET['raf'] : '';
+        $tur_filter = isset($_GET['tur']) ? $_GET['tur'] : '';
         $order_by = isset($_GET['order_by']) ? $_GET['order_by'] : 'malzeme_ismi';
         $order_dir = isset($_GET['order_dir']) ? strtoupper($_GET['order_dir']) : 'ASC';
         $offset = ($page - 1) * $limit;
@@ -61,6 +62,12 @@ if (isset($_GET['action'])) {
         if (!empty($raf_filter)) {
             $where_conditions[] = "m.raf = ?";
             $params[] = $raf_filter;
+            $param_types .= 's';
+        }
+
+        if (!empty($tur_filter)) {
+            $where_conditions[] = "m.malzeme_turu = ?";
+            $params[] = $tur_filter;
             $param_types .= 's';
         }
 
@@ -114,6 +121,11 @@ if (isset($_GET['action'])) {
         if (!empty($raf_filter)) {
             $critical_where_conditions[] = "m.raf = ?";
             $critical_params[] = $raf_filter;
+            $critical_param_types .= 's';
+        }
+        if (!empty($tur_filter)) {
+            $critical_where_conditions[] = "m.malzeme_turu = ?";
+            $critical_params[] = $tur_filter;
             $critical_param_types .= 's';
         }
 
@@ -172,6 +184,19 @@ if (isset($_GET['action'])) {
         }
         if (isset($stmt))
             $stmt->close();
+    } elseif ($action == 'get_material_turler') {
+        // Sadece malzemelerde kullanılan türler
+        $query = "SELECT DISTINCT malzeme_turu FROM malzemeler WHERE malzeme_turu IS NOT NULL AND malzeme_turu != '' ORDER BY malzeme_turu";
+        $result = $connection->query($query);
+        $turler = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $turler[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $turler];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Tür listesi alınamadı.'];
+        }
     } elseif ($action == 'get_material' && isset($_GET['id'])) {
         if (!yetkisi_var('page:view:malzemeler')) {
             echo json_encode(['status' => 'error', 'message' => 'Malzeme görüntüleme yetkiniz yok.']);

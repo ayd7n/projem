@@ -284,41 +284,42 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             {{ alert.message }}
         </div>
 
-        <div class="row mb-4">
+        <div class="row mb-2">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:malzemeler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Malzeme
+                    <button @click="openModal(null)" class="btn btn-primary btn-sm mb-2"><i class="fas fa-plus"></i> Yeni
+                        Malzeme
                         Ekle</button>
                 <?php endif; ?>
             </div>
             <div class="col-md-4">
                 <div class="row">
-                    <div class="col-6 mb-3">
+                    <div class="col-6 mb-2">
                         <div class="card">
-                            <div class="card-body d-flex align-items-center">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
                                 <div class="stat-icon"
-                                    style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    style="background: var(--primary); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
                                     <i class="fas fa-boxes"></i>
                                 </div>
                                 <div class="stat-info">
-                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ totalMaterials }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam
+                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ totalMaterials }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Toplam
                                         Malzeme</p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 mb-3">
+                    <div class="col-6 mb-2">
                         <div class="card" @click="toggleCriticalStockFilter"
                             style="cursor: pointer; transition: all 0.3s;">
-                            <div class="card-body d-flex align-items-center">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
                                 <div class="stat-icon"
-                                    style="background: var(--danger); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    style="background: var(--danger); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <div class="stat-info">
-                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ criticalMaterials }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Kritik Stok
+                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ criticalMaterials }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Kritik Stok
                                         Altı</p>
                                 </div>
                             </div>
@@ -329,18 +330,17 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
         </div>
 
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center">
-                <h2 class="mb-2 mb-md-0 mr-md-3"><i class="fas fa-list"></i> Malzeme Listesi</h2>
-                <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
                     <!-- Depo ve Raf Filtreleri -->
                     <div class="input-group input-group-sm" style="width: auto;">
                         <div class="input-group-prepend">
                             <span class="input-group-text"
-                                style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                style="background: var(--primary); color: white; border: none; font-size: 0.7rem; padding: 4px 8px;"><i
                                     class="fas fa-warehouse"></i></span>
                         </div>
                         <select class="form-control form-control-sm" v-model="depoFilter" @change="onDepoFilterChange"
-                            style="border-radius: 0 6px 6px 0; min-width: 120px; font-size: 0.8rem;">
+                            style="border-radius: 0 6px 6px 0; min-width: 110px; font-size: 0.75rem; padding: 4px 8px;">
                             <option value="">Tüm Depolar</option>
                             <option v-for="depo in materialDepoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}
                             </option>
@@ -349,23 +349,39 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     <div class="input-group input-group-sm" style="width: auto;">
                         <div class="input-group-prepend">
                             <span class="input-group-text"
-                                style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
+                                style="background: var(--primary); color: white; border: none; font-size: 0.7rem; padding: 4px 8px;"><i
                                     class="fas fa-cube"></i></span>
                         </div>
                         <select class="form-control form-control-sm" v-model="rafFilter" @change="loadMaterials(1)"
-                            style="border-radius: 0 6px 6px 0; min-width: 100px; font-size: 0.8rem;"
+                            style="border-radius: 0 6px 6px 0; min-width: 90px; font-size: 0.75rem; padding: 4px 8px;"
                             :disabled="!depoFilter">
                             <option value="">{{ depoFilter ? 'Tüm Raflar' : 'Depo seçin' }}</option>
                             <option v-for="raf in filterRafList" :value="raf.raf">{{ raf.raf }}</option>
                         </select>
                     </div>
-                    <!-- Arama Kutusu -->
-                    <div class="input-group" style="width: auto; min-width: 200px;">
+                    <!-- Tür Filtresi -->
+                    <div class="input-group input-group-sm" style="width: auto;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text"
+                                style="background: var(--primary); color: white; border: none; font-size: 0.7rem; padding: 4px 8px;"><i
+                                    class="fas fa-box"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadMaterials(1)"
-                            placeholder="Malzeme ara...">
+                        <select class="form-control form-control-sm" v-model="turFilter" @change="loadMaterials(1)"
+                            style="border-radius: 0 6px 6px 0; min-width: 100px; font-size: 0.75rem; padding: 4px 8px;">
+                            <option value="">Tüm Türler</option>
+                            <option v-for="tur in filterTurList" :value="tur.malzeme_turu">{{ tur.malzeme_turu }}
+                            </option>
+                        </select>
+                    </div>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" style="padding: 4px 8px;"><i
+                                    class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control form-control-sm" v-model="search"
+                            @input="loadMaterials(1)" placeholder="Malzeme ara..."
+                            style="font-size: 0.75rem; padding: 4px 8px;">
                     </div>
                 </div>
             </div>
@@ -852,7 +868,9 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     rafList: [],
                     depoFilter: '',
                     rafFilter: '',
+                    turFilter: '',
                     filterRafList: [],
+                    filterTurList: [],
                     materialDepoList: [],
                     criticalStockFilterEnabled: false,
                     materialPhotos: [],
@@ -921,6 +939,9 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     }
                     if (this.rafFilter) {
                         url += `&raf=${encodeURIComponent(this.rafFilter)}`;
+                    }
+                    if (this.turFilter) {
+                        url += `&tur=${encodeURIComponent(this.turFilter)}`;
                     }
                     fetch(url)
                         .then(response => response.json())
@@ -1068,6 +1089,15 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                         .then(response => {
                             if (response.status === 'success') {
                                 this.filterRafList = response.data;
+                            }
+                        });
+                },
+                loadMaterialTurler() {
+                    fetch('api_islemleri/malzemeler_islemler.php?action=get_material_turler')
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.filterTurList = response.data;
                             }
                         });
                 },
@@ -1464,6 +1494,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                 this.loadMaterials();
                 this.loadDepoList();
                 this.loadMaterialDepolar();
+                this.loadMaterialTurler();
                 this.loadTurler();
             }
         });
