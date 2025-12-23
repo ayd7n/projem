@@ -311,7 +311,8 @@ $orders_result = $orders_stmt->get_result();
     <div class="main-container">
         <!-- Header -->
         <div class="page-header d-block">
-            <div class="d-flex align-items-center mb-3 text-primary font-weight-bold" style="font-size: 1.1rem; opacity: 0.9;">
+            <div class="d-flex align-items-center mb-3 text-primary font-weight-bold"
+                style="font-size: 1.1rem; opacity: 0.9;">
                 <i class="fas fa-flask mr-2"></i> İdo Kozmetik Kurumsal Kaynak Yönetimi Sistemi
             </div>
             <div class="d-flex justify-content-between align-items-center">
@@ -329,7 +330,8 @@ $orders_result = $orders_stmt->get_result();
                     </div>
                 </div>
                 <div class="header-actions">
-                    <a href="is_merkezleri.php" class="btn-back no-print"><i class="fas fa-arrow-left"></i> Listeye Dön</a>
+                    <a href="is_merkezleri.php" class="btn-back no-print"><i class="fas fa-arrow-left"></i> Listeye
+                        Dön</a>
                     <button onclick="window.print()" class="btn btn-outline-secondary ml-2"><i class="fas fa-print"></i>
                         Yazdır</button>
                 </div>
@@ -430,7 +432,9 @@ $orders_result = $orders_stmt->get_result();
             <div class="col-12">
                 <div class="alert alert-info border-0 bg-light-blue mb-0 p-3"
                     style="border-radius: 8px 8px 0 0; background: #f0f9ff;">
-                    <small class="text-primary"><i class="fas fa-info-circle mr-1"></i> Bu alanda, yukarıdaki tarih filtresine uygun olarak üretilen ürünlerin <strong>toplam miktarları</strong> özetlenmektedir.</small>
+                    <small class="text-primary"><i class="fas fa-info-circle mr-1"></i> Bu alanda, yukarıdaki tarih
+                        filtresine uygun olarak üretilen ürünlerin <strong>toplam miktarları</strong>
+                        özetlenmektedir.</small>
                 </div>
                 <div class="custom-card h-100 mt-0" style="border-top-left-radius: 0; border-top-right-radius: 0;">
                     <div class="custom-card-header">
@@ -482,7 +486,9 @@ $orders_result = $orders_stmt->get_result();
             <div class="col-12">
                 <div class="alert alert-warning border-0 bg-light-orange mb-0 p-3"
                     style="border-radius: 8px 8px 0 0; background: #fffbeb;">
-                    <small class="text-warning-dark" style="color: #92400e;"><i class="fas fa-info-circle mr-1"></i> Bu alanda, filtreye uygun olan iş emirlerinin <strong>detaylı listesi</strong> yer almaktadır.</small>
+                    <small class="text-warning-dark" style="color: #92400e;"><i class="fas fa-info-circle mr-1"></i> Bu
+                        alanda, filtreye uygun olan iş emirlerinin <strong>detaylı listesi</strong> yer
+                        almaktadır.</small>
                 </div>
                 <div class="custom-card h-100 mt-0" style="border-top-left-radius: 0; border-top-right-radius: 0;">
                     <div class="custom-card-header">
@@ -495,6 +501,7 @@ $orders_result = $orders_stmt->get_result();
                                     <th><i class="fas fa-hashtag text-muted mr-1"></i> No / <i
                                             class="fas fa-calendar-alt text-muted mr-1"></i> Tarih</th>
                                     <th><i class="fas fa-box text-muted mr-1"></i> Ürün</th>
+                                    <th><i class="fas fa-comment-alt text-muted mr-1"></i> Açıklama</th>
                                     <th><i class="fas fa-info-circle text-muted mr-1"></i> Durum</th>
                                     <th class="text-right"><i class="fas fa-ruler-combined text-muted mr-1"></i> Miktar
                                     </th>
@@ -516,6 +523,11 @@ $orders_result = $orders_stmt->get_result();
                                                 <div class="text-truncate" style="max-width: 200px;"
                                                     title="<?php echo htmlspecialchars($order['urun_ismi']); ?>">
                                                     <?php echo htmlspecialchars($order['urun_ismi']); ?>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="text-muted small">
+                                                    <?php echo htmlspecialchars($order['aciklama'] ?? '-'); ?>
                                                 </div>
                                             </td>
                                             <td>
@@ -548,7 +560,7 @@ $orders_result = $orders_stmt->get_result();
                                     <?php endwhile; ?>
                                 <?php else: ?>
                                     <tr>
-                                        <td colspan="4" class="text-center py-4 text-muted">İş emri bulunamadı.</td>
+                                        <td colspan="5" class="text-center py-4 text-muted">İş emri bulunamadı.</td>
                                     </tr>
                                 <?php endif; ?>
                             </tbody>
