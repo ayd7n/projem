@@ -103,131 +103,43 @@ function display_date($date_string)
             </div>
         </div>
 
-        <!-- Bütünleşik Bilgi Paneli -->
-        <div class="row mb-4">
-            <div class="col-12">
-                <div class="card border-0 shadow-sm"
-                    style="background: linear-gradient(145deg, #ffffff, #f8f9fa); border-radius: 16px; overflow: hidden;">
-                    <div class="card-body p-0">
-                        <div class="row no-gutters">
-                            <!-- Limit Bilgisi -->
-                            <div class="col-md-4 info-panel-item" style="border-right: 1px solid rgba(0,0,0,0.05);">
-                                <div class="d-flex align-items-center p-3">
-                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
-                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                                        <i class="fas fa-boxes"></i>
-                                    </div>
-                                    <div class="ml-3 flex-grow-1">
-                                        <h6 class="mb-1 font-weight-bold"
-                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
-                                            <i class="fas fa-chart-bar mr-1" style="color: #667eea;"></i> Limit
-                                        </h6>
-                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
-                                            Sözleşmede belirlenen <strong style="color: #667eea;">toplam
-                                                miktar</strong>dır. Tedarikçiyle yapılan anlaşmanın üst sınırını
-                                            gösterir.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Ödenen Bilgisi -->
-                            <div class="col-md-4 info-panel-item" style="border-right: 1px solid rgba(0,0,0,0.05);">
-                                <div class="d-flex align-items-center p-3">
-                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
-                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #f6ad55 0%, #ed8936 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(246, 173, 85, 0.3);">
-                                        <i class="fas fa-money-bill-wave"></i>
-                                    </div>
-                                    <div class="ml-3 flex-grow-1">
-                                        <h6 class="mb-1 font-weight-bold"
-                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
-                                            <i class="fas fa-check-circle mr-1" style="color: #f6ad55;"></i> Ödenen
-                                        </h6>
-                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
-                                            Limitin <strong style="color: #f6ad55;">peşin ödeme yapılan</strong>
-                                            kısmıdır. Kalan miktar için ödeme beklenmektedir.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Geçerlilik Bilgisi -->
-                            <div class="col-md-4 info-panel-item">
-                                <div class="d-flex align-items-center p-3">
-                                    <div class="info-icon-wrapper d-flex align-items-center justify-content-center"
-                                        style="width: 50px; height: 50px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); border-radius: 12px; color: white; font-size: 1.2rem; box-shadow: 0 4px 15px rgba(72, 187, 120, 0.3);">
-                                        <i class="fas fa-calendar-check"></i>
-                                    </div>
-                                    <div class="ml-3 flex-grow-1">
-                                        <h6 class="mb-1 font-weight-bold"
-                                            style="color: #2d3748; font-family: 'Ubuntu', sans-serif; font-size: 1rem;">
-                                            <i class="fas fa-clock mr-1" style="color: #48bb78;"></i> Geçerlilik
-                                        </h6>
-                                        <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.4;">
-                                            <strong style="color: #48bb78;">Limite ulaşılana</strong> veya <strong
-                                                style="color: #48bb78;">süre dolana</strong> kadar geçerlidir.
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <style>
-            .info-panel-item {
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-
-            .info-panel-item:hover {
-                background: rgba(102, 126, 234, 0.03);
-            }
-
-            @media (max-width: 767.98px) {
-                .info-panel-item {
-                    border-right: none !important;
-                    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-                }
-
-                .info-panel-item:last-child {
-                    border-bottom: none;
-                }
-            }
-        </style>
-
         <div id="alert-placeholder"></div>
 
-        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-            <div>
-                <?php if (yetkisi_var('action:cerceve_sozlesmeler:create')): ?>
-                    <button id="addContractBtn" class="btn btn-primary btn-sm"><i class="fas fa-plus"></i> Yeni Sözleşme
-                        Ekle</button>
-                <?php endif; ?>
-                <button class="btn btn-info btn-sm ml-1" data-toggle="modal" data-target="#bilgiModal"><i
-                        class="fas fa-info-circle"></i> Nasıl Çalışır?</button>
-            </div>
-            <div class="d-flex flex-wrap">
-                <div class="stat-card-mini mr-2 mb-1"
-                    style="padding: 6px 12px; border-radius: 8px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; box-shadow: 0 2px 8px rgba(74,14,99,0.2);">
-                    <i class="fas fa-file-contract mr-2" style="font-size: 0.9rem;"></i>
-                    <span style="font-weight: 600; font-size: 0.85rem;"><?php echo $total_contracts; ?></span>
-                    <span class="ml-1" style="font-size: 0.75rem; opacity: 0.9;">Sözleşme</span>
-                </div>
-                <div class="stat-card-mini mb-1" id="filterPendingPayment"
-                    style="padding: 6px 12px; border-radius: 8px; background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; display: inline-flex; align-items: center; cursor: pointer; box-shadow: 0 2px 8px rgba(246,173,85,0.3);"
-                    title="Ödeme bekleyenleri filtrele">
-                    <i class="fas fa-hourglass-half mr-2" style="font-size: 0.9rem;"></i>
-                    <span style="font-weight: 600; font-size: 0.85rem;"><?php echo $pending_payment_count; ?></span>
-                    <span class="ml-1" style="font-size: 0.75rem; opacity: 0.9;">Bekleyen</span>
-                </div>
-            </div>
-        </div>
-
         <div class="card">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <h2><i class="fas fa-table"></i> Sözleşme Listesi</h2>
+            <div class="card-header d-flex justify-content-start align-items-center py-2 px-3" style="gap: 8px;">
+                <!-- Butonlar -->
+                <?php if (yetkisi_var('action:cerceve_sozlesmeler:create')): ?>
+                        <button id="addContractBtn" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Sözleşme</button>
+                <?php endif; ?>
+                <button class="btn btn-info btn-sm" data-toggle="modal" data-target="#bilgiModal"
+                    style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-info-circle"></i> Nasıl
+                    Çalışır?</button>
+
+                <!-- Arama Kutusu -->
+                <div class="input-group input-group-sm" style="width: auto; min-width: 250px;">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text" style="padding: 4px 8px;"><i class="fas fa-search"></i></span>
+                    </div>
+                    <input type="text" class="form-control form-control-sm" id="contractSearch"
+                        placeholder="Sözleşme ara (Tedarikçi, Malzeme, ID...)"
+                        style="font-size: 0.75rem; padding: 4px 8px;">
+                </div>
+                <!-- Stat Kartları -->
+                <div class="stat-card-mini"
+                    style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                    <i class="fas fa-file-contract mr-1"></i>
+                    <span id="visibleContractCount" style="font-weight: 600;"><?php echo $total_contracts; ?></span>
+                    <span class="ml-1" style="opacity: 0.9;">Sözleşme</span>
+                </div>
+                <div class="stat-card-mini" id="filterPendingPayment"
+                    style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #f6ad55, #ed8936); color: white; display: inline-flex; align-items: center; cursor: pointer; font-size: 0.75rem;"
+                    title="Ödeme bekleyenleri filtrele">
+                    <i class="fas fa-hourglass-half mr-1"></i>
+                    <span id="visiblePendingCount"
+                        style="font-weight: 600;"><?php echo $pending_payment_count; ?></span>
+                    <span class="ml-1" style="opacity: 0.9;">Ödeme Bekleyen</span>
+                </div>
             </div>
             <div class="card-body">
                 <div class="table-wrapper">
@@ -256,100 +168,100 @@ function display_date($date_string)
                         </thead>
                         <tbody>
                             <?php if ($contracts_result && $contracts_result->num_rows > 0): ?>
-                                <?php while ($contract = $contracts_result->fetch_assoc()):
-                                    $odenen = $contract['toplu_odenen_miktar'] ?? 0;
-                                    $kabul = $contract['toplam_mal_kabul_miktari'] ?? 0;
-                                    $fark = $kabul - $odenen;
-                                    $has_pending_payment = $fark > 0;
+                                    <?php while ($contract = $contracts_result->fetch_assoc()):
+                                        $odenen = $contract['toplu_odenen_miktar'] ?? 0;
+                                        $kabul = $contract['toplam_mal_kabul_miktari'] ?? 0;
+                                        $fark = $kabul - $odenen;
+                                        $has_pending_payment = $fark > 0;
 
-                                    $row_class = $contract['gecerli_mi'] ? 'table-success' : 'table-danger';
-                                    $payment_class = $has_pending_payment ? 'has-pending-payment' : '';
-                                    ?>
-                                    <tr class="<?php echo $row_class; ?> <?php echo $payment_class; ?>">
-                                        <td class="actions">
-                                            <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
-                                                <button class="btn btn-primary btn-sm edit-btn"
-                                                    data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                                    <i class="fas fa-edit"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            <?php if (yetkisi_var('action:cerceve_sozlesmeler:delete')): ?>
-                                                <button class="btn btn-danger btn-sm delete-btn"
-                                                    data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                                    <i class="fas fa-trash"></i>
-                                                </button>
-                                            <?php endif; ?>
-                                            <button class="btn btn-info btn-sm detail-btn"
-                                                data-id="<?php echo $contract['sozlesme_id']; ?>">
-                                                <i class="fas fa-info-circle"></i>
-                                            </button>
-                                        </td>
-                                        <td><strong>#<?php echo $contract['sozlesme_id']; ?></strong></td>
-                                        <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
-                                        <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
-                                        <td><strong><?php echo number_format($contract['birim_fiyat'], 2); ?></strong></td>
-                                        <td>
-                                            <?php
-                                            $curr = $contract['para_birimi'];
-                                            if ($curr === 'TL')
-                                                echo '<span class="badge badge-info">₺ TRY</span>';
-                                            elseif ($curr === 'USD')
-                                                echo '<span class="badge badge-success">$ USD</span>';
-                                            elseif ($curr === 'EUR')
-                                                echo '<span class="badge badge-warning">€ EUR</span>';
-                                            ?>
-                                        </td>
-                                        <td><?php echo $contract['limit_miktar']; ?></td>
-                                        <td><?php echo $contract['toplu_odenen_miktar'] ?? 0; ?></td>
-                                        <td>
-                                            <?php
-                                            if ($has_pending_payment) {
-                                                echo '<button class="btn btn-primary btn-sm make-payment-btn" 
+                                        $row_class = $contract['gecerli_mi'] ? 'table-success' : 'table-danger';
+                                        $payment_class = $has_pending_payment ? 'has-pending-payment' : '';
+                                        ?>
+                                            <tr class="<?php echo $row_class; ?> <?php echo $payment_class; ?>">
+                                                <td class="actions">
+                                                    <?php if (yetkisi_var('action:cerceve_sozlesmeler:edit')): ?>
+                                                            <button class="btn btn-primary btn-sm edit-btn"
+                                                                data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                    <?php endif; ?>
+                                                    <?php if (yetkisi_var('action:cerceve_sozlesmeler:delete')): ?>
+                                                            <button class="btn btn-danger btn-sm delete-btn"
+                                                                data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                    <?php endif; ?>
+                                                    <button class="btn btn-info btn-sm detail-btn"
+                                                        data-id="<?php echo $contract['sozlesme_id']; ?>">
+                                                        <i class="fas fa-info-circle"></i>
+                                                    </button>
+                                                </td>
+                                                <td><strong>#<?php echo $contract['sozlesme_id']; ?></strong></td>
+                                                <td><strong><?php echo htmlspecialchars($contract['tedarikci_adi']); ?></strong></td>
+                                                <td><?php echo htmlspecialchars($contract['malzeme_ismi']); ?></td>
+                                                <td><strong><?php echo number_format($contract['birim_fiyat'], 2); ?></strong></td>
+                                                <td>
+                                                    <?php
+                                                    $curr = $contract['para_birimi'];
+                                                    if ($curr === 'TL')
+                                                        echo '<span class="badge badge-info">₺ TRY</span>';
+                                                    elseif ($curr === 'USD')
+                                                        echo '<span class="badge badge-success">$ USD</span>';
+                                                    elseif ($curr === 'EUR')
+                                                        echo '<span class="badge badge-warning">€ EUR</span>';
+                                                    ?>
+                                                </td>
+                                                <td><?php echo $contract['limit_miktar']; ?></td>
+                                                <td><?php echo $contract['toplu_odenen_miktar'] ?? 0; ?></td>
+                                                <td>
+                                                    <?php
+                                                    if ($has_pending_payment) {
+                                                        echo '<button class="btn btn-primary btn-sm make-payment-btn" 
                                                             data-id="' . $contract['sozlesme_id'] . '" 
                                                             data-quantity="' . $fark . '"
                                                             data-price="' . $contract['birim_fiyat'] . '"
                                                             data-currency="' . $contract['para_birimi'] . '">
                                                             <i class="fas fa-money-bill-wave"></i> ' . $fark . ' Adet Ödeme Yap
                                                     </button>';
-                                            } else {
-                                                echo '<span class="text-success"><i class="fas fa-check"></i> Tamamlandı</span>';
-                                            }
-                                            ?>
-                                        </td>
-                                        <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
-                                        <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
-                                        <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
-                                        <td>
-                                            <span class="badge badge-info"><?php echo $contract['oncelik']; ?></span>
-                                        </td>
-                                        <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
-                                        <td><?php echo $contract['kalan_miktar']; ?></td>
-                                        <td>
-                                            <?php
-                                            $status_class = $contract['gecerlilik_durumu'] === 'Gecerli' ? 'badge-success' : 'badge-danger';
-                                            echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
-                                            ?>
-                                        </td>
-                                        <td>
-                                            <?php
-                                            $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
-                                            $usage_text = $contract['gecerli_mi'] ? 'Kullanilabilir' : 'Kullanilamaz';
-                                            echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
-                                            ?>
-                                        </td>
-                                        <td><?php echo htmlspecialchars($contract['aciklama']); ?></td>
-                                    </tr>
-                                <?php endwhile; ?>
+                                                    } else {
+                                                        echo '<span class="text-success"><i class="fas fa-check"></i> Tamamlandı</span>';
+                                                    }
+                                                    ?>
+                                                </td>
+                                                <td><?php echo display_date($contract['baslangic_tarihi']); ?></td>
+                                                <td><?php echo display_date($contract['bitis_tarihi']); ?></td>
+                                                <td><?php echo htmlspecialchars($contract['olusturan']); ?></td>
+                                                <td>
+                                                    <span class="badge badge-info"><?php echo $contract['oncelik']; ?></span>
+                                                </td>
+                                                <td><?php echo $contract['toplam_mal_kabul_miktari']; ?></td>
+                                                <td><?php echo $contract['kalan_miktar']; ?></td>
+                                                <td>
+                                                    <?php
+                                                    $status_class = $contract['gecerlilik_durumu'] === 'Gecerli' ? 'badge-success' : 'badge-danger';
+                                                    echo '<span class="badge ' . $status_class . '">' . $contract['gecerlilik_durumu'] . '</span>';
+                                                    ?>
+                                                </td>
+                                                <td>
+                                                    <?php
+                                                    $usage_class = $contract['gecerli_mi'] ? 'badge-success' : 'badge-danger';
+                                                    $usage_text = $contract['gecerli_mi'] ? 'Kullanilabilir' : 'Kullanilamaz';
+                                                    echo '<span class="badge ' . $usage_class . '">' . $usage_text . '</span>';
+                                                    ?>
+                                                </td>
+                                                <td><?php echo htmlspecialchars($contract['aciklama']); ?></td>
+                                            </tr>
+                                    <?php endwhile; ?>
                             <?php else: ?>
-                                <tr class="no-contracts-row">
-                                    <td colspan="18" class="text-center p-4">
-                                        <i class="fas fa-file-contract fa-3x mb-3"
-                                            style="color: var(--text-secondary);"></i>
-                                        <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
-                                        <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle"
-                                            butonunu kullanabilirsiniz.</p>
-                                    </td>
-                                </tr>
+                                    <tr class="no-contracts-row">
+                                        <td colspan="18" class="text-center p-4">
+                                            <i class="fas fa-file-contract fa-3x mb-3"
+                                                style="color: var(--text-secondary);"></i>
+                                            <h4>Henüz Kayıtlı Sözleşme Bulunmuyor</h4>
+                                            <p class="text-muted">Yeni bir sözleşme eklemek için yukarıdaki "Yeni Sözleşme Ekle"
+                                                butonunu kullanabilirsiniz.</p>
+                                        </td>
+                                    </tr>
                             <?php endif; ?>
                         </tbody>
                     </table>
@@ -381,8 +293,9 @@ function display_date($date_string)
                                     <?php
                                     mysqli_data_seek($suppliers_result, 0);
                                     while ($supplier = $suppliers_result->fetch_assoc()): ?>
-                                        <option value="<?php echo $supplier['tedarikci_id']; ?>">
-                                            <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></option>
+                                            <option value="<?php echo $supplier['tedarikci_id']; ?>">
+                                                <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?>
+                                            </option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
@@ -393,9 +306,9 @@ function display_date($date_string)
                                     <?php
                                     mysqli_data_seek($materials_result, 0);
                                     while ($material = $materials_result->fetch_assoc()): ?>
-                                        <option value="<?php echo $material['malzeme_kodu']; ?>">
-                                            <?php echo $material['malzeme_kodu'] . ' - ' . htmlspecialchars($material['malzeme_ismi']); ?>
-                                        </option>
+                                            <option value="<?php echo $material['malzeme_kodu']; ?>">
+                                                <?php echo $material['malzeme_kodu'] . ' - ' . htmlspecialchars($material['malzeme_ismi']); ?>
+                                            </option>
                                     <?php endwhile; ?>
                                 </select>
                             </div>
@@ -470,6 +383,7 @@ function display_date($date_string)
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-size: 0.8rem;
         }
 
         .stat-card {
@@ -751,6 +665,35 @@ function display_date($date_string)
                 </div>`
                 );
             }
+
+            // Client-side search/filter functionality
+            $('#contractSearch').on('keyup', function () {
+                var searchText = $(this).val().toLowerCase().trim();
+                var visibleCount = 0;
+                var pendingCount = 0;
+
+                $('table tbody tr').each(function () {
+                    // Skip the "no contracts" row
+                    if ($(this).hasClass('no-contracts-row')) return;
+
+                    var rowText = $(this).text().toLowerCase();
+
+                    if (searchText === '' || rowText.indexOf(searchText) !== -1) {
+                        $(this).show();
+                        visibleCount++;
+                        // Check if this row has pending payment
+                        if ($(this).hasClass('has-pending-payment')) {
+                            pendingCount++;
+                        }
+                    } else {
+                        $(this).hide();
+                    }
+                });
+
+                // Update stat counts
+                $('#visibleContractCount').text(visibleCount);
+                $('#visiblePendingCount').text(pendingCount);
+            });
 
             // Open modal for adding a new contract
             $('#addContractBtn').on('click', function () {
@@ -1087,6 +1030,41 @@ function display_date($date_string)
                         <h6><i class="fas fa-exclamation-circle"></i> Sistem Özeti</h6>
                         <p>Çerçeve sözleşme sistemi, tedarikçinizle yaptığınız anlaşmaları takip etmenizi ve Mal Kabul
                             işlemlerinde bu anlaşmaları otomatik olarak kullanmanızı sağlar.</p>
+                    </div>
+
+                    <!-- Temel Kavramlar -->
+                    <h6><i class="fas fa-book"></i> Temel Kavramlar</h6>
+                    <div class="row mb-3">
+                        <div class="col-md-4">
+                            <div class="card border-primary h-100">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title text-primary mb-1"><i class="fas fa-chart-bar"></i> Limit</h6>
+                                    <p class="card-text small mb-0">Sözleşmede belirlenen <strong>toplam
+                                            miktar</strong>dır. Tedarikçiyle yapılan anlaşmanın üst sınırını gösterir.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-warning h-100">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title text-warning mb-1"><i class="fas fa-money-bill-wave"></i>
+                                        Ödenen</h6>
+                                    <p class="card-text small mb-0">Limitin <strong>peşin ödeme yapılan</strong>
+                                        kısmıdır. Kalan miktar için ödeme beklenmektedir.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card border-success h-100">
+                                <div class="card-body p-2">
+                                    <h6 class="card-title text-success mb-1"><i class="fas fa-calendar-check"></i>
+                                        Geçerlilik</h6>
+                                    <p class="card-text small mb-0"><strong>Limite ulaşılana</strong> veya <strong>süre
+                                            dolana</strong> kadar geçerlidir.</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <h6><i class="fas fa-star"></i> Öncelik Sistemi</h6>
