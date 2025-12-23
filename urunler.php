@@ -294,91 +294,39 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         <div class="row mb-4">
             <div class="col-md-8">
                 <?php if (yetkisi_var('action:urunler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Urun
+                    <button @click="openModal(null)" class="btn btn-primary btn-sm mb-2"><i class="fas fa-plus"></i> Yeni
+                        Urun
                         Ekle</button>
                 <?php endif; ?>
-
-                <!-- Kompakt Filtre Alanı -->
-                <div class="d-flex align-items-center flex-wrap mb-3 p-2"
-                    style="background: linear-gradient(135deg, rgba(74,14,99,0.05), rgba(124,42,153,0.08)); border-radius: 10px; gap: 12px;">
-                    <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
-                        <label class="btn btn-outline-secondary" :class="{ active: productTypeFilter === '' }"
-                            style="border-radius: 6px 0 0 6px; font-size: 0.8rem;">
-                            <input type="radio" @click="setProductTypeFilter('')" :checked="productTypeFilter === ''">
-                            <i class="fas fa-th-list"></i> Tümü
-                        </label>
-                        <label class="btn btn-outline-primary" :class="{ active: productTypeFilter === 'uretilen' }"
-                            style="font-size: 0.8rem;">
-                            <input type="radio" @click="setProductTypeFilter('uretilen')"
-                                :checked="productTypeFilter === 'uretilen'">
-                            <i class="fas fa-industry"></i> Üretilen
-                        </label>
-                        <label class="btn btn-outline-success" :class="{ active: productTypeFilter === 'hazir_alinan' }"
-                            style="border-radius: 0 6px 6px 0; font-size: 0.8rem;">
-                            <input type="radio" @click="setProductTypeFilter('hazir_alinan')"
-                                :checked="productTypeFilter === 'hazir_alinan'">
-                            <i class="fas fa-shopping-cart"></i> Hazır
-                        </label>
-                    </div>
-                    <div class="d-flex align-items-center" style="gap: 8px;">
-                        <div class="input-group input-group-sm" style="width: auto;">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"
-                                    style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
-                                        class="fas fa-warehouse"></i></span>
-                            </div>
-                            <select class="form-control form-control-sm" v-model="depoFilter"
-                                @change="onDepoFilterChange"
-                                style="border-radius: 0 6px 6px 0; min-width: 120px; font-size: 0.8rem;">
-                                <option value="">Tüm Depolar</option>
-                                <option v-for="depo in productDepoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}
-                                </option>
-                            </select>
-                        </div>
-                        <div class="input-group input-group-sm" style="width: auto;">
-                            <div class="input-group-prepend">
-                                <span class="input-group-text"
-                                    style="background: var(--primary); color: white; border: none; font-size: 0.75rem;"><i
-                                        class="fas fa-cube"></i></span>
-                            </div>
-                            <select class="form-control form-control-sm" v-model="rafFilter" @change="loadProducts(1)"
-                                style="border-radius: 0 6px 6px 0; min-width: 100px; font-size: 0.8rem;"
-                                :disabled="!depoFilter">
-                                <option value="">{{ depoFilter ? 'Tüm Raflar' : 'Depo seçin' }}</option>
-                                <option v-for="raf in filterRafList" :value="raf.raf">{{ raf.raf }}</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div class="col-md-4">
                 <div class="row">
-                    <div class="col-6 mb-3">
+                    <div class="col-6 mb-2">
                         <div class="card">
-                            <div class="card-body d-flex align-items-center">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
                                 <div class="stat-icon"
-                                    style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    style="background: var(--primary); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
                                     <i class="fas fa-boxes"></i>
                                 </div>
                                 <div class="stat-info">
-                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ totalProducts }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Toplam Urun
+                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ totalProducts }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Toplam Urun
                                     </p>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6 mb-3">
+                    <div class="col-6 mb-2">
                         <div class="card" @click="toggleCriticalStockFilter"
                             style="cursor: pointer; transition: all 0.3s;">
-                            <div class="card-body d-flex align-items-center">
+                            <div class="card-body d-flex align-items-center py-2 px-3">
                                 <div class="stat-icon"
-                                    style="background: var(--danger); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
+                                    style="background: var(--danger); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
                                     <i class="fas fa-exclamation-triangle"></i>
                                 </div>
                                 <div class="stat-info">
-                                    <h3 style="font-size: 1.5rem; margin: 0;">{{ criticalProducts }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Kritik Stok
+                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ criticalProducts }}</h3>
+                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Kritik Stok
                                         Altı</p>
                                 </div>
                             </div>
@@ -390,15 +338,66 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
 
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Urun Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Ürün Tipi Butonları -->
+                    <div class="btn-group btn-group-sm btn-group-toggle" data-toggle="buttons">
+                        <label class="btn btn-outline-secondary btn-sm" :class="{ active: productTypeFilter === '' }"
+                            style="border-radius: 6px 0 0 6px; font-size: 0.7rem; padding: 4px 8px;">
+                            <input type="radio" @click="setProductTypeFilter('')" :checked="productTypeFilter === ''">
+                            <i class="fas fa-th-list"></i> Tümü
+                        </label>
+                        <label class="btn btn-outline-primary btn-sm"
+                            :class="{ active: productTypeFilter === 'uretilen' }"
+                            style="font-size: 0.7rem; padding: 4px 8px;">
+                            <input type="radio" @click="setProductTypeFilter('uretilen')"
+                                :checked="productTypeFilter === 'uretilen'">
+                            <i class="fas fa-industry"></i> Üretilen
+                        </label>
+                        <label class="btn btn-outline-success btn-sm"
+                            :class="{ active: productTypeFilter === 'hazir_alinan' }"
+                            style="border-radius: 0 6px 6px 0; font-size: 0.7rem; padding: 4px 8px;">
+                            <input type="radio" @click="setProductTypeFilter('hazir_alinan')"
+                                :checked="productTypeFilter === 'hazir_alinan'">
+                            <i class="fas fa-shopping-cart"></i> Hazır
+                        </label>
+                    </div>
+                    <!-- Depo Filtresi -->
+                    <div class="input-group input-group-sm" style="width: auto;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text"
+                                style="background: var(--primary); color: white; border: none; font-size: 0.7rem; padding: 4px 8px;"><i
+                                    class="fas fa-warehouse"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="onSearchInput"
-                            placeholder="Urun ara...">
+                        <select class="form-control form-control-sm" v-model="depoFilter" @change="onDepoFilterChange"
+                            style="border-radius: 0 6px 6px 0; min-width: 110px; font-size: 0.75rem; padding: 4px 8px;">
+                            <option value="">Tüm Depolar</option>
+                            <option v-for="depo in productDepoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}
+                            </option>
+                        </select>
+                    </div>
+                    <!-- Raf Filtresi -->
+                    <div class="input-group input-group-sm" style="width: auto;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text"
+                                style="background: var(--primary); color: white; border: none; font-size: 0.7rem; padding: 4px 8px;"><i
+                                    class="fas fa-cube"></i></span>
+                        </div>
+                        <select class="form-control form-control-sm" v-model="rafFilter" @change="loadProducts(1)"
+                            style="border-radius: 0 6px 6px 0; min-width: 90px; font-size: 0.75rem; padding: 4px 8px;"
+                            :disabled="!depoFilter">
+                            <option value="">{{ depoFilter ? 'Tüm Raflar' : 'Depo seçin' }}</option>
+                            <option v-for="raf in filterRafList" :value="raf.raf">{{ raf.raf }}</option>
+                        </select>
+                    </div>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text" style="padding: 4px 8px;"><i
+                                    class="fas fa-search"></i></span>
+                        </div>
+                        <input type="text" class="form-control form-control-sm" v-model="search" @input="onSearchInput"
+                            placeholder="Urun ara..." style="font-size: 0.75rem; padding: 4px 8px;">
                     </div>
                 </div>
             </div>
@@ -476,7 +475,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     <span v-if="product.urun_tipi === 'uretilen'"
                                         class="badge badge-primary">Üretilen</span>
                                     <span v-else-if="product.urun_tipi === 'hazir_alinan'"
-                                        class="badge badge-success">Hazır Alınan</span>
+                                        class="badge badge-success">Hazır
+                                        Alınan</span>
                                     <span v-else class="badge badge-secondary">{{ product.urun_tipi }}</span>
                                 </td>
                             </tr>
