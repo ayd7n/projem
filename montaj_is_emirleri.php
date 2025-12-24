@@ -853,11 +853,12 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                             <table class="table table-sm">
                                                 <thead>
                                                     <tr>
-                                                        <th>Malzeme Kodu</th>       
-                                                        <th>Malzeme Ismi</th>       
-                                                        <th>Malzeme Turu</th>       
-                                                        <th>Gerekli Miktar</th>     
-                                                        <th>Bilesim Orani</th>      
+                                                        <th>Malzeme Kodu</th>
+                                                        <th>Malzeme Ismi</th>
+                                                        <th>Malzeme Turu</th>
+                                                        <th>Gerekli Miktar</th>
+                                                        <th>Bilesim Orani</th>
+                                                        <th>Stok Miktarı</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -867,6 +868,9 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                         <td>{{ component.malzeme_turu }}</td>
                                                         <td>{{ component.miktar }} {{ component.birim }}</td>
                                                         <td>{{ component.bilesim_orani || (component.miktar / selectedWorkOrder.planlanan_miktar).toFixed(4) }}</td>
+                                                        <td :class="component.stok_yeterli ? 'text-success' : 'text-danger font-weight-bold'">
+                                                            {{ component.stok_miktari }}
+                                                        </td>
                                                     </tr>
                                                 </tbody>
                                             </table>

@@ -175,17 +175,17 @@ app = new Vue({
                 });
 
                 if (response.data.status === 'success') {
-                    // Calculate the required amounts based on the formula
+                    // Map the response data to the expected format
                     const calculated = response.data.data.map(component => {
-                        // Calculate: original_component_amount * user_quantity
-                        const calculatedAmount = parseFloat(component.bilesen_miktari) * parseFloat(this.selectedWorkOrder.planlanan_miktar);
                         return {
                             malzeme_kodu: component.bilesen_kodu,
                             malzeme_ismi: component.bilesen_ismi,
                             malzeme_turu: component.bilesenin_malzeme_turu,
-                            miktar: calculatedAmount.toFixed(2),
+                            miktar: parseFloat(component.gereken_miktar).toFixed(2),
                             birim: this.productUnit, // Use the product unit instead of work order unit
-                            bilesim_orani: component.bilesen_miktari // Bileşim oranı (formül oranı)
+                            bilesim_orani: component.bilesen_miktari, // Bileşim oranı (formül oranı)
+                            stok_miktari: parseFloat(component.stok_miktari).toFixed(2),
+                            stok_yeterli: component.stok_yeterli
                         };
                     });
 
@@ -261,6 +261,24 @@ app = new Vue({
         },
         async saveWorkOrder() {
             try {
+                // Check if any component has insufficient stock
+                const insufficientStockComponents = this.calculatedComponents.filter(component => !component.stok_yeterli);
+                if (insufficientStockComponents.length > 0) {
+                    let errorMessage = 'Aşağıdaki bileşenlerin stok miktarı yeterli değildir:\n\n';
+                    insufficientStockComponents.forEach(component => {
+                        errorMessage += `- ${component.malzeme_ismi}: Gerekli ${component.miktar} ${component.birim}, Mevcut ${component.stok_miktari} ${component.birim}\n`;
+                    });
+                    errorMessage += '\nStok miktarlarını kontrol edin ve iş emrini oluşturmayın.';
+
+                    Swal.fire({
+                        title: 'Stok Yetersiz!',
+                        text: errorMessage,
+                        icon: 'error',
+                        confirmButtonText: 'Tamam'
+                    });
+                    return; // Prevent saving
+                }
+
                 // Calculate planlanan_bitis_tarihi based on planlanan_baslangic_tarihi
                 // For assembly work orders, end date is the same as start date
                 let startDate = new Date(this.selectedWorkOrder.planlanan_baslangic_tarihi);
