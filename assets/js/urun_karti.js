@@ -7,6 +7,7 @@ const app = Vue.createApp({
       urunKodu: window.urunKodu,
       frameContracts: [], // Store available frame contracts
       contractsLoaded: false, // Track if contracts have been loaded
+      kurlar: { dolar: 1, euro: 1 }, // Exchange rates
       // No image viewer needed since we're using Lightbox2
     };
   },
@@ -123,6 +124,7 @@ const app = Vue.createApp({
   },
   mounted() {
     this.loadProductCard();
+    this.loadKurlar();
     // Remove v-cloak attribute after Vue has mounted to show the content
     this.$nextTick(() => {
       const appElement = document.getElementById("app");
@@ -183,9 +185,45 @@ const app = Vue.createApp({
           this.loading = false;
         });
     },
-    formatCurrency(value) {
-      if (value === null || value === undefined) return "0.00 ₺";
-      return parseFloat(value).toFixed(2) + " ₺";
+    formatCurrency(value, currency = "TRY") {
+      if (value === null || value === undefined) return "0,00 ₺";
+      const num = parseFloat(value);
+      const currencySymbols = { TRY: "₺", USD: "$", EUR: "€" };
+      const symbol = currencySymbols[currency] || "₺";
+      return (
+        num.toLocaleString("tr-TR", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        }) +
+        " " +
+        symbol
+      );
+    },
+    formatPriceWithCurrency(product) {
+      const price = parseFloat(product.satis_fiyati) || 0;
+      const currency = product.satis_fiyati_para_birimi || "TRY";
+      return this.formatCurrency(price, currency);
+    },
+    formatTeorikMaliyet(product) {
+      const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
+      const currency = product.satis_fiyati_para_birimi || "TRY";
+      let convertedCost = teorikMaliyet;
+      if (currency === "USD" && this.kurlar.dolar > 0) {
+        convertedCost = teorikMaliyet / this.kurlar.dolar;
+      } else if (currency === "EUR" && this.kurlar.euro > 0) {
+        convertedCost = teorikMaliyet / this.kurlar.euro;
+      }
+      return this.formatCurrency(convertedCost, currency);
+    },
+    loadKurlar() {
+      fetch("api_islemleri/ayarlar_islemler.php?action=get_settings")
+        .then((response) => response.json())
+        .then((response) => {
+          if (response.status === "success") {
+            this.kurlar.dolar = parseFloat(response.data.dolar_kuru) || 1;
+            this.kurlar.euro = parseFloat(response.data.euro_kuru) || 1;
+          }
+        });
     },
     formatNumber(value) {
       if (value === null || value === undefined) return "0";

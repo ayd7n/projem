@@ -635,7 +635,11 @@ body {
                     </div>
                     <div class="info-row" v-if="productData.product.satis_fiyati">
                         <span class="info-label"><i class="fas fa-dollar-sign"></i> Satış Fiyatı</span>
-                        <span class="info-value">{{ formatCurrency(productData.product.satis_fiyati) }}</span>
+                        <span class="info-value">{{ formatPriceWithCurrency(productData.product) }}</span>
+                    </div>
+                    <div class="info-row" v-if="productData.product.teorik_maliyet">
+                        <span class="info-label"><i class="fas fa-calculator"></i> Teorik Maliyet</span>
+                        <span class="info-value">{{ formatTeorikMaliyet(productData.product) }}</span>
                     </div>
                     <div class="info-row">
                         <span class="info-label"><i class="fas fa-exclamation-triangle"></i> Kritik Stok</span>
