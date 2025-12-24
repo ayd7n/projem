@@ -264,17 +264,45 @@ app = new Vue({
                 // Check if any component has insufficient stock
                 const insufficientStockComponents = this.calculatedComponents.filter(component => !component.stok_yeterli);
                 if (insufficientStockComponents.length > 0) {
-                    let errorMessage = 'Aşağıdaki bileşenlerin stok miktarı yeterli değildir:\n\n';
+                    let tableHtml = `
+                        <div style="text-align: left;">
+                            <p style="margin-bottom: 15px;">Aşağıdaki bileşenlerin stok miktarı yeterli değildir:</p>
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+                                <thead>
+                                    <tr style="background-color: #f8f9fa;">
+                                        <th style="border: 1px solid #dee2e6; padding: 8px; text-align: left; font-weight: bold;">Bileşen Adı</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 8px; text-align: center; font-weight: bold;">Gerekli Miktar</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 8px; text-align: center; font-weight: bold;">Mevcut Stok</th>
+                                        <th style="border: 1px solid #dee2e6; padding: 8px; text-align: center; font-weight: bold;">Eksik Miktar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>`;
+
                     insufficientStockComponents.forEach(component => {
-                        errorMessage += `- ${component.malzeme_ismi}: Gerekli ${component.miktar} ${component.birim}, Mevcut ${component.stok_miktari} ${component.birim}\n`;
+                        const eksik = parseFloat(component.miktar) - parseFloat(component.stok_miktari);
+                        tableHtml += `
+                                    <tr>
+                                        <td style="border: 1px solid #dee2e6; padding: 8px;">${component.malzeme_ismi}</td>
+                                        <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center;">${component.miktar} ${component.birim}</td>
+                                        <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center; color: #dc3545; font-weight: bold;">${component.stok_miktari} ${component.birim}</td>
+                                        <td style="border: 1px solid #dee2e6; padding: 8px; text-align: center; color: #dc3545; font-weight: bold;">${eksik.toFixed(2)} ${component.birim}</td>
+                                    </tr>`;
                     });
-                    errorMessage += '\nStok miktarlarını kontrol edin ve iş emrini oluşturmayın.';
+
+                    tableHtml += `
+                                </tbody>
+                            </table>
+                            <p style="color: #dc3545; font-weight: bold; margin-top: 10px;">Stok miktarlarını kontrol edin ve iş emrini oluşturmayın.</p>
+                        </div>`;
 
                     Swal.fire({
                         title: 'Stok Yetersiz!',
-                        text: errorMessage,
+                        html: tableHtml,
                         icon: 'error',
-                        confirmButtonText: 'Tamam'
+                        confirmButtonText: 'Tamam',
+                        customClass: {
+                            popup: 'swal-wide'
+                        }
                     });
                     return; // Prevent saving
                 }

@@ -505,10 +505,11 @@ function calculateComponents() {
             while ($row = $result->fetch_assoc()) {
                 // Get stock quantity based on material type
                 $stock_quantity = 0;
-                if ($row['bilesenin_malzeme_turu'] === 'malzeme') {
-                    $stock_query = "SELECT stok_miktari FROM malzemeler WHERE malzeme_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
-                } elseif ($row['bilesenin_malzeme_turu'] === 'esans') {
+                if ($row['bilesenin_malzeme_turu'] === 'esans') {
                     $stock_query = "SELECT stok_miktari FROM esanslar WHERE esans_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
+                } else {
+                    // All other types (malzeme, takim, kutu, etiket, jelatin, etc.) are stored in malzemeler table
+                    $stock_query = "SELECT stok_miktari FROM malzemeler WHERE malzeme_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
                 }
 
                 if (isset($stock_query)) {
