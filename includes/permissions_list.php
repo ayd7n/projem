@@ -158,6 +158,7 @@ function get_all_permissions()
             'page:view:log_raporlari' => 'Sistem İşlem Logları',
             'page:view:sayisal_ozet' => 'Sayısal Özet',
             'page:view:isletme_maliyeti_raporu' => 'İşletme Maliyeti Analizi',
+            'page:view:kar_zarar_raporu' => 'Kar-Zarar Raporu',
         ],
         'Ayarlar' => [
             'action:ayarlar:maintenance_mode' => 'Bakım Modunu Değiştirme',

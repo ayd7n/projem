@@ -357,6 +357,19 @@ if (!yetkisi_var('page:view:raporlar')) {
                     </a>
                 </div>
             <?php endif; ?>
+            <?php if (yetkisi_var('page:view:kar_zarar_raporu')): ?>
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <a href="kar_zarar_raporu.php" class="settings-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chart-line icon"></i>
+                            <div>
+                                <h5 class="card-title mb-1">Kar-Zarar Raporu</h5>
+                                <p class="card-text mb-0">Aylık gelir, gider ve kar/zarar analizini görüntüleyin.</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            <?php endif; ?>
         </div>
 
     </div>
