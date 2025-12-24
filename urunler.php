@@ -374,6 +374,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
+                                    <th>Alış Fiyatı</th>
                                     <th>Teorik Maliyet</th>
 
                                 <?php endif; ?>
@@ -435,6 +436,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <td>{{ product.birim }}</td>
                                 <td>{{ formatPriceWithCurrency(product) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
+                                    <td>{{ formatAlisFiyati(product) }}</td>
                                     <td>{{ formatTeorikMaliyet(product) }}</td>
 
                                 <?php endif; ?>
@@ -630,9 +632,20 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
-                                                <label>Alış Fiyatı (₺)</label>
+                                                <label>Alış Fiyatı</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.alis_fiyati" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group mb-3">
+                                                <label>Alış Para Birimi</label>
+                                                <select class="form-control"
+                                                    v-model="modal.data.alis_fiyati_para_birimi">
+                                                    <option value="TRY">₺ Türk Lirası</option>
+                                                    <option value="USD">$ Amerikan Doları</option>
+                                                    <option value="EUR">€ Euro</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
@@ -928,7 +941,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0 };
+                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY' };
                     }
 
                     // Modal'ı kapatıp açmak için kontrol et
@@ -1060,6 +1073,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         convertedCost = teorikMaliyet / this.kurlar.euro;
                     }
                     return this.formatCurrency(convertedCost, currency);
+                },
+                formatAlisFiyati(product) {
+                    const alisFiyati = parseFloat(product.alis_fiyati) || 0;
+                    const currency = product.alis_fiyati_para_birimi || 'TRY';
+                    return this.formatCurrency(alisFiyati, currency);
                 },
                 stockClass(product) {
                     const stok = parseFloat(product.stok_miktari);
