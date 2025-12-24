@@ -354,18 +354,24 @@ if (isset($_GET['action'])) {
             if ($check_result->num_rows > 0) {
                 $response = ['status' => 'error', 'message' => 'Bu ürün ismi zaten mevcut. Lütfen farklı bir isim kullanın.'];
             } else {
-                $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                $stmt = $connection->prepare($query);
-                $stmt->bind_param('ssisdsdssiss', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $satis_fiyati_para_birimi, $alis_fiyati, $alis_fiyati_para_birimi, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi);
+                $depo = $depo ?: NULL;
+                $raf = $raf ?: NULL;
 
-                if ($stmt->execute()) {
+                // Eğer ürün tipi hazir_alinan ise alış fiyatını 0 yap
+                if ($urun_tipi === 'hazir_alinan') {
+                    $alis_fiyati = 0.0;
+                    $alis_fiyati_para_birimi = 'TRY';
+                }
+
+                $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES ('" . $connection->real_escape_string($urun_ismi) . "', '" . $connection->real_escape_string($not_bilgisi) . "', " . (int)$stok_miktari . ", '" . $connection->real_escape_string($birim) . "', " . (float)$satis_fiyati . ", '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', " . (float)$alis_fiyati . ", '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', " . (int)$kritik_stok_seviyesi . ", " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", '" . $connection->real_escape_string($urun_tipi) . "')";
+
+                if ($connection->query($query)) {
                     // Log ekleme
                     log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürünü sisteme eklendi", 'CREATE');
                     $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi.'];
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
                 }
-                $stmt->close();
             }
         }
     } elseif ($action == 'update_product' && isset($_POST['urun_kodu'])) {
@@ -398,18 +404,24 @@ if (isset($_GET['action'])) {
                 $old_product_name = $old_product['urun_ismi'] ?? 'Bilinmeyen Ürün';
                 $old_stmt->close();
 
-                $query = "UPDATE urunler SET urun_ismi = ?, not_bilgisi = ?, stok_miktari = ?, birim = ?, satis_fiyati = ?, satis_fiyati_para_birimi = ?, alis_fiyati = ?, alis_fiyati_para_birimi = ?, kritik_stok_seviyesi = ?, depo = ?, raf = ?, urun_tipi = ? WHERE urun_kodu = ?";
-                $stmt = $connection->prepare($query);
-                $stmt->bind_param('ssisdsdssissi', $urun_ismi, $not_bilgisi, $stok_miktari, $birim, $satis_fiyati, $satis_fiyati_para_birimi, $alis_fiyati, $alis_fiyati_para_birimi, $kritik_stok_seviyesi, $depo, $raf, $urun_tipi, $urun_kodu);
+                $depo = $depo ?: NULL;
+                $raf = $raf ?: NULL;
 
-                if ($stmt->execute()) {
+                // Eğer ürün tipi hazir_alinan ise alış fiyatını 0 yap
+                if ($urun_tipi === 'hazir_alinan') {
+                    $alis_fiyati = 0.0;
+                    $alis_fiyati_para_birimi = 'TRY';
+                }
+
+                $query = "UPDATE urunler SET urun_ismi = '" . $connection->real_escape_string($urun_ismi) . "', not_bilgisi = '" . $connection->real_escape_string($not_bilgisi) . "', stok_miktari = " . (int)$stok_miktari . ", birim = '" . $connection->real_escape_string($birim) . "', satis_fiyati = " . (float)$satis_fiyati . ", satis_fiyati_para_birimi = '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', alis_fiyati = " . (float)$alis_fiyati . ", alis_fiyati_para_birimi = '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', kritik_stok_seviyesi = " . (int)$kritik_stok_seviyesi . ", depo = " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", raf = " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", urun_tipi = '" . $connection->real_escape_string($urun_tipi) . "' WHERE urun_kodu = " . (int)$urun_kodu;
+
+                if ($connection->query($query)) {
                     // Log ekleme
                     log_islem($connection, $_SESSION['kullanici_adi'], "$old_product_name ürünü $urun_ismi olarak güncellendi", 'UPDATE');
                     $response = ['status' => 'success', 'message' => 'Ürün başarıyla güncellendi.'];
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
                 }
-                $stmt->close();
             }
         }
     } elseif ($action == 'delete_product' && isset($_POST['urun_kodu'])) {

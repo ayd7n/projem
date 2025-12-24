@@ -375,7 +375,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <th>Alış Fiyatı</th>
-                                    <th>Teorik Maliyet</th>
+                                    <th>Maliyet</th>
 
                                 <?php endif; ?>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
@@ -622,7 +622,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Ürün Tipi *</label>
-                                                <select class="form-control" v-model="modal.data.urun_tipi" required>
+                                                <select class="form-control" v-model="modal.data.urun_tipi" @change="onUrunTipiChange" required>
                                                     <option value="uretilen">Üretilen Ürün</option>
                                                     <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
@@ -941,7 +941,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.loadPhotos();
                     } else {
                         this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY' };
+                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
                     }
 
                     // Modal'ı kapatıp açmak için kontrol et
@@ -1064,15 +1064,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     return this.formatCurrency(price, currency);
                 },
                 formatTeorikMaliyet(product) {
+                    // Hazır alınan ürün için alış fiyatını göster
+                    if (product.urun_tipi === 'hazir_alinan') {
+                        return this.formatAlisFiyati(product);
+                    }
+                    // Üretilen ürün için teorik maliyeti göster (satış fiyatı para birimiyle)
                     const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
                     const currency = product.satis_fiyati_para_birimi || 'TRY';
-                    let convertedCost = teorikMaliyet;
-                    if (currency === 'USD' && this.kurlar.dolar > 0) {
-                        convertedCost = teorikMaliyet / this.kurlar.dolar;
-                    } else if (currency === 'EUR' && this.kurlar.euro > 0) {
-                        convertedCost = teorikMaliyet / this.kurlar.euro;
-                    }
-                    return this.formatCurrency(convertedCost, currency);
+                    return this.formatCurrency(teorikMaliyet, currency);
                 },
                 formatAlisFiyati(product) {
                     const alisFiyati = parseFloat(product.alis_fiyati) || 0;
@@ -1397,6 +1396,13 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 this.kurlar.euro = parseFloat(response.data.euro_kuru) || 1;
                             }
                         });
+                },
+                onUrunTipiChange() {
+                    // Ürün tipi üretilen olarak değiştiğinde alış fiyatını 0 yap
+                    if (this.modal.data.urun_tipi === 'uretilen') {
+                        this.modal.data.alis_fiyati = 0.0;
+                        this.modal.data.alis_fiyati_para_birimi = 'TRY';
+                    }
                 }
             },
             mounted() {
