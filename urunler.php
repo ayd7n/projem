@@ -302,7 +302,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                 <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
                     <!-- Yeni Ürün Ekle Butonu -->
                     <?php if (yetkisi_var('action:urunler:create')): ?>
-                        <button @click="openModal(null)" class="btn btn-primary btn-sm" style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Ürün</button>
+                        <button @click="openModal(null)" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Ürün</button>
                     <?php endif; ?>
                     <!-- Depo Filtresi -->
                     <div class="input-group input-group-sm" style="width: auto;">
@@ -367,6 +368,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-tag"></i> Urun Ismi</th>
                                 <th><i class="fas fa-image"></i> Fotograf</th>
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
+                                <th><i class="fas fa-calculator"></i> Üretilebilir</th>
+                                <th><i class="fas fa-check-double"></i> Gerçek Ürt.</th>
                                 <th><i class="fas fa-exclamation-triangle"></i> Kritik Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
@@ -416,6 +419,16 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <td>
                                     <span :class="stockClass(product)">
                                         {{ product.stok_miktari }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span :class="product.uretilebilir_miktar > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
+                                        {{ product.uretilebilir_miktar || 0 }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span :class="product.gercek_uretilebilir > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
+                                        {{ product.gercek_uretilebilir || 0 }}
                                     </span>
                                 </td>
                                 <td>{{ product.kritik_stok_seviyesi }}</td>

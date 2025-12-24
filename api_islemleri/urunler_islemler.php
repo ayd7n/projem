@@ -106,6 +106,54 @@ if (isset($_GET['action'])) {
                     if (!$can_view_cost) {
                         unset($row['teorik_maliyet']);
                     }
+
+                    // Üretilebilir miktar hesaplama
+                    $row['uretilebilir_miktar'] = 0;  // Kritik bileşenlere göre
+                    $row['gercek_uretilebilir'] = 0;  // Tüm bileşenlere göre
+
+                    $kritik_bilesen_turleri = ['kutu', 'takim', 'esans'];
+                    $uretilebilir_kritik = PHP_INT_MAX;
+                    $uretilebilir_gercek = PHP_INT_MAX;
+
+                    // Ürün ağacından bileşenleri al
+                    $bom_query = "SELECT ua.bilesen_miktari, ua.bilesenin_malzeme_turu as bilesen_turu,
+                                 CASE
+                                    WHEN m.malzeme_kodu IS NOT NULL THEN m.stok_miktari
+                                    WHEN u.urun_kodu IS NOT NULL THEN u.stok_miktari
+                                    WHEN e.esans_kodu IS NOT NULL THEN e.stok_miktari
+                                    ELSE 0
+                                 END as bilesen_stok
+                                 FROM urun_agaci ua
+                                 LEFT JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
+                                 LEFT JOIN urunler u ON ua.bilesen_kodu = u.urun_kodu
+                                 LEFT JOIN esanslar e ON ua.bilesen_kodu = e.esans_kodu
+                                 WHERE ua.agac_turu = 'urun' AND ua.urun_kodu = ?";
+                    $bom_stmt = $connection->prepare($bom_query);
+                    $bom_stmt->bind_param('i', $row['urun_kodu']);
+                    $bom_stmt->execute();
+                    $bom_result = $bom_stmt->get_result();
+
+                    while ($bom_row = $bom_result->fetch_assoc()) {
+                        $gerekli = floatval($bom_row['bilesen_miktari']);
+                        $mevcut = floatval($bom_row['bilesen_stok']);
+
+                        if ($gerekli > 0) {
+                            $bu_bilesenden = max(0, floor($mevcut / $gerekli));
+
+                            // Gerçek üretilebilir (tüm bileşenler)
+                            $uretilebilir_gercek = min($uretilebilir_gercek, $bu_bilesenden);
+
+                            // Kritik üretilebilir (sadece kritik bileşenler)
+                            if (in_array(strtolower($bom_row['bilesen_turu']), $kritik_bilesen_turleri)) {
+                                $uretilebilir_kritik = min($uretilebilir_kritik, $bu_bilesenden);
+                            }
+                        }
+                    }
+                    $bom_stmt->close();
+
+                    $row['uretilebilir_miktar'] = ($uretilebilir_kritik === PHP_INT_MAX) ? 0 : $uretilebilir_kritik;
+                    $row['gercek_uretilebilir'] = ($uretilebilir_gercek === PHP_INT_MAX) ? 0 : $uretilebilir_gercek;
+
                     $products[] = $row;
                 }
             }

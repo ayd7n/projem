@@ -346,21 +346,29 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
                 'durum' => $stok_acigi > 0 ? ($stok_acigi > $kritik_seviye * 0.5 ? 'danger' : 'warning') : 'success'
             ];
 
-            // Üretilebilir Miktar - Enhanced (bileşenlere göre minimum)
+            // Üretilebilir Miktar - Enhanced (kritik bileşenlere göre minimum: kutu, takim, esans)
+            $kritik_bilesen_turleri = ['kutu', 'takim', 'esans'];
             $uretilebilir = PHP_INT_MAX;
             $sinir_bilesen = '';
             $sinir_bilesen_stok = 0;
+            $sinir_bilesen_miktari = 0;
 
             if (!empty($bom_components)) {
                 foreach ($bom_components as $component) {
+                    // Sadece kritik bileşen türlerini kontrol et
+                    if (!in_array(strtolower($component['bilesen_turu']), $kritik_bilesen_turleri)) {
+                        continue;
+                    }
+
                     $gerekli = floatval($component['bilesen_miktari']);
                     $mevcut = floatval($component['bilesen_stok']);
                     if ($gerekli > 0) {
-                        $bu_bilesenden_uretilebilir = floor($mevcut / $gerekli);
+                        $bu_bilesenden_uretilebilir = max(0, floor($mevcut / $gerekli));
                         if ($bu_bilesenden_uretilebilir < $uretilebilir) {
                             $uretilebilir = $bu_bilesenden_uretilebilir;
                             $sinir_bilesen = $component['bilesen_ismi'];
                             $sinir_bilesen_stok = $mevcut;
+                            $sinir_bilesen_miktari = $gerekli;
                         }
                     }
                 }
