@@ -38,6 +38,21 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
         rel="stylesheet">
     <link rel="stylesheet" href="assets/css/tanklar.css">
+    <style>
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control {
+            font-size: 0.8rem !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -111,20 +126,24 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                 </div>
             </div>
 
-            <div class="row">
-                <div class="col-md-12">
-                    <?php if (yetkisi_var('action:tanklar:create')): ?>
-                        <button class="btn btn-primary mb-3" @click="openTankModal()"><i class="fas fa-plus"></i> Yeni Tank
-                            Ekle</button>
-                    <?php endif; ?>
-                </div>
-            </div>
-
-
-
             <div class="card">
-                <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                    <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Tank Listesi</h2>
+                <div
+                    class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                    <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                        <!-- Yeni Tank Ekle Butonu -->
+                        <?php if (yetkisi_var('action:tanklar:create')): ?>
+                            <button class="btn btn-primary btn-sm" @click="openTankModal()"
+                                style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni
+                                Tank</button>
+                        <?php endif; ?>
+                        <!-- Stat Kartı -->
+                        <div class="stat-card-mini"
+                            style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                            <i class="fas fa-database mr-1"></i>
+                            <span style="font-weight: 600;">{{ total_tanks }}</span>
+                            <span class="ml-1" style="opacity: 0.9;">Tank</span>
+                        </div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">

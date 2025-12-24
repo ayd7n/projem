@@ -234,6 +234,20 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             border: 2px dashed var(--primary) !important;
             background: rgba(74, 14, 99, 0.05);
         }
+
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control-sm {
+            font-size: 0.8rem !important;
+        }
     </style>
 </head>
 
@@ -284,54 +298,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             {{ alert.message }}
         </div>
 
-        <div class="row mb-2">
-            <div class="col-md-8">
-                <?php if (yetkisi_var('action:malzemeler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary btn-sm mb-2"><i class="fas fa-plus"></i> Yeni
-                        Malzeme
-                        Ekle</button>
-                <?php endif; ?>
-            </div>
-            <div class="col-md-4">
-                <div class="row">
-                    <div class="col-6 mb-2">
-                        <div class="card">
-                            <div class="card-body d-flex align-items-center py-2 px-3">
-                                <div class="stat-icon"
-                                    style="background: var(--primary); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
-                                    <i class="fas fa-boxes"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ totalMaterials }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Toplam
-                                        Malzeme</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-6 mb-2">
-                        <div class="card" @click="toggleCriticalStockFilter"
-                            style="cursor: pointer; transition: all 0.3s;">
-                            <div class="card-body d-flex align-items-center py-2 px-3">
-                                <div class="stat-icon"
-                                    style="background: var(--danger); font-size: 1.2rem; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 10px; color: white;">
-                                    <i class="fas fa-exclamation-triangle"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <h3 style="font-size: 1.2rem; margin: 0;">{{ criticalMaterials }}</h3>
-                                    <p style="color: var(--text-secondary); margin: 0; font-size: 0.75rem;">Kritik Stok
-                                        Altı</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
                 <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Yeni Malzeme Ekle Butonu -->
+                    <?php if (yetkisi_var('action:malzemeler:create')): ?>
+                        <button @click="openModal(null)" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Malzeme</button>
+                    <?php endif; ?>
                     <!-- Depo ve Raf Filtreleri -->
                     <div class="input-group input-group-sm" style="width: auto;">
                         <div class="input-group-prepend">
@@ -382,6 +356,20 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                         <input type="text" class="form-control form-control-sm" v-model="search"
                             @input="loadMaterials(1)" placeholder="Malzeme ara..."
                             style="font-size: 0.75rem; padding: 4px 8px;">
+                    </div>
+                    <!-- Stat Kartları -->
+                    <div class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-boxes mr-1"></i>
+                        <span style="font-weight: 600;">{{ totalMaterials }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Malzeme</span>
+                    </div>
+                    <div class="stat-card-mini" @click="toggleCriticalStockFilter"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; display: inline-flex; align-items: center; cursor: pointer; font-size: 0.75rem;"
+                        title="Kritik stok altındakileri filtrele">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <span style="font-weight: 600;">{{ criticalMaterials }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Kritik</span>
                     </div>
                 </div>
             </div>

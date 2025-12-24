@@ -415,6 +415,21 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                 height: 100%;
             }
         }
+
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control,
+        .custom-select {
+            font-size: 0.8rem !important;
+        }
     </style>
 </head>
 
@@ -467,66 +482,36 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
         <div id="alert-placeholder"></div>
 
-        <div class="alert alert-info" role="alert" style="border-left: 5px solid var(--info);">
-            <h4 class="alert-heading" style="color: var(--info);"><i class="fas fa-info-circle"></i> Bilgilendirme</h4>
-            <p>Bu sayfadaki gider kayıtları birkaç farklı şekilde oluşabilir:</p>
-            <ul class="mb-0">
-                <li><strong>Manuel Gider Girişi:</strong> Bu sayfadaki "Yeni Gider Ekle" butonu kullanılarak personel,
-                    işletme, kira gibi çeşitli giderler manuel olarak eklenebilir.</li>
-                <li><strong>Çerçeve Sözleşme Ödemeleri:</strong> Tedarikçilerle yapılan çerçeve sözleşmeleri için "Ön
-                    Ödeme" veya "Ara Ödeme" yapıldığında, bu ödemeler otomatik olarak "Malzeme Gideri" kategorisinde
-                    buraya kaydedilir.</li>
-                <li><strong>Fire Kayıtları:</strong> Manuel Stok Hareket sayfasından "Fire / Sayım Eksigi" işlemi ile
-                    fire kaydı yapıldığında, fire edilen malzeme/esans/ürünün teorik maliyeti hesaplanarak otomatik
-                    olarak "Fire Gideri" kategorisinde buraya kaydedilir.</li>
-                <li><strong>Personel Maaş Ödemeleri ve Avanslar:</strong> Personel Bordro sayfasından maaş ödemesi
-                    yapıldığında "Personel Gideri", avans verildiğinde ise "Personel Avansı" kategorisinde buraya
-                    kaydedilir.</li>
-                <li><strong>Tekrarlı Ödemeler:</strong> Tekrarlı Ödeme Hatırlatma sayfasından kira, elektrik, su,
-                    internet gibi periyodik ödemeler yapıldığında, ödeme tipine göre ilgili kategoride buraya
-                    kaydedilir.</li>
-            </ul>
-        </div>
-
-
-        <div class="row">
-            <div class="col-md-8">
-                <?php if (yetkisi_var('action:gider_yonetimi:create')): ?>
-                    <button id="addExpenseBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Gider
-                        Ekle</button>
-                <?php endif; ?>
-            </div>
-            <div class="col-md-4">
-                <div class="card mb-3">
-                    <div class="card-body d-flex align-items-center">
-                        <div class="stat-icon"
-                            style="background: var(--primary); font-size: 1.5rem; width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; color: white;">
-                            <i class="fas fa-wallet"></i>
-                        </div>
-                        <div class="stat-info">
-                            <h3 id="overallTotal" style="font-size: 1.5rem; margin: 0;">
-                                <?php echo number_format($total_expenses, 2, ',', '.'); ?> TL
-                            </h3>
-                            <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">Bu Ayın Toplam Gideri
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0"><i class="fas fa-list"></i> Gider Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group input-group-sm">
-                        <input type="text" class="form-control" id="searchInput"
-                            placeholder="Firma, kategori, açıklama, fatura no veya kaydeden ara">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Yeni Gider Ekle Butonu -->
+                    <?php if (yetkisi_var('action:gider_yonetimi:create')): ?>
+                        <button id="addExpenseBtn" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Gider</button>
+                    <?php endif; ?>
+                    <!-- Bilgi Butonu -->
+                    <button type="button" class="btn btn-info btn-sm" data-toggle="modal" data-target="#infoModal"
+                        style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-info-circle"></i> Bilgi</button>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 220px;">
+                        <input type="text" class="form-control form-control-sm" id="searchInput"
+                            placeholder="Firma, kategori, açıklama..." style="font-size: 0.75rem; padding: 4px 8px;">
                         <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn" title="Temizle">
+                            <button class="btn btn-outline-secondary btn-sm" type="button" id="clearSearchBtn"
+                                title="Temizle" style="font-size: 0.75rem;">
                                 <i class="fas fa-times"></i>
                             </button>
                         </div>
+                    </div>
+                    <!-- Stat Kartı -->
+                    <div class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-wallet mr-1"></i>
+                        <span id="overallTotal"
+                            style="font-weight: 600;"><?php echo number_format($total_expenses, 2, ',', '.'); ?>
+                            TL</span>
+                        <span class="ml-1" style="opacity: 0.9;">Bu Ay</span>
                     </div>
                 </div>
             </div>
@@ -654,6 +639,53 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
     </div>
+
+    <!-- Info Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header"
+                    style="background: linear-gradient(135deg, var(--info), #0d6efd); color: white;">
+                    <h5 class="modal-title"><i class="fas fa-info-circle"></i> Bilgilendirme</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>Bu sayfadaki gider kayıtları birkaç farklı şekilde oluşabilir:</p>
+                    <ul class="mb-0">
+                        <li><strong>Manuel Gider Girişi:</strong> Bu sayfadaki "Yeni Gider Ekle" butonu kullanılarak
+                            personel,
+                            işletme, kira gibi çeşitli giderler manuel olarak eklenebilir.</li>
+                        <li><strong>Çerçeve Sözleşme Ödemeleri:</strong> Tedarikçilerle yapılan çerçeve sözleşmeleri
+                            için "Ön
+                            Ödeme" veya "Ara Ödeme" yapıldığında, bu ödemeler otomatik olarak "Malzeme Gideri"
+                            kategorisinde
+                            buraya kaydedilir.</li>
+                        <li><strong>Fire Kayıtları:</strong> Manuel Stok Hareket sayfasından "Fire / Sayım Eksigi"
+                            işlemi ile
+                            fire kaydı yapıldığında, fire edilen malzeme/esans/ürünün teorik maliyeti hesaplanarak
+                            otomatik
+                            olarak "Fire Gideri" kategorisinde buraya kaydedilir.</li>
+                        <li><strong>Personel Maaş Ödemeleri ve Avanslar:</strong> Personel Bordro sayfasından maaş
+                            ödemesi
+                            yapıldığında "Personel Gideri", avans verildiğinde ise "Personel Avansı" kategorisinde
+                            buraya
+                            kaydedilir.</li>
+                        <li><strong>Tekrarlı Ödemeler:</strong> Tekrarlı Ödeme Hatırlatma sayfasından kira, elektrik,
+                            su,
+                            internet gibi periyodik ödemeler yapıldığında, ödeme tipine göre ilgili kategoride buraya
+                            kaydedilir.</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i>
+                        Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 
     <!-- jQuery and Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>

@@ -37,6 +37,21 @@ if (!yetkisi_var('page:view:malzeme_siparisler')) {
         rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <style>
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control {
+            font-size: 0.8rem !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -86,25 +101,29 @@ if (!yetkisi_var('page:view:malzeme_siparisler')) {
             {{ alert.message }}
         </div>
 
-        <div class="row mb-4">
-            <div class="col-12">
-                <?php if (yetkisi_var('action:malzeme_siparisler:create')): ?>
-                    <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Sipariş
-                        Ekle</button>
-                <?php endif; ?>
-            </div>
-        </div>
-
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0 mr-md-3"><i class="fas fa-list"></i> Sipariş Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Yeni Sipariş Ekle Butonu -->
+                    <?php if (yetkisi_var('action:malzeme_siparisler:create')): ?>
+                        <button @click="openModal(null)" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Sipariş</button>
+                    <?php endif; ?>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text" style="padding: 4px 8px;"><i
+                                    class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadOrders(1)"
-                            placeholder="Ara...">
+                        <input type="text" class="form-control form-control-sm" v-model="search" @input="loadOrders(1)"
+                            placeholder="Ara..." style="font-size: 0.75rem; padding: 4px 8px;">
+                    </div>
+                    <!-- Stat Kartı -->
+                    <div class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-shopping-cart mr-1"></i>
+                        <span style="font-weight: 600;">{{ totalOrders }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Sipariş</span>
                     </div>
                 </div>
             </div>

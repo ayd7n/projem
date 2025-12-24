@@ -414,6 +414,20 @@ $work_centers_result = $connection->query($work_centers_query);
                 height: 100%;
             }
         }
+
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control {
+            font-size: 0.8rem !important;
+        }
     </style>
 </head>
 
@@ -476,24 +490,23 @@ $work_centers_result = $connection->query($work_centers_query);
 
         <div id="alert-placeholder"></div>
 
-        <div class="row">
-            <div class="col-md-12">
-                <?php if (yetkisi_var('action:is_merkezleri:create')): ?>
-                    <button id="addWorkCenterBtn" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni İş Merkezi
-                        Ekle</button>
-                <?php endif; ?>
-            </div>
-        </div>
-
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0 text-nowrap mr-md-3"><i class="fas fa-list"></i> İş Merkezi Listesi</h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Yeni İş Merkezi Ekle Butonu -->
+                    <?php if (yetkisi_var('action:is_merkezleri:create')): ?>
+                        <button id="addWorkCenterBtn" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni İş
+                            Merkezi</button>
+                    <?php endif; ?>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text" style="padding: 4px 8px;"><i
+                                    class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" id="searchInput" placeholder="İş merkezi ara...">
+                        <input type="text" class="form-control form-control-sm" id="searchInput"
+                            placeholder="İş merkezi ara..." style="font-size: 0.75rem; padding: 4px 8px;">
                     </div>
                 </div>
             </div>

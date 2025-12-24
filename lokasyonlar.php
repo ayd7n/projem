@@ -222,13 +222,26 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             border-radius: 18px;
         }
 
-        /* Remove old styles that are no longer needed */
         .form-grid,
         .form-group,
         .form-actions,
         .table-wrapper,
         .stat-card {
             /* These are replaced by Bootstrap classes and Vue.js templates */
+        }
+
+        /* Tablo font boyutu */
+        table th,
+        table td {
+            font-size: 0.8rem;
+        }
+
+        /* Pagination font boyutu */
+        .pagination,
+        .pagination-info,
+        .page-link,
+        .form-control {
+            font-size: 0.8rem !important;
         }
     </style>
 </head>
@@ -291,24 +304,31 @@ $total_locations = $total_result->fetch_assoc()['total'] ?? 0;
             {{ alert.message }}
         </div>
 
-        <div class="d-flex flex-column flex-md-row justify-content-start align-items-start mb-3">
-            <?php if (yetkisi_var('action:lokasyonlar:create')): ?>
-                <button @click="openModal(null)" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Lokasyon
-                    Ekle</button>
-            <?php endif; ?>
-        </div>
-
         <div class="card">
-            <div class="card-header d-flex flex-column flex-md-row justify-content-between align-items-center">
-                <h2 class="mb-2 mb-md-0 mr-3" style="white-space: nowrap;"><i class="fas fa-list"></i> Lokasyon Listesi
-                </h2>
-                <div class="search-container w-100 w-md-25">
-                    <div class="input-group">
+            <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
+                <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                    <!-- Yeni Lokasyon Ekle Butonu -->
+                    <?php if (yetkisi_var('action:lokasyonlar:create')): ?>
+                        <button @click="openModal(null)" class="btn btn-primary btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni
+                            Lokasyon</button>
+                    <?php endif; ?>
+                    <!-- Arama Kutusu -->
+                    <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                            <span class="input-group-text" style="padding: 4px 8px;"><i
+                                    class="fas fa-search"></i></span>
                         </div>
-                        <input type="text" class="form-control" v-model="search" @input="loadLocations(1)"
-                            placeholder="Lokasyon ara...">
+                        <input type="text" class="form-control form-control-sm" v-model="search"
+                            @input="loadLocations(1)" placeholder="Lokasyon ara..."
+                            style="font-size: 0.75rem; padding: 4px 8px;">
+                    </div>
+                    <!-- Stat Kartı -->
+                    <div class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-warehouse mr-1"></i>
+                        <span style="font-weight: 600;">{{ totalLocations }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Lokasyon</span>
                     </div>
                 </div>
             </div>
