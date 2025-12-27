@@ -16,11 +16,11 @@ $action = null;
 // Check for action in GET parameters
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
-} 
+}
 // Check for action in POST parameters
 elseif (isset($_POST['action'])) {
     $action = $_POST['action'];
-} 
+}
 // Check for action in JSON input
 else {
     $input = file_get_contents('php://input');
@@ -39,13 +39,13 @@ if ($request_method === 'GET' && $action) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $product_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $product_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $product_trees
@@ -55,25 +55,25 @@ if ($request_method === 'GET' && $action) {
         }
     } elseif ($action === 'search_product_trees_paginated' && isset($_GET['searchTerm'])) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
-        
+
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
-        
+
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
         $total_result = $connection->query($total_query);
         $total_row = $total_result->fetch_assoc();
         $total = $total_row ? $total_row['total'] : 0;
-        
+
         if ($result) {
             $product_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $product_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $product_trees,
@@ -89,25 +89,25 @@ if ($request_method === 'GET' && $action) {
         }
     } elseif ($action === 'search_essence_trees_paginated' && isset($_GET['searchTerm'])) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
-        
+
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
-        
+
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%')";
         $total_result = $connection->query($total_query);
         $total_row = $total_result->fetch_assoc();
         $total = $total_row ? $total_row['total'] : 0;
-        
+
         if ($result) {
             $essence_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $essence_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $essence_trees,
@@ -125,19 +125,19 @@ if ($request_method === 'GET' && $action) {
         // Fetch all product trees
         $query = "SELECT * FROM urun_agaci ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $product_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $product_trees[] = $row;
             }
-            
+
             // Calculate total distinct products in product trees
             $total_query = "SELECT COUNT(DISTINCT urun_kodu) as total FROM urun_agaci";
             $total_result = $connection->query($total_query);
             $total_row = $total_result->fetch_assoc();
             $total = $total_row ? $total_row['total'] : 0;
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $product_trees,
@@ -147,7 +147,7 @@ if ($request_method === 'GET' && $action) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
     } elseif ($action === 'get_product_tree' && isset($_GET['id'])) {
-        $urun_agaci_id = (int)$_GET['id'];
+        $urun_agaci_id = (int) $_GET['id'];
         $query = "SELECT * FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
         $result = $connection->query($query);
         $product_tree = $result->fetch_assoc();
@@ -161,13 +161,13 @@ if ($request_method === 'GET' && $action) {
         // Fetch all products
         $query = "SELECT urun_kodu, urun_ismi FROM urunler ORDER BY urun_ismi";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $products = [];
             while ($row = $result->fetch_assoc()) {
                 $products[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $products
@@ -179,13 +179,13 @@ if ($request_method === 'GET' && $action) {
         // Fetch all materials
         $query = "SELECT malzeme_kodu, malzeme_ismi, malzeme_turu FROM malzemeler ORDER BY malzeme_ismi";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $materials = [];
             while ($row = $result->fetch_assoc()) {
                 $materials[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $materials
@@ -197,13 +197,13 @@ if ($request_method === 'GET' && $action) {
         // Fetch all essences
         $query = "SELECT esans_id, esans_kodu, esans_ismi FROM esanslar ORDER BY esans_ismi";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $essences = [];
             while ($row = $result->fetch_assoc()) {
                 $essences[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $essences
@@ -215,13 +215,13 @@ if ($request_method === 'GET' && $action) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $essence_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $essence_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $essence_trees
@@ -230,26 +230,26 @@ if ($request_method === 'GET' && $action) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
     } elseif ($action === 'get_product_trees_paginated') {
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
-        
+
         // Fetch paginated product trees
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
-        
+
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'urun'";
         $total_result = $connection->query($total_query);
         $total_row = $total_result->fetch_assoc();
         $total = $total_row ? $total_row['total'] : 0;
-        
+
         if ($result) {
             $product_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $product_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $product_trees,
@@ -264,26 +264,26 @@ if ($request_method === 'GET' && $action) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
     } elseif ($action === 'get_essence_trees_paginated') {
-        $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
-        $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 10;
+        $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
+        $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
         $offset = ($page - 1) * $limit;
-        
+
         // Fetch paginated essence trees
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
-        
+
         // Get total count for pagination
         $total_query = "SELECT COUNT(*) as total FROM urun_agaci WHERE agac_turu = 'esans'";
         $total_result = $connection->query($total_query);
         $total_row = $total_result->fetch_assoc();
         $total = $total_row ? $total_row['total'] : 0;
-        
+
         if ($result) {
             $essence_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $essence_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $essence_trees,
@@ -297,14 +297,85 @@ if ($request_method === 'GET' && $action) {
         } else {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
         }
+    } elseif ($action === 'get_product_tree_hierarchy' && isset($_GET['urun_kodu'])) {
+        // Ürün koduna göre hiyerarşik ağaç yapısını getir
+        $urun_kodu = (int) $_GET['urun_kodu'];
+
+        // Önce ürün bilgilerini al
+        $urun_query = "SELECT urun_kodu, urun_ismi FROM urunler WHERE urun_kodu = $urun_kodu";
+        $urun_result = $connection->query($urun_query);
+        $urun = $urun_result->fetch_assoc();
+
+        if (!$urun) {
+            $response = ['status' => 'error', 'message' => 'Ürün bulunamadı.'];
+        } else {
+            // Ürünün doğrudan bileşenlerini getir (agac_turu = 'urun')
+            $bilesen_query = "SELECT * FROM urun_agaci WHERE urun_kodu = $urun_kodu AND agac_turu = 'urun' ORDER BY bilesenin_malzeme_turu, bilesen_ismi";
+            $bilesen_result = $connection->query($bilesen_query);
+
+            $children = [];
+
+            while ($bilesen = $bilesen_result->fetch_assoc()) {
+                $child = [
+                    'name' => $bilesen['bilesen_ismi'],
+                    'type' => $bilesen['bilesenin_malzeme_turu'],
+                    'code' => $bilesen['bilesen_kodu'],
+                    'quantity' => floatval($bilesen['bilesen_miktari']),
+                    'children' => []
+                ];
+
+                // Eğer bileşen bir esans ise, esansın alt bileşenlerini de getir
+                if (strtolower($bilesen['bilesenin_malzeme_turu']) === 'esans') {
+                    // Esans koduna göre esans ağacını getir
+                    $esans_kodu = $bilesen['bilesen_kodu'];
+
+                    // Önce esans_id'yi bul (esans_kodu veya esans_id ile eşleşebilir)
+                    $esans_query = "SELECT esans_id, esans_kodu FROM esanslar WHERE esans_kodu = '" . $connection->real_escape_string($esans_kodu) . "'";
+                    $esans_result = $connection->query($esans_query);
+                    $esans = $esans_result->fetch_assoc();
+
+                    if ($esans) {
+                        // Esansın bileşenlerini getir (agac_turu = 'esans')
+                        // urun_kodu esans_id veya esans_kodu olabilir
+                        $esans_bilesen_query = "SELECT * FROM urun_agaci WHERE (urun_kodu = '" . $esans['esans_id'] . "' OR urun_kodu = '" . $connection->real_escape_string($esans_kodu) . "') AND agac_turu = 'esans' ORDER BY bilesen_ismi";
+                        $esans_bilesen_result = $connection->query($esans_bilesen_query);
+
+                        while ($esans_bilesen = $esans_bilesen_result->fetch_assoc()) {
+                            $child['children'][] = [
+                                'name' => $esans_bilesen['bilesen_ismi'],
+                                'type' => $esans_bilesen['bilesenin_malzeme_turu'],
+                                'code' => $esans_bilesen['bilesen_kodu'],
+                                'quantity' => floatval($esans_bilesen['bilesen_miktari']),
+                                'children' => []
+                            ];
+                        }
+                    }
+                }
+
+                $children[] = $child;
+            }
+
+            $tree_data = [
+                'name' => $urun['urun_ismi'],
+                'type' => 'urun',
+                'code' => $urun['urun_kodu'],
+                'quantity' => 1,
+                'children' => $children
+            ];
+
+            $response = [
+                'status' => 'success',
+                'data' => $tree_data
+            ];
+        }
     }
-} 
+}
 // Handle POST requests
 elseif ($request_method === 'POST') {
     // Extract action from either JSON or form data
     $input = file_get_contents('php://input');
     $json = json_decode($input, true);
-    
+
     if ($json && isset($json['action'])) {
         // JSON request - use the decoded values
         $action = $json['action'];
@@ -313,7 +384,7 @@ elseif ($request_method === 'POST') {
         $bilesenin_malzeme_turu = $json['bilesenin_malzeme_turu'] ?? '';
         $bilesen_kodu = $json['bilesen_kodu'] ?? '';
         $bilesen_ismi = $json['bilesen_ismi'] ?? '';
-        $bilesen_miktari = isset($json['bilesen_miktari']) ? (float)$json['bilesen_miktari'] : 0;
+        $bilesen_miktari = isset($json['bilesen_miktari']) ? (float) $json['bilesen_miktari'] : 0;
         $urun_agaci_id = $json['urun_agaci_id'] ?? null;
         $agac_turu = $json['agac_turu'] ?? 'urun'; // Add agac_turu from input
     } elseif (isset($_POST['action'])) {
@@ -324,7 +395,7 @@ elseif ($request_method === 'POST') {
         $bilesenin_malzeme_turu = $_POST['bilesenin_malzeme_turu'] ?? '';
         $bilesen_kodu = $_POST['bilesen_kodu'] ?? '';
         $bilesen_ismi = $_POST['bilesen_ismi'] ?? '';
-        $bilesen_miktari = isset($_POST['bilesen_miktari']) ? (float)$_POST['bilesen_miktari'] : 0;
+        $bilesen_miktari = isset($_POST['bilesen_miktari']) ? (float) $_POST['bilesen_miktari'] : 0;
         $urun_agaci_id = $_POST['urun_agaci_id'] ?? null;
         $agac_turu = $_POST['agac_turu'] ?? 'urun'; // Add agac_turu from input
     }
@@ -339,7 +410,7 @@ elseif ($request_method === 'POST') {
             $bilesen_kodu = $connection->real_escape_string($bilesen_kodu);
             $bilesen_ismi = $connection->real_escape_string($bilesen_ismi);
             $agac_turu = $connection->real_escape_string($agac_turu);
-            
+
             $query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) VALUES ('$urun_kodu', '$urun_ismi', '$bilesenin_malzeme_turu', '$bilesen_kodu', '$bilesen_ismi', '$bilesen_miktari', '$agac_turu')";
 
             if ($connection->query($query)) {
@@ -353,13 +424,13 @@ elseif ($request_method === 'POST') {
     } elseif ($action === 'update_product_tree') {
         // Handle both form data and JSON input for urun_agaci_id
         if (isset($_POST['urun_agaci_id'])) {
-            $urun_agaci_id = (int)$_POST['urun_agaci_id'];
+            $urun_agaci_id = (int) $_POST['urun_agaci_id'];
         } elseif (isset($json['urun_agaci_id'])) {
-            $urun_agaci_id = (int)$json['urun_agaci_id'];
+            $urun_agaci_id = (int) $json['urun_agaci_id'];
         } else {
             $urun_agaci_id = null;
         }
-        
+
         if ($urun_agaci_id && (empty($urun_kodu) || empty($bilesen_kodu))) {
             $response = ['status' => 'error', 'message' => 'Ürün ve bileşen boş olamaz.'];
         } elseif ($urun_agaci_id) {
@@ -369,7 +440,7 @@ elseif ($request_method === 'POST') {
             $bilesen_kodu = $connection->real_escape_string($bilesen_kodu);
             $bilesen_ismi = $connection->real_escape_string($bilesen_ismi);
             $agac_turu = $connection->real_escape_string($agac_turu);
-            
+
             // Eski ürün ağacı bilgilerini al
             $old_tree_query = "SELECT urun_ismi, bilesen_ismi FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
             $old_tree_result = $connection->query($old_tree_query);
@@ -392,13 +463,13 @@ elseif ($request_method === 'POST') {
     } elseif ($action === 'delete_product_tree') {
         // Handle both form data and JSON input for urun_agaci_id
         if (isset($_POST['urun_agaci_id'])) {
-            $urun_agaci_id = (int)$_POST['urun_agaci_id'];
+            $urun_agaci_id = (int) $_POST['urun_agaci_id'];
         } elseif (isset($json['urun_agaci_id'])) {
-            $urun_agaci_id = (int)$json['urun_agaci_id'];
+            $urun_agaci_id = (int) $json['urun_agaci_id'];
         } else {
             $urun_agaci_id = null;
         }
-        
+
         if ($urun_agaci_id) {
             // Silinen ürün ağacı bilgilerini al
             $deleted_tree_query = "SELECT urun_ismi, bilesen_ismi FROM urun_agaci WHERE urun_agaci_id = $urun_agaci_id";
@@ -426,20 +497,20 @@ elseif ($request_method === 'POST') {
 // NEW: Handle GET requests for specific agac_turu (for Vue.js)
 if ($request_method === 'GET' && isset($_GET['agac_turu'])) {
     $agac_turu = $connection->real_escape_string($_GET['agac_turu']);
-    
+
     // Validate agac_turu parameter
     if (!in_array($agac_turu, ['urun', 'esans'])) {
         $response = ['status' => 'error', 'message' => 'Geçersiz agac_turu parametresi.'];
     } else {
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = '$agac_turu' ORDER BY urun_kodu, bilesen_kodu";
         $result = $connection->query($query);
-        
+
         if ($result) {
             $product_trees = [];
             while ($row = $result->fetch_assoc()) {
                 $product_trees[] = $row;
             }
-            
+
             $response = [
                 'status' => 'success',
                 'data' => $product_trees

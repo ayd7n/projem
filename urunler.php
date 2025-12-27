@@ -397,6 +397,10 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         class="btn btn-info btn-sm" title="Ürün Kartı">
                                         <i class="fas fa-id-card"></i>
                                     </a>
+                                    <button @click="openTreeModal(product)" class="btn btn-success btn-sm"
+                                        title="Ürün Ağacı">
+                                        <i class="fas fa-sitemap"></i>
+                                    </button>
                                     <?php if (yetkisi_var('action:urunler:edit')): ?>
                                         <button @click="openModal(product)" class="btn btn-primary btn-sm"><i
                                                 class="fas fa-edit"></i></button>
@@ -423,12 +427,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </span>
                                 </td>
                                 <td>
-                                    <span :class="product.uretilebilir_miktar > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
+                                    <span
+                                        :class="product.uretilebilir_miktar > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
                                         {{ product.uretilebilir_miktar || 0 }}
                                     </span>
                                 </td>
                                 <td>
-                                    <span :class="product.gercek_uretilebilir > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
+                                    <span
+                                        :class="product.gercek_uretilebilir > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
                                         {{ product.gercek_uretilebilir || 0 }}
                                     </span>
                                 </td>
@@ -622,7 +628,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                         <div class="col-md-6">
                                             <div class="form-group mb-3">
                                                 <label>Ürün Tipi *</label>
-                                                <select class="form-control" v-model="modal.data.urun_tipi" @change="onUrunTipiChange" required>
+                                                <select class="form-control" v-model="modal.data.urun_tipi"
+                                                    @change="onUrunTipiChange" required>
                                                     <option value="uretilen">Üretilen Ürün</option>
                                                     <option value="hazir_alinan">Hazır Alınan Ürün</option>
                                                 </select>
@@ -784,440 +791,460 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                 <i class="fas fa-chevron-right"></i>
             </button>
         </div>
-    </div>
 
-    <!-- jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Product Tree Modal -->
+        <div class="modal fade" id="treeModal" tabindex="-1" role="dialog">
 
-    <script>
-        const app = Vue.createApp({
-            data() {
-                return {
-                    products: [],
-                    loading: false,
-                    alert: { message: '', type: '' },
-                    search: '',
-                    currentPage: 1,
-                    totalPages: 1,
-                    totalProducts: <?php echo $total_products; ?>,
-                    criticalProducts: <?php echo $critical_products; ?>,
-                    limit: 10,
-                    productTypeFilter: '',
-                    modal: { title: '', data: {} },
-                    depoList: [],
-                    rafList: [],
-                    criticalStockFilterEnabled: false,
-                    depoFilter: '',
-                    rafFilter: '',
-                    filterRafList: [],
-                    productDepoList: [],
-                    operatingCostMetrics: null,
-                    productPhotos: [],
-                    loadingPhotos: false,
-                    uploadProgress: 0,
-                    lightbox: {
-                        show: false,
-                        currentIndex: 0
+            <div class="modal-dialog modal-xl" role="document" style="max-width: 95%; width: 1200px;">
+                <div class="modal-content">
+                    <div class="modal-header"
+                        style="background: linear-gradient(135deg, #2e7d32, #4caf50); color: white;">
+                        <h5 class="modal-title"><i class="fas fa-sitemap mr-2"></i>{{ treeModal.title }}</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body" style="padding: 20px; min-height: 500px;">
+                        <!-- Legend -->
+                        <div class="tree-legend mb-3"
+                            style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.8rem;">
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #4a0e63; border-radius: 50%; margin-right: 5px;"></span>Ürün
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #9c27b0; border-radius: 50%; margin-right: 5px;"></span>Esans
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #2196f3; border-radius: 50%; margin-right: 5px;"></span>Malzeme
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #ff9800; border-radius: 50%; margin-right: 5px;"></span>Kutu
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #4caf50; border-radius: 50%; margin-right: 5px;"></span>Takım
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #f44336; border-radius: 50%; margin-right: 5px;"></span>Etiket
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #00bcd4; border-radius: 50%; margin-right: 5px;"></span>Jelatin
+                            </div>
+                            <div><span
+                                    style="display: inline-block; width: 16px; height: 16px; background: #795548; border-radius: 50%; margin-right: 5px;"></span>Dış
+                                Kutu</div>
+                        </div>
+
+                        <div v-if="treeModal.loading" class="text-center p-5">
+                            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
+                            <p class="mt-3">Ürün ağacı yükleniyor...</p>
+                        </div>
+                        <div v-else-if="treeModal.error" class="alert alert-warning text-center">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
+                            <p>{{ treeModal.error }}</p>
+                        </div>
+                        <div v-else-if="!treeModal.data || (treeModal.data.children && treeModal.data.children.length === 0)"
+                            class="alert alert-info text-center">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Bu ürün için henüz ürün ağacı tanımlanmamış.</p>
+                            <a href="urun_agaclari.php" class="btn btn-primary btn-sm mt-2">
+                                <i class="fas fa-plus mr-1"></i> Ürün Ağacı Tanımla
+                            </a>
+                        </div>
+                        <div v-else id="tree-container"
+                            style="width: 100%; height: 450px; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: #fafafa;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- jQuery and Bootstrap JS -->
+
+        <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+
+        <script>
+            const app = Vue.createApp({
+                data() {
+                    return {
+                        products: [],
+                        loading: false,
+                        alert: { message: '', type: '' },
+                        search: '',
+                        currentPage: 1,
+                        totalPages: 1,
+                        totalProducts: <?php echo $total_products; ?>,
+                        criticalProducts: <?php echo $critical_products; ?>,
+                        limit: 10,
+                        productTypeFilter: '',
+                        modal: { title: '', data: {} },
+                        depoList: [],
+                        rafList: [],
+                        criticalStockFilterEnabled: false,
+                        depoFilter: '',
+                        rafFilter: '',
+                        filterRafList: [],
+                        productDepoList: [],
+                        operatingCostMetrics: null,
+                        productPhotos: [],
+                        loadingPhotos: false,
+                        uploadProgress: 0,
+                        lightbox: {
+                            show: false,
+                            currentIndex: 0
+                        },
+                        draggedIndex: null,
+                        dragOverIndex: null,
+                        searchTimeout: null,
+                        kurlar: { dolar: 1, euro: 1 },
+                        treeModal: {
+                            title: '',
+                            loading: false,
+                            error: null,
+                            data: null
+                        }
+                    }
+                },
+                computed: {
+                    paginationInfo() {
+                        if (this.totalPages <= 0 || this.totalProducts <= 0) {
+                            return 'Gösterilecek kayıt yok';
+                        }
+                        const startRecord = (this.currentPage - 1) * this.limit + 1;
+                        const endRecord = Math.min(this.currentPage * this.limit, this.totalProducts);
+                        return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalProducts} kayıttan`;
                     },
-                    draggedIndex: null,
-                    dragOverIndex: null,
-                    searchTimeout: null,
-                    kurlar: { dolar: 1, euro: 1 }
-                }
-            },
-            computed: {
-                paginationInfo() {
-                    if (this.totalPages <= 0 || this.totalProducts <= 0) {
-                        return 'Gösterilecek kayıt yok';
-                    }
-                    const startRecord = (this.currentPage - 1) * this.limit + 1;
-                    const endRecord = Math.min(this.currentPage * this.limit, this.totalProducts);
-                    return `${startRecord}-${endRecord} arası gösteriliyor, toplam ${this.totalProducts} kayıttan`;
-                },
-                pageNumbers() {
-                    const pages = [];
-                    const startPage = Math.max(1, this.currentPage - 2);
-                    const endPage = Math.min(this.totalPages, this.currentPage + 2);
+                    pageNumbers() {
+                        const pages = [];
+                        const startPage = Math.max(1, this.currentPage - 2);
+                        const endPage = Math.min(this.totalPages, this.currentPage + 2);
 
-                    for (let i = startPage; i <= endPage; i++) {
-                        pages.push(i);
-                    }
-                    return pages;
-                }
-            },
-            methods: {
-                showAlert(message, type) {
-                    this.alert.message = message;
-                    this.alert.type = type;
-                    setTimeout(() => { this.alert.message = ''; }, 3000);
-                },
-                loadProducts(page = 1) {
-                    this.loading = true;
-                    this.currentPage = page;
-                    let url = `api_islemleri/urunler_islemler.php?action=get_products&page=${this.currentPage}&limit=${this.limit}&search=${encodeURIComponent(this.search)}`;
-                    if (this.criticalStockFilterEnabled) {
-                        url += '&filter=critical';
-                    }
-                    if (this.productTypeFilter) {
-                        url += `&urun_tipi=${encodeURIComponent(this.productTypeFilter)}`;
-                    }
-                    if (this.depoFilter) {
-                        url += `&depo=${encodeURIComponent(this.depoFilter)}`;
-                    }
-                    if (this.rafFilter) {
-                        url += `&raf=${encodeURIComponent(this.rafFilter)}`;
-                    }
-                    fetch(url)
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.products = response.data;
-                                this.totalPages = response.pagination.total_pages;
-                                this.totalProducts = response.pagination.total_products;
-                                // Update stats
-                                if (response.stats) {
-                                    this.totalProducts = response.stats.total_products;
-                                    this.criticalProducts = response.stats.critical_products;
-                                }
-                            } else {
-                                this.showAlert('Ürünler yüklenirken hata oluştu: ' + response.message, 'danger');
-                            }
-                            this.loading = false;
-                        })
-                        .catch(error => {
-                            this.showAlert('Ürünler yüklenirken bir hata oluştu.', 'danger');
-                            this.loading = false;
-                        });
-                },
-                setProductTypeFilter(filter) {
-                    this.productTypeFilter = filter;
-                    this.currentPage = 1; // Reset to first page when filtering
-                    this.loadProducts(1);
-                },
-                onSearchInput() {
-                    clearTimeout(this.searchTimeout);
-                    this.searchTimeout = setTimeout(() => {
-                        this.currentPage = 1; // Reset to first page when searching
-                        this.loadProducts(1);
-                    }, 500); // 500ms debounce
-                },
-                onDepoFilterChange() {
-                    this.rafFilter = ''; // Reset raf filter when depo changes
-                    if (this.depoFilter) {
-                        this.loadFilterRafList(this.depoFilter);
-                    } else {
-                        this.filterRafList = [];
-                    }
-                    this.loadProducts(1);
-                },
-                loadFilterRafList(depo) {
-                    if (!depo) {
-                        this.filterRafList = [];
-                        return;
-                    }
-                    fetch(`api_islemleri/urunler_islemler.php?action=get_product_raflar&depo=${encodeURIComponent(depo)}`)
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.filterRafList = response.data;
-                            }
-                        });
-                },
-                openModal(product) {
-                    this.rafList = []; // Clear raf list
-                    this.productPhotos = []; // Clear photos
-                    this.uploadProgress = 0; // Reset progress
-
-                    if (product) {
-                        this.modal.title = 'Urunu Duzenle';
-                        this.modal.data = { ...product };
-                        if (product.depo) {
-                            this.loadRafList(product.depo, product.raf);
+                        for (let i = startPage; i <= endPage; i++) {
+                            pages.push(i);
                         }
-                        // Fotoğrafları yükle
-                        this.loadPhotos();
-                    } else {
-                        this.modal.title = 'Yeni Urun Ekle';
-                        this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
-                    }
-
-                    // Modal'ı kapatıp açmak için kontrol et
-                    if ($('#productModal').hasClass('show')) {
-                        $('#productModal').modal('hide');
-                        setTimeout(() => {
-                            $('#productModal').modal('show');
-                        }, 300);
-                    } else {
-                        $('#productModal').modal('show');
+                        return pages;
                     }
                 },
-                saveProduct() {
-                    let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
-                    let formData = new FormData();
-                    for (let key in this.modal.data) {
-                        formData.append(key, this.modal.data[key]);
-                    }
-                    formData.append('action', action);
-
-                    fetch('api_islemleri/urunler_islemler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.showAlert(response.message, 'success');
-                                $('#productModal').modal('hide');
-                                this.loadProducts(this.currentPage);
-                            } else {
-                                this.showAlert(response.message, 'danger');
-                            }
-                        })
-                        .catch(error => {
-                            this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                        });
-                },
-                deleteProduct(id) {
-                    Swal.fire({
-                        title: 'Emin misiniz?',
-                        text: "Bu urunu silmek istediğinizden emin misiniz?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Evet, sil!',
-                        cancelButtonText: 'İptal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
-                            let formData = new FormData();
-                            formData.append('action', 'delete_product');
-                            formData.append('urun_kodu', id);
-
-                            fetch('api_islemleri/urunler_islemler.php', {
-                                method: 'POST',
-                                body: formData
-                            })
-                                .then(response => response.json())
-                                .then(response => {
-                                    if (response.status === 'success') {
-                                        this.showAlert(response.message, 'success');
-                                        this.loadProducts(this.currentPage);
-                                    } else {
-                                        this.showAlert(response.message, 'danger');
+                methods: {
+                    showAlert(message, type) {
+                        this.alert.message = message;
+                        this.alert.type = type;
+                        setTimeout(() => { this.alert.message = ''; }, 3000);
+                    },
+                    loadProducts(page = 1) {
+                        this.loading = true;
+                        this.currentPage = page;
+                        let url = `api_islemleri/urunler_islemler.php?action=get_products&page=${this.currentPage}&limit=${this.limit}&search=${encodeURIComponent(this.search)}`;
+                        if (this.criticalStockFilterEnabled) {
+                            url += '&filter=critical';
+                        }
+                        if (this.productTypeFilter) {
+                            url += `&urun_tipi=${encodeURIComponent(this.productTypeFilter)}`;
+                        }
+                        if (this.depoFilter) {
+                            url += `&depo=${encodeURIComponent(this.depoFilter)}`;
+                        }
+                        if (this.rafFilter) {
+                            url += `&raf=${encodeURIComponent(this.rafFilter)}`;
+                        }
+                        fetch(url)
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.products = response.data;
+                                    this.totalPages = response.pagination.total_pages;
+                                    this.totalProducts = response.pagination.total_products;
+                                    // Update stats
+                                    if (response.stats) {
+                                        this.totalProducts = response.stats.total_products;
+                                        this.criticalProducts = response.stats.critical_products;
                                     }
-                                })
-                                .catch(error => {
-                                    this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
-                                });
-                        }
-                    })
-                },
-                loadDepoList() {
-                    // Modal için tüm lokasyonlardan depo listesi
-                    fetch('api_islemleri/urunler_islemler.php?action=get_depo_list')
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.depoList = response.data;
-                            }
-                        });
-                },
-                loadProductDepolar() {
-                    // Filtre için sadece ürünlerde kullanılan depolar
-                    fetch('api_islemleri/urunler_islemler.php?action=get_product_depolar')
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.productDepoList = response.data;
-                            }
-                        });
-                },
-                loadRafList(depo, selectedRaf = null) {
-                    if (!depo) {
-                        this.rafList = [];
-                        return;
-                    }
-                    fetch(`api_islemleri/urunler_islemler.php?action=get_raf_list&depo=${encodeURIComponent(depo)}`)
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.rafList = response.data;
-                                if (selectedRaf) {
-                                    this.modal.data.raf = selectedRaf;
+                                } else {
+                                    this.showAlert('Ürünler yüklenirken hata oluştu: ' + response.message, 'danger');
                                 }
-                            }
-                        });
-                },
-                formatCurrency(value, currency = 'TRY') {
-                    if (isNaN(value)) return '0,00 ₺';
-                    const num = parseFloat(value);
-                    const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€' };
-                    const symbol = currencySymbols[currency] || '₺';
-                    return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
-                },
-                formatPriceWithCurrency(product) {
-                    const price = parseFloat(product.satis_fiyati) || 0;
-                    const currency = product.satis_fiyati_para_birimi || 'TRY';
-                    return this.formatCurrency(price, currency);
-                },
-                formatTeorikMaliyet(product) {
-                    // Hazır alınan ürün için alış fiyatını göster
-                    if (product.urun_tipi === 'hazir_alinan') {
-                        return this.formatAlisFiyati(product);
-                    }
-                    // Üretilen ürün için teorik maliyeti göster (satış fiyatı para birimiyle)
-                    const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
-                    const currency = product.satis_fiyati_para_birimi || 'TRY';
-                    return this.formatCurrency(teorikMaliyet, currency);
-                },
-                formatAlisFiyati(product) {
-                    const alisFiyati = parseFloat(product.alis_fiyati) || 0;
-                    const currency = product.alis_fiyati_para_birimi || 'TRY';
-                    return this.formatCurrency(alisFiyati, currency);
-                },
-                stockClass(product) {
-                    const stok = parseFloat(product.stok_miktari);
-                    const kritik = parseFloat(product.kritik_stok_seviyesi);
-                    if (stok <= 0) return 'stock-low';
-                    if (stok <= kritik) return 'stock-critical';
-                    return 'stock-normal';
-                },
-                stockStatus(product) {
-                    const stok = parseFloat(product.stok_miktari);
-                    const kritik = parseFloat(product.kritik_stok_seviyesi);
-                    if (stok == 0) {
-                        return '<span style="color: #c62828; font-weight: bold;">Stokta Yok</span>';
-                    } else if (stok <= kritik) {
-                        return '<span style="color: #f57f17; font-weight: bold;">Kritik Seviye</span>';
-                    } else {
-                        return '<span style="color: #2e7d32; font-weight: bold;">Yeterli</span>';
-                    }
-                },
-                toggleCriticalStockFilter() {
-                    this.criticalStockFilterEnabled = !this.criticalStockFilterEnabled;
-                    this.loadProducts(1);
-                },
-                loadOperatingCostMetrics() {
-                    fetch('api_islemleri/isletme_maliyeti_islemler.php?action=get_metrics')
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.operatingCostMetrics = response.data;
-                            }
-                        });
-                },
-                loadPhotos() {
-                    if (!this.modal.data.urun_kodu) return;
-
-                    this.loadingPhotos = true;
-                    fetch(`api_islemleri/urun_fotograflari_islemler.php?action=get_photos&urun_kodu=${this.modal.data.urun_kodu}`)
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.productPhotos = response.data;
-                            } else {
-                                this.showAlert('Fotoğraflar yüklenirken hata oluştu.', 'danger');
-                            }
-                            this.loadingPhotos = false;
-                        })
-                        .catch(error => {
-                            this.showAlert('Fotoğraflar yüklenirken bir hata oluştu.', 'danger');
-                            this.loadingPhotos = false;
-                        });
-                },
-                handlePhotoSelect(event) {
-                    const files = event.target.files;
-                    this.uploadPhotos(files);
-                },
-                handleDrop(event) {
-                    const files = event.dataTransfer.files;
-                    this.uploadPhotos(files);
-                },
-                uploadPhotos(files) {
-                    if (!this.modal.data.urun_kodu) {
-                        this.showAlert('Önce ürünü kaydetmelisiniz.', 'warning');
-                        return;
-                    }
-
-                    if (files.length === 0) return;
-
-                    const totalFiles = files.length;
-                    let uploadedFiles = 0;
-
-                    Array.from(files).forEach((file, index) => {
-                        // Dosya boyutu kontrolü (5MB)
-                        if (file.size > 5 * 1024 * 1024) {
-                            this.showAlert(`${file.name} dosyası 5MB'dan büyük.`, 'danger');
+                                this.loading = false;
+                            })
+                            .catch(error => {
+                                this.showAlert('Ürünler yüklenirken bir hata oluştu.', 'danger');
+                                this.loading = false;
+                            });
+                    },
+                    setProductTypeFilter(filter) {
+                        this.productTypeFilter = filter;
+                        this.currentPage = 1; // Reset to first page when filtering
+                        this.loadProducts(1);
+                    },
+                    onSearchInput() {
+                        clearTimeout(this.searchTimeout);
+                        this.searchTimeout = setTimeout(() => {
+                            this.currentPage = 1; // Reset to first page when searching
+                            this.loadProducts(1);
+                        }, 500); // 500ms debounce
+                    },
+                    onDepoFilterChange() {
+                        this.rafFilter = ''; // Reset raf filter when depo changes
+                        if (this.depoFilter) {
+                            this.loadFilterRafList(this.depoFilter);
+                        } else {
+                            this.filterRafList = [];
+                        }
+                        this.loadProducts(1);
+                    },
+                    loadFilterRafList(depo) {
+                        if (!depo) {
+                            this.filterRafList = [];
                             return;
                         }
+                        fetch(`api_islemleri/urunler_islemler.php?action=get_product_raflar&depo=${encodeURIComponent(depo)}`)
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.filterRafList = response.data;
+                                }
+                            });
+                    },
+                    openModal(product) {
+                        this.rafList = []; // Clear raf list
+                        this.productPhotos = []; // Clear photos
+                        this.uploadProgress = 0; // Reset progress
 
-                        // Dosya formatı kontrolü
-                        const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
-                        if (!allowedTypes.includes(file.type)) {
-                            this.showAlert(`${file.name} desteklenmeyen bir format.`, 'danger');
-                            return;
+                        if (product) {
+                            this.modal.title = 'Urunu Duzenle';
+                            this.modal.data = { ...product };
+                            if (product.depo) {
+                                this.loadRafList(product.depo, product.raf);
+                            }
+                            // Fotoğrafları yükle
+                            this.loadPhotos();
+                        } else {
+                            this.modal.title = 'Yeni Urun Ekle';
+                            this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
                         }
 
-                        const formData = new FormData();
-                        formData.append('action', 'upload_photo');
-                        formData.append('urun_kodu', this.modal.data.urun_kodu);
-                        formData.append('photo', file);
+                        // Modal'ı kapatıp açmak için kontrol et
+                        if ($('#productModal').hasClass('show')) {
+                            $('#productModal').modal('hide');
+                            setTimeout(() => {
+                                $('#productModal').modal('show');
+                            }, 300);
+                        } else {
+                            $('#productModal').modal('show');
+                        }
+                    },
+                    saveProduct() {
+                        let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
+                        let formData = new FormData();
+                        for (let key in this.modal.data) {
+                            formData.append(key, this.modal.data[key]);
+                        }
+                        formData.append('action', action);
 
-                        fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                        fetch('api_islemleri/urunler_islemler.php', {
                             method: 'POST',
                             body: formData
                         })
                             .then(response => response.json())
                             .then(response => {
-                                uploadedFiles++;
-                                this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
-
                                 if (response.status === 'success') {
-                                    this.productPhotos.push(response.data);
-
-                                    // Update main product list photo count
-                                    const productIndex = this.products.findIndex(p => p.urun_kodu === this.modal.data.urun_kodu);
-                                    if (productIndex !== -1) {
-                                        // Force reactivity by creating a new object or using Vue.set if needed, 
-                                        // but direct assignment usually works if property exists. 
-                                        // To be safe with Vue 2 reactivity for numbers:
-                                        this.products[productIndex].foto_sayisi = (parseInt(this.products[productIndex].foto_sayisi) || 0) + 1;
-                                    }
+                                    this.showAlert(response.message, 'success');
+                                    $('#productModal').modal('hide');
+                                    this.loadProducts(this.currentPage);
                                 } else {
                                     this.showAlert(response.message, 'danger');
                                 }
-
-                                if (uploadedFiles === totalFiles) {
-                                    setTimeout(() => {
-                                        this.uploadProgress = 0;
-                                    }, 1000);
-                                }
                             })
                             .catch(error => {
-                                this.showAlert('Fotoğraf yüklenirken bir hata oluştu.', 'danger');
-                                uploadedFiles++;
-                                this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+                                this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
                             });
-                    });
-                },
-                deletePhoto(fotograf_id) {
-                    Swal.fire({
-                        title: 'Emin misiniz?',
-                        text: "Bu fotoğrafı silmek istediğinizden emin misiniz?",
-                        icon: 'warning',
-                        showCancelButton: true,
-                        confirmButtonColor: '#3085d6',
-                        cancelButtonColor: '#d33',
-                        confirmButtonText: 'Evet, sil!',
-                        cancelButtonText: 'İptal'
-                    }).then((result) => {
-                        if (result.isConfirmed) {
+                    },
+                    deleteProduct(id) {
+                        Swal.fire({
+                            title: 'Emin misiniz?',
+                            text: "Bu urunu silmek istediğinizden emin misiniz?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Evet, sil!',
+                            cancelButtonText: 'İptal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                let formData = new FormData();
+                                formData.append('action', 'delete_product');
+                                formData.append('urun_kodu', id);
+
+                                fetch('api_islemleri/urunler_islemler.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                    .then(response => response.json())
+                                    .then(response => {
+                                        if (response.status === 'success') {
+                                            this.showAlert(response.message, 'success');
+                                            this.loadProducts(this.currentPage);
+                                        } else {
+                                            this.showAlert(response.message, 'danger');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                    });
+                            }
+                        })
+                    },
+                    loadDepoList() {
+                        // Modal için tüm lokasyonlardan depo listesi
+                        fetch('api_islemleri/urunler_islemler.php?action=get_depo_list')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.depoList = response.data;
+                                }
+                            });
+                    },
+                    loadProductDepolar() {
+                        // Filtre için sadece ürünlerde kullanılan depolar
+                        fetch('api_islemleri/urunler_islemler.php?action=get_product_depolar')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.productDepoList = response.data;
+                                }
+                            });
+                    },
+                    loadRafList(depo, selectedRaf = null) {
+                        if (!depo) {
+                            this.rafList = [];
+                            return;
+                        }
+                        fetch(`api_islemleri/urunler_islemler.php?action=get_raf_list&depo=${encodeURIComponent(depo)}`)
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.rafList = response.data;
+                                    if (selectedRaf) {
+                                        this.modal.data.raf = selectedRaf;
+                                    }
+                                }
+                            });
+                    },
+                    formatCurrency(value, currency = 'TRY') {
+                        if (isNaN(value)) return '0,00 ₺';
+                        const num = parseFloat(value);
+                        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€' };
+                        const symbol = currencySymbols[currency] || '₺';
+                        return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
+                    },
+                    formatPriceWithCurrency(product) {
+                        const price = parseFloat(product.satis_fiyati) || 0;
+                        const currency = product.satis_fiyati_para_birimi || 'TRY';
+                        return this.formatCurrency(price, currency);
+                    },
+                    formatTeorikMaliyet(product) {
+                        // Hazır alınan ürün için alış fiyatını göster
+                        if (product.urun_tipi === 'hazir_alinan') {
+                            return this.formatAlisFiyati(product);
+                        }
+                        // Üretilen ürün için teorik maliyeti göster (satış fiyatı para birimiyle)
+                        const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
+                        const currency = product.satis_fiyati_para_birimi || 'TRY';
+                        return this.formatCurrency(teorikMaliyet, currency);
+                    },
+                    formatAlisFiyati(product) {
+                        const alisFiyati = parseFloat(product.alis_fiyati) || 0;
+                        const currency = product.alis_fiyati_para_birimi || 'TRY';
+                        return this.formatCurrency(alisFiyati, currency);
+                    },
+                    stockClass(product) {
+                        const stok = parseFloat(product.stok_miktari);
+                        const kritik = parseFloat(product.kritik_stok_seviyesi);
+                        if (stok <= 0) return 'stock-low';
+                        if (stok <= kritik) return 'stock-critical';
+                        return 'stock-normal';
+                    },
+                    stockStatus(product) {
+                        const stok = parseFloat(product.stok_miktari);
+                        const kritik = parseFloat(product.kritik_stok_seviyesi);
+                        if (stok == 0) {
+                            return '<span style="color: #c62828; font-weight: bold;">Stokta Yok</span>';
+                        } else if (stok <= kritik) {
+                            return '<span style="color: #f57f17; font-weight: bold;">Kritik Seviye</span>';
+                        } else {
+                            return '<span style="color: #2e7d32; font-weight: bold;">Yeterli</span>';
+                        }
+                    },
+                    toggleCriticalStockFilter() {
+                        this.criticalStockFilterEnabled = !this.criticalStockFilterEnabled;
+                        this.loadProducts(1);
+                    },
+                    loadOperatingCostMetrics() {
+                        fetch('api_islemleri/isletme_maliyeti_islemler.php?action=get_metrics')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.operatingCostMetrics = response.data;
+                                }
+                            });
+                    },
+                    loadPhotos() {
+                        if (!this.modal.data.urun_kodu) return;
+
+                        this.loadingPhotos = true;
+                        fetch(`api_islemleri/urun_fotograflari_islemler.php?action=get_photos&urun_kodu=${this.modal.data.urun_kodu}`)
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.productPhotos = response.data;
+                                } else {
+                                    this.showAlert('Fotoğraflar yüklenirken hata oluştu.', 'danger');
+                                }
+                                this.loadingPhotos = false;
+                            })
+                            .catch(error => {
+                                this.showAlert('Fotoğraflar yüklenirken bir hata oluştu.', 'danger');
+                                this.loadingPhotos = false;
+                            });
+                    },
+                    handlePhotoSelect(event) {
+                        const files = event.target.files;
+                        this.uploadPhotos(files);
+                    },
+                    handleDrop(event) {
+                        const files = event.dataTransfer.files;
+                        this.uploadPhotos(files);
+                    },
+                    uploadPhotos(files) {
+                        if (!this.modal.data.urun_kodu) {
+                            this.showAlert('Önce ürünü kaydetmelisiniz.', 'warning');
+                            return;
+                        }
+
+                        if (files.length === 0) return;
+
+                        const totalFiles = files.length;
+                        let uploadedFiles = 0;
+
+                        Array.from(files).forEach((file, index) => {
+                            // Dosya boyutu kontrolü (5MB)
+                            if (file.size > 5 * 1024 * 1024) {
+                                this.showAlert(`${file.name} dosyası 5MB'dan büyük.`, 'danger');
+                                return;
+                            }
+
+                            // Dosya formatı kontrolü
+                            const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                            if (!allowedTypes.includes(file.type)) {
+                                this.showAlert(`${file.name} desteklenmeyen bir format.`, 'danger');
+                                return;
+                            }
+
                             const formData = new FormData();
-                            formData.append('action', 'delete_photo');
-                            formData.append('fotograf_id', fotograf_id);
+                            formData.append('action', 'upload_photo');
+                            formData.append('urun_kodu', this.modal.data.urun_kodu);
+                            formData.append('photo', file);
 
                             fetch('api_islemleri/urun_fotograflari_islemler.php', {
                                 method: 'POST',
@@ -1225,201 +1252,380 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             })
                                 .then(response => response.json())
                                 .then(response => {
+                                    uploadedFiles++;
+                                    this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
+
                                     if (response.status === 'success') {
-                                        // Remove photo from array using splice for better reactivity
-                                        const index = this.productPhotos.findIndex(p => p.fotograf_id === fotograf_id);
-                                        if (index !== -1) {
-                                            this.productPhotos.splice(index, 1);
-                                        }
+                                        this.productPhotos.push(response.data);
 
                                         // Update main product list photo count
                                         const productIndex = this.products.findIndex(p => p.urun_kodu === this.modal.data.urun_kodu);
                                         if (productIndex !== -1) {
-                                            this.products[productIndex].foto_sayisi = Math.max(0, (parseInt(this.products[productIndex].foto_sayisi) || 0) - 1);
+                                            // Force reactivity by creating a new object or using Vue.set if needed, 
+                                            // but direct assignment usually works if property exists. 
+                                            // To be safe with Vue 2 reactivity for numbers:
+                                            this.products[productIndex].foto_sayisi = (parseInt(this.products[productIndex].foto_sayisi) || 0) + 1;
                                         }
-                                        this.showAlert('Fotoğraf başarıyla silindi.', 'success');
                                     } else {
                                         this.showAlert(response.message, 'danger');
                                     }
+
+                                    if (uploadedFiles === totalFiles) {
+                                        setTimeout(() => {
+                                            this.uploadProgress = 0;
+                                        }, 1000);
+                                    }
                                 })
                                 .catch(error => {
-                                    this.showAlert('Fotoğraf silinirken bir hata oluştu.', 'danger');
+                                    this.showAlert('Fotoğraf yüklenirken bir hata oluştu.', 'danger');
+                                    uploadedFiles++;
+                                    this.uploadProgress = Math.round((uploadedFiles / totalFiles) * 100);
                                 });
-                        }
-                    });
-                },
-                openLightbox(index) {
-                    this.lightbox.currentIndex = index;
-                    this.lightbox.show = true;
-                    document.body.style.overflow = 'hidden'; // Prevent scrolling
-                    // Add keyboard navigation
-                    document.addEventListener('keydown', this.handleLightboxKeyboard);
-                },
-                closeLightbox() {
-                    this.lightbox.show = false;
-                    document.body.style.overflow = ''; // Restore scrolling
-                    document.removeEventListener('keydown', this.handleLightboxKeyboard);
-                },
-                nextPhoto() {
-                    this.lightbox.currentIndex = (this.lightbox.currentIndex + 1) % this.productPhotos.length;
-                },
-                previousPhoto() {
-                    this.lightbox.currentIndex = (this.lightbox.currentIndex - 1 + this.productPhotos.length) % this.productPhotos.length;
-                },
-                handleLightboxKeyboard(event) {
-                    if (!this.lightbox.show) return;
-
-                    if (event.key === 'Escape') {
-                        this.closeLightbox();
-                    } else if (event.key === 'ArrowRight') {
-                        this.nextPhoto();
-                    } else if (event.key === 'ArrowLeft') {
-                        this.previousPhoto();
-                    }
-                },
-                setPrimaryPhoto(fotograf_id) {
-                    const formData = new FormData();
-                    formData.append('action', 'set_primary_photo');
-                    formData.append('fotograf_id', fotograf_id);
-
-                    fetch('api_islemleri/urun_fotograflari_islemler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                // Tüm fotoğrafları normal yap
-                                this.productPhotos.forEach(p => p.ana_fotograf = 0);
-                                // Seçilen fotoğrafı ana yap
-                                const photo = this.productPhotos.find(p => p.fotograf_id === fotograf_id);
-                                if (photo) {
-                                    photo.ana_fotograf = 1;
-                                }
-                                this.showAlert('Ana fotoğraf başarıyla ayarlandı.', 'success');
-                            } else {
-                                this.showAlert(response.message, 'danger');
-                            }
-                        })
-                        .catch(error => {
-                            this.showAlert('Ana fotoğraf ayarlanırken bir hata oluştu.', 'danger');
                         });
-                },
-                handleDragStart(event, index) {
-                    this.draggedIndex = index;
-                    event.dataTransfer.effectAllowed = 'move';
-                    event.dataTransfer.setData('text/html', event.target.innerHTML);
-                },
-                handleDragOver(event, index) {
-                    this.dragOverIndex = index;
-                },
-                handleDrop(event, targetIndex) {
-                    event.preventDefault();
+                    },
+                    deletePhoto(fotograf_id) {
+                        Swal.fire({
+                            title: 'Emin misiniz?',
+                            text: "Bu fotoğrafı silmek istediğinizden emin misiniz?",
+                            icon: 'warning',
+                            showCancelButton: true,
+                            confirmButtonColor: '#3085d6',
+                            cancelButtonColor: '#d33',
+                            confirmButtonText: 'Evet, sil!',
+                            cancelButtonText: 'İptal'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                const formData = new FormData();
+                                formData.append('action', 'delete_photo');
+                                formData.append('fotograf_id', fotograf_id);
 
-                    if (this.draggedIndex === null || this.draggedIndex === targetIndex) {
+                                fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                    .then(response => response.json())
+                                    .then(response => {
+                                        if (response.status === 'success') {
+                                            // Remove photo from array using splice for better reactivity
+                                            const index = this.productPhotos.findIndex(p => p.fotograf_id === fotograf_id);
+                                            if (index !== -1) {
+                                                this.productPhotos.splice(index, 1);
+                                            }
+
+                                            // Update main product list photo count
+                                            const productIndex = this.products.findIndex(p => p.urun_kodu === this.modal.data.urun_kodu);
+                                            if (productIndex !== -1) {
+                                                this.products[productIndex].foto_sayisi = Math.max(0, (parseInt(this.products[productIndex].foto_sayisi) || 0) - 1);
+                                            }
+                                            this.showAlert('Fotoğraf başarıyla silindi.', 'success');
+                                        } else {
+                                            this.showAlert(response.message, 'danger');
+                                        }
+                                    })
+                                    .catch(error => {
+                                        this.showAlert('Fotoğraf silinirken bir hata oluştu.', 'danger');
+                                    });
+                            }
+                        });
+                    },
+                    openLightbox(index) {
+                        this.lightbox.currentIndex = index;
+                        this.lightbox.show = true;
+                        document.body.style.overflow = 'hidden'; // Prevent scrolling
+                        // Add keyboard navigation
+                        document.addEventListener('keydown', this.handleLightboxKeyboard);
+                    },
+                    closeLightbox() {
+                        this.lightbox.show = false;
+                        document.body.style.overflow = ''; // Restore scrolling
+                        document.removeEventListener('keydown', this.handleLightboxKeyboard);
+                    },
+                    nextPhoto() {
+                        this.lightbox.currentIndex = (this.lightbox.currentIndex + 1) % this.productPhotos.length;
+                    },
+                    previousPhoto() {
+                        this.lightbox.currentIndex = (this.lightbox.currentIndex - 1 + this.productPhotos.length) % this.productPhotos.length;
+                    },
+                    handleLightboxKeyboard(event) {
+                        if (!this.lightbox.show) return;
+
+                        if (event.key === 'Escape') {
+                            this.closeLightbox();
+                        } else if (event.key === 'ArrowRight') {
+                            this.nextPhoto();
+                        } else if (event.key === 'ArrowLeft') {
+                            this.previousPhoto();
+                        }
+                    },
+                    setPrimaryPhoto(fotograf_id) {
+                        const formData = new FormData();
+                        formData.append('action', 'set_primary_photo');
+                        formData.append('fotograf_id', fotograf_id);
+
+                        fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    // Tüm fotoğrafları normal yap
+                                    this.productPhotos.forEach(p => p.ana_fotograf = 0);
+                                    // Seçilen fotoğrafı ana yap
+                                    const photo = this.productPhotos.find(p => p.fotograf_id === fotograf_id);
+                                    if (photo) {
+                                        photo.ana_fotograf = 1;
+                                    }
+                                    this.showAlert('Ana fotoğraf başarıyla ayarlandı.', 'success');
+                                } else {
+                                    this.showAlert(response.message, 'danger');
+                                }
+                            })
+                            .catch(error => {
+                                this.showAlert('Ana fotoğraf ayarlanırken bir hata oluştu.', 'danger');
+                            });
+                    },
+                    handleDragStart(event, index) {
+                        this.draggedIndex = index;
+                        event.dataTransfer.effectAllowed = 'move';
+                        event.dataTransfer.setData('text/html', event.target.innerHTML);
+                    },
+                    handleDragOver(event, index) {
+                        this.dragOverIndex = index;
+                    },
+                    handleDrop(event, targetIndex) {
+                        event.preventDefault();
+
+                        if (this.draggedIndex === null || this.draggedIndex === targetIndex) {
+                            this.draggedIndex = null;
+                            this.dragOverIndex = null;
+                            return;
+                        }
+
+                        // Fotoğrafları yeniden sırala
+                        const draggedPhoto = this.productPhotos[this.draggedIndex];
+                        const newPhotos = [...this.productPhotos];
+
+                        // Sürüklenen öğeyi çıkar
+                        newPhotos.splice(this.draggedIndex, 1);
+                        // Yeni konuma ekle
+                        newPhotos.splice(targetIndex, 0, draggedPhoto);
+
+                        this.productPhotos = newPhotos;
+
+                        // Sıralamayı backend'e gönder
+                        this.updatePhotoOrder();
+
                         this.draggedIndex = null;
                         this.dragOverIndex = null;
-                        return;
-                    }
+                    },
+                    handleDragEnd() {
+                        this.draggedIndex = null;
+                        this.dragOverIndex = null;
+                    },
+                    updatePhotoOrder() {
+                        const photoIds = this.productPhotos.map(p => p.fotograf_id);
+                        const formData = new FormData();
+                        formData.append('action', 'update_order');
+                        formData.append('photos', JSON.stringify(photoIds));
 
-                    // Fotoğrafları yeniden sırala
-                    const draggedPhoto = this.productPhotos[this.draggedIndex];
-                    const newPhotos = [...this.productPhotos];
-
-                    // Sürüklenen öğeyi çıkar
-                    newPhotos.splice(this.draggedIndex, 1);
-                    // Yeni konuma ekle
-                    newPhotos.splice(targetIndex, 0, draggedPhoto);
-
-                    this.productPhotos = newPhotos;
-
-                    // Sıralamayı backend'e gönder
-                    this.updatePhotoOrder();
-
-                    this.draggedIndex = null;
-                    this.dragOverIndex = null;
-                },
-                handleDragEnd() {
-                    this.draggedIndex = null;
-                    this.dragOverIndex = null;
-                },
-                updatePhotoOrder() {
-                    const photoIds = this.productPhotos.map(p => p.fotograf_id);
-                    const formData = new FormData();
-                    formData.append('action', 'update_order');
-                    formData.append('photos', JSON.stringify(photoIds));
-
-                    fetch('api_islemleri/urun_fotograflari_islemler.php', {
-                        method: 'POST',
-                        body: formData
-                    })
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                // Sıra numaralarını güncelle
-                                this.productPhotos.forEach((photo, index) => {
-                                    photo.sira_no = index + 1;
-                                });
-                            } else {
-                                this.showAlert('Sıralama güncellenirken hata oluştu.', 'danger');
-                            }
+                        fetch('api_islemleri/urun_fotograflari_islemler.php', {
+                            method: 'POST',
+                            body: formData
                         })
-                        .catch(error => {
-                            this.showAlert('Sıralama güncellenirken bir hata oluştu.', 'danger');
-                        });
-                },
-                calculateProfitability(product) {
-                    if (!this.operatingCostMetrics || !product.teorik_maliyet) return '<span class="text-muted">-</span>';
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    // Sıra numaralarını güncelle
+                                    this.productPhotos.forEach((photo, index) => {
+                                        photo.sira_no = index + 1;
+                                    });
+                                } else {
+                                    this.showAlert('Sıralama güncellenirken hata oluştu.', 'danger');
+                                }
+                            })
+                            .catch(error => {
+                                this.showAlert('Sıralama güncellenirken bir hata oluştu.', 'danger');
+                            });
+                    },
+                    calculateProfitability(product) {
+                        if (!this.operatingCostMetrics || !product.teorik_maliyet) return '<span class="text-muted">-</span>';
 
-                    const theoreticalCost = parseFloat(product.teorik_maliyet);
-                    const operatingCost = parseFloat(this.operatingCostMetrics.unit_operating_cost);
-                    const totalCost = theoreticalCost + operatingCost;
-                    const sellingPrice = parseFloat(product.satis_fiyati);
+                        const theoreticalCost = parseFloat(product.teorik_maliyet);
+                        const operatingCost = parseFloat(this.operatingCostMetrics.unit_operating_cost);
+                        const totalCost = theoreticalCost + operatingCost;
+                        const sellingPrice = parseFloat(product.satis_fiyati);
 
-                    // Avoid division by zero or invalid data
-                    if (sellingPrice <= 0) return '<span class="text-muted">Fiyat Yok</span>';
+                        // Avoid division by zero or invalid data
+                        if (sellingPrice <= 0) return '<span class="text-muted">Fiyat Yok</span>';
 
-                    const diff = sellingPrice - totalCost;
+                        const diff = sellingPrice - totalCost;
 
-                    if (diff > 0) {
-                        return `<span class="badge badge-success" title="Tahmini Kâr: ${this.formatCurrency(diff)}">Kârlı</span>`;
-                    } else {
-                        return `<span class="badge badge-danger" title="Tahmini Zarar: ${this.formatCurrency(Math.abs(diff))}">Zarar</span>`;
+                        if (diff > 0) {
+                            return `<span class="badge badge-success" title="Tahmini Kâr: ${this.formatCurrency(diff)}">Kârlı</span>`;
+                        } else {
+                            return `<span class="badge badge-danger" title="Tahmini Zarar: ${this.formatCurrency(Math.abs(diff))}">Zarar</span>`;
+                        }
+                    },
+                    loadKurlar() {
+                        fetch('api_islemleri/ayarlar_islemler.php?action=get_settings')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.kurlar.dolar = parseFloat(response.data.dolar_kuru) || 1;
+                                    this.kurlar.euro = parseFloat(response.data.euro_kuru) || 1;
+                                }
+                            });
+                    },
+                    onUrunTipiChange() {
+                        // Ürün tipi üretilen olarak değiştiğinde alış fiyatını 0 yap
+                        if (this.modal.data.urun_tipi === 'uretilen') {
+                            this.modal.data.alis_fiyati = 0.0;
+                            this.modal.data.alis_fiyati_para_birimi = 'TRY';
+                        }
+                    }
+                    ,
+                    openTreeModal(product) {
+                        this.treeModal.title = product.urun_ismi + ' - Ürün Ağacı';
+                        this.treeModal.loading = true;
+                        this.treeModal.error = null;
+                        this.treeModal.data = null;
+
+                        $('#treeModal').modal('show');
+
+                        fetch(`api_islemleri/urun_agaclari_islemler.php?action=get_product_tree_hierarchy&urun_kodu=${product.urun_kodu}`)
+                            .then(response => response.json())
+                            .then(response => {
+                                this.treeModal.loading = false;
+                                if (response.status === 'success') {
+                                    this.treeModal.data = response.data;
+                                    // Render tree after DOM update
+                                    this.$nextTick(() => {
+                                        if (this.treeModal.data && this.treeModal.data.children && this.treeModal.data.children.length > 0) {
+                                            this.renderTree(this.treeModal.data);
+                                        }
+                                    });
+                                } else {
+                                    this.treeModal.error = response.message || 'Ürün ağacı yüklenemedi.';
+                                }
+                            })
+                            .catch(error => {
+                                this.treeModal.loading = false;
+                                this.treeModal.error = 'Bir hata oluştu: ' + error.message;
+                            });
+                    },
+                    renderTree(data) {
+                        const container = document.getElementById('tree-container');
+                        if (!container) return;
+
+                        // Clear previous content
+                        container.innerHTML = '';
+
+                        const margin = { top: 30, right: 120, bottom: 30, left: 120 };
+                        const width = 1100;
+                        const height = 450;
+
+                        // Color mapping for different types
+                        const getColor = (type) => {
+                            const colors = {
+                                'urun': '#4a0e63',
+                                'esans': '#9c27b0',
+                                'malzeme': '#2196f3',
+                                'kutu': '#ff9800',
+                                'takim': '#4caf50',
+                                'etiket': '#f44336',
+                                'jelatin': '#00bcd4',
+                                'dis_kutu': '#795548',
+                                'kapak': '#607d8b'
+                            };
+                            return colors[type?.toLowerCase()] || '#9e9e9e';
+                        };
+
+                        // Create SVG
+                        const svg = d3.select(container)
+                            .append('svg')
+                            .attr('width', width)
+                            .attr('height', height)
+                            .append('g')
+                            .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                        // Create tree layout
+                        const treeLayout = d3.tree()
+                            .size([height - margin.top - margin.bottom, width - margin.left - margin.right - 200]);
+
+                        // Create hierarchy
+                        const root = d3.hierarchy(data);
+                        treeLayout(root);
+
+                        // Create links
+                        svg.selectAll('.link')
+                            .data(root.links())
+                            .enter()
+                            .append('path')
+                            .attr('class', 'link')
+                            .attr('fill', 'none')
+                            .attr('stroke', '#ccc')
+                            .attr('stroke-width', 2)
+                            .attr('d', d3.linkHorizontal()
+                                .x(d => d.y)
+                                .y(d => d.x));
+
+                        // Create nodes
+                        const nodes = svg.selectAll('.node')
+                            .data(root.descendants())
+                            .enter()
+                            .append('g')
+                            .attr('class', 'node')
+                            .attr('transform', d => `translate(${d.y},${d.x})`);
+
+                        // Add circles
+                        nodes.append('circle')
+                            .attr('r', 12)
+                            .attr('fill', d => getColor(d.data.type))
+                            .attr('stroke', '#fff')
+                            .attr('stroke-width', 2)
+                            .style('cursor', 'pointer');
+
+                        // Add labels
+                        nodes.append('text')
+                            .attr('dy', 4)
+                            .attr('x', d => d.children ? -18 : 18)
+                            .attr('text-anchor', d => d.children ? 'end' : 'start')
+                            .style('font-size', '11px')
+                            .style('font-weight', d => d.depth === 0 ? 'bold' : 'normal')
+                            .text(d => {
+                                const name = d.data.name;
+                                const qty = d.data.quantity;
+                                if (d.depth === 0) return name;
+                                return `${name} (${qty})`;
+                            });
+
+                        // Add type labels below circles
+                        nodes.append('text')
+                            .attr('dy', 25)
+                            .attr('text-anchor', 'middle')
+                            .style('font-size', '9px')
+                            .style('fill', d => getColor(d.data.type))
+                            .style('font-weight', 'bold')
+                            .text(d => d.data.type?.toUpperCase() || '');
                     }
                 },
-                loadKurlar() {
-                    fetch('api_islemleri/ayarlar_islemler.php?action=get_settings')
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.kurlar.dolar = parseFloat(response.data.dolar_kuru) || 1;
-                                this.kurlar.euro = parseFloat(response.data.euro_kuru) || 1;
-                            }
-                        });
-                },
-                onUrunTipiChange() {
-                    // Ürün tipi üretilen olarak değiştiğinde alış fiyatını 0 yap
-                    if (this.modal.data.urun_tipi === 'uretilen') {
-                        this.modal.data.alis_fiyati = 0.0;
-                        this.modal.data.alis_fiyati_para_birimi = 'TRY';
-                    }
+
+                mounted() {
+                    this.loadProducts();
+                    this.loadDepoList();
+                    this.loadProductDepolar();
+                    this.loadOperatingCostMetrics();
+                    this.loadKurlar();
+
+                    // Modal açıldığında tab'ı Ürün Bilgileri'ne sıfırla
+                    $('#productModal').on('shown.bs.modal', () => {
+                        $('#info-tab').tab('show');
+                    });
                 }
-            },
-            mounted() {
-                this.loadProducts();
-                this.loadDepoList();
-                this.loadProductDepolar();
-                this.loadOperatingCostMetrics();
-                this.loadKurlar();
-
-                // Modal açıldığında tab'ı Ürün Bilgileri'ne sıfırla
-                $('#productModal').on('shown.bs.modal', () => {
-                    $('#info-tab').tab('show');
-                });
-            }
-        });
-        app.mount('#app');
-    </script>
+            });
+            app.mount('#app');
+        </script>
 </body>
 
 </html>
