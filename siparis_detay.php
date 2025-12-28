@@ -560,8 +560,15 @@ $products_result = $connection->query($products_query);
                                     <td><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
                                     <td><?php echo $item['adet']; ?></td>
                                     <td><?php echo htmlspecialchars($item['birim']); ?></td>
-                                    <td><?php echo number_format($item['birim_fiyat'], 2); ?> TL</td>
-                                    <td><?php echo number_format($item['toplam_tutar'], 2); ?> TL</td>
+                                    <?php 
+                                    $symbol = '₺';
+                                    if(isset($item['para_birimi'])) {
+                                        if($item['para_birimi'] == 'USD') $symbol = '$';
+                                        elseif($item['para_birimi'] == 'EUR') $symbol = '€';
+                                    }
+                                    ?>
+                                    <td><?php echo number_format($item['birim_fiyat'], 2); ?> <?php echo $symbol; ?></td>
+                                    <td><?php echo number_format($item['toplam_tutar'], 2); ?> <?php echo $symbol; ?></td>
                                                                          <td class="actions">
                                                                             <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
                                                                                 <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">

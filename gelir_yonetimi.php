@@ -583,8 +583,13 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                             <!-- Tutar -->
                             <div class="form-group col-md-3 mb-2">
                                 <label for="tutar" class="small font-weight-bold">Tutar</label>
-                                <input type="number" step="0.01" class="form-control form-control-sm" id="tutar"
-                                    name="tutar" required placeholder="0.00">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" step="0.01" class="form-control" id="tutar"
+                                        name="tutar" required placeholder="0.00">
+                                    <div class="input-group-append">
+                                        <span class="input-group-text" id="currency-display">TL</span>
+                                    </div>
+                                </div>
                             </div>
                             <!-- Ödeme Tipi -->
                             <div class="form-group col-md-3 mb-2">
@@ -597,7 +602,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                                 </select>
                             </div>
                         </div>
-                        <!-- Para Birimi (Gizli) -->
+                        <!-- Para Birimi (Otomatik - Gizli) -->
                         <input type="hidden" id="para_birimi" name="para_birimi" value="TL">
 
                         <!-- Müşteri Adı -->
@@ -647,7 +652,21 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     if (res.status === 'success') {
                         renderTable(res.data);
                         renderPagination(res.page, Math.ceil(res.total / res.per_page));
-                        $('#overallTotal').html(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.overall_sum) + ' TL');
+
+                        // Handle multiple currencies for overall total
+                        let overallHtml = '';
+                        if (typeof res.overall_sum === 'object' && res.overall_sum !== null) {
+                            let parts = [];
+                            for (const [curr, val] of Object.entries(res.overall_sum)) {
+                                if (parseFloat(val) > 0) {
+                                    parts.push(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(val) + ' ' + curr);
+                                }
+                            }
+                            overallHtml = parts.length > 0 ? parts.join(' <br> ') : '0,00 TL';
+                        } else {
+                            overallHtml = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.overall_sum) + ' TL';
+                        }
+                        $('#overallTotal').html(overallHtml);
                     } else {
                         $('#incomesTableBody').html('<tr><td colspan="9" class="text-center text-danger">Veri alınamadı: ' + res.message + '</td></tr>');
                     }
@@ -707,7 +726,22 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     const res = JSON.parse(response);
                     if (res.status === 'success') {
                         $('#pendingCount').text(res.data.count);
-                        $('#pendingTotal').text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.data.total_remaining) + ' TL');
+
+                        // Handle multiple currencies for pending totals
+                        let pendingHtml = '';
+                        if (res.data.totals && Object.keys(res.data.totals).length > 0) {
+                            let parts = [];
+                            for (const [curr, val] of Object.entries(res.data.totals)) {
+                                if (parseFloat(val) > 0.01) {
+                                    parts.push(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(val) + ' ' + curr);
+                                }
+                            }
+                            pendingHtml = parts.length > 0 ? parts.join(' <br> ') : '0,00 TL';
+                        } else {
+                            // Fallback or empty
+                            pendingHtml = '0,00 TL';
+                        }
+                        $('#pendingTotal').html(pendingHtml);
                     }
                 });
             }
@@ -840,6 +874,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     $('#musteri_adi').val(customer);
                     $('#tutar').val(remaining);
                     $('#para_birimi').val(currency);
+                    $('#currency-display').text(currency); // Update visible label
                     $('#kategori').val('Sipariş Ödemesi');
                     $('#aciklama').val(`Sipariş No: #${siparis_id} tahsilatı`);
 
@@ -850,6 +885,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     $('#siparis_id').val('');
                     $('#musteri_id').val('');
                     $('#para_birimi').val('TL'); // Reset to default
+                    $('#currency-display').text('TL');
                     // Only clear if user wants? Or keep it?
                     // Better clear to avoid confusion if they unchecked it
                     // $('#musteri_adi').val('');

@@ -123,10 +123,13 @@ function getIncomes()
 
     $current_month_start = date('Y-m-01');
     $current_month_end = date('Y-m-t');
-    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gelir_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
-    $overallSum = 0.0;
-    if ($overallResult && $overallRow = $overallResult->fetch_assoc()) {
-        $overallSum = (float) $overallRow['overall_sum'];
+    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum, para_birimi FROM gelir_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end' GROUP BY para_birimi");
+    $overallSums = [];
+    if ($overallResult) {
+        while ($row = $overallResult->fetch_assoc()) {
+            $currency = $row['para_birimi'] ?: 'TL';
+            $overallSums[$currency] = (float) $row['overall_sum'];
+        }
     }
 
     echo json_encode([
@@ -136,7 +139,7 @@ function getIncomes()
         'page' => $page,
         'per_page' => $per_page,
         'total_sum' => $filteredSum,
-        'overall_sum' => $overallSum
+        'overall_sum' => $overallSums // Now returning an array
     ]);
 }
 
@@ -376,20 +379,23 @@ function getPendingStats()
     $query = "SELECT 
                 COUNT(*) as count,
                 SUM(
-                  (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
-                  - COALESCE(s.odenen_tutar, 0)
-                ) as total_remaining
+                    (SELECT IFNULL(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) - IFNULL(s.odenen_tutar, 0)
+                ) as total_remaining,
+                s.para_birimi
               FROM siparisler s 
               WHERE s.durum IN ('onaylandi', 'tamamlandi') 
-              AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')";
+              AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+              GROUP BY s.para_birimi";
 
     $result = $connection->query($query);
-    $data = ['count' => 0, 'total_remaining' => 0];
+    $data = ['count' => 0, 'totals' => []];
 
     if ($result) {
-        $row = $result->fetch_assoc();
-        $data['count'] = (int) $row['count'];
-        $data['total_remaining'] = (float) $row['total_remaining'];
+        while ($row = $result->fetch_assoc()) {
+            $data['count'] += (int) $row['count'];
+            $currency = $row['para_birimi'] ?: 'TL';
+            $data['totals'][$currency] = (float) $row['total_remaining'];
+        }
     }
 
     echo json_encode(['status' => 'success', 'data' => $data]);
