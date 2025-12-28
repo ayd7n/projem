@@ -1007,6 +1007,15 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Şirket giderlerini takip edin ve raporlayın.</p>
                             </div>
                         </a>
+                        <?php if (yetkisi_var('page:view:gider_yonetimi')): ?>
+                            <a href="sirket_kasasi.php" class="module-card">
+                                <div class="icon"><i class="fas fa-cash-register"></i></div>
+                                <div class="card-content">
+                                    <span class="title">Şirket Kasası</span>
+                                    <p class="description">Kasa bakiyelerini ve nakit hareketlerini yönetin.</p>
+                                </div>
+                            </a>
+                        <?php endif; ?>
                         <a href="cerceve_sozlesmeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-file-contract"></i></div>
                             <div class="card-content">
