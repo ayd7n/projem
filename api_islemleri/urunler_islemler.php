@@ -317,6 +317,18 @@ if (isset($_GET['action'])) {
         } else {
             $response = ['status' => 'error', 'message' => 'Ürün listesi alınamadı.'];
         }
+    } elseif ($action == 'get_malzeme_turleri') {
+        $query = "SELECT * FROM malzeme_turleri ORDER BY label";
+        $result = $connection->query($query);
+        $turler = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $turler[] = $row;
+            }
+            $response = ['status' => 'success', 'data' => $turler];
+        } else {
+            $response = ['status' => 'error', 'message' => 'Malzeme türleri listesi alınamadı.'];
+        }
     }
 } elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     $action = $_POST['action'];
@@ -324,7 +336,6 @@ if (isset($_GET['action'])) {
     $urun_ismi = $_POST['urun_ismi'] ?? null;
     $not_bilgisi = $_POST['not_bilgisi'] ?? '';
     $stok_miktari = isset($_POST['stok_miktari']) ? (int) $_POST['stok_miktari'] : 0;
-    $birim = $_POST['birim'] ?? 'adet';
     $birim = $_POST['birim'] ?? 'adet';
     $satis_fiyati = isset($_POST['satis_fiyati']) && $_POST['satis_fiyati'] !== '' ? (float) $_POST['satis_fiyati'] : 0.0;
     $satis_fiyati_para_birimi = $_POST['satis_fiyati_para_birimi'] ?? 'TRY';
@@ -334,6 +345,7 @@ if (isset($_GET['action'])) {
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
     $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
+    $selected_material_types = isset($_POST['selected_material_types']) ? json_decode($_POST['selected_material_types'], true) : [];
 
     if ($action == 'add_product') {
         if (!yetkisi_var('action:urunler:create')) {
@@ -366,9 +378,44 @@ if (isset($_GET['action'])) {
                 $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES ('" . $connection->real_escape_string($urun_ismi) . "', '" . $connection->real_escape_string($not_bilgisi) . "', " . (int)$stok_miktari . ", '" . $connection->real_escape_string($birim) . "', " . (float)$satis_fiyati . ", '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', " . (float)$alis_fiyati . ", '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', " . (int)$kritik_stok_seviyesi . ", " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", '" . $connection->real_escape_string($urun_tipi) . "')";
 
                 if ($connection->query($query)) {
+                    $new_product_id = $connection->insert_id;
                     // Log ekleme
                     log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürünü sisteme eklendi", 'CREATE');
-                    $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi.'];
+                    
+                    // Otomatik Malzeme Ekleme
+                    if (!empty($selected_material_types)) {
+                        foreach ($selected_material_types as $type) {
+                            $malzeme_turu_value = $type['value'];
+                            $malzeme_turu_label = $type['label'];
+                            $malzeme_ismi = $urun_ismi . ", " . $malzeme_turu_label;
+                            
+                            // Malzeme zaten var mı kontrol et (Unique constraint hatası almamak için)
+                            $m_check = "SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '" . $connection->real_escape_string($malzeme_ismi) . "'";
+                            $m_check_res = $connection->query($m_check);
+                            
+                            if ($m_check_res && $m_check_res->num_rows == 0) {
+                                $m_query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, birim, para_birimi, depo, raf) 
+                                           VALUES ('" . $connection->real_escape_string($malzeme_ismi) . "', 
+                                                   '" . $connection->real_escape_string($malzeme_turu_value) . "', 
+                                                   'adet', 'TRY', 
+                                                   " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", 
+                                                   " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ")";
+                                if ($connection->query($m_query)) {
+                                    $new_material_id = $connection->insert_id;
+                                    
+                                    // Ürün Ağacına Bağla
+                                    $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) 
+                                                VALUES (?, ?, ?, ?, ?, 1.00, 'urun')";
+                                    $ua_stmt = $connection->prepare($ua_query);
+                                    $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $malzeme_turu_label, $new_material_id, $malzeme_ismi);
+                                    $ua_stmt->execute();
+                                    $ua_stmt->close();
+                                }
+                            }
+                        }
+                    }
+                    
+                    $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi' . (!empty($selected_material_types) ? ' ve otomatik ürün ağacı bağlantıları oluşturuldu.' : '.')];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
                 }
@@ -461,6 +508,13 @@ if (isset($_GET['action'])) {
         $delete_photos_stmt->bind_param('i', $urun_kodu);
         $delete_photos_stmt->execute();
         $delete_photos_stmt->close();
+
+        // Ürüne ait ürün ağacı kayıtlarını sil
+        $delete_tree_query = "DELETE FROM urun_agaci WHERE urun_kodu = ? AND agac_turu = 'urun'";
+        $delete_tree_stmt = $connection->prepare($delete_tree_query);
+        $delete_tree_stmt->bind_param('i', $urun_kodu);
+        $delete_tree_stmt->execute();
+        $delete_tree_stmt->close();
 
         $query = "DELETE FROM urunler WHERE urun_kodu = ?";
         $stmt = $connection->prepare($query);

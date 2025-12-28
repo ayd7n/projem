@@ -336,6 +336,13 @@ if (isset($_GET['action'])) {
         }
         $photos_stmt->close();
 
+        // Malzemenin kullanıldığı ürün ağacı kayıtlarını sil
+        $delete_tree_query = "DELETE FROM urun_agaci WHERE bilesen_kodu = ?";
+        $delete_tree_stmt = $connection->prepare($delete_tree_query);
+        $delete_tree_stmt->bind_param('s', $malzeme_kodu);
+        $delete_tree_stmt->execute();
+        $delete_tree_stmt->close();
+
         $query = "DELETE FROM malzemeler WHERE malzeme_kodu = ?";
         // Silinen malzeme bilgilerini al
         $old_material_query = "SELECT malzeme_ismi FROM malzemeler WHERE malzeme_kodu = ?";

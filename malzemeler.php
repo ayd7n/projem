@@ -248,6 +248,38 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
         .form-control-sm {
             font-size: 0.8rem !important;
         }
+
+        /* Modal Form Düzenlemeleri */
+        #materialModal .modal-header {
+            padding: 10px 15px;
+        }
+        #materialModal .modal-title {
+            font-size: 1.1rem;
+        }
+        #materialModal .modal-body {
+            padding: 15px 20px;
+        }
+        #materialModal .form-group {
+            margin-bottom: 0.75rem !important;
+        }
+        #materialModal label {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+        #materialModal .form-control {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.75rem;
+            height: auto;
+        }
+        #materialModal .nav-tabs .nav-link {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        #materialModal .btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -527,14 +559,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                     <input type="hidden" v-model="modal.data.malzeme_kodu">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Malzeme İsmi *</label>
                                                 <input type="text" class="form-control"
                                                     v-model="modal.data.malzeme_ismi" required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Malzeme Türü * <button type="button" @click="openTurModal"
                                                         class="btn btn-sm btn-outline-primary ml-2"
                                                         title="Türleri Düzenle"><i
@@ -549,14 +581,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Stok Miktarı</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.stok_miktari" min="0">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Birim *</label>
                                                 <select class="form-control" v-model="modal.data.birim" required>
                                                     <option value="">Birim Seçin</option>
@@ -573,14 +605,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Alış Fiyatı</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.alis_fiyati" min="0">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Para Birimi</label>
                                                 <select class="form-control" v-model="modal.data.para_birimi">
                                                     <option value="TRY">TRY</option>
@@ -592,14 +624,14 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Termin Süresi (Gün)</label>
                                                 <input type="number" class="form-control"
                                                     v-model="modal.data.termin_suresi" min="0">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Depo *</label>
                                                 <select class="form-control" v-model="modal.data.depo"
                                                     @change="loadRafList(modal.data.depo)" required>
@@ -613,7 +645,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Raf *</label>
                                                 <select class="form-control" v-model="modal.data.raf" required>
                                                     <option value="">Raf Seçin</option>
@@ -623,17 +655,17 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Kritik Stok Seviyesi</label>
                                                 <input type="number" class="form-control"
                                                     v-model="modal.data.kritik_stok_seviyesi" min="0">
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2">
                                         <label>Not Bilgisi</label>
                                         <textarea class="form-control" v-model="modal.data.not_bilgisi"
-                                            rows="3"></textarea>
+                                            rows="2"></textarea>
                                     </div>
                                     <div class="text-right">
                                         <button type="button" class="btn btn-secondary" data-dismiss="modal"><i

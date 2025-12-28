@@ -688,6 +688,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                     </div>
+                                    <div class="form-group mb-2" v-if="!modal.data.urun_kodu">
+                                        <label><strong>Otomatik Malzeme Oluştur</strong> (Seçilen türlerde malzemeler de eklenecek)</label>
+                                        <div class="d-flex flex-wrap" style="gap: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
+                                            <div v-for="tur in malzemeTurleri" :key="tur.id" class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" :id="'tur_' + tur.id" :value="tur" v-model="selectedMaterialTypes">
+                                                <label class="custom-control-label" :for="'tur_' + tur.id" style="font-size: 0.8rem; cursor: pointer;">{{ tur.label }}</label>
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="form-group mb-2">
                                         <label>Not Bilgisi</label>
                                         <textarea class="form-control" v-model="modal.data.not_bilgisi"
@@ -934,6 +943,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         dragOverIndex: null,
                         searchTimeout: null,
                         kurlar: { dolar: 1, euro: 1 },
+                        malzemeTurleri: [],
+                        selectedMaterialTypes: [],
                         treeModal: {
                             title: '',
                             loading: false,
@@ -967,6 +978,16 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.alert.message = message;
                         this.alert.type = type;
                         setTimeout(() => { this.alert.message = ''; }, 3000);
+                    },
+                    loadMalzemeTurleri() {
+                        fetch('api_islemleri/urunler_islemler.php?action=get_malzeme_turleri')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    // 'alkol' türünü listeden filtrele
+                                    this.malzemeTurleri = response.data.filter(tur => tur.value !== 'alkol');
+                                }
+                            });
                     },
                     loadProducts(page = 1) {
                         this.loading = true;
@@ -1044,6 +1065,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.rafList = []; // Clear raf list
                         this.productPhotos = []; // Clear photos
                         this.uploadProgress = 0; // Reset progress
+                        this.selectedMaterialTypes = []; // Reset selected types
 
                         if (product) {
                             this.modal.title = 'Urunu Duzenle';
@@ -1056,6 +1078,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         } else {
                             this.modal.title = 'Yeni Urun Ekle';
                             this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
+                            this.loadMalzemeTurleri(); // Türleri yükle
                         }
 
                         // Modal'ı kapatıp açmak için kontrol et
@@ -1075,6 +1098,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             formData.append(key, this.modal.data[key]);
                         }
                         formData.append('action', action);
+                        
+                        // Seçili malzeme türlerini gönder
+                        if (action === 'add_product') {
+                            formData.append('selected_material_types', JSON.stringify(this.selectedMaterialTypes));
+                        }
 
                         fetch('api_islemleri/urunler_islemler.php', {
                             method: 'POST',
