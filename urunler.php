@@ -247,6 +247,38 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         table td {
             font-size: 0.8rem;
         }
+
+        /* Modal Form Düzenlemeleri */
+        #productModal .modal-header {
+            padding: 10px 15px;
+        }
+        #productModal .modal-title {
+            font-size: 1.1rem;
+        }
+        #productModal .modal-body {
+            padding: 15px 20px;
+        }
+        #productModal .form-group {
+            margin-bottom: 0.75rem !important;
+        }
+        #productModal label {
+            font-size: 0.8rem;
+            margin-bottom: 2px;
+            font-weight: 500;
+        }
+        #productModal .form-control {
+            font-size: 0.85rem;
+            padding: 0.4rem 0.75rem;
+            height: auto;
+        }
+        #productModal .nav-tabs .nav-link {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+        }
+        #productModal .btn {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
     </style>
 </head>
 
@@ -511,7 +543,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
         <!-- Product Modal -->
         <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-xl" role="document">
+            <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <div class="modal-header"
                         style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
@@ -522,7 +554,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     </div>
                     <div class="modal-body">
                         <!-- Tabs -->
-                        <ul class="nav nav-tabs mb-3" id="productTabs" role="tablist">
+                        <ul class="nav nav-tabs mb-2" id="productTabs" role="tablist">
                             <li class="nav-item">
                                 <a class="nav-link active" id="info-tab" data-toggle="tab" href="#info" role="tab">
                                     <i class="fas fa-info-circle"></i> Ürün Bilgileri
@@ -544,14 +576,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     <input type="hidden" v-model="modal.data.urun_kodu">
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Urun Ismi *</label>
                                                 <input type="text" class="form-control" v-model="modal.data.urun_ismi"
                                                     required>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Stok Miktari</label>
                                                 <input type="number" class="form-control"
                                                     v-model="modal.data.stok_miktari" min="0">
@@ -560,7 +592,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Birim</label>
                                                 <select class="form-control" v-model="modal.data.birim">
                                                     <option value="adet">Adet</option>
@@ -573,7 +605,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Satis Fiyati *</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.satis_fiyati" min="0" required>
@@ -582,7 +614,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Para Birimi *</label>
                                                 <select class="form-control"
                                                     v-model="modal.data.satis_fiyati_para_birimi">
@@ -593,7 +625,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Kritik Stok Seviyesi</label>
                                                 <input type="number" class="form-control"
                                                     v-model="modal.data.kritik_stok_seviyesi" min="0">
@@ -602,7 +634,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Depo *</label>
                                                 <select class="form-control" v-model="modal.data.depo"
                                                     @change="loadRafList(modal.data.depo)" required>
@@ -614,7 +646,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Raf *</label>
                                                 <select class="form-control" v-model="modal.data.raf" required>
                                                     <option value="">Once Depo Secin</option>
@@ -626,7 +658,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </div>
                                     <div class="row">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Ürün Tipi *</label>
                                                 <select class="form-control" v-model="modal.data.urun_tipi"
                                                     @change="onUrunTipiChange" required>
@@ -638,14 +670,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     </div>
                                     <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Alış Fiyatı</label>
                                                 <input type="number" step="0.01" class="form-control"
                                                     v-model="modal.data.alis_fiyati" min="0">
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            <div class="form-group mb-3">
+                                            <div class="form-group mb-2">
                                                 <label>Alış Para Birimi</label>
                                                 <select class="form-control"
                                                     v-model="modal.data.alis_fiyati_para_birimi">
@@ -656,16 +688,18 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group mb-3">
+                                    <div class="form-group mb-2">
                                         <label>Not Bilgisi</label>
                                         <textarea class="form-control" v-model="modal.data.not_bilgisi"
-                                            rows="3"></textarea>
+                                            rows="2"></textarea>
                                     </div>
-                                    <div class="text-right">
-                                        <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                                class="fas fa-times"></i> Iptal</button>
-                                        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
-                                            Kaydet</button>
+                                    <div class="text-right mt-2">
+                                        <div class="btn-group" role="group">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
+                                                    class="fas fa-times"></i> Iptal</button>
+                                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
+                                                Kaydet</button>
+                                        </div>
                                     </div>
                                 </form>
                             </div>
