@@ -81,7 +81,7 @@ function getSuppliers() {
     }
 
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
-    $limit = isset($_GET['limit']) ? max(1, min(100, (int)$_GET['limit'])) : 10;
+    $limit = isset($_GET['limit']) ? max(1, min(500, (int)$_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     $offset = ($page - 1) * $limit;
 
@@ -117,6 +117,22 @@ function getSuppliers() {
         $suppliers[] = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
     }
 
+    // GENEL TOPLAMLARI HESAPLA (Tüm sayfalar için)
+    $all_suppliers_query = "SELECT * FROM tedarikciler " . $where_clause;
+    $all_result = $connection->query($all_suppliers_query);
+    $total_purchase_sum = 0;
+    $total_payment_sum = 0;
+    $total_balance_sum = 0;
+
+    if ($all_result) {
+        while ($row = $all_result->fetch_assoc()) {
+            $row_totals = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
+            $total_purchase_sum += $row_totals['total_purchase'];
+            $total_payment_sum += $row_totals['total_payment'];
+            $total_balance_sum += $row_totals['balance'];
+        }
+    }
+
     $response = [
         'status' => 'success',
         'data' => $suppliers,
@@ -125,6 +141,11 @@ function getSuppliers() {
             'total_pages' => $total_pages,
             'total_suppliers' => $total_suppliers,
             'limit' => $limit
+        ],
+        'total_stats' => [
+            'total_purchase' => $total_purchase_sum,
+            'total_payment' => $total_payment_sum,
+            'total_balance' => $total_balance_sum
         ]
     ];
 

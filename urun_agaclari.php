@@ -95,7 +95,6 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="page-header">
                 <div>
                     <h1>Ürün Ağacı Yönetimi</h1>
-                    <p>Ürün ağaçlarını ekleyin, düzenleyin ve yönetin</p>
                 </div>
             </div>
 
@@ -106,15 +105,6 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                     <button type="button" class="close" @click="closeAlert" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
-                </div>
-            </div>
-
-            <div class="row">
-                <div class="col-md-12">
-                    <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
-                        <button @click="openAddModal" class="btn btn-primary mb-3"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
-                        <button @click="openEssenceAddModal" class="btn btn-success mb-3 ml-2"><i class="fas fa-plus"></i> Yeni Esans Ağacı Ekle</button>
-                    <?php endif; ?>
                 </div>
             </div>
 
@@ -137,46 +127,26 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                     <div class="tab-pane fade show active" id="product" role="tabpanel">
                         <div class="card mt-3">
                             <div class="card-body">
-                                <div class="input-group mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
+                                    <div class="alert alert-info mb-3" style="font-size: 0.85rem; line-height: 1.5;">
+                                        <i class="fas fa-info-circle mr-1"></i> <strong>Bu alan sistemin en kritik bölümüdür!</strong><br>
+                                        Burada tanımlayacağınız ürün reçetesi, <strong>Montaj İş Emirleri</strong> sayfasında üretim yapılırken ve <strong>Maliyet Hesaplamalarında</strong> temel alınır.<br>
+                                        Eğer 1 adet ürün için gereken malzemeyi (Örn: 1 Şişe, 1 Kapak, 50ml Esans) yanlış girerseniz; üretim sonunda stoklarınız yanlış düşer ve ürün maliyetiniz hatalı hesaplanır.<br>
+                                        <em>Lütfen reçeteyi gerçek üretimde kullandığınız birebir miktarlarla oluşturunuz.</em>
                                     </div>
-                                    <input type="text" class="form-control" placeholder="Ürün ağaçlarında arama yapın..." v-model="productTreeSearchTerm" @input="searchProductTrees">
-                                </div>
-                                <!-- Pagination controls for Product Trees -->
+                                <?php endif; ?>
                                 <div class="row mb-3 align-items-center">
-                                    <div class="col-md-6">
-                                        <div class="form-inline">
-                                            <label>Sayfa başına:&nbsp;</label>
-                                            <select class="form-control" v-model="productTreesPerPage" @change="changeProductTreesPerPage">
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="5">5</option>
-                                                <option value="10">10</option>
-                                                <option value="25">25</option>
-                                                <option value="50">50</option>
-                                                <option value="100">100</option>
-                                            </select>
+                                    <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
+                                        <div class="col-md-auto">
+                                            <button @click="openAddModal" class="btn btn-primary"><i class="fas fa-plus"></i> Yeni Ürün Ağacı Ekle</button>
                                         </div>
-                                    </div>
-                                    <div class="col-md-6 text-right">
-                                        <div class="btn-group" role="group">
-                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(1)" :disabled="productTreesCurrentPage === 1">
-                                                <i class="fas fa-angle-double-left"></i>
-                                            </button>
-                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage - 1)" :disabled="productTreesCurrentPage === 1">
-                                                <i class="fas fa-angle-left"></i>
-                                            </button>
-                                            <button class="btn btn-outline-secondary disabled">
-                                                {{ productTreesCurrentPage }} / {{ productTreesTotalPages }}
-                                            </button>
-                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage + 1)" :disabled="productTreesCurrentPage === productTreesTotalPages">
-                                                <i class="fas fa-angle-right"></i>
-                                            </button>
-                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesTotalPages)" :disabled="productTreesCurrentPage === productTreesTotalPages">
-                                                <i class="fas fa-angle-double-right"></i>
-                                            </button>
+                                    <?php endif; ?>
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" placeholder="Ürün ağaçlarında arama yapın..." v-model="productTreeSearchTerm" @input="searchProductTrees">
                                         </div>
                                     </div>
                                 </div>
@@ -216,26 +186,12 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         </tbody>
                                     </table>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Essence Trees Tab -->
-                    <div class="tab-pane fade" id="essence" role="tabpanel">
-                        <div class="card mt-3">
-                            <div class="card-body">
-                                <div class="input-group mb-3">
-                                    <div class="input-group-prepend">
-                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                    </div>
-                                    <input type="text" class="form-control" placeholder="Esans ağaçlarında arama yapın..." v-model="essenceTreeSearchTerm" @input="searchEssenceTrees">
-                                </div>
-                                <!-- Pagination controls for Essence Trees -->
-                                <div class="row mb-3 align-items-center">
+                                <!-- Pagination controls for Product Trees -->
+                                <div class="row mt-3 align-items-center">
                                     <div class="col-md-6">
                                         <div class="form-inline">
                                             <label>Sayfa başına:&nbsp;</label>
-                                            <select class="form-control" v-model="essenceTreesPerPage" @change="changeEssenceTreesPerPage">
+                                            <select class="form-control" v-model="productTreesPerPage" @change="changeProductTreesPerPage">
                                                 <option value="1">1</option>
                                                 <option value="2">2</option>
                                                 <option value="3">3</option>
@@ -249,21 +205,52 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                     </div>
                                     <div class="col-md-6 text-right">
                                         <div class="btn-group" role="group">
-                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(1)" :disabled="essenceTreesCurrentPage === 1">
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(1)" :disabled="productTreesCurrentPage === 1">
                                                 <i class="fas fa-angle-double-left"></i>
                                             </button>
-                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage - 1)" :disabled="essenceTreesCurrentPage === 1">
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage - 1)" :disabled="productTreesCurrentPage === 1">
                                                 <i class="fas fa-angle-left"></i>
                                             </button>
                                             <button class="btn btn-outline-secondary disabled">
-                                                {{ essenceTreesCurrentPage }} / {{ essenceTreesTotalPages }}
+                                                {{ productTreesCurrentPage }} / {{ productTreesTotalPages }}
                                             </button>
-                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage + 1)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesCurrentPage + 1)" :disabled="productTreesCurrentPage === productTreesTotalPages">
                                                 <i class="fas fa-angle-right"></i>
                                             </button>
-                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesTotalPages)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                            <button class="btn btn-outline-secondary" @click="changeProductTreesPage(productTreesTotalPages)" :disabled="productTreesCurrentPage === productTreesTotalPages">
                                                 <i class="fas fa-angle-double-right"></i>
                                             </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Essence Trees Tab -->
+                    <div class="tab-pane fade" id="essence" role="tabpanel">
+                        <div class="card mt-3">
+                            <div class="card-body">
+                                <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
+                                    <div class="alert alert-warning mb-3" style="font-size: 0.85rem; line-height: 1.5;">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Esans formülleri burada tanımlanır!</strong><br>
+                                        Gireceğiniz karışım oranları, <strong>Esans İş Emirleri</strong> sayfasında üretim yapılırken otomatik olarak kullanılır.<br>
+                                        <strong>ÖNEMLİ:</strong> Esansın birim maliyeti ve üretim sırasında stoktan düşülecek hammadde miktarları tamamen buradaki formüle göre belirlenir.<br>
+                                        Yanlış formül girişi, hem stoklarınızın bozulmasına hem de karlılık hesaplarınızın (maliyet analizi) yanlış çıkmasına sebep olur.
+                                    </div>
+                                <?php endif; ?>
+                                <div class="row mb-3 align-items-center">
+                                    <?php if (yetkisi_var('action:urun_agaclari:create')): ?>
+                                        <div class="col-md-auto">
+                                            <button @click="openEssenceAddModal" class="btn btn-success"><i class="fas fa-plus"></i> Yeni Esans Ağacı Ekle</button>
+                                        </div>
+                                    <?php endif; ?>
+                                    <div class="col">
+                                        <div class="input-group">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                            </div>
+                                            <input type="text" class="form-control" placeholder="Esans ağaçlarında arama yapın..." v-model="essenceTreeSearchTerm" @input="searchEssenceTrees">
                                         </div>
                                     </div>
                                 </div>
@@ -302,6 +289,43 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                             </tr>
                                         </tbody>
                                     </table>
+                                </div>
+                                <!-- Pagination controls for Essence Trees -->
+                                <div class="row mt-3 align-items-center">
+                                    <div class="col-md-6">
+                                        <div class="form-inline">
+                                            <label>Sayfa başına:&nbsp;</label>
+                                            <select class="form-control" v-model="essenceTreesPerPage" @change="changeEssenceTreesPerPage">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="5">5</option>
+                                                <option value="10">10</option>
+                                                <option value="25">25</option>
+                                                <option value="50">50</option>
+                                                <option value="100">100</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6 text-right">
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(1)" :disabled="essenceTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-double-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage - 1)" :disabled="essenceTreesCurrentPage === 1">
+                                                <i class="fas fa-angle-left"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary disabled">
+                                                {{ essenceTreesCurrentPage }} / {{ essenceTreesTotalPages }}
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesCurrentPage + 1)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                                <i class="fas fa-angle-right"></i>
+                                            </button>
+                                            <button class="btn btn-outline-secondary" @click="changeEssenceTreesPage(essenceTreesTotalPages)" :disabled="essenceTreesCurrentPage === essenceTreesTotalPages">
+                                                <i class="fas fa-angle-double-right"></i>
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>

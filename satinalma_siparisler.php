@@ -163,40 +163,44 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
         .form-section {
             background: white;
             border-radius: 6px;
-            padding: 1rem;
-            margin-bottom: 1rem;
+            padding: 0.75rem;
+            margin-bottom: 0.75rem;
             border: 1px solid #e5e5e5;
         }
 
         .form-section-title {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-weight: 600;
             color: #5a3d7a;
-            margin-bottom: 0.75rem;
+            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             gap: 6px;
-            padding-bottom: 0.5rem;
+            padding-bottom: 0.25rem;
             border-bottom: 1px solid #eee;
-        }
-
-        .form-section-title i {
-            font-size: 0.85rem;
         }
 
         /* Form Controls */
         #orderModal .form-group label {
             font-weight: 500;
             color: #555;
-            margin-bottom: 0.4rem;
-            font-size: 0.8rem;
+            margin-bottom: 0.2rem;
+            font-size: 0.75rem;
         }
 
         #orderModal .form-control {
             border: 1px solid #ddd;
             border-radius: 4px;
-            padding: 0.5rem 0.75rem;
-            font-size: 0.85rem;
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+            height: 32px;
+            display: block;
+            width: 100%;
+        }
+
+        #orderModal select.form-control {
+            padding-top: 2px;
+            padding-bottom: 2px;
         }
 
         #orderModal .form-control:focus {
@@ -208,19 +212,33 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
         .kalem-row {
             background: white;
             border-radius: 6px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 8px;
+            padding: 0.5rem 0.75rem;
+            margin-bottom: 4px;
             border: 1px solid #e5e5e5;
         }
 
-        .kalem-row:hover {
-            border-color: #ccc;
+        .kalem-row .row.no-gutters {
+            flex-wrap: nowrap !important;
+        }
+
+        .kalem-row .input-group {
+            flex-wrap: nowrap !important;
+        }
+
+        .kalem-row .input-group-text {
+            white-space: nowrap !important;
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+            font-size: 0.65rem !important;
         }
 
         .kalem-row .malzeme-name {
             font-weight: 600;
             color: #333;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .kalem-row .form-control-sm {
@@ -769,48 +787,50 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                     </div>
 
                                     <!-- Kalem Listesi -->
-                                    <div v-for="(kalem, index) in modal.data.kalemler" :key="index" class="kalem-row">
-                                        <div class="row align-items-center">
-                                            <div class="col-md-3">
-                                                <div class="malzeme-name">{{ kalem.malzeme_adi }}</div>
+                                    <div v-if="modal.data.kalemler.length > 0" class="row no-gutters px-2 mb-1 text-muted d-flex flex-nowrap" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase; width: 100%;">
+                                        <div :class="modal.isEdit ? 'col-3' : 'col-4'" class="flex-grow-1">Malzeme</div>
+                                        <div style="width: 100px;" class="ml-1">Miktar</div>
+                                        <div style="width: 110px;" class="ml-1">Birim Fiyat</div>
+                                        <div style="width: 100px;" class="ml-1 text-center">Toplam</div>
+                                        <div style="width: 90px;" class="ml-1" v-if="modal.isEdit">Teslim</div>
+                                        <div style="width: 30px;" class="ml-1"></div>
+                                    </div>
+
+                                    <div v-for="(kalem, index) in modal.data.kalemler" :key="index" class="kalem-row py-1 px-2">
+                                        <div class="row no-gutters align-items-center flex-nowrap">
+                                            <div :class="modal.isEdit ? 'col-3' : 'col-4'" class="flex-grow-1" style="min-width: 0;">
+                                                <div class="malzeme-name" :title="kalem.malzeme_adi">{{ kalem.malzeme_adi }}</div>
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="small text-muted mb-1">Miktar</label>
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" class="form-control form-control-sm"
+                                            <div style="width: 100px;" class="ml-1">
+                                                <div class="input-group input-group-sm flex-nowrap">
+                                                    <input type="number" class="form-control form-control-sm px-1"
                                                         v-model.number="kalem.miktar"
                                                         @input="calculateKalemTotal(kalem)" min="0.01" step="0.01">
                                                     <div class="input-group-append">
-                                                        <span class="input-group-text" style="font-size: 0.75rem;">{{
-                                                            kalem.birim }}</span>
+                                                        <span class="input-group-text px-1">{{ kalem.birim.substring(0,3) }}</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="small text-muted mb-1">Birim Fiyat</label>
-                                                <div class="input-group input-group-sm">
-                                                    <input type="number" class="form-control form-control-sm"
+                                            <div style="width: 110px;" class="ml-1">
+                                                <div class="input-group input-group-sm flex-nowrap">
+                                                    <input type="number" class="form-control form-control-sm px-1"
                                                         v-model.number="kalem.birim_fiyat"
                                                         @input="calculateKalemTotal(kalem)" min="0" step="0.01">
                                                     <div class="input-group-append">
-                                                        <span class="input-group-text" style="font-size: 0.75rem;">{{
-                                                            kalem.para_birimi }}</span>
+                                                        <span class="input-group-text px-1">{{ kalem.para_birimi }}</span>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="col-md-2 text-center">
-                                                <label class="small text-muted mb-1">Toplam</label>
-                                                <div class="kalem-total">{{ formatCurrency(kalem.toplam_fiyat,
-                                                    kalem.para_birimi) }}</div>
+                                            <div style="width: 100px;" class="ml-1 text-center">
+                                                <div class="kalem-total" style="font-size: 0.75rem; white-space: nowrap;">{{ formatCurrency(kalem.toplam_fiyat, kalem.para_birimi) }}</div>
                                             </div>
-                                            <div class="col-md-2" v-if="modal.isEdit">
-                                                <label class="small text-muted mb-1">Teslim Edilen</label>
-                                                <input type="number" class="form-control form-control-sm"
+                                            <div style="width: 90px;" class="ml-1" v-if="modal.isEdit">
+                                                <input type="number" class="form-control form-control-sm px-1"
                                                     v-model.number="kalem.teslim_edilen_miktar" min="0" step="0.01"
-                                                    placeholder="0.00">
+                                                    placeholder="0">
                                             </div>
-                                            <div :class="modal.isEdit ? 'col-md-1' : 'col-md-3'" class="text-right">
-                                                <div class="remove-kalem ml-auto" @click="removeKalem(index)">
+                                            <div style="width: 30px;" class="ml-1 text-right">
+                                                <div class="remove-kalem ml-auto" @click="removeKalem(index)" style="width: 22px; height: 22px; font-size: 0.8rem;">
                                                     <i class="fas fa-times"></i>
                                                 </div>
                                             </div>

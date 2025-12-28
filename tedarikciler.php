@@ -280,6 +280,38 @@ if (!yetkisi_var('page:view:tedarikciler')) {
             {{ alert.message }}
         </div>
 
+        <!-- Minimal İstatistik Özeti -->
+        <div class="d-flex justify-content-md-end mb-3">
+            <div class="d-flex flex-wrap align-items-center py-2 px-3 bg-white border shadow-sm" style="border-radius: 8px; gap: 25px;">
+                <div class="d-flex align-items-center">
+                    <div class="mr-2 text-primary" style="font-size: 1rem;"><i class="fas fa-shopping-cart"></i></div>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.65rem; line-height: 1;">TOPLAM ALIM</small>
+                        <span class="font-weight-bold" style="font-size: 0.9rem; color: var(--text-primary);">{{ formatCurrency(totalStats.total_purchase) }}</span>
+                    </div>
+                </div>
+                <div style="width: 1px; height: 25px; background: #eee;"></div>
+                <div class="d-flex align-items-center">
+                    <div class="mr-2 text-success" style="font-size: 1rem;"><i class="fas fa-hand-holding-usd"></i></div>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.65rem; line-height: 1;">TOPLAM ÖDEME</small>
+                        <span class="font-weight-bold" style="font-size: 0.9rem; color: var(--text-primary);">{{ formatCurrency(totalStats.total_payment) }}</span>
+                    </div>
+                </div>
+                <div style="width: 1px; height: 25px; background: #eee;"></div>
+                <div class="d-flex align-items-center">
+                    <div class="mr-2" :class="totalStats.total_balance > 0 ? 'text-danger' : 'text-info'" style="font-size: 1rem;"><i class="fas fa-balance-scale"></i></div>
+                    <div>
+                        <small class="text-muted d-block" style="font-size: 0.65rem; line-height: 1;">GENEL BAKİYE</small>
+                        <span class="font-weight-bold" :class="totalStats.total_balance > 0 ? 'text-danger' : 'text-info'" style="font-size: 0.9rem;">
+                            {{ formatCurrency(Math.abs(totalStats.total_balance)) }}
+                            <small style="font-size: 0.7rem;">{{ totalStats.total_balance > 0 ? '(Borç)' : (totalStats.total_balance < 0 ? '(Alacak)' : '') }}</small>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="card">
             <div class="card-header d-flex flex-column flex-md-row justify-content-start align-items-center py-2 px-3">
                 <div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
@@ -379,6 +411,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
+                            <option value="200">200</option>
                         </select>
                     </div>
                     <div class="d-flex flex-column flex-md-row align-items-center w-100 w-md-auto mt-2 mt-md-0">
@@ -514,7 +547,12 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                     currentPage: 1,
                     totalPages: 1,
                     totalSuppliers: 0,
-                    limit: 10,
+                    limit: 200,
+                    totalStats: {
+                        total_purchase: 0,
+                        total_payment: 0,
+                        total_balance: 0
+                    },
                     modal: {
                         title: '',
                         data: {}
@@ -568,6 +606,9 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                 this.suppliers = response.data;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalSuppliers = response.pagination.total_suppliers;
+                                if (response.total_stats) {
+                                    this.totalStats = response.total_stats;
+                                }
                             } else {
                                 this.showAlert('Tedarikçiler yüklenirken hata oluştu.', 'danger');
                             }
