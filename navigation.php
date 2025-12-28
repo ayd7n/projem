@@ -927,13 +927,6 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Manuel stok giriş/çıkış işlemleri yapın.</p>
                             </div>
                         </a>
-                        <a href="malzeme_siparisler.php" class="module-card">
-                            <div class="icon"><i class="fas fa-clipboard-list"></i></div>
-                            <div class="card-content">
-                                <span class="title">Malzeme Siparişleri</span>
-                                <p class="description">Tedarikçiye verilen siparişleri takip edin.</p>
-                            </div>
-                        </a>
                         <a href="satinalma_siparisler.php" class="module-card">
                             <div class="icon"><i class="fas fa-shopping-bag"></i></div>
                             <div class="card-content">
@@ -979,13 +972,6 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                             <div class="card-content">
                                 <span class="title">Raporlar</span>
                                 <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
-                            </div>
-                        </a>
-                        <a href="analiz_dinamik.php" class="module-card">
-                            <div class="icon"><i class="fas fa-chart-line"></i></div>
-                            <div class="card-content">
-                                <span class="title">Dinamik Üretim Analizi</span>
-                                <p class="description">Otomatik üretim planı ve sipariş analizleri.</p>
                             </div>
                         </a>
                     </div>
