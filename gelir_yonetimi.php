@@ -320,17 +320,32 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
         .search-group input {
             border-radius: 0.5rem 0 0 0.5rem;
             border: 1px solid var(--border-color);
+            border-right: none;
             padding: 0.35rem 0.75rem;
             font-size: 0.8rem;
         }
 
         .search-group input:focus {
-            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
-            border-color: var(--accent);
+            box-shadow: none;
+            border-color: var(--border-color);
         }
 
-        .search-group button {
+        /* Input group wrapper focus state check if needed, or just focus ring on input but handle neighbour */
+        .search-group input:focus+.input-group-append .btn {
+            border-color: var(--border-color);
+            border-left: none;
+        }
+
+        .search-group .btn {
             border-radius: 0 0.5rem 0.5rem 0;
+            border: 1px solid var(--border-color);
+            border-left: none;
+            color: var(--text-secondary);
+        }
+
+        .search-group .btn:hover {
+            background-color: transparent;
+            color: var(--danger);
         }
 
         /* Modal Styles */
@@ -409,8 +424,8 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
         <!-- Modern Header -->
         <div class="page-header">
             <div>
-                <h1>Gelir Yönetimi</h1>
-                <p>Finansal akışınızı, tahsilatları ve sipariş ödemelerini tek bir yerden yönetin.</p>
+                <h1>Sipariş Tahsilat Yönetimi</h1>
+                <p>Müşteri siparişlerine ait ödemeleri ve tahsilat durumlarını buradan yönetebilirsiniz.</p>
             </div>
         </div>
 
@@ -428,7 +443,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     <div class="stat-value" id="overallTotal">
                         <?php echo number_format($total_income, 2, ',', '.'); ?> TL
                     </div>
-                    <div class="stat-label">Bu Ay Toplam Gelir</div>
+                    <div class="stat-label">Bu Ay Toplam Tahsilat</div>
                 </div>
             </div>
 
@@ -439,7 +454,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 </div>
                 <div class="stat-content">
                     <div class="stat-value" id="pendingCount">0</div>
-                    <div class="stat-label">Bekleyen Sipariş</div>
+                    <div class="stat-label">Ödeme Bekleyen Sipariş</div>
                 </div>
             </div>
 
@@ -450,7 +465,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 </div>
                 <div class="stat-content">
                     <div class="stat-value" id="pendingTotal">0,00 TL</div>
-                    <div class="stat-label">Toplam Alacak</div>
+                    <div class="stat-label">Toplam Bekleyen Alacak</div>
                 </div>
             </div>
         </div>
@@ -460,14 +475,15 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="card-header">
                 <div class="d-flex align-items-center">
                     <button id="addIncomeBtn" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Yeni Gelir Ekle
+                        <i class="fas fa-plus"></i> Yeni Tahsilat Ekle
                     </button>
                 </div>
 
                 <div class="d-flex align-items-center" style="gap: 15px;">
                     <!-- Search Box -->
                     <div class="input-group search-group" style="width: 300px;">
-                        <input type="text" class="form-control" id="searchInput" placeholder="Gelir ara...">
+                        <input type="text" class="form-control" id="searchInput"
+                            placeholder="Müşteri veya Sipariş No ara...">
                         <div class="input-group-append">
                             <button class="btn btn-outline-secondary border-left-0 bg-white" type="button"
                                 id="clearSearchBtn">
@@ -525,7 +541,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="modal-content">
                 <form id="incomeForm">
                     <div class="modal-header"
-                        style="background: linear-gradient(135deg, var(--success), #218838); color: white;">
+                        style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
                         <h5 class="modal-title" id="modalTitle"><i class="fas fa-edit"></i> Gelir Formu</h5>
                         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"><span
                                 aria-hidden="true">&times;</span></button>
@@ -562,13 +578,14 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                             </div>
 
                             <div class="form-row">
-                        <!-- Kategori -->
-                        <div class="form-group col-md-6 mb-2">
-                            <label for="kategori" class="small font-weight-bold">Kategori</label>
-                            <input type="text" class="form-control form-control-sm" id="kategori" name="kategori" value="Sipariş Ödemesi" readonly>
-                        </div>
-                        <!-- Ödeme Tipi -->
-                        <div class="form-group col-md-6 mb-2">
+                                <!-- Kategori -->
+                                <div class="form-group col-md-6 mb-2">
+                                    <label for="kategori" class="small font-weight-bold">Kategori</label>
+                                    <input type="text" class="form-control form-control-sm" id="kategori"
+                                        name="kategori" value="Sipariş Ödemesi" readonly>
+                                </div>
+                                <!-- Ödeme Tipi -->
+                                <div class="form-group col-md-6 mb-2">
                                     <label for="odeme_tipi" class="small font-weight-bold">Ödeme Tipi</label>
                                     <select class="form-control form-control-sm" id="odeme_tipi" name="odeme_tipi"
                                         required>
@@ -718,7 +735,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $('#incomeForm')[0].reset();
                 $('#action').val('add_income');
                 $('#gelir_id').val('');
-                $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Gelir Ekle');
+                $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Tahsilat Ekle');
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
 
                 // Clear order selection
@@ -744,7 +761,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#odeme_tipi').val(data.odeme_tipi);
                         $('#musteri_adi').val(data.musteri_adi);
                         $('#aciklama').val(data.aciklama);
-                        $('#modalTitle').html('<i class="fas fa-edit"></i> Gelir Düzenle');
+                        $('#modalTitle').html('<i class="fas fa-edit"></i> Tahsilat Düzenle');
                         $('#incomeModal').modal('show');
                     }
                 });
@@ -766,8 +783,10 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         $.post(api_url, { action: 'delete_income', gelir_id: id }, function (response) {
                             const res = JSON.parse(response);
                             if (res.status === 'success') {
-                                Swal.fire('Silindi!', 'Gelir kaydı başarıyla silindi.', 'success');
+                                Swal.fire('Silindi!', res.message, 'success');
                                 loadIncomes(currentPage);
+                                loadPendingStats();
+                                loadPendingOrders();
                             } else {
                                 Swal.fire('Hata!', res.message, 'error');
                             }
