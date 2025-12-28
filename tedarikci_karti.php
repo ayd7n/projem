@@ -789,14 +789,13 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <div style="text-align: right;">
                             <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (TL)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
-                                <i class="fas fa-lira-sign"></i> <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?>
+                                <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?> ₺
                             </div>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (USD)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
-                                <i class="fas fa-dollar-sign"></i>
-                                <?php echo number_format($genel_toplam_usd, 2, ',', '.'); ?>
+                                <?php echo number_format($genel_toplam_usd, 2, ',', '.'); ?> $
                             </div>
                             <small style="font-size: 10px; color: #15803d;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
@@ -804,8 +803,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (EUR)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #166534;">
-                                <i class="fas fa-euro-sign"></i>
-                                <?php echo number_format($genel_toplam_eur, 2, ',', '.'); ?>
+                                <?php echo number_format($genel_toplam_eur, 2, ',', '.'); ?> €
                             </div>
                             <small style="font-size: 10px; color: #15803d;">(1 EUR =
                                 <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
@@ -901,14 +899,13 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <div style="text-align: right;">
                             <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (TL)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
-                                <i class="fas fa-lira-sign"></i> <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?>
+                                <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?> ₺
                             </div>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (USD)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
-                                <i class="fas fa-dollar-sign"></i>
-                                <?php echo number_format($odeme_toplam_usd, 2, ',', '.'); ?>
+                                <?php echo number_format($odeme_toplam_usd, 2, ',', '.'); ?> $
                             </div>
                             <small style="font-size: 10px; color: #b91c1c;">(1 USD =
                                 <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
@@ -916,8 +913,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <div style="text-align: right;" class="currency-toggle">
                             <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (EUR)</div>
                             <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
-                                <i class="fas fa-euro-sign"></i>
-                                <?php echo number_format($odeme_toplam_eur, 2, ',', '.'); ?>
+                                <?php echo number_format($odeme_toplam_eur, 2, ',', '.'); ?> €
                             </div>
                             <small style="font-size: 10px; color: #b91c1c;">(1 EUR =
                                 <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
@@ -941,7 +937,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <th class="font-weight-normal"><i class="fas fa-calendar-alt"></i> Tarih</th>
                                 <th class="font-weight-normal"><i class="fas fa-file-invoice"></i> Fatura No</th>
                                 <th class="font-weight-normal"><i class="fas fa-comment"></i> Açıklama</th>
-                                <th class="font-weight-normal text-right"><i class="fas fa-lira-sign"></i> Tutar (TL)
+                                <th class="font-weight-normal text-right"><i class="fas fa-coins"></i> Tutar (TL)
                                 </th>
                             </tr>
                         </thead>
@@ -1025,14 +1021,14 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                         <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
                             (USD)</div>
                         <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
-                            $ <?php echo number_format($bakiye_usd, 2, ',', '.'); ?>
+                            <?php echo number_format($bakiye_usd, 2, ',', '.'); ?> $
                         </div>
                     </div>
                     <div style="text-align: center;" class="currency-toggle">
                         <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
                             (EUR)</div>
                         <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
-                            € <?php echo number_format($bakiye_eur, 2, ',', '.'); ?>
+                            <?php echo number_format($bakiye_eur, 2, ',', '.'); ?> €
                         </div>
                     </div>
                 </div>

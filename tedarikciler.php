@@ -289,6 +289,9 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                             style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni
                             Tedarikçi</button>
                     <?php endif; ?>
+                    <!-- Excel'e Aktar Butonu -->
+                    <button @click="exportExcel" class="btn btn-success btn-sm"
+                        style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-file-excel"></i> Excel'e Aktar</button>
                     <!-- Arama Kutusu -->
                     <div class="input-group input-group-sm" style="width: auto; min-width: 180px;">
                         <div class="input-group-prepend">
@@ -321,6 +324,9 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                 <th><i class="fas fa-envelope"></i> E-posta</th>
                                 <th><i class="fas fa-user-tie"></i> Yetkili Kişi</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
+                                <th class="text-right" style="background-color: #f8f9fa;"><i class="fas fa-boxes"></i> Toplam Alım</th>
+                                <th class="text-right" style="background-color: #f8f9fa;"><i class="fas fa-money-bill-wave"></i> Toplam Ödeme</th>
+                                <th class="text-right" style="background-color: #f8f9fa;"><i class="fas fa-balance-scale"></i> Bakiye</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -353,6 +359,13 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                 <td>{{ supplier.aciklama_notlar ? (supplier.aciklama_notlar.length > 20 ?
                                     supplier.aciklama_notlar.substring(0, 20) + '...' : supplier.aciklama_notlar) : '-'
                                     }}</td>
+                                <td class="text-right" style="background-color: #f8f9fa;">{{ formatCurrency(supplier.total_purchase) }}</td>
+                                <td class="text-right" style="background-color: #f8f9fa;">{{ formatCurrency(supplier.total_payment) }}</td>
+                                <td class="text-right" style="background-color: #f8f9fa;" :class="{'text-danger': supplier.balance > 0, 'text-success': supplier.balance < 0}">
+                                    <strong>{{ formatCurrency(Math.abs(supplier.balance)) }}</strong> 
+                                    <small v-if="supplier.balance > 0">(Borç)</small>
+                                    <small v-else-if="supplier.balance < 0">(Alacak)</small>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -529,12 +542,20 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                 }
             },
             methods: {
+                formatCurrency(value) {
+                    if (value === null || value === undefined) return '-';
+                    return new Intl.NumberFormat('tr-TR', { style: 'currency', currency: 'TRY' }).format(value);
+                },
                 showAlert(message, type) {
                     this.alert.message = message;
                     this.alert.type = type;
                     setTimeout(() => {
                         this.alert.message = '';
                     }, 3000);
+                },
+                exportExcel() {
+                    let url = `api_islemleri/tedarikciler_islemler.php?action=export_excel&search=${this.search}`;
+                    window.location.href = url;
                 },
                 loadSuppliers(page = 1) {
                     this.loading = true;

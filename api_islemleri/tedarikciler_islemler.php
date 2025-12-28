@@ -31,8 +31,45 @@ switch ($action) {
     case 'delete_supplier':
         deleteSupplier();
         break;
+    case 'export_excel':
+        exportExcel();
+        break;
     default:
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
+}
+
+function calculateSupplierTotals($row, $dolar_kuru, $euro_kuru) {
+    global $connection;
+    
+    // Toplam Alım Hesaplama (TL cinsinden)
+    $purchase_query = "SELECT para_birimi, SUM(kullanilan_miktar * birim_fiyat) as total FROM stok_hareketleri_sozlesmeler WHERE tedarikci_id = " . (int)$row['tedarikci_id'] . " GROUP BY para_birimi";
+    $p_result = $connection->query($purchase_query);
+    $total_purchase_tl = 0;
+    if ($p_result) {
+        while($p_row = $p_result->fetch_assoc()) {
+            $amount = floatval($p_row['total']);
+            $currency = strtoupper($p_row['para_birimi']);
+            if($currency == 'USD' || $currency == '$') $total_purchase_tl += $amount * $dolar_kuru;
+            elseif($currency == 'EUR' || $currency == '€') $total_purchase_tl += $amount * $euro_kuru;
+            else $total_purchase_tl += $amount;
+        }
+    }
+
+    // Toplam Ödeme Hesaplama
+    $tedarikci_adi_safe = $connection->real_escape_string($row['tedarikci_adi']);
+    $payment_query = "SELECT SUM(tutar) as total FROM gider_yonetimi WHERE odeme_yapilan_firma = '$tedarikci_adi_safe'";
+    $pay_result = $connection->query($payment_query);
+    $total_payment_tl = 0;
+    if ($pay_result) {
+        $pay_row = $pay_result->fetch_assoc();
+        $total_payment_tl = floatval($pay_row['total'] ?? 0);
+    }
+
+    $row['total_purchase'] = $total_purchase_tl;
+    $row['total_payment'] = $total_payment_tl;
+    $row['balance'] = $total_purchase_tl - $total_payment_tl;
+    
+    return $row;
 }
 
 function getSuppliers() {
@@ -65,8 +102,19 @@ function getSuppliers() {
     $result = $connection->query($query);
 
     $suppliers = [];
+    
+    // Döviz kurlarını al
+    $dolar_kuru = 1;
+    $euro_kuru = 1;
+    $kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+    $kur_result = $connection->query($kur_query);
+    while ($kur_row = $kur_result->fetch_assoc()) {
+        if ($kur_row['ayar_anahtar'] == 'dolar_kuru') $dolar_kuru = floatval($kur_row['ayar_deger']);
+        elseif ($kur_row['ayar_anahtar'] == 'euro_kuru') $euro_kuru = floatval($kur_row['ayar_deger']);
+    }
+
     while ($row = $result->fetch_assoc()) {
-        $suppliers[] = $row;
+        $suppliers[] = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
     }
 
     $response = [
@@ -81,6 +129,67 @@ function getSuppliers() {
     ];
 
     echo json_encode($response);
+}
+
+function exportExcel() {
+    global $connection;
+    include '../libs/SimpleXLSXGen.php';
+
+    if (!yetkisi_var('page:view:tedarikciler')) {
+        die('Yetkiniz yok.');
+    }
+
+    $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+    
+    $where_clause = "";
+    if (!empty($search)) {
+        $search_escaped = $connection->real_escape_string($search);
+        $search_param = '%' . $search_escaped . '%';
+        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
+    }
+
+    $query = "SELECT * FROM tedarikciler " . $where_clause . " ORDER BY tedarikci_adi";
+    $result = $connection->query($query);
+
+    // Döviz kurlarını al
+    $dolar_kuru = 1;
+    $euro_kuru = 1;
+    $kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+    $kur_result = $connection->query($kur_query);
+    while ($kur_row = $kur_result->fetch_assoc()) {
+        if ($kur_row['ayar_anahtar'] == 'dolar_kuru') $dolar_kuru = floatval($kur_row['ayar_deger']);
+        elseif ($kur_row['ayar_anahtar'] == 'euro_kuru') $euro_kuru = floatval($kur_row['ayar_deger']);
+    }
+
+    $excel_data = [
+        ['Tedarikçi Adı', 'Vergi/TC No', 'Telefon', 'Telefon 2', 'E-posta', 'Yetkili Kişi', 'Açıklama', 'Toplam Alım (TL)', 'Toplam Ödeme (TL)', 'Bakiye (TL)', 'Durum']
+    ];
+
+    while ($row = $result->fetch_assoc()) {
+        $row = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
+        
+        $durum = 'Hesap Kapalı';
+        if ($row['balance'] > 0) $durum = 'Borçlu';
+        elseif ($row['balance'] < 0) $durum = 'Alacaklı';
+
+        $excel_data[] = [
+            $row['tedarikci_adi'],
+            $row['vergi_no_tc'],
+            $row['telefon'],
+            $row['telefon_2'],
+            $row['e_posta'],
+            $row['yetkili_kisi'],
+            $row['aciklama_notlar'],
+            number_format($row['total_purchase'], 2, ',', '.'),
+            number_format($row['total_payment'], 2, ',', '.'),
+            number_format(abs($row['balance']), 2, ',', '.'),
+            $durum
+        ];
+    }
+
+    $xlsx = Shuchkin\SimpleXLSXGen::fromArray($excel_data);
+    $xlsx->downloadAs('tedarikciler_' . date('Y-m-d_H-i') . '.xlsx');
+    exit;
 }
 
 function getSupplier() {
