@@ -587,17 +587,18 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                 <th><i class="fas fa-calendar"></i> Tarih</th>
                                 <th><i class="fas fa-calendar-check"></i> Teslim Tarihi</th>
                                 <th><i class="fas fa-money-bill"></i> Toplam Tutar</th>
+                                <th><i class="fas fa-truck-loading"></i> Teslimat</th>
                                 <th><i class="fas fa-info-circle"></i> Durum</th>
                                 <th><i class="fas fa-user"></i> Oluşturan</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="8" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="9" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="orders.length === 0">
-                                <td colspan="8" class="text-center p-4">Sipariş bulunamadı.</td>
+                                <td colspan="9" class="text-center p-4">Sipariş bulunamadı.</td>
                             </tr>
                             <tr v-else v-for="order in orders" :key="order.siparis_id">
                                 <td class="actions">
@@ -628,6 +629,17 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                 <td>{{ order.istenen_teslim_tarihi ? formatDate(order.istenen_teslim_tarihi) : '-' }}
                                 </td>
                                 <td><strong>{{ formatCurrency(order.toplam_tutar, order.para_birimi) }}</strong></td>
+                                <td style="width: 100px;">
+                                    <div class="d-flex flex-column">
+                                        <small class="text-muted mb-1" style="font-size: 0.65rem;">%{{ parseFloat(order.teslimat_yuzdesi || 0).toFixed(1) }}</small>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar bg-warning" role="progressbar" 
+                                                :style="{ width: (order.teslimat_yuzdesi || 0) + '%' }" 
+                                                :aria-valuenow="order.teslimat_yuzdesi || 0" 
+                                                aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </div>
+                                </td>
                                 <td>
                                     <span class="badge" :class="'badge-' + order.durum">{{ getDurumText(order.durum)
                                         }}</span>
@@ -814,11 +826,26 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
 
                                     <!-- Toplam Bar -->
                                     <div class="order-total-bar" v-if="modal.data.kalemler.length > 0">
-                                        <div class="total-label">
-                                            <i class="fas fa-calculator mr-2"></i> Sipariş Toplamı
+                                        <div class="d-flex align-items-center" style="gap: 15px; width: 100%;">
+                                            <div class="total-label" style="white-space: nowrap;">
+                                                <i class="fas fa-calculator mr-2"></i> Sipariş Toplamı
+                                            </div>
+                                            <div class="total-value" style="margin-right: auto;">{{ formatCurrency(calculateTotal(), modal.data.para_birimi || 'TRY') }}</div>
+                                            
+                                            <!-- Delivery Progress -->
+                                            <div v-if="modal.isEdit" class="d-flex align-items-center" style="gap: 10px; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 4px;">
+                                                <div class="small text-white" style="white-space: nowrap;">
+                                                    <i class="fas fa-truck-loading"></i> Teslimat: 
+                                                    <strong>%{{ calculateDeliveryPercentage() }}</strong>
+                                                </div>
+                                                <div class="progress" style="width: 100px; height: 8px; background-color: rgba(255,255,255,0.3);">
+                                                    <div class="progress-bar bg-warning" role="progressbar" 
+                                                        :style="{ width: calculateDeliveryPercentage() + '%' }" 
+                                                        :aria-valuenow="calculateDeliveryPercentage()" 
+                                                        aria-valuemin="0" aria-valuemax="100"></div>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div class="total-value">{{ formatCurrency(calculateTotal(),
-                                            modal.data.para_birimi || 'TRY') }}</div>
                                     </div>
                                 </div>
                             </div>
@@ -1171,6 +1198,22 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                 },
                 calculateTotal() {
                     return this.modal.data.kalemler.reduce((sum, k) => sum + (k.toplam_fiyat || 0), 0);
+                },
+                calculateDeliveryPercentage() {
+                    if (!this.modal.data.kalemler || this.modal.data.kalemler.length === 0) return 0;
+                    
+                    let totalQty = 0;
+                    let totalDelivered = 0;
+                    
+                    this.modal.data.kalemler.forEach(k => {
+                        totalQty += parseFloat(k.miktar) || 0;
+                        totalDelivered += parseFloat(k.teslim_edilen_miktar) || 0;
+                    });
+                    
+                    if (totalQty === 0) return 0;
+                    
+                    const percent = (totalDelivered / totalQty) * 100;
+                    return Math.min(100, Math.max(0, percent)).toFixed(1);
                 },
                 saveOrder() {
                     const formData = new FormData();

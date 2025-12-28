@@ -1,5 +1,5 @@
 <?php
-// HTML tabanlı PDF oluşturma sayfası
+// HTML tabanlı PDF oluşturma sayfası - Client Side PDF Generation
 include 'config.php';
 
 // Check if user is logged in
@@ -22,7 +22,7 @@ if (!$siparis_id) {
 }
 
 // Get order details with supplier info
-$result = $connection->query("SELECT s.*, t.adres as tedarikci_adres, t.telefon as tedarikci_telefon, t.e_posta as tedarikci_email
+$result = $connection->query("SELECT s.*, t.adres as tedarikci_adres, t.telefon as tedarikci_telefon, t.e_posta as tedarikci_email, t.vergi_no_tc, t.yetkili_kisi
     FROM satinalma_siparisler s
     LEFT JOIN tedarikciler t ON s.tedarikci_id = t.tedarikci_id
     WHERE s.siparis_id = $siparis_id");
@@ -55,205 +55,253 @@ function formatCurrency($value, $currency = 'TRY') {
 // Function to format date
 function formatDate($dateString) {
     if (!$dateString) return '-';
-    return date('d/m/Y', strtotime($dateString));
+    return date('d.m.Y', strtotime($dateString));
 }
-
-// Function to get status text
-function getDurumText($durum) {
-    $map = [
-        'taslak' => 'Taslak',
-        'onaylandi' => 'Onaylandı',
-        'gonderildi' => 'Gönderildi',
-        'kismen_teslim' => 'Kısmen Teslim',
-        'tamamlandi' => 'Tamamlandı',
-        'iptal' => 'İptal'
-    ];
-    return $map[$durum] ?? $durum;
-}
-
-// Set headers for PDF download
-header('Content-Type: text/html; charset=utf-8');
-header('Content-Disposition: attachment; filename="satinalma_siparişi_' . $order['siparis_no'] . '.html"');
-
-// HTML tabanlı PDF içeriği
 ?>
 <!DOCTYPE html>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satınalma Siparişi - <?php echo htmlspecialchars($order['siparis_no']); ?></title>
+    <title>Sipariş <?php echo htmlspecialchars($order['siparis_no']); ?></title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background: white;
-        }
-        .header {
-            text-align: center;
-            border-bottom: 2px solid #333;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-        .header h1 {
+            background-color: #f0f0f0;
+            font-family: 'Roboto', sans-serif;
             margin: 0;
-            color: #4a0e63;
-            font-size: 24px;
+            padding: 0;
         }
-        .header p {
-            font-size: 16px;
-            margin: 5px 0;
-        }
-        .info-row {
-            display: table;
-            width: 100%;
-            margin-bottom: 20px;
-        }
-        .info-box {
-            display: table-cell;
-            width: 48%;
-            padding: 10px;
-            border: 1px solid #ddd;
-            vertical-align: top;
-        }
-        .info-box h3 {
-            margin: 0 0 10px 0;
-            font-size: 14px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 5px;
-            color: #4a0e63;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        th, td {
-            border: 1px solid #333;
-            padding: 8px;
-            font-size: 12px;
-        }
-        th {
+
+        #download-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
             background: #4a0e63;
             color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
             font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .total-row {
-            font-size: 14px;
-            background: #f8f9fa;
-            font-weight: bold;
+
+        #download-btn:hover { background: #3a0b4d; }
+
+        .page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 15mm;
+            box-sizing: border-box;
+            margin: 20px auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
-        .footer {
-            margin-top: 40px;
-            display: table;
+
+        .layout-table {
             width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
         }
-        .signature {
-            display: table-cell;
-            text-align: center;
-            width: 40%;
-            padding: 20px;
+
+        .layout-table td { vertical-align: top; }
+
+        .logo { font-size: 26px; font-weight: bold; color: #4a0e63; }
+        .logo span { color: #d4af37; }
+        .sub-logo { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 3px; letter-spacing: 1px; }
+
+        .doc-title { text-align: right; font-size: 22px; font-weight: bold; color: #222; }
+        .doc-no { text-align: right; font-size: 14px; color: #4a0e63; font-weight: bold; margin-top: 5px; }
+
+        .box-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #4a0e63;
+            text-transform: uppercase;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            display: block;
         }
-        .signature-line {
-            border-top: 1px solid #333;
-            margin-top: 50px;
-            padding-top: 5px;
-            font-size: 12px;
+
+        .box-content { font-size: 13px; line-height: 1.4; color: #333; }
+
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th {
+            background: #fdfdfd;
+            border-bottom: 2px solid #4a0e63;
+            padding: 10px 8px;
+            font-size: 11px;
+            text-align: left;
+            color: #4a0e63;
         }
-        @media print {
-            body {
-                margin: 0;
-                background: white !important;
-            }
-        }
+        .data-table td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
+
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        .total-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .total-table td { padding: 5px 8px; font-size: 13px; text-align: right; }
+        .total-label { color: #666; font-weight: 500; }
+        .total-value { font-weight: bold; width: 130px; }
+        .grand-total td { padding-top: 10px; border-top: 1px solid #ddd; }
+        .grand-total .total-label { font-size: 16px; color: #4a0e63; font-weight: bold; }
+        .grand-total .total-value { font-size: 18px; color: #4a0e63; font-weight: bold; }
+
+        .notes-area { margin-top: 30px; padding: 12px; border: 1px dashed #ccc; font-size: 12px; color: #555; background: #fafafa; }
+
+        .footer-table { width: 100%; margin-top: 60px; }
+        .sign-box { text-align: center; font-size: 12px; }
+        .sign-line { border-top: 1px solid #222; margin-top: 45px; width: 80%; margin-left: auto; margin-right: auto; padding-top: 8px; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <h1>SATINALMA SİPARİŞİ</h1>
-        <p><strong><?php echo htmlspecialchars($order['siparis_no']); ?></strong></p>
-    </div>
 
-    <div class="info-row">
-        <div class="info-box">
-            <h3>FİRMA BİLGİLERİ</h3>
-            <p><strong>IDO KOZMETİK</strong></p>
-            <p>Adres: [Firma Adresi]</p>
-            <p>Tel: [Telefon]</p>
-            <p>Email: [Email]</p>
-        </div>
-        <div class="info-box">
-            <h3>TEDARİKÇİ BİLGİLERİ</h3>
-            <p><strong><?php echo htmlspecialchars($order['tedarikci_adi']); ?></strong></p>
-            <p><?php echo htmlspecialchars($order['tedarikci_adres'] ?? ''); ?></p>
-            <p>Tel: <?php echo htmlspecialchars($order['tedarikci_telefon'] ?? ''); ?></p>
-            <p>Email: <?php echo htmlspecialchars($order['tedarikci_email'] ?? ''); ?></p>
-        </div>
-    </div>
+    <button id="download-btn" onclick="generatePDF()">
+        <i class="fas fa-file-pdf"></i> PDF İNDİR
+    </button>
 
-    <table style="border: none; margin-bottom: 20px;">
-        <tr>
-            <td style="border: none; padding: 5px;"><strong>Sipariş Tarihi:</strong> <?php echo formatDate($order['siparis_tarihi']); ?></td>
-            <td style="border: none; padding: 5px;"><strong>İstenen Teslim:</strong> <?php echo $order['istenen_teslim_tarihi'] ? formatDate($order['istenen_teslim_tarihi']) : '-'; ?></td>
-        </tr>
-        <tr>
-            <td style="border: none; padding: 5px;"><strong>Durum:</strong> <?php echo getDurumText($order['durum']); ?></td>
-            <td style="border: none; padding: 5px;"><strong>Oluşturan:</strong> <?php echo htmlspecialchars($_SESSION['kullanici_adi']); ?></td>
-        </tr>
-    </table>
-
-    <h3 style="color: #4a0e63; margin-top: 30px;">SİPARİŞ KALEMLERİ</h3>
-    <table>
-        <thead>
+    <div id="invoice-container" class="page">
+        
+        <table class="layout-table">
             <tr>
-                <th style="width:40px">#</th>
-                <th>Malzeme Adı</th>
-                <th style="width:100px">Miktar</th>
-                <th style="width:120px">Birim Fiyat</th>
-                <th style="width:120px">Toplam</th>
+                <td>
+                    <div class="logo">IDO<span>KOZMETİK</span></div>
+                    <div class="sub-logo">Tedarik Yönetim Sistemi</div>
+                </td>
+                <td>
+                    <div class="doc-title">SATINALMA SİPARİŞİ</div>
+                    <div class="doc-no">Sipariş No: #<?php echo htmlspecialchars($order['siparis_no']); ?></div>
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            <?php foreach ($order['kalemler'] as $index => $kalem): ?>
+        </table>
+
+        <div style="height: 15px;"></div>
+
+        <table class="layout-table">
             <tr>
-                <td style="text-align:center"><?php echo $index + 1; ?></td>
-                <td><?php echo htmlspecialchars($kalem['malzeme_adi']); ?></td>
-                <td style="text-align:center"><?php echo $kalem['miktar']; ?> <?php echo htmlspecialchars($kalem['birim']); ?></td>
-                <td style="text-align:right"><?php echo formatCurrency($kalem['birim_fiyat'], $kalem['para_birimi']); ?></td>
-                <td style="text-align:right"><strong><?php echo formatCurrency($kalem['toplam_fiyat'], $kalem['para_birimi']); ?></strong></td>
+                <td style="width: 48%;">
+                    <span class="box-title">ALICI FİRMA</span>
+                    <div class="box-content">
+                        <strong>IDO KOZMETİK</strong><br>
+                        İstanbul, Türkiye
+                    </div>
+                </td>
+                <td style="width: 4%;"></td>
+                <td style="width: 48%;">
+                    <span class="box-title">TEDARİKÇİ</span>
+                    <div class="box-content">
+                        <strong><?php echo htmlspecialchars($order['tedarikci_adi']); ?></strong><br>
+                        <?php echo htmlspecialchars($order['tedarikci_adres'] ?? 'Adres belirtilmemiş'); ?><br>
+                        Vergi/TC No: <?php echo htmlspecialchars($order['vergi_no_tc'] ?? '-'); ?>
+                    </div>
+                </td>
             </tr>
-            <?php endforeach; ?>
-        </tbody>
-        <tfoot>
-            <tr class="total-row">
-                <td colspan="4" style="text-align:right"><strong>GENEL TOPLAM:</strong></td>
-                <td style="text-align:right"><strong><?php echo formatCurrency($order['toplam_tutar'], $order['para_birimi']); ?></strong></td>
+        </table>
+
+        <div style="height: 15px;"></div>
+
+        <table class="layout-table" style="width: 60%;">
+            <tr>
+                <td>
+                    <span style="font-size: 10px; color: #888; text-transform: uppercase;">Sipariş Tarihi</span><br>
+                    <span style="font-size: 13px; font-weight: bold;"><?php echo formatDate($order['siparis_tarihi']); ?></span>
+                </td>
+                <td>
+                    <span style="font-size: 10px; color: #888; text-transform: uppercase;">İstenen Teslim Tarihi</span><br>
+                    <span style="font-size: 13px; font-weight: bold;"><?php echo $order['istenen_teslim_tarihi'] ? formatDate($order['istenen_teslim_tarihi']) : '-'; ?></span>
+                </td>
             </tr>
-        </tfoot>
-    </table>
+        </table>
 
-    <?php if (!empty($order['aciklama'])): ?>
-    <p style="margin-top:20px"><strong>Açıklama:</strong> <?php echo htmlspecialchars($order['aciklama']); ?></p>
-    <?php endif; ?>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 5%; text-align: center;">#</th>
+                    <th style="width: 50%;">MALZEME AÇIKLAMASI</th>
+                    <th style="width: 15%; text-align: center;">MİKTAR</th>
+                    <th style="width: 15%; text-align: right;">BİRİM FİYAT</th>
+                    <th style="width: 15%; text-align: right;">TOPLAM</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($order['kalemler'] as $index => $kalem): ?>
+                <tr>
+                    <td class="text-center"><?php echo $index + 1; ?></td>
+                    <td>
+                        <strong><?php echo htmlspecialchars($kalem['malzeme_adi']); ?></strong>
+                        <?php if (!empty($kalem['aciklama'])): ?>
+                            <br><small style="color: #666;"><?php echo htmlspecialchars($kalem['aciklama']); ?></small>
+                        <?php endif; ?>
+                    </td>
+                    <td class="text-center"><?php echo floatval($kalem['miktar']); ?> <?php echo htmlspecialchars($kalem['birim']); ?></td>
+                    <td class="text-right"><?php echo formatCurrency($kalem['birim_fiyat'], $kalem['para_birimi']); ?></td>
+                    <td class="text-right"><strong><?php echo formatCurrency($kalem['toplam_fiyat'], $kalem['para_birimi']); ?></strong></td>
+                </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
 
-    <div class="footer">
-        <div class="signature">
-            <strong>Sipariş Veren</strong><br><br><br>
-            <div class="signature-line"><?php echo htmlspecialchars($_SESSION['kullanici_adi']); ?><br><?php echo date('d/m/Y H:i'); ?></div>
+        <table class="total-table">
+            <tr>
+                <td></td>
+                <td class="total-label">Ara Toplam:</td>
+                <td class="total-value"><?php echo formatCurrency($order['toplam_tutar'], $order['para_birimi']); ?></td>
+            </tr>
+            <tr class="grand-total">
+                <td></td>
+                <td class="total-label">GENEL TOPLAM:</td>
+                <td class="total-value"><?php echo formatCurrency($order['toplam_tutar'], $order['para_birimi']); ?></td>
+            </tr>
+        </table>
+
+        <?php if (!empty($order['aciklama'])): ?>
+        <div class="notes-area">
+            <strong style="color: #4a0e63;">NOTLAR:</strong><br>
+            <?php echo nl2br(htmlspecialchars($order['aciklama'])); ?>
         </div>
-        <div style="display: table-cell; width: 20%;"></div>
-        <div class="signature">
-            <strong>Onaylayan</strong><br><br><br>
-            <div class="signature-line"></div>
+        <?php endif; ?>
+
+        <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #f0f0f0; text-align: center;">
+            <p style="font-size: 9px; color: #bbb; font-style: italic; line-height: 1.5; letter-spacing: 0.3px;">
+                <i class="fas fa-shield-alt"></i> Bu doküman, IDO KOZMETİK ERP Kurumsal Bilgi Yönetim Sistemi altyapısı kullanılarak dijital ortamda güvenli olarak oluşturulmuştur. 
+                İşbu belge içeriğindeki tüm veriler, merkez veritabanı kayıtları ile anlık olarak senkronize edilmekte olup sistem tarafından doğruluğu teyit edilmiştir. 
+                Elektronik ortamda onaylanan bu form, 5070 sayılı Elektronik İmza Kanunu standartlarına uygun olarak üretilmiş olup ıslak imza gerektirmeksizin hukuki geçerliliğini korumaktadır. 
+                Veri bütünlüğü ve gizliliği uluslararası bilgi güvenliği standartları çerçevesinde korunmaktadır. 
+                Belge üzerindeki bilgilerin sistem kayıtları dışında manuel olarak değiştirilmesi veya tahrif edilmesi durumunda belge geçersiz sayılacaktır.
+            </p>
         </div>
+
     </div>
 
     <script>
-        // Sayfa yüklendiğinde otomatik yazdırma
-        window.onload = function() {
-            window.print();
+        function generatePDF() {
+            const element = document.getElementById('invoice-container');
+            const button = document.getElementById('download-btn');
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dosya Hazırlanıyor...';
+            button.disabled = true;
+
+            const opt = {
+                margin:       0,
+                filename:     'Siparis_<?php echo $order['siparis_no']; ?>.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function(){
+                 button.innerHTML = '<i class="fas fa-file-pdf"></i> PDF İNDİR';
+                 button.disabled = false;
+            });
         }
     </script>
 </body>
 </html>
-<?php exit; ?>

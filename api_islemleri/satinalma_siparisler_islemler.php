@@ -56,7 +56,14 @@ switch ($action) {
         $total = $count_result ? $count_result->fetch_assoc()['total'] : 0;
 
         // Get paginated orders
-        $query = "SELECT * FROM satinalma_siparisler $where_sql ORDER BY siparis_id DESC LIMIT $limit OFFSET $offset";
+        $query = "SELECT s.*, 
+                  (SELECT (SUM(teslim_edilen_miktar) / SUM(miktar)) * 100 
+                   FROM satinalma_siparis_kalemleri 
+                   WHERE siparis_id = s.siparis_id) as teslimat_yuzdesi
+                  FROM satinalma_siparisler s 
+                  $where_sql 
+                  ORDER BY s.siparis_id DESC 
+                  LIMIT $limit OFFSET $offset";
         $result = $connection->query($query);
 
         $orders = [];
