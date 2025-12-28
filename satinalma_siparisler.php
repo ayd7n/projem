@@ -815,7 +815,8 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                                 <div class="input-group input-group-sm flex-nowrap">
                                                     <input type="number" class="form-control form-control-sm px-1"
                                                         v-model.number="kalem.birim_fiyat"
-                                                        @input="calculateKalemTotal(kalem)" min="0" step="0.01">
+                                                        @input="calculateKalemTotal(kalem)"
+                                                        @change="checkPriceWarning(kalem)" min="0" step="0.01">
                                                     <div class="input-group-append">
                                                         <span class="input-group-text px-1">{{ kalem.para_birimi }}</span>
                                                     </div>
@@ -1196,7 +1197,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                         this.modal.data.para_birimi = this.selectedMaterial.para_birimi || 'TRY';
                     }
 
-                    this.modal.data.kalemler.push({
+                    const newKalem = {
                         malzeme_kodu: this.selectedMaterial.malzeme_kodu,
                         malzeme_adi: this.selectedMaterial.malzeme_adi,
                         miktar: 1,
@@ -1206,7 +1207,12 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                         toplam_fiyat: parseFloat(this.selectedMaterial.birim_fiyat) || 0,
                         teslim_edilen_miktar: 0,
                         aciklama: ''
-                    });
+                    };
+
+                    this.modal.data.kalemler.push(newKalem);
+                    
+                    // Check for better price warning
+                    this.checkPriceWarning(newKalem);
 
                     this.selectedMaterial = '';
                 },
@@ -1215,6 +1221,36 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                 },
                 calculateKalemTotal(kalem) {
                     kalem.toplam_fiyat = (kalem.miktar || 0) * (kalem.birim_fiyat || 0);
+                },
+                checkPriceWarning(kalem) {
+                    console.log("Fiyat kontrolü yapılıyor:", kalem.malzeme_adi, kalem.birim_fiyat);
+                    if (!kalem.malzeme_kodu || !kalem.birim_fiyat) return;
+
+                    const t_id = this.modal.data.tedarikci_id;
+                    
+                    fetch(`api_islemleri/satinalma_siparisler_islemler.php?action=check_material_best_price&malzeme_kodu=${kalem.malzeme_kodu}&current_tedarikci_id=${t_id}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            console.log("Fiyat kontrol sonucu:", data);
+                            if (data.status === 'success') {
+                                const best = data.data;
+                                if (parseFloat(best.birim_fiyat) < parseFloat(kalem.birim_fiyat)) {
+                                    Swal.fire({
+                                        title: 'Daha Ucuz Tedarikçi Var!',
+                                        html: `Dikkat! <b>${kalem.malzeme_adi}</b> malzemesi şu an <b>${best.tedarikci_adi}</b> firmasında daha ucuz.<br><br>` +
+                                              `<div class="text-left" style="background:#fff3cd; padding:15px; border-radius:8px; border:1px solid #ffeeba;">` +
+                                              `Şu anki fiyat: <b>${this.formatCurrency(kalem.birim_fiyat, kalem.para_birimi)}</b><br>` +
+                                              `Oradaki fiyat: <b class="text-success">${this.formatCurrency(best.birim_fiyat, best.para_birimi)}</b><br><br>` +
+                                              `<small>Yine de buradan almak istiyorsan sen bilirsin, ama diğer tedarikçi daha kârlı görünüyor.</small>` +
+                                              `</div>`,
+                                        icon: 'warning',
+                                        confirmButtonText: 'Anladım, devam et',
+                                        confirmButtonColor: '#7c2a99'
+                                    });
+                                }
+                            }
+                        })
+                        .catch(err => console.error('Price check error:', err));
                 },
                 calculateTotal() {
                     return this.modal.data.kalemler.reduce((sum, k) => sum + (k.toplam_fiyat || 0), 0);

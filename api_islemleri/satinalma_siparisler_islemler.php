@@ -505,6 +505,36 @@ switch ($action) {
         echo json_encode(['status' => 'success', 'data' => $stats]);
         break;
 
+    case 'check_material_best_price':
+        $malzeme_kodu = (int) ($_GET['malzeme_kodu'] ?? 0);
+        $current_tedarikci_id = (int) ($_GET['current_tedarikci_id'] ?? 0);
+
+        if (!$malzeme_kodu) {
+            echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu belirtilmedi.']);
+            break;
+        }
+
+        // Find the best price for this material in VALID contracts, excluding the current supplier
+        // Use cerceve_sozlesmeler directly with date validity check
+        $query = "SELECT birim_fiyat, para_birimi, tedarikci_adi 
+                  FROM cerceve_sozlesmeler 
+                  WHERE malzeme_kodu = $malzeme_kodu 
+                  AND tedarikci_id != $current_tedarikci_id
+                  AND (baslangic_tarihi IS NULL OR baslangic_tarihi <= CURDATE())
+                  AND (bitis_tarihi IS NULL OR bitis_tarihi >= CURDATE())
+                  ORDER BY birim_fiyat ASC 
+                  LIMIT 1";
+
+        $result = $connection->query($query);
+
+        if ($result && $result->num_rows > 0) {
+            $best = $result->fetch_assoc();
+            echo json_encode(['status' => 'success', 'data' => $best]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Daha ucuz bir gecerli sozlesme bulunamadi.']);
+        }
+        break;
+
     case 'send_pdf_email':
         $siparis_id = (int) ($_POST['siparis_id'] ?? 0);
         $email = $_POST['email'] ?? '';
@@ -609,7 +639,8 @@ switch ($action) {
 }
 
 // Helper function to generate PDF content
-function generateOrderPDFContent($connection, $siparis_id) {
+function generateOrderPDFContent($connection, $siparis_id)
+{
     // Get order details with supplier info
     $result = $connection->query("SELECT s.*, t.adres as tedarikci_adres, t.telefon as tedarikci_telefon, t.e_posta as tedarikci_email
         FROM satinalma_siparisler s
@@ -626,18 +657,19 @@ function generateOrderPDFContent($connection, $siparis_id) {
     }
 
     // Format functions
-    $formatCurrency = function($value, $currency = 'TRY') {
+    $formatCurrency = function ($value, $currency = 'TRY') {
         $num = floatval($value);
         $symbols = ['TRY' => '₺', 'TL' => '₺', 'USD' => '$', 'EUR' => '€'];
         return number_format($num, 2, ',', '.') . ' ' . ($symbols[$currency] ?? $currency);
     };
 
-    $formatDate = function($dateString) {
-        if (!$dateString) return '-';
+    $formatDate = function ($dateString) {
+        if (!$dateString)
+            return '-';
         return date('d/m/Y', strtotime($dateString));
     };
 
-    $getDurumText = function($durum) {
+    $getDurumText = function ($durum) {
         $map = [
             'taslak' => 'Taslak',
             'onaylandi' => 'Onaylandı',
