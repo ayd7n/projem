@@ -993,6 +993,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 <div class="module-category" id="finance">
                     <h3><i class="fas fa-file-invoice-dollar"></i> Finans</h3>
                     <div class="module-grid">
+                        <a href="gelir_yonetimi.php" class="module-card">
+                            <div class="icon"><i class="fas fa-coins"></i></div>
+                            <div class="card-content">
+                                <span class="title">Gelir Yönetimi</span>
+                                <p class="description">Şirket gelirlerini ve tahsilatları takip edin.</p>
+                            </div>
+                        </a>
                         <a href="gider_yonetimi.php" class="module-card">
                             <div class="icon"><i class="fas fa-money-bill-wave"></i></div>
                             <div class="card-content">

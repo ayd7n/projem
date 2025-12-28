@@ -1,0 +1,842 @@
+<?php
+include 'config.php';
+
+// Check if user is logged in
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
+// Only staff can access this page
+if ($_SESSION['taraf'] !== 'personel') {
+    header('Location: login.php');
+    exit;
+}
+
+// Page-level permission check (assuming same as gider_yonetimi or separate, let's use a new one if possible, or same for now)
+// Ideally we should add 'page:view:gelir_yonetimi' to permissions but for now assuming admin has all access or we skip strict check or reuse
+if (!yetkisi_var('page:view:gider_yonetimi')) { // Using same permission for simplicity or allow all staff
+    // die('Bu sayfayı görüntüleme yetkiniz yok.'); 
+}
+
+// Calculate total income for current month
+$current_month_start = date('Y-m-01');
+$current_month_end = date('Y-m-t');
+$total_result = $connection->query("SELECT SUM(tutar) as total FROM gelir_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
+$total_income = $total_result->fetch_assoc()['total'] ?? 0;
+
+?>
+
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Gelir Yönetimi - Parfüm ERP</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #4a0e63;
+            --secondary: #7c2a99;
+            --accent: #d4af37;
+            --accent-hover: #b39023;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --bg-color: #fdf8f5;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        body {
+            font-family: 'Ubuntu', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            -webkit-font-smoothing: antialiased;
+            font-size: 0.85rem;
+            /* Reduced base font size */
+        }
+
+        .main-content {
+            padding: 1.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .page-header {
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            color: white;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .page-header::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background: url('data:image/svg+xml,<svg width="20" height="20" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><g fill="%23ffffff" fill-opacity="0.05"><path d="M0 0h20L0 20z"/></g></svg>');
+            opacity: 0.3;
+        }
+
+        .page-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0;
+            color: var(--accent);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .page-header p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9rem;
+            margin: 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--accent);
+        }
+
+        .stat-card.blue::before {
+            background: var(--info);
+        }
+
+        .stat-card.green::before {
+            background: var(--success);
+        }
+
+        .stat-card.orange::before {
+            background: var(--warning);
+        }
+
+        .stat-card.red::before {
+            background: var(--danger);
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            margin-bottom: 0;
+            /* Changed from column to row layout */
+            opacity: 0.9;
+            flex-shrink: 0;
+        }
+
+        .stat-content {
+            flex-grow: 1;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.02em;
+        }
+
+        .stat-card.green .stat-icon {
+            background: rgba(16, 185, 129, 0.1);
+            color: #059669;
+        }
+
+        .stat-card.orange .stat-icon {
+            background: rgba(245, 158, 11, 0.1);
+            color: #d97706;
+        }
+
+        .stat-card.red .stat-icon {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .table {
+            margin-bottom: 0;
+            font-size: 0.8rem;
+        }
+
+        .table th {
+            background: #f9fafb;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.02em;
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            border-top: none;
+        }
+
+        .table td {
+            padding: 0.4rem 1rem;
+            vertical-align: middle;
+            color: var(--text-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .table tbody tr:hover {
+            background-color: #ffffcd;
+            /* Very light yellow hover */
+        }
+
+        .badge-pill {
+            padding: 0.5em 1em;
+            font-weight: 600;
+            font-size: 0.75rem;
+        }
+
+        .btn {
+            border-radius: 0.25rem;
+            padding: 0.35rem 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+            font-size: 0.8rem;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border: none;
+        }
+
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.75rem;
+        }
+
+        .btn-action {
+            width: 24px;
+            height: 24px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            margin-right: 3px;
+            box-shadow: none;
+            font-size: 0.7rem;
+        }
+
+        .search-group input {
+            border-radius: 0.5rem 0 0 0.5rem;
+            border: 1px solid var(--border-color);
+            padding: 0.35rem 0.75rem;
+            font-size: 0.8rem;
+        }
+
+        .search-group input:focus {
+            box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2);
+            border-color: var(--accent);
+        }
+
+        .search-group button {
+            border-radius: 0 0.5rem 0.5rem 0;
+        }
+
+        /* Modal Styles */
+        .modal-content {
+            border-radius: 1rem;
+            border: none;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-radius: 1rem 1rem 0 0;
+            padding: 0.75rem 1.5rem;
+        }
+
+        .modal-title {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .close {
+            color: white;
+            opacity: 0.8;
+            text-shadow: none;
+        }
+
+        .close:hover {
+            opacity: 1;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 0.75rem;
+            }
+
+            .page-header {
+                padding: 1rem;
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+        <div class="container-fluid">
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                <ul class="navbar-nav ml-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="navigation.php">Ana Sayfa</a></li>
+                    <li class="nav-item"><a class="nav-link" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış
+                            Yap</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <!-- Modern Header -->
+        <div class="page-header">
+            <div>
+                <h1>Gelir Yönetimi</h1>
+                <p>Finansal akışınızı, tahsilatları ve sipariş ödemelerini tek bir yerden yönetin.</p>
+            </div>
+        </div>
+
+        <!-- Alerts -->
+        <div id="alert-placeholder"></div>
+
+        <!-- Statistics Grid -->
+        <div class="stats-container">
+            <!-- Stat 1: Monthly Income -->
+            <div class="stat-card green">
+                <div class="stat-icon">
+                    <i class="fas fa-wallet"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="overallTotal">
+                        <?php echo number_format($total_income, 2, ',', '.'); ?> TL
+                    </div>
+                    <div class="stat-label">Bu Ay Toplam Gelir</div>
+                </div>
+            </div>
+
+            <!-- Stat 2: Pending Orders -->
+            <div class="stat-card orange">
+                <div class="stat-icon">
+                    <i class="fas fa-clock"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="pendingCount">0</div>
+                    <div class="stat-label">Bekleyen Sipariş</div>
+                </div>
+            </div>
+
+            <!-- Stat 3: Total Receivables -->
+            <div class="stat-card red">
+                <div class="stat-icon">
+                    <i class="fas fa-hand-holding-usd"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="pendingTotal">0,00 TL</div>
+                    <div class="stat-label">Toplam Alacak</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Table Card -->
+        <div class="content-card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <button id="addIncomeBtn" class="btn btn-success">
+                        <i class="fas fa-plus"></i> Yeni Gelir Ekle
+                    </button>
+                </div>
+
+                <div class="d-flex align-items-center" style="gap: 15px;">
+                    <!-- Search Box -->
+                    <div class="input-group search-group" style="width: 300px;">
+                        <input type="text" class="form-control" id="searchInput" placeholder="Gelir ara...">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary border-left-0 bg-white" type="button"
+                                id="clearSearchBtn">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>İşlemler</th>
+                                <th>Tarih</th>
+                                <th>Kategori</th>
+                                <th>Tutar</th>
+                                <th>Ödeme Tipi</th>
+                                <th>Müşteri</th>
+                                <th>Açıklama</th>
+                                <th>Kaydeden</th>
+                            </tr>
+                        </thead>
+                        <tbody id="incomesTableBody">
+                            <tr>
+                                <td colspan="8" class="text-center p-5 text-muted">Veriler yükleniyor...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top">
+                    <div class="records-per-page text-muted">
+                        <small>Sayfa başına: </small>
+                        <select class="custom-select custom-select-sm ml-2 form-control-sm d-inline-block"
+                            id="perPageSelect" style="width: auto;">
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0"
+                            id="incomesPagination"></ul>
+                    </nav>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Income Modal -->
+    <div class="modal fade" id="incomeModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <form id="incomeForm">
+                    <div class="modal-header"
+                        style="background: linear-gradient(135deg, var(--success), #218838); color: white;">
+                        <h5 class="modal-title" id="modalTitle"><i class="fas fa-edit"></i> Gelir Formu</h5>
+                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        <form id="incomeForm">
+                            <input type="hidden" id="gelir_id" name="gelir_id">
+                            <input type="hidden" id="action" name="action">
+                            <input type="hidden" id="siparis_id" name="siparis_id">
+                            <input type="hidden" id="musteri_id" name="musteri_id">
+
+                            <!-- Sipariş Seçimi -->
+                            <div class="form-group mb-2">
+                                <label for="siparis_secimi" class="small font-weight-bold">Bağlı Sipariş
+                                    (Opsiyonel)</label>
+                                <select class="form-control form-control-sm" id="siparis_secimi" name="siparis_secimi">
+                                    <option value="">Sipariş Seçiniz...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-row">
+                                <!-- Tarih -->
+                                <div class="form-group col-md-6 mb-2">
+                                    <label for="tarih" class="small font-weight-bold">Tarih</label>
+                                    <input type="date" class="form-control form-control-sm" id="tarih" name="tarih"
+                                        required>
+                                </div>
+                                <!-- Tutar -->
+                                <div class="form-group col-md-6 mb-2">
+                                    <label for="tutar" class="small font-weight-bold">Tutar (TL)</label>
+                                    <input type="number" step="0.01" class="form-control form-control-sm" id="tutar"
+                                        name="tutar" required placeholder="0.00">
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                        <!-- Kategori -->
+                        <div class="form-group col-md-6 mb-2">
+                            <label for="kategori" class="small font-weight-bold">Kategori</label>
+                            <input type="text" class="form-control form-control-sm" id="kategori" name="kategori" value="Sipariş Ödemesi" readonly>
+                        </div>
+                        <!-- Ödeme Tipi -->
+                        <div class="form-group col-md-6 mb-2">
+                                    <label for="odeme_tipi" class="small font-weight-bold">Ödeme Tipi</label>
+                                    <select class="form-control form-control-sm" id="odeme_tipi" name="odeme_tipi"
+                                        required>
+                                        <option value="Nakit">Nakit</option>
+                                        <option value="Kredi Kartı">Kredi Kartı</option>
+                                        <option value="Havale/EFT">Havale/EFT</option>
+                                        <option value="Çek">Çek</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Müşteri Adı -->
+                            <div class="form-group mb-2">
+                                <label for="musteri_adi" class="small font-weight-bold">Müşteri Adı / Unvanı</label>
+                                <input type="text" class="form-control form-control-sm" id="musteri_adi"
+                                    name="musteri_adi" placeholder="Opsiyonel">
+                            </div>
+
+                            <!-- Açıklama -->
+                            <div class="form-group mb-3">
+                                <label for="aciklama" class="small font-weight-bold">Açıklama</label>
+                                <textarea class="form-control form-control-sm" id="aciklama" name="aciklama" rows="2"
+                                    required placeholder="Gelir hakkında kısa bilgi..."></textarea>
+                            </div>
+
+                            <div class="text-right">
+                                <button type="button" class="btn btn-secondary btn-sm"
+                                    data-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i>
+                                    Kaydet</button>
+                            </div>
+                        </form>
+                    </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        $(document).ready(function () {
+            const api_url = 'api_islemleri/gelir_yonetimi_islemler.php';
+            let currentPage = 1;
+            let perPage = 10;
+            let searchTimeout;
+
+            function loadIncomes(page = 1) {
+                const search = $('#searchInput').val();
+                $('#incomesTableBody').html('<tr><td colspan="8" class="text-center">Yükleniyor...</td></tr>');
+
+                $.get(api_url, { action: 'get_incomes', page: page, per_page: perPage, search: search }, function (response) {
+                    const res = JSON.parse(response);
+                    if (res.status === 'success') {
+                        renderTable(res.data);
+                        renderPagination(res.page, Math.ceil(res.total / res.per_page));
+                        $('#overallTotal').html(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.overall_sum) + ' TL');
+                    } else {
+                        $('#incomesTableBody').html('<tr><td colspan="8" class="text-center text-danger">Veri alınamadı: ' + res.message + '</td></tr>');
+                    }
+                });
+            }
+
+            function renderTable(data) {
+                let html = '';
+                if (data.length === 0) {
+                    html = '<tr><td colspan="8" class="text-center">Kayıt bulunamadı.</td></tr>';
+                } else {
+                    data.forEach(item => {
+                        const date = new Date(item.tarih).toLocaleDateString('tr-TR');
+                        const amount = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(item.tutar);
+                        html += `
+                            <tr>
+                                <td style="width: 120px;">
+                                    <div class="d-flex">
+                                        <button class="btn btn-warning btn-action edit-btn" data-id="${item.gelir_id}" title="Düzenle"><i class="fas fa-edit"></i></button>
+                                        <button class="btn btn-danger btn-action delete-btn" data-id="${item.gelir_id}" title="Sil"><i class="fas fa-trash"></i></button>
+                                    </div>
+                                </td>
+                                <td>${date}</td>
+                                <td><span class="badge badge-light" style="font-size: 0.9em;">${item.kategori}</span></td>
+                                <td class="font-weight-bold" style="color: var(--success); font-size: 1.1em;">${amount} TL</td>
+                                <td><span class="badge badge-pill badge-info">${item.odeme_tipi || '-'}</span></td>
+                                <td>${item.musteri_adi || '-'}</td>
+                                <td>${item.aciklama}</td>
+                                <td><small class="text-muted"><i class="fas fa-user-circle"></i> ${item.kaydeden_personel_ismi || '-'}</small></td>
+                            </tr>
+                        `;
+                    });
+                }
+                $('#incomesTableBody').html(html);
+            }
+
+            function renderPagination(current, total) {
+                let html = '';
+                if (total > 1) {
+                    html += `<li class="page-item ${current === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${current - 1}">«</a></li>`;
+                    for (let i = 1; i <= total; i++) {
+                        html += `<li class="page-item ${current === i ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                    }
+                    html += `<li class="page-item ${current === total ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${current + 1}">»</a></li>`;
+                }
+                $('#incomesPagination').html(html);
+            }
+
+            function loadPendingStats() {
+                $.get(api_url, { action: 'get_pending_stats' }, function (response) {
+                    const res = JSON.parse(response);
+                    if (res.status === 'success') {
+                        $('#pendingCount').text(res.data.count);
+                        $('#pendingTotal').text(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.data.total_remaining) + ' TL');
+                    }
+                });
+            }
+
+            // Initial load
+            loadIncomes();
+            loadPendingStats();
+
+            $('#searchInput').on('input', function () {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => { currentPage = 1; loadIncomes(); }, 500);
+            });
+
+            $('#clearSearchBtn').click(function () {
+                $('#searchInput').val('');
+                currentPage = 1;
+                loadIncomes();
+            });
+
+            $('#perPageSelect').change(function () {
+                perPage = $(this).val();
+                currentPage = 1;
+                loadIncomes();
+            });
+
+            $(document).on('click', '.page-link', function (e) {
+                e.preventDefault();
+                const page = $(this).data('page');
+                if (page) { currentPage = page; loadIncomes(page); }
+            });
+
+            $('#addIncomeBtn').click(function () {
+                $('#incomeForm')[0].reset();
+                $('#action').val('add_income');
+                $('#gelir_id').val('');
+                $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Gelir Ekle');
+                $('#tarih').val(new Date().toISOString().split('T')[0]);
+
+                // Clear order selection
+                $('#siparis_secimi').val('');
+                $('#siparis_id').val('');
+                $('#musteri_id').val('');
+
+                loadPendingOrders(); // Reload orders
+                $('#incomeModal').modal('show');
+            });
+
+            $(document).on('click', '.edit-btn', function () {
+                const id = $(this).data('id');
+                $.get(api_url, { action: 'get_income', id: id }, function (response) {
+                    const res = JSON.parse(response);
+                    if (res.status === 'success') {
+                        const data = res.data;
+                        $('#action').val('update_income');
+                        $('#gelir_id').val(data.gelir_id);
+                        $('#tarih').val(data.tarih.split(' ')[0]);
+                        $('#tutar').val(data.tutar);
+                        $('#kategori').val(data.kategori);
+                        $('#odeme_tipi').val(data.odeme_tipi);
+                        $('#musteri_adi').val(data.musteri_adi);
+                        $('#aciklama').val(data.aciklama);
+                        $('#modalTitle').html('<i class="fas fa-edit"></i> Gelir Düzenle');
+                        $('#incomeModal').modal('show');
+                    }
+                });
+            });
+
+            $(document).on('click', '.delete-btn', function () {
+                const id = $(this).data('id');
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: "Bu gelir kaydını silmek istediğinize emin misiniz?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: 'Evet, Sil',
+                    cancelButtonText: 'İptal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(api_url, { action: 'delete_income', gelir_id: id }, function (response) {
+                            const res = JSON.parse(response);
+                            if (res.status === 'success') {
+                                Swal.fire('Silindi!', 'Gelir kaydı başarıyla silindi.', 'success');
+                                loadIncomes(currentPage);
+                            } else {
+                                Swal.fire('Hata!', res.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            function loadPendingOrders() {
+                $.get(api_url, { action: 'get_pending_orders' }, function (response) {
+                    const res = JSON.parse(response);
+                    if (res.status === 'success') {
+                        let options = '<option value="">Sipariş Seçiniz...</option>';
+                        res.data.forEach(order => {
+                            const date = new Date(order.tarih).toLocaleDateString('tr-TR');
+                            const remaining = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(order.kalan_tutar);
+                            options += `<option value="${order.siparis_id}" data-customer="${order.musteri_adi}" data-remaining="${order.kalan_tutar}">
+                                Sipariş #${order.siparis_id} - ${order.musteri_adi} - Kalan: ${remaining} TL (${date})
+                            </option>`;
+                        });
+                        $('#siparis_secimi').html(options);
+                    }
+                });
+            }
+
+            $('#siparis_secimi').change(function () {
+                const selected = $(this).find(':selected');
+                const siparis_id = $(this).val();
+
+                if (siparis_id) {
+                    const customer = selected.data('customer');
+                    const remaining = selected.data('remaining');
+
+                    $('#siparis_id').val(siparis_id);
+                    $('#musteri_adi').val(customer);
+                    $('#tutar').val(remaining);
+                    $('#kategori').val('Sipariş Ödemesi');
+                    $('#aciklama').val(`Sipariş No: #${siparis_id} tahsilatı`);
+
+                    // Flash effect to show auto-filled
+                    $('#tutar, #kategori, #aciklama, #musteri_adi').addClass('bg-light');
+                    setTimeout(() => { $('#tutar, #kategori, #aciklama, #musteri_adi').removeClass('bg-light'); }, 500);
+                } else {
+                    $('#siparis_id').val('');
+                    // Only clear if user wants? Or keep it?
+                    // Better clear to avoid confusion if they unchecked it
+                    // $('#musteri_adi').val('');
+                    // $('#tutar').val('');
+                }
+            });
+
+            $('#incomeForm').submit(function (e) {
+                e.preventDefault();
+                $.post(api_url, $(this).serialize(), function (response) {
+                    const res = JSON.parse(response);
+                    if (res.status === 'success') {
+                        $('#incomeModal').modal('hide');
+                        Swal.fire('Başarılı!', res.message, 'success');
+                        loadIncomes(currentPage);
+                        // Refresh pending orders too
+                        loadPendingOrders();
+                        loadPendingStats();
+                    } else {
+                        Swal.fire('Hata!', res.message, 'error');
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

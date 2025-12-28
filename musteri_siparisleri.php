@@ -68,6 +68,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $delete_items_stmt->execute();
             $delete_items_stmt->close();
 
+            // Delete related income records
+            $delete_income_query = "DELETE FROM gelir_yonetimi WHERE siparis_id = ?";
+            $delete_income_stmt = $connection->prepare($delete_income_query);
+            $delete_income_stmt->bind_param('i', $siparis_id);
+            $delete_income_stmt->execute();
+            $delete_income_stmt->close();
+
             // Silinen sipariş bilgilerini al
             $deleted_order_query = "SELECT siparis_id, musteri_adi FROM siparisler WHERE siparis_id = ?";
             $deleted_order_stmt = $connection->prepare($deleted_order_query);
@@ -270,6 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmt->close();
     }
+
 }
 
 // Build search filters
@@ -748,6 +756,23 @@ if ($orders_result && $orders_result->num_rows > 0) {
             color: var(--text-secondary);
         }
 
+        .payment-status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        .payment-paid {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+
+        .payment-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+
         .actions {
             display: flex !important;
             flex-direction: row !important;
@@ -982,6 +1007,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                     <th><i class="fas fa-user"></i> Müşteri</th>
                                     <th><i class="fas fa-calendar"></i> Tarih</th>
                                     <th><i class="fas fa-tag"></i> Durum</th>
+                                    <th><i class="fas fa-coins"></i> Ödeme</th>
                                     <th><i class="fas fa-boxes"></i> Ürün Kalemleri</th>
                                     <th><i class="fas fa-sort-numeric-up"></i> Toplam Adet</th>
                                     <th><i class="fas fa-user"></i> Oluşturan</th>
@@ -1137,6 +1163,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                                     </form>
                                                 <?php endif; ?>
                                             </div>
+
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -1442,6 +1469,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
             }
         });
     </script>
+
 </body>
 
 </html>
