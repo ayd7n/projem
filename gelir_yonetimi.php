@@ -503,6 +503,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th>Tarih</th>
                                 <th>Kategori</th>
                                 <th>Tutar</th>
+                                <th>Para Birimi</th>
                                 <th>Ödeme Tipi</th>
                                 <th>Müşteri</th>
                                 <th>Açıklama</th>
@@ -511,7 +512,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         </thead>
                         <tbody id="incomesTableBody">
                             <tr>
-                                <td colspan="8" class="text-center p-5 text-muted">Veriler yükleniyor...</td>
+                                <td colspan="9" class="text-center p-5 text-muted">Veriler yükleniyor...</td>
                             </tr>
                         </tbody>
                     </table>
@@ -547,80 +548,81 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                                 aria-hidden="true">&times;</span></button>
                     </div>
                     <div class="modal-body pt-0">
-                        <form id="incomeForm">
-                            <input type="hidden" id="gelir_id" name="gelir_id">
-                            <input type="hidden" id="action" name="action">
-                            <input type="hidden" id="siparis_id" name="siparis_id">
-                            <input type="hidden" id="musteri_id" name="musteri_id">
+                        <input type="hidden" id="gelir_id" name="gelir_id">
+                        <input type="hidden" id="action" name="action">
+                        <input type="hidden" id="siparis_id" name="siparis_id">
+                        <input type="hidden" id="musteri_id" name="musteri_id">
 
-                            <!-- Sipariş Seçimi -->
-                            <div class="form-group mb-2">
-                                <label for="siparis_secimi" class="small font-weight-bold">Bağlı Sipariş
-                                    (Opsiyonel)</label>
-                                <select class="form-control form-control-sm" id="siparis_secimi" name="siparis_secimi">
-                                    <option value="">Sipariş Seçiniz...</option>
+                        <!-- Sipariş Seçimi -->
+                        <div class="form-group mb-2">
+                            <label for="siparis_secimi" class="small font-weight-bold">Bağlı Sipariş
+                                (Opsiyonel)</label>
+                            <select class="form-control form-control-sm" id="siparis_secimi" name="siparis_secimi">
+                                <option value="">Sipariş Seçiniz...</option>
+                            </select>
+                        </div>
+
+                        <div class="form-row">
+                            <!-- Tarih -->
+                            <div class="form-group col-md-3 mb-2">
+                                <label for="tarih" class="small font-weight-bold">Tarih</label>
+                                <input type="date" class="form-control form-control-sm" id="tarih" name="tarih"
+                                    required>
+                            </div>
+                            <!-- Kategori -->
+                            <div class="form-group col-md-3 mb-2">
+                                <label for="kategori" class="small font-weight-bold">Kategori</label>
+                                <select class="form-control form-control-sm" id="kategori" name="kategori" required>
+                                    <option value="">Seçiniz...</option>
+                                    <option value="Sipariş Ödemesi">Sipariş Ödemesi</option>
+                                    <option value="Perakende Satış">Perakende Satış</option>
+                                    <option value="Hizmet Geliri">Hizmet Geliri</option>
+                                    <option value="Diğer">Diğer</option>
                                 </select>
                             </div>
-
-                            <div class="form-row">
-                                <!-- Tarih -->
-                                <div class="form-group col-md-6 mb-2">
-                                    <label for="tarih" class="small font-weight-bold">Tarih</label>
-                                    <input type="date" class="form-control form-control-sm" id="tarih" name="tarih"
-                                        required>
-                                </div>
-                                <!-- Tutar -->
-                                <div class="form-group col-md-6 mb-2">
-                                    <label for="tutar" class="small font-weight-bold">Tutar (TL)</label>
-                                    <input type="number" step="0.01" class="form-control form-control-sm" id="tutar"
-                                        name="tutar" required placeholder="0.00">
-                                </div>
+                            <!-- Tutar -->
+                            <div class="form-group col-md-3 mb-2">
+                                <label for="tutar" class="small font-weight-bold">Tutar</label>
+                                <input type="number" step="0.01" class="form-control form-control-sm" id="tutar"
+                                    name="tutar" required placeholder="0.00">
                             </div>
-
-                            <div class="form-row">
-                                <!-- Kategori -->
-                                <div class="form-group col-md-6 mb-2">
-                                    <label for="kategori" class="small font-weight-bold">Kategori</label>
-                                    <input type="text" class="form-control form-control-sm" id="kategori"
-                                        name="kategori" value="Sipariş Ödemesi" readonly>
-                                </div>
-                                <!-- Ödeme Tipi -->
-                                <div class="form-group col-md-6 mb-2">
-                                    <label for="odeme_tipi" class="small font-weight-bold">Ödeme Tipi</label>
-                                    <select class="form-control form-control-sm" id="odeme_tipi" name="odeme_tipi"
-                                        required>
-                                        <option value="Nakit">Nakit</option>
-                                        <option value="Kredi Kartı">Kredi Kartı</option>
-                                        <option value="Havale/EFT">Havale/EFT</option>
-                                        <option value="Çek">Çek</option>
-                                    </select>
-                                </div>
+                            <!-- Ödeme Tipi -->
+                            <div class="form-group col-md-3 mb-2">
+                                <label for="odeme_tipi" class="small font-weight-bold">Ödeme Tipi</label>
+                                <select class="form-control form-control-sm" id="odeme_tipi" name="odeme_tipi" required>
+                                    <option value="Nakit">Nakit</option>
+                                    <option value="Kredi Kartı">Kredi Kartı</option>
+                                    <option value="Havale/EFT">Havale/EFT</option>
+                                    <option value="Çek">Çek</option>
+                                </select>
                             </div>
+                        </div>
+                        <!-- Para Birimi (Gizli) -->
+                        <input type="hidden" id="para_birimi" name="para_birimi" value="TL">
 
-                            <!-- Müşteri Adı -->
-                            <div class="form-group mb-2">
-                                <label for="musteri_adi" class="small font-weight-bold">Müşteri Adı / Unvanı</label>
-                                <input type="text" class="form-control form-control-sm" id="musteri_adi"
-                                    name="musteri_adi" placeholder="Opsiyonel">
-                            </div>
+                        <!-- Müşteri Adı -->
+                        <div class="form-group mb-2">
+                            <label for="musteri_adi" class="small font-weight-bold">Müşteri Adı / Unvanı</label>
+                            <input type="text" class="form-control form-control-sm" id="musteri_adi" name="musteri_adi"
+                                placeholder="Opsiyonel">
+                        </div>
 
-                            <!-- Açıklama -->
-                            <div class="form-group mb-3">
-                                <label for="aciklama" class="small font-weight-bold">Açıklama</label>
-                                <textarea class="form-control form-control-sm" id="aciklama" name="aciklama" rows="2"
-                                    required placeholder="Gelir hakkında kısa bilgi..."></textarea>
-                            </div>
+                        <!-- Açıklama -->
+                        <div class="form-group mb-3">
+                            <label for="aciklama" class="small font-weight-bold">Açıklama</label>
+                            <textarea class="form-control form-control-sm" id="aciklama" name="aciklama" rows="2"
+                                required placeholder="Gelir hakkında kısa bilgi..."></textarea>
+                        </div>
 
-                            <div class="text-right">
-                                <button type="button" class="btn btn-secondary btn-sm"
-                                    data-dismiss="modal">İptal</button>
-                                <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i>
-                                    Kaydet</button>
-                            </div>
-                        </form>
-                    </div>
+                        <div class="text-right">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">İptal</button>
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-save"></i>
+                                Kaydet</button>
+                        </div>
+                </form>
             </div>
         </div>
+    </div>
     </div>
 
     <!-- Scripts -->
@@ -638,7 +640,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
 
             function loadIncomes(page = 1) {
                 const search = $('#searchInput').val();
-                $('#incomesTableBody').html('<tr><td colspan="8" class="text-center">Yükleniyor...</td></tr>');
+                $('#incomesTableBody').html('<tr><td colspan="9" class="text-center">Yükleniyor...</td></tr>');
 
                 $.get(api_url, { action: 'get_incomes', page: page, per_page: perPage, search: search }, function (response) {
                     const res = JSON.parse(response);
@@ -647,7 +649,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         renderPagination(res.page, Math.ceil(res.total / res.per_page));
                         $('#overallTotal').html(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(res.overall_sum) + ' TL');
                     } else {
-                        $('#incomesTableBody').html('<tr><td colspan="8" class="text-center text-danger">Veri alınamadı: ' + res.message + '</td></tr>');
+                        $('#incomesTableBody').html('<tr><td colspan="9" class="text-center text-danger">Veri alınamadı: ' + res.message + '</td></tr>');
                     }
                 });
             }
@@ -655,11 +657,16 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
             function renderTable(data) {
                 let html = '';
                 if (data.length === 0) {
-                    html = '<tr><td colspan="8" class="text-center">Kayıt bulunamadı.</td></tr>';
+                    html = '<tr><td colspan="9" class="text-center">Kayıt bulunamadı.</td></tr>';
                 } else {
                     data.forEach(item => {
                         const date = new Date(item.tarih).toLocaleDateString('tr-TR');
                         const amount = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(item.tutar);
+                        const currency = item.para_birimi || 'TL';
+                        const currencySymbols = { 'TL': '₺', 'USD': '$', 'EUR': '€' };
+                        const currencySymbol = currencySymbols[currency] || currency;
+                        const currencyBadge = currency === 'TL' ? 'badge-success' : (currency === 'USD' ? 'badge-warning' : 'badge-info');
+
                         html += `
                             <tr>
                                 <td style="width: 120px;">
@@ -670,7 +677,8 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                                 </td>
                                 <td>${date}</td>
                                 <td><span class="badge badge-light" style="font-size: 0.9em;">${item.kategori}</span></td>
-                                <td class="font-weight-bold" style="color: var(--success); font-size: 1.1em;">${amount} TL</td>
+                                <td class="font-weight-bold" style="color: var(--success); font-size: 1.1em;">${amount} ${currencySymbol}</td>
+                                <td><span class="badge badge-pill ${currencyBadge}">${currency}</span></td>
                                 <td><span class="badge badge-pill badge-info">${item.odeme_tipi || '-'}</span></td>
                                 <td>${item.musteri_adi || '-'}</td>
                                 <td>${item.aciklama}</td>
@@ -737,6 +745,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $('#gelir_id').val('');
                 $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Tahsilat Ekle');
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
+                $('#para_birimi').val('TL'); // Set default currency
 
                 // Clear order selection
                 $('#siparis_secimi').val('');
@@ -755,8 +764,11 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         const data = res.data;
                         $('#action').val('update_income');
                         $('#gelir_id').val(data.gelir_id);
+                        $('#siparis_id').val(data.siparis_id || '');
+                        $('#musteri_id').val(data.musteri_id || '');
                         $('#tarih').val(data.tarih.split(' ')[0]);
                         $('#tutar').val(data.tutar);
+                        $('#para_birimi').val(data.para_birimi || 'TL');
                         $('#kategori').val(data.kategori);
                         $('#odeme_tipi').val(data.odeme_tipi);
                         $('#musteri_adi').val(data.musteri_adi);
@@ -803,8 +815,9 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         res.data.forEach(order => {
                             const date = new Date(order.tarih).toLocaleDateString('tr-TR');
                             const remaining = new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(order.kalan_tutar);
-                            options += `<option value="${order.siparis_id}" data-customer="${order.musteri_adi}" data-remaining="${order.kalan_tutar}">
-                                Sipariş #${order.siparis_id} - ${order.musteri_adi} - Kalan: ${remaining} TL (${date})
+                            const currency = order.para_birimi || 'TL';
+                            options += `<option value="${order.siparis_id}" data-customer="${order.musteri_adi}" data-customer-id="${order.musteri_id}" data-remaining="${order.kalan_tutar}" data-currency="${currency}">
+                                Sipariş #${order.siparis_id} - ${order.musteri_adi} - Kalan: ${remaining} ${currency} (${date})
                             </option>`;
                         });
                         $('#siparis_secimi').html(options);
@@ -818,11 +831,15 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
 
                 if (siparis_id) {
                     const customer = selected.data('customer');
+                    const customerId = selected.data('customer-id');
                     const remaining = selected.data('remaining');
+                    const currency = selected.data('currency') || 'TL';
 
                     $('#siparis_id').val(siparis_id);
+                    $('#musteri_id').val(customerId);
                     $('#musteri_adi').val(customer);
                     $('#tutar').val(remaining);
+                    $('#para_birimi').val(currency);
                     $('#kategori').val('Sipariş Ödemesi');
                     $('#aciklama').val(`Sipariş No: #${siparis_id} tahsilatı`);
 
@@ -831,6 +848,8 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     setTimeout(() => { $('#tutar, #kategori, #aciklama, #musteri_adi').removeClass('bg-light'); }, 500);
                 } else {
                     $('#siparis_id').val('');
+                    $('#musteri_id').val('');
+                    $('#para_birimi').val('TL'); // Reset to default
                     // Only clear if user wants? Or keep it?
                     // Better clear to avoid confusion if they unchecked it
                     // $('#musteri_adi').val('');

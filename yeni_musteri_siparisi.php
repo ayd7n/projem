@@ -23,7 +23,7 @@ $customers_query = "SELECT musteri_id, musteri_adi FROM musteriler WHERE giris_y
 $customers_result = $connection->query($customers_query);
 
 // Get all products for the search/dropdown
-$products_query = "SELECT urun_kodu, urun_ismi, stok_miktari, birim, satis_fiyati FROM urunler WHERE stok_miktari > 0 ORDER BY urun_ismi";
+$products_query = "SELECT urun_kodu, urun_ismi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi FROM urunler WHERE stok_miktari > 0 ORDER BY urun_ismi";
 $products_result = $connection->query($products_query);
 $products = [];
 while ($row = $products_result->fetch_assoc()) {
@@ -33,6 +33,7 @@ while ($row = $products_result->fetch_assoc()) {
 
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -43,31 +44,36 @@ while ($row = $products_result->fetch_assoc()) {
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@300;400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
     <!-- Select2 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-    <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@ttskch/select2-bootstrap4-theme@x.x.x/dist/select2-bootstrap4.min.css"
+        rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css">
-    
+
     <style>
         body {
-            background-color: #fcfcfc; /* Very light gray, almost white */
+            background-color: #fcfcfc;
+            /* Very light gray, almost white */
             color: #444;
         }
-        
+
         /* Minimalist Card */
         .card {
             border: 1px solid #f0f0f0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
             border-radius: 12px;
             background: #fff;
             margin-bottom: 1.5rem;
         }
+
         .card-header {
             background-color: transparent;
             border-bottom: 1px solid #f5f5f5;
             padding: 1.25rem 1.5rem;
         }
+
         .card-header h2 {
             font-size: 1rem;
             font-weight: 600;
@@ -76,6 +82,7 @@ while ($row = $products_result->fetch_assoc()) {
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .card-body {
             padding: 1.5rem;
         }
@@ -87,6 +94,7 @@ while ($row = $products_result->fetch_assoc()) {
             color: #666;
             margin-bottom: 0.4rem;
         }
+
         .form-control {
             border: 1px solid #e0e0e0;
             border-radius: 8px;
@@ -96,9 +104,10 @@ while ($row = $products_result->fetch_assoc()) {
             box-shadow: none;
             height: auto;
         }
+
         .form-control:focus {
             border-color: #bbb;
-            box-shadow: 0 0 0 2px rgba(0,0,0,0.03);
+            box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.03);
         }
 
         /* Minimalist Buttons */
@@ -109,23 +118,28 @@ while ($row = $products_result->fetch_assoc()) {
             font-size: 0.9rem;
             box-shadow: none !important;
         }
+
         .btn-primary {
             background-color: #333;
             border-color: #333;
             color: #fff;
         }
+
         .btn-primary:hover {
             background-color: #000;
             border-color: #000;
         }
+
         .btn-success {
             background-color: #28a745;
             border-color: #28a745;
         }
+
         .btn-outline-secondary {
             border-color: #ddd;
             color: #666;
         }
+
         .btn-outline-secondary:hover {
             background-color: #f8f9fa;
             color: #333;
@@ -136,6 +150,7 @@ while ($row = $products_result->fetch_assoc()) {
         .table {
             color: #555;
         }
+
         .table th {
             border-top: none;
             border-bottom: 1px solid #eee;
@@ -145,27 +160,32 @@ while ($row = $products_result->fetch_assoc()) {
             color: #888;
             padding: 1rem;
         }
+
         .table td {
             border-top: 1px solid #f9f9f9;
             padding: 1rem;
             vertical-align: middle;
         }
+
         .table-hover tbody tr:hover {
             background-color: #fafafa;
         }
 
         /* Select2 Minimalist Override */
         .select2-container--bootstrap4 .select2-selection--single {
-            height: calc(1.5em + 0.75rem + 8px) !important; /* Match form-control height */
+            height: calc(1.5em + 0.75rem + 8px) !important;
+            /* Match form-control height */
             border: 1px solid #e0e0e0 !important;
             border-radius: 8px !important;
             box-shadow: none !important;
         }
+
         .select2-container--bootstrap4 .select2-selection--single .select2-selection__rendered {
             line-height: calc(1.5em + 0.75rem + 6px);
             padding-left: 1rem;
             color: #444;
         }
+
         .select2-container--bootstrap4 .select2-selection--single .select2-selection__placeholder {
             line-height: calc(1.5em + 0.75rem + 6px);
             color: #999;
@@ -178,12 +198,14 @@ while ($row = $products_result->fetch_assoc()) {
             padding: 1.5rem;
             text-align: right;
         }
+
         .total-label {
             font-size: 0.85rem;
             color: #888;
             text-transform: uppercase;
             margin-bottom: 0.2rem;
         }
+
         .total-amount {
             font-size: 2rem;
             font-weight: 300;
@@ -197,25 +219,31 @@ while ($row = $products_result->fetch_assoc()) {
             padding-bottom: 1rem;
             border-bottom: 1px solid #eee;
         }
+
         .page-header h1 {
             font-size: 1.75rem;
             font-weight: 300;
             color: #333;
             margin-bottom: 0.5rem;
         }
+
         .page-header p {
             color: #888;
             font-weight: 300;
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
+        style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;" href="navigation.php"><i
+                    class="fas fa-spa"></i> IDO KOZMETIK</a>
 
-            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
+                aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
 
@@ -228,8 +256,10 @@ while ($row = $products_result->fetch_assoc()) {
                         <a class="nav-link" href="musteri_siparisleri.php">Siparişler</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
+                            data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            <i class="fas fa-user-circle"></i>
+                            <?php echo htmlspecialchars($_SESSION['kullanici_adi'] ?? 'Kullanıcı'); ?>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -259,7 +289,7 @@ while ($row = $products_result->fetch_assoc()) {
                                 <label for="customerSelect">Müşteri Seçimi</label>
                                 <select class="form-control select2" id="customerSelect" style="width: 100%;">
                                     <option value="">Müşteri Ara...</option>
-                                    <?php while($customer = $customers_result->fetch_assoc()): ?>
+                                    <?php while ($customer = $customers_result->fetch_assoc()): ?>
                                         <option value="<?php echo $customer['musteri_id']; ?>">
                                             <?php echo htmlspecialchars($customer['musteri_adi']); ?>
                                         </option>
@@ -268,7 +298,8 @@ while ($row = $products_result->fetch_assoc()) {
                             </div>
                             <div class="form-group mb-0">
                                 <label for="orderDescription">Notlar</label>
-                                <textarea class="form-control" id="orderDescription" rows="3" placeholder="Sipariş notu (opsiyonel)"></textarea>
+                                <textarea class="form-control" id="orderDescription" rows="3"
+                                    placeholder="Sipariş notu (opsiyonel)"></textarea>
                             </div>
                         </div>
                     </div>
@@ -283,13 +314,15 @@ while ($row = $products_result->fetch_assoc()) {
                                 <label for="productSelect">Ürün Seçimi</label>
                                 <select class="form-control select2" id="productSelect" style="width: 100%;">
                                     <option value="">Ürün Ara...</option>
-                                    <?php foreach($products as $product): ?>
-                                        <option value="<?php echo $product['urun_kodu']; ?>" 
-                                                data-price="<?php echo $product['satis_fiyati']; ?>"
-                                                data-unit="<?php echo htmlspecialchars($product['birim']); ?>"
-                                                data-stock="<?php echo $product['stok_miktari']; ?>">
-                                            <?php echo htmlspecialchars($product['urun_ismi']); ?> 
-                                            (Stok: <?php echo $product['stok_miktari']; ?> <?php echo htmlspecialchars($product['birim']); ?>)
+                                    <?php foreach ($products as $product): ?>
+                                        <option value="<?php echo $product['urun_kodu']; ?>"
+                                            data-price="<?php echo $product['satis_fiyati']; ?>"
+                                            data-unit="<?php echo htmlspecialchars($product['birim']); ?>"
+                                            data-currency="<?php echo htmlspecialchars($product['satis_fiyati_para_birimi'] ?? 'TRY'); ?>"
+                                            data-stock="<?php echo $product['stok_miktari']; ?>">
+                                            <?php echo htmlspecialchars($product['urun_ismi']); ?>
+                                            (Stok: <?php echo $product['stok_miktari']; ?>
+                                            <?php echo htmlspecialchars($product['birim']); ?>)
                                         </option>
                                     <?php endforeach; ?>
                                 </select>
@@ -298,13 +331,15 @@ while ($row = $products_result->fetch_assoc()) {
                                 <div class="col-6">
                                     <div class="form-group">
                                         <label>Birim Fiyat</label>
-                                        <input type="text" class="form-control" id="productPrice" readonly style="background-color: #fcfcfc;">
+                                        <input type="text" class="form-control" id="productPrice" readonly
+                                            style="background-color: #fcfcfc;">
                                     </div>
                                 </div>
                                 <div class="col-6">
                                     <div class="form-group">
                                         <label for="productQuantity">Adet</label>
-                                        <input type="number" class="form-control" id="productQuantity" value="1" min="1">
+                                        <input type="number" class="form-control" id="productQuantity" value="1"
+                                            min="1">
                                     </div>
                                 </div>
                             </div>
@@ -346,7 +381,7 @@ while ($row = $products_result->fetch_assoc()) {
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="row align-items-center mt-4" id="orderFooter" style="display: none;">
                         <div class="col-md-6">
                             <div class="total-card">
@@ -374,7 +409,7 @@ while ($row = $products_result->fetch_assoc()) {
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
-        $(document).ready(function() {
+        $(document).ready(function () {
             // Initialize Select2
             $('.select2').select2({
                 theme: 'bootstrap4',
@@ -383,12 +418,22 @@ while ($row = $products_result->fetch_assoc()) {
                 placeholder: "Seçiniz..."
             });
 
+            // Currency symbol map
+            const currencySymbols = {
+                'TRY': '₺',
+                'USD': '$',
+                'EUR': '€'
+            };
+
             // Update price input when product changes
-            $('#productSelect').on('change', function() {
+            $('#productSelect').on('change', function () {
                 const selectedOption = $(this).find(':selected');
                 const price = selectedOption.data('price');
+                const currency = selectedOption.data('currency') || 'TRY';
+
                 if (price) {
-                    $('#productPrice').val(parseFloat(price).toFixed(2) + ' ₺');
+                    const symbol = currencySymbols[currency] || currency;
+                    $('#productPrice').val(parseFloat(price).toFixed(2) + ' ' + symbol);
                 } else {
                     $('#productPrice').val('');
                 }
@@ -397,10 +442,10 @@ while ($row = $products_result->fetch_assoc()) {
             let orderItems = [];
 
             // Add product to list
-            $('#addProductBtn').click(function() {
+            $('#addProductBtn').click(function () {
                 const productId = $('#productSelect').val();
                 const quantity = parseInt($('#productQuantity').val());
-                
+
                 if (!productId) {
                     Swal.fire({
                         icon: 'info',
@@ -410,7 +455,7 @@ while ($row = $products_result->fetch_assoc()) {
                     });
                     return;
                 }
-                
+
                 if (quantity <= 0) {
                     Swal.fire({
                         icon: 'warning',
@@ -425,6 +470,7 @@ while ($row = $products_result->fetch_assoc()) {
                 const productName = selectedOption.text().split('(')[0].trim();
                 const unit = selectedOption.data('unit');
                 const stock = parseInt(selectedOption.data('stock'));
+                const currency = selectedOption.data('currency') || 'TRY';
                 const price = parseFloat(selectedOption.data('price'));
 
                 if (quantity > stock) {
@@ -439,7 +485,7 @@ while ($row = $products_result->fetch_assoc()) {
 
                 // Check if product already exists in list
                 const existingItemIndex = orderItems.findIndex(item => item.id === productId);
-                
+
                 if (existingItemIndex > -1) {
                     // Update quantity
                     const newQuantity = orderItems[existingItemIndex].quantity + quantity;
@@ -462,17 +508,18 @@ while ($row = $products_result->fetch_assoc()) {
                         unit: unit,
                         quantity: quantity,
                         price: price,
+                        currency: currency,
                         total: quantity * price
                     });
                 }
 
                 renderOrderTable();
-                
+
                 // Reset product selection
                 $('#productSelect').val('').trigger('change');
                 $('#productQuantity').val(1);
                 $('#productPrice').val('');
-                
+
                 // Minimal toast
                 const Toast = Swal.mixin({
                     toast: true,
@@ -492,7 +539,7 @@ while ($row = $products_result->fetch_assoc()) {
             });
 
             // Remove item from list
-            $(document).on('click', '.remove-item', function() {
+            $(document).on('click', '.remove-item', function () {
                 const index = $(this).data('index');
                 orderItems.splice(index, 1);
                 renderOrderTable();
@@ -514,19 +561,26 @@ while ($row = $products_result->fetch_assoc()) {
                     $('#orderFooter').hide();
                     $('#itemCountText').text('0 kalem ürün');
                 } else {
-                    let grandTotal = 0;
-                    
+
+                    let totalsByCurrency = {};
+
                     orderItems.forEach((item, index) => {
-                        grandTotal += item.total;
+                        if (!totalsByCurrency[item.currency]) {
+                            totalsByCurrency[item.currency] = 0;
+                        }
+                        totalsByCurrency[item.currency] += item.total;
+
+                        const symbol = currencySymbols[item.currency] || item.currency;
+
                         tbody.append(`
                             <tr>
                                 <td class="pl-4 font-weight-bold text-dark">${item.name}</td>
                                 <td class="text-center text-muted small">${item.unit}</td>
-                                <td class="text-right">${item.price.toFixed(2)} ₺</td>
+                                <td class="text-right">${item.price.toFixed(2)} ${symbol}</td>
                                 <td class="text-center">
                                     ${item.quantity}
                                 </td>
-                                <td class="text-right font-weight-bold">${item.total.toFixed(2)} ₺</td>
+                                <td class="text-right font-weight-bold">${item.total.toFixed(2)} ${symbol}</td>
                                 <td class="text-right pr-4">
                                     <button class="btn btn-sm btn-link text-muted remove-item" data-index="${index}" title="Sil" style="padding: 0;">
                                         <i class="fas fa-times"></i>
@@ -535,8 +589,14 @@ while ($row = $products_result->fetch_assoc()) {
                             </tr>
                         `);
                     });
-                    
-                    $('#grandTotal').text(grandTotal.toFixed(2) + ' ₺');
+
+                    // Format totals string
+                    let totalString = Object.keys(totalsByCurrency).map(curr => {
+                        const symbol = currencySymbols[curr] || curr;
+                        return totalsByCurrency[curr].toFixed(2) + ' ' + symbol;
+                    }).join(' + ');
+
+                    $('#grandTotal').text(totalString);
                     $('#orderFooter').fadeIn();
                     $('#createOrderBtn').prop('disabled', false);
                     $('#itemCountText').text(orderItems.length + ' kalem ürün');
@@ -544,7 +604,7 @@ while ($row = $products_result->fetch_assoc()) {
             }
 
             // Create Order
-            $('#createOrderBtn').click(function() {
+            $('#createOrderBtn').click(function () {
                 const customerId = $('#customerSelect').val();
                 const description = $('#orderDescription').val();
 
@@ -580,7 +640,7 @@ while ($row = $products_result->fetch_assoc()) {
                                 items: orderItems
                             },
                             dataType: 'json',
-                            success: function(response) {
+                            success: function (response) {
                                 if (response.status === 'success') {
                                     Swal.fire(
                                         'Başarılı',
@@ -597,7 +657,7 @@ while ($row = $products_result->fetch_assoc()) {
                                     );
                                 }
                             },
-                            error: function() {
+                            error: function () {
                                 Swal.fire(
                                     'Hata',
                                     'Sunucu hatası.',
@@ -611,4 +671,5 @@ while ($row = $products_result->fetch_assoc()) {
         });
     </script>
 </body>
+
 </html>

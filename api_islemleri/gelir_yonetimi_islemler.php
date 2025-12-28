@@ -179,6 +179,7 @@ function addIncome()
 
     $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
     $tutar = floatval($_POST['tutar'] ?? 0);
+    $para_birimi = $connection->real_escape_string($_POST['para_birimi'] ?? 'TL');
     $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
@@ -188,22 +189,23 @@ function addIncome()
     $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
 
     // Optional: Link to order if provided
-    $siparis_id = isset($_POST['siparis_id']) ? (int) $_POST['siparis_id'] : 'NULL';
-    $musteri_id = isset($_POST['musteri_id']) ? (int) $_POST['musteri_id'] : 'NULL';
+    $siparis_id = !empty($_POST['siparis_id']) ? (int) $_POST['siparis_id'] : 'NULL';
+    $musteri_id = !empty($_POST['musteri_id']) ? (int) $_POST['musteri_id'] : 'NULL';
+    // If siparis_id is 'NULL' string, we keep it as is for query. If it's a number, it's fine.
 
     if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, açıklama ve ödeme tipi alanları zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO gelir_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, siparis_id, odeme_tipi, musteri_id, musteri_adi) 
-              VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', $siparis_id, '$odeme_tipi', $musteri_id, '$musteri_adi')";
+    $query = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, siparis_id, odeme_tipi, musteri_id, musteri_adi)
+              VALUES ('$tarih', $tutar, '$para_birimi', '$kategori', '$aciklama', $personel_id, '$personel_adi', $siparis_id, '$odeme_tipi', $musteri_id, '$musteri_adi')";
 
     if ($connection->query($query)) {
         if ($siparis_id > 0) {
             updateOrderPaymentStatus($siparis_id);
         }
-        log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar TL tutarında gelir eklendi", 'CREATE');
+        log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar $para_birimi tutarında gelir eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'Gelir başarıyla eklendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gelir eklenirken hata oluştu: ' . $connection->error]);
@@ -217,6 +219,7 @@ function updateIncome()
     $gelir_id = (int) ($_POST['gelir_id'] ?? 0);
     $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
     $tutar = floatval($_POST['tutar'] ?? 0);
+    $para_birimi = $connection->real_escape_string($_POST['para_birimi'] ?? 'TL');
     $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
@@ -233,19 +236,20 @@ function updateIncome()
         return;
     }
 
-    $old_query = "SELECT kategori, tutar FROM gelir_yonetimi WHERE gelir_id = $gelir_id";
+    $old_query = "SELECT kategori, tutar, para_birimi FROM gelir_yonetimi WHERE gelir_id = $gelir_id";
     $old_res = $connection->query($old_query);
     $old_rec = $old_res->fetch_assoc();
     $old_cat = $old_rec['kategori'] ?? '';
     $old_amt = $old_rec['tutar'] ?? 0;
+    $old_currency = $old_rec['para_birimi'] ?? 'TL';
 
-    $query = "UPDATE gelir_yonetimi SET tarih = '$tarih', tutar = $tutar, kategori = '$kategori', aciklama = '$aciklama', odeme_tipi = '$odeme_tipi', musteri_adi = '$musteri_adi' WHERE gelir_id = $gelir_id";
+    $query = "UPDATE gelir_yonetimi SET tarih = '$tarih', tutar = $tutar, para_birimi = '$para_birimi', kategori = '$kategori', aciklama = '$aciklama', odeme_tipi = '$odeme_tipi', musteri_adi = '$musteri_adi' WHERE gelir_id = $gelir_id";
 
     if ($connection->query($query)) {
         if ($siparis_id > 0) {
             updateOrderPaymentStatus($siparis_id);
         }
-        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt TL tutarlı gelir güncellendi", 'UPDATE');
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt $old_currency tutarlı gelir güncellendi", 'UPDATE');
         echo json_encode(['status' => 'success', 'message' => 'Gelir başarıyla güncellendi.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Gelir güncellenirken hata oluştu: ' . $connection->error]);
@@ -300,10 +304,10 @@ function getPendingOrders()
     // Fetch orders that are approved/completed but not fully paid
     // Also include 'kismi_odendi'
     // NOTE: Column is birim_fiyat, not fiyat
-    $query = "SELECT s.siparis_id, s.musteri_adi, s.tarih, s.odeme_durumu, s.odenen_tutar,
+    $query = "SELECT s.siparis_id, s.musteri_id, s.musteri_adi, s.tarih, s.odeme_durumu, s.odenen_tutar, s.para_birimi,
               (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam_tutar
-              FROM siparisler s 
-              WHERE s.durum IN ('onaylandi', 'tamamlandi') 
+              FROM siparisler s
+              WHERE s.durum IN ('onaylandi', 'tamamlandi')
               AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
               ORDER BY s.siparis_id DESC";
 
