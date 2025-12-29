@@ -920,6 +920,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Montaj ve dolum iş emirlerini yönetin.</p>
                             </div>
                         </a>
+                        <a href="ne_uretsem.php" class="module-card">
+                            <div class="icon"><i class="fas fa-lightbulb"></i></div>
+                            <div class="card-content">
+                                <span class="title">Ne Üretsem?</span>
+                                <p class="description">Üretim ihtiyacı olan ürünleri öncelik sırasına göre görün.</p>
+                            </div>
+                        </a>
                         <a href="manuel_stok_hareket.php" class="module-card">
                             <div class="icon"><i class="fas fa-exchange-alt"></i></div>
                             <div class="card-content">
