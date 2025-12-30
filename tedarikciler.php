@@ -350,6 +350,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                             <tr>
                                 <th><i class="fas fa-cogs"></i> İşlemler</th>
                                 <th><i class="fas fa-user"></i> Tedarikçi Adı</th>
+                                <th><i class="fas fa-industry"></i> Sektör</th>
                                 <th><i class="fas fa-id-card"></i> Vergi/TC No</th>
                                 <th><i class="fas fa-phone"></i> Telefon</th>
                                 <th><i class="fas fa-phone"></i> Telefon 2</th>
@@ -383,6 +384,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                         class="btn btn-info btn-sm"><i class="fas fa-id-card"></i></a>
                                 </td>
                                 <td><strong>{{ supplier.tedarikci_adi }}</strong></td>
+                                <td>{{ supplier.sektor || '-' }}</td>
                                 <td>{{ supplier.vergi_no_tc || '-' }}</td>
                                 <td>{{ supplier.telefon || '-' }}</td>
                                 <td>{{ supplier.telefon_2 || '-' }}</td>
@@ -474,7 +476,7 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                 <div style="font-size: 0.65rem; font-weight: 600; color: #4a0e63; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
                                     <i class="fas fa-building"></i> Temel Bilgiler
                                 </div>
-                                <div class="row" style="margin: 0 -4px;">
+                                <div class="row" style="margin: 0 -4px; margin-bottom: 4px;">
                                     <div class="col-md-6" style="padding: 0 4px;">
                                         <div class="form-group mb-1">
                                             <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
@@ -487,19 +489,32 @@ if (!yetkisi_var('page:view:tedarikciler')) {
                                     <div class="col-md-6" style="padding: 0 4px;">
                                         <div class="form-group mb-1">
                                             <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-industry text-muted mr-1"></i>Sektör
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.sektor"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row" style="margin: 0 -4px;">
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
                                                 <i class="fas fa-id-card text-muted mr-1"></i>Vergi No / TC
                                             </label>
                                             <input type="text" class="form-control" v-model="modal.data.vergi_no_tc"
                                                 style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
                                         </div>
                                     </div>
-                                </div>
-                                <div class="form-group mb-0">
-                                    <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
-                                        <i class="fas fa-user-tie text-muted mr-1"></i>Yetkili Kişi
-                                    </label>
-                                    <input type="text" class="form-control" v-model="modal.data.yetkili_kisi"
-                                        style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-user-tie text-muted mr-1"></i>Yetkili Kişi
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.yetkili_kisi"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 

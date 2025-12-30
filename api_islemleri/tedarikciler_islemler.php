@@ -89,7 +89,7 @@ function getSuppliers() {
     if (!empty($search)) {
         $search_escaped = $connection->real_escape_string($search);
         $search_param = '%' . $search_escaped . '%';
-        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
+        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param' OR sektor LIKE '$search_param' OR vergi_no_tc LIKE '$search_param' OR adres LIKE '$search_param' OR aciklama_notlar LIKE '$search_param'";
     }
 
     $count_query = "SELECT COUNT(*) as total FROM tedarikciler " . $where_clause;
@@ -166,7 +166,7 @@ function exportExcel() {
     if (!empty($search)) {
         $search_escaped = $connection->real_escape_string($search);
         $search_param = '%' . $search_escaped . '%';
-        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param'";
+        $where_clause = "WHERE tedarikci_adi LIKE '$search_param' OR e_posta LIKE '$search_param' OR yetkili_kisi LIKE '$search_param' OR telefon LIKE '$search_param' OR telefon_2 LIKE '$search_param' OR sektor LIKE '$search_param' OR vergi_no_tc LIKE '$search_param' OR adres LIKE '$search_param' OR aciklama_notlar LIKE '$search_param'";
     }
 
     $query = "SELECT * FROM tedarikciler " . $where_clause . " ORDER BY tedarikci_adi";
@@ -183,7 +183,7 @@ function exportExcel() {
     }
 
     $excel_data = [
-        ['Tedarikçi Adı', 'Vergi/TC No', 'Telefon', 'Telefon 2', 'E-posta', 'Yetkili Kişi', 'Açıklama', 'Toplam Alım (TL)', 'Toplam Ödeme (TL)', 'Bakiye (TL)', 'Durum']
+        ['Tedarikçi Adı', 'Sektör', 'Vergi/TC No', 'Telefon', 'Telefon 2', 'E-posta', 'Yetkili Kişi', 'Açıklama', 'Toplam Alım (TL)', 'Toplam Ödeme (TL)', 'Bakiye (TL)', 'Durum']
     ];
 
     while ($row = $result->fetch_assoc()) {
@@ -195,6 +195,7 @@ function exportExcel() {
 
         $excel_data[] = [
             $row['tedarikci_adi'],
+            $row['sektor'] ?? '',
             $row['vergi_no_tc'],
             $row['telefon'],
             $row['telefon_2'],
@@ -252,6 +253,7 @@ function addSupplier() {
     }
 
     $tedarikci_adi = $_POST['tedarikci_adi'] ?? '';
+    $sektor = $_POST['sektor'] ?? '';
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
     $adres = $_POST['adres'] ?? '';
     $telefon = $_POST['telefon'] ?? '';
@@ -268,9 +270,9 @@ function addSupplier() {
         return;
     }
 
-    $query = "INSERT INTO tedarikciler (tedarikci_adi, vergi_no_tc, adres, telefon, telefon_2, e_posta, yetkili_kisi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    $query = "INSERT INTO tedarikciler (tedarikci_adi, sektor, vergi_no_tc, adres, telefon, telefon_2, e_posta, yetkili_kisi, aciklama_notlar) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($query);
-    $stmt->bind_param('ssssssss', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar);
+    $stmt->bind_param('sssssssss', $tedarikci_adi, $sektor, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar);
 
     if ($stmt->execute()) {
         // Log ekleme
@@ -293,6 +295,7 @@ function updateSupplier() {
 
     $tedarikci_id = $_POST['tedarikci_id'] ?? '';
     $tedarikci_adi = $_POST['tedarikci_adi'] ?? '';
+    $sektor = $_POST['sektor'] ?? '';
     $vergi_no_tc = $_POST['vergi_no_tc'] ?? '';
     $adres = $_POST['adres'] ?? '';
     $telefon = $_POST['telefon'] ?? '';
@@ -319,9 +322,9 @@ function updateSupplier() {
     $old_supplier_name = $old_supplier['tedarikci_adi'] ?? 'Bilinmeyen Tedarikçi';
     $old_stmt->close();
 
-    $query = "UPDATE tedarikciler SET tedarikci_adi = ?, vergi_no_tc = ?, adres = ?, telefon = ?, telefon_2 = ?, e_posta = ?, yetkili_kisi = ?, aciklama_notlar = ? WHERE tedarikci_id = ?";
+    $query = "UPDATE tedarikciler SET tedarikci_adi = ?, sektor = ?, vergi_no_tc = ?, adres = ?, telefon = ?, telefon_2 = ?, e_posta = ?, yetkili_kisi = ?, aciklama_notlar = ? WHERE tedarikci_id = ?";
     $stmt = $connection->prepare($query);
-    $stmt->bind_param('ssssssssi', $tedarikci_adi, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar, $tedarikci_id);
+    $stmt->bind_param('sssssssssi', $tedarikci_adi, $sektor, $vergi_no_tc, $adres, $telefon, $telefon_2, $e_posta, $yetkili_kisi, $aciklama_notlar, $tedarikci_id);
 
     if ($stmt->execute()) {
         // Log ekleme
