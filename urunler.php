@@ -723,6 +723,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                 <input type="checkbox" class="custom-control-input" :id="'tur_' + tur.id" :value="tur" v-model="selectedMaterialTypes">
                                                 <label class="custom-control-label" :for="'tur_' + tur.id" style="font-size: 0.8rem; cursor: pointer;">{{ tur.label }}</label>
                                             </div>
+                                            <!-- Manuel Eklenen Esans Seçeneği -->
+                                            <div class="custom-control custom-checkbox">
+                                                <input type="checkbox" class="custom-control-input" id="check_create_essence" v-model="createEssence">
+                                                <label class="custom-control-label" for="check_create_essence" style="font-size: 0.8rem; cursor: pointer; color: var(--primary); font-weight: 600;">Esans (Oto. Tank)</label>
+                                            </div>
                                         </div>
                                     </div>
                                     <div class="form-group mb-2">
@@ -929,6 +934,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             </div>
         </div>
 
+        </div>
+
         <!-- jQuery and Bootstrap JS -->
 
         <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
@@ -973,6 +980,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         kurlar: { dolar: 1, euro: 1 },
                         malzemeTurleri: [],
                         selectedMaterialTypes: [],
+                        createEssence: false,
                         treeModal: {
                             title: '',
                             loading: false,
@@ -1094,6 +1102,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.productPhotos = []; // Clear photos
                         this.uploadProgress = 0; // Reset progress
                         this.selectedMaterialTypes = []; // Reset selected types
+                        this.createEssence = false; // Reset essence creation
 
                         if (product) {
                             this.modal.title = 'Urunu Duzenle';
@@ -1130,6 +1139,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         // Seçili malzeme türlerini gönder
                         if (action === 'add_product') {
                             formData.append('selected_material_types', JSON.stringify(this.selectedMaterialTypes));
+                            formData.append('create_essence', this.createEssence ? '1' : '0');
                         }
 
                         fetch('api_islemleri/urunler_islemler.php', {

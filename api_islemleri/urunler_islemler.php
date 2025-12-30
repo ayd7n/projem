@@ -345,7 +345,9 @@ if (isset($_GET['action'])) {
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
     $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
+    $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
     $selected_material_types = isset($_POST['selected_material_types']) ? json_decode($_POST['selected_material_types'], true) : [];
+    $create_essence = isset($_POST['create_essence']) && $_POST['create_essence'] === '1';
 
     if ($action == 'add_product') {
         if (!yetkisi_var('action:urunler:create')) {
@@ -414,8 +416,71 @@ if (isset($_GET['action'])) {
                             }
                         }
                     }
+
+                    // Otomatik Esans Oluşturma
+                    if ($create_essence) {
+                        // 1. Boş bir tank bul (esanslar tablosunda KULLANILMAYAN bir tank)
+                        // tanklar tablosunda olup esanslar tablosunda olmayan ilk tankı bul
+                        $tank_query = "SELECT t.tank_kodu, t.tank_ismi FROM tanklar t 
+                                      LEFT JOIN esanslar e ON t.tank_kodu = e.tank_kodu 
+                                      WHERE e.tank_kodu IS NULL 
+                                      LIMIT 1";
+                        $tank_result = $connection->query($tank_query);
+                        
+                        $tank_kodu = null;
+                        $tank_ismi = null;
+                        
+                        if ($tank_result && $tank_result->num_rows > 0) {
+                            $tank_row = $tank_result->fetch_assoc();
+                            $tank_kodu = $tank_row['tank_kodu'];
+                            $tank_ismi = $tank_row['tank_ismi'];
+                        }
+
+                        // Esans Kodu Oluştur (ES-YYYYMMDD-RAND)
+                        $esans_kodu = 'ES-' . date('ymd') . '-' . rand(100, 999);
+                        $esans_ismi = $urun_ismi . ', Esans';
+                        
+                        // Esans Ekle
+                        $esans_query = "INSERT INTO esanslar (esans_kodu, esans_ismi, stok_miktari, birim, demlenme_suresi_gun, not_bilgisi, tank_kodu, tank_ismi) 
+                                       VALUES (
+                                        '" . $connection->real_escape_string($esans_kodu) . "', 
+                                        '" . $connection->real_escape_string($esans_ismi) . "', 
+                                        0, 
+                                        'lt', 
+                                        1, 
+                                        '', 
+                                        " . ($tank_kodu ? "'" . $connection->real_escape_string($tank_kodu) . "'" : "NULL") . ", 
+                                        " . ($tank_ismi ? "'" . $connection->real_escape_string($tank_ismi) . "'" : "NULL") . "
+                                       )";
+                        
+                        // $esans_stmt yapısını kaldırdık, düz sorgu çalıştırıyoruz
+                        if ($connection->query($esans_query)) {
+                            $new_essence_id = $connection->insert_id;
+                            
+                            // Ürün Ağacına Bağla
+                            // Burası da düz sorguya çevrilebilir ama hata burda değildi, yine de tutarlılık için çevirelim.
+                            $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) 
+                                        VALUES (
+                                        " . (int)$new_product_id . ",
+                                        '" . $connection->real_escape_string($urun_ismi) . "',
+                                        'esans',
+                                        '" . $connection->real_escape_string($esans_kodu) . "',
+                                        '" . $connection->real_escape_string($esans_ismi) . "',
+                                        1.00,
+                                        'urun'
+                                        )";
+                             
+                            $connection->query($ua_query);
+                            
+                            log_islem($connection, $_SESSION['kullanici_adi'], "Otomatik esans oluşturuldu: $esans_ismi (Tank: $tank_kodu)", 'CREATE');
+                        }
+                    }
                     
-                    $response = ['status' => 'success', 'message' => 'Ürün başarıyla eklendi' . (!empty($selected_material_types) ? ' ve otomatik ürün ağacı bağlantıları oluşturuldu.' : '.')];
+                    $resp_message = 'Ürün başarıyla eklendi';
+                    if (!empty($selected_material_types)) $resp_message .= ' ve malzemeler eklendi';
+                    if ($create_essence) $resp_message .= ' ve esans oluşturuldu' . ($tank_kodu ? " (Tank: $tank_kodu)" : " (Boş tank bulunamadı!)");
+                    
+                    $response = ['status' => 'success', 'message' => $resp_message];
                 } else {
                     $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
                 }
