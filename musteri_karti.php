@@ -30,156 +30,101 @@ if ($musteri_id <= 0) {
         $customers[] = $customer;
     }
     ?>
-        <!DOCTYPE html>
-        <html lang="tr">
-
-        <head>
-            <meta charset="UTF-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-            <title>Müşteri Kartı Seçimi - Parfüm ERP</title>
-            <!-- Bootstrap CSS -->
-            <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-            <link rel="preconnect" href="https://fonts.googleapis.com">
-            <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-            <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-                rel="stylesheet">
-            <style>
-                :root {
-                    --primary: #7c3aed;
-                    --primary-light: #a855f7;
-                    --secondary: #6b7280;
-                    --success: #10b981;
-                    --warning: #f59e0b;
-                    --danger: #ef4444;
-                    --bg: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
-                    --card-bg: #ffffff;
-                    --border: #e9d5ff;
-                    --text-primary: #1f2937;
-                    --text-secondary: #6b7280;
-                }
-
-                body {
-                    font-family: 'Inter', sans-serif;
-                    background: var(--bg);
-                    color: var(--text-primary);
-                    font-size: 14px;
-                }
-
-                .container {
-                    max-width: 800px;
-                    padding: 30px 15px;
-                }
-
-                .card {
-                    background: var(--card-bg);
-                    border-radius: 8px;
-                    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-                    border: 1px solid var(--border);
-                    overflow: hidden;
-                }
-
-                .card-header {
-                    background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-                    padding: 16px 20px;
-                    border: none;
-                }
-
-                .card-header h2 {
-                    font-size: 18px;
-                    font-weight: 600;
-                    margin: 0;
-                    color: white;
-                    display: flex;
-                    align-items: center;
-                    gap: 10px;
-                }
-
-                .card-body {
-                    padding: 24px;
-                }
-
-                .form-group label {
-                    font-weight: 600;
-                    font-size: 13px;
-                    color: var(--text-primary);
-                    margin-bottom: 6px;
-                }
-
-                .form-control {
-                    padding: 10px 12px;
-                    border: 1px solid var(--border);
-                    border-radius: 6px;
-                    font-size: 14px;
-                }
-
-                .form-control:focus {
-                    border-color: var(--primary);
-                    box-shadow: 0 0 0 3px rgba(107, 70, 193, 0.1);
-                }
-
-                .btn {
-                    padding: 10px 18px;
-                    font-size: 13px;
-                    font-weight: 600;
-                    border-radius: 6px;
-                    transition: all 0.2s;
-                }
-
-                .btn-primary {
-                    background: var(--primary);
-                    border: none;
-                    color: white;
-                }
-
-                .btn-primary:hover {
-                    background: var(--primary-light);
-                    transform: translateY(-1px);
-                }
-
-                .btn-secondary {
-                    background: white;
-                    border: 1px solid var(--border);
-                    color: var(--text-primary);
-                }
-
-                .btn-secondary:hover {
-                    background: var(--bg);
-                }
-            </style>
-        </head>
-
-        <body>
-            <div class="container">
-                <div class="card">
-                    <div class="card-header">
-                        <h2><i class="fas fa-id-card"></i> Müşteri Kartı Seçimi</h2>
-                    </div>
-                    <div class="card-body">
-                        <form action="musteri_karti.php" method="get">
-                            <div class="form-group">
-                                <label for="musteri_id">Müşteri Seçin:</label>
-                                <select name="musteri_id" id="musteri_id" class="form-control" required>
-                                    <option value="">-- Müşteri Seçin --</option>
-                                    <?php foreach ($customers as $customer): ?>
-                                            <option value="<?php echo $customer['musteri_id']; ?>">
-                                                <?php echo htmlspecialchars($customer['musteri_adi']); ?>
-                                            </option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Görüntüle</button>
-                            <a href="navigation.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri</a>
-                        </form>
-                    </div>
+    <!DOCTYPE html>
+    <html lang="tr">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Müşteri Kartı Seçimi - Parfüm ERP</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <style>
+            body {
+                background-color: #f0f0f0;
+                font-family: 'Roboto', sans-serif;
+                margin: 0;
+                padding: 0;
+            }
+            .page {
+                background: white;
+                width: 500px;
+                padding: 30px;
+                box-sizing: border-box;
+                margin: 40px auto;
+                box-shadow: 0 0 15px rgba(0,0,0,0.1);
+                border-radius: 4px;
+            }
+            .logo { font-size: 26px; font-weight: bold; color: #4a0e63; text-align: center; margin-bottom: 5px; }
+            .logo span { color: #d4af37; }
+            .sub-logo { font-size: 11px; color: #888; text-transform: uppercase; text-align: center; letter-spacing: 1px; margin-bottom: 25px; }
+            .box-title {
+                font-size: 14px;
+                font-weight: bold;
+                color: #4a0e63;
+                text-transform: uppercase;
+                border-bottom: 2px solid #4a0e63;
+                padding-bottom: 8px;
+                margin-bottom: 20px;
+            }
+            .form-group { margin-bottom: 20px; }
+            .form-group label { display: block; font-size: 11px; color: #888; text-transform: uppercase; margin-bottom: 6px; }
+            .form-group select {
+                width: 100%;
+                padding: 12px;
+                border: 1px solid #ddd;
+                border-radius: 4px;
+                font-size: 14px;
+                font-family: 'Roboto', sans-serif;
+            }
+            .form-group select:focus { border-color: #4a0e63; outline: none; }
+            .btn-row { display: flex; gap: 10px; margin-top: 25px; }
+            .btn {
+                padding: 12px 24px;
+                border: none;
+                border-radius: 4px;
+                cursor: pointer;
+                font-weight: bold;
+                font-size: 13px;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .btn-primary { background: #4a0e63; color: white; flex: 1; justify-content: center; }
+            .btn-primary:hover { background: #3a0b4d; }
+            .btn-secondary { background: #f5f5f5; color: #333; border: 1px solid #ddd; }
+            .btn-secondary:hover { background: #eee; }
+        </style>
+    </head>
+    <body>
+        <div class="page">
+            <div class="logo">IDO<span>KOZMETİK</span></div>
+            <div class="sub-logo">Müşteri Yönetim Sistemi</div>
+            
+            <div class="box-title"><i class="fas fa-id-card"></i> Müşteri Kartı Seçimi</div>
+            
+            <form action="musteri_karti.php" method="get">
+                <div class="form-group">
+                    <label>Müşteri Seçin</label>
+                    <select name="musteri_id" required>
+                        <option value="">-- Müşteri Seçin --</option>
+                        <?php foreach ($customers as $customer): ?>
+                            <option value="<?php echo $customer['musteri_id']; ?>">
+                                <?php echo htmlspecialchars($customer['musteri_adi']); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
-            </div>
-        </body>
-
-        </html>
-        <?php
-        exit;
+                <div class="btn-row">
+                    <a href="navigation.php" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Geri</a>
+                    <button type="submit" class="btn btn-primary"><i class="fas fa-search"></i> Görüntüle</button>
+                </div>
+            </form>
+        </div>
+    </body>
+    </html>
+    <?php
+    exit;
 }
 
 // Get customer information
@@ -195,7 +140,14 @@ if (!$customer) {
 }
 
 // Get all orders for this customer (excluding cancelled orders)
-$orders_query = "SELECT * FROM siparisler WHERE musteri_id = ? AND durum != 'iptal_edildi' ORDER BY tarih DESC";
+// Sort by payment status (unpaid first) then by date
+$orders_query = "SELECT s.*, 
+                 (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam_tutar_hesaplanan
+                 FROM siparisler s 
+                 WHERE s.musteri_id = ? AND s.durum != 'iptal_edildi' 
+                 ORDER BY 
+                    CASE WHEN s.odeme_durumu IS NULL OR s.odeme_durumu = 'bekliyor' OR s.odeme_durumu = 'kismi_odendi' THEN 0 ELSE 1 END,
+                    s.tarih DESC";
 $orders_stmt = $connection->prepare($orders_query);
 $orders_stmt->bind_param('i', $musteri_id);
 $orders_stmt->execute();
@@ -209,6 +161,12 @@ $status_beklemede = 0;
 $status_onaylandi = 0;
 $status_tamamlandi = 0;
 
+// Bakiye hesaplama değişkenleri
+$toplam_siparis_tutari = 0;
+$toplam_odenen = 0;
+$toplam_kalan_bakiye = 0;
+$odenmemis_siparis_sayisi = 0;
+
 while ($order = $orders_result->fetch_assoc()) {
     // Get order items for this order
     $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
@@ -218,11 +176,29 @@ while ($order = $orders_result->fetch_assoc()) {
     $items_result = $items_stmt->get_result();
 
     $order['items'] = [];
+    $order_item_total = 0;
     while ($item = $items_result->fetch_assoc()) {
         $order['items'][] = $item;
         $total_products += $item['adet'];
+        $order_item_total += floatval($item['birim_fiyat']) * floatval($item['adet']);
     }
     $items_stmt->close();
+    
+    // Sipariş tutarını hesapla
+    $order['hesaplanan_tutar'] = $order_item_total;
+    $odenen = floatval($order['odenen_tutar'] ?? 0);
+    $order['kalan_tutar'] = $order_item_total - $odenen;
+    
+    // Sadece onaylanmış veya tamamlanmış siparişler için bakiye hesapla
+    if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])) {
+        $toplam_siparis_tutari += $order_item_total;
+        $toplam_odenen += $odenen;
+        
+        if ($order['kalan_tutar'] > 0.01) {
+            $toplam_kalan_bakiye += $order['kalan_tutar'];
+            $odenmemis_siparis_sayisi++;
+        }
+    }
 
     $orders[] = $order;
     $total_orders++;
@@ -246,698 +222,492 @@ while ($order = $orders_result->fetch_assoc()) {
 }
 $orders_stmt->close();
 
+// Function to format date
+function formatDate($dateString) {
+    if (!$dateString) return '-';
+    return date('d.m.Y', strtotime($dateString));
+}
+
+// Function to format currency
+function formatCurrency($value) {
+    return number_format(floatval($value), 2, ',', '.') . ' ₺';
+}
 ?>
 <!DOCTYPE html>
 <html lang="tr">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Müşteri Kartı - <?php echo htmlspecialchars($customer['musteri_adi']); ?> - Parfüm ERP</title>
-    <!-- Bootstrap CSS -->
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
     <style>
-        :root {
-            --primary: #7c3aed;
-            --primary-light: #a855f7;
-            --secondary: #6b7280;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --bg: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
-            --card-bg: #ffffff;
-            --border: #e9d5ff;
-            --text-primary: #1f2937;
-            --text-secondary: #6b7280;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #faf5ff 0%, #f5f3ff 100%);
-            color: var(--text-primary);
-            font-size: 13px;
-            line-height: 1.5;
+            background-color: #f0f0f0;
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
         }
 
-        .print-btn {
+        #download-btn {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 1000;
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
+            background: #4a0e63;
+            color: white;
             border: none;
-            border-radius: 50%;
-            color: white;
-            font-size: 18px;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(107, 70, 193, 0.3);
-            transition: all 0.2s;
-        }
-
-        .print-btn:hover {
-            transform: scale(1.05);
-            box-shadow: 0 8px 25px rgba(124, 58, 237, 0.4);
-        }
-
-        .container {
-            max-width: 1400px;
-            padding: 20px 15px;
-        }
-
-        /* Header kompakt */
-        .customer-header {
-            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-            border-radius: 8px;
-            padding: 20px 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 20px rgba(124, 58, 237, 0.25);
-        }
-
-        .customer-header h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: white;
-            margin: 0 0 4px 0;
-            letter-spacing: -0.5px;
-        }
-
-        .customer-header .subtitle {
-            font-size: 13px;
-            color: rgba(255, 255, 255, 0.9);
-            margin: 0;
-        }
-
-        /* Özet bilgi kartları */
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .summary-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 14px 16px;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
-            gap: 12px;
-            transition: all 0.2s;
+            gap: 10px;
         }
 
-        .summary-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        #download-btn:hover { background: #3a0b4d; }
+
+        .page {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 10mm;
+            box-sizing: border-box;
+            margin: 20px auto;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
         }
 
-        .summary-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            flex-shrink: 0;
+        .layout-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
         }
 
-        .summary-icon.primary {
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
-        }
+        .layout-table td { vertical-align: top; }
 
-        .summary-icon.gold {
-            background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.3);
-        }
+        .logo { font-size: 26px; font-weight: bold; color: #4a0e63; }
+        .logo span { color: #d4af37; }
+        .sub-logo { font-size: 11px; color: #888; text-transform: uppercase; margin-top: 3px; letter-spacing: 1px; }
 
-        .summary-icon.success {
-            background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
-        }
+        .doc-title { text-align: right; font-size: 22px; font-weight: bold; color: #222; }
+        .doc-no { text-align: right; font-size: 14px; color: #4a0e63; font-weight: bold; margin-top: 5px; }
 
-        .summary-icon.warning {
-            background: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
-        }
-
-        .summary-icon.info {
-            background: linear-gradient(135deg, #06b6d4 0%, #22d3ee 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(6, 182, 212, 0.3);
-        }
-
-        .summary-icon.success-dark {
-            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-            color: white;
-            box-shadow: 0 4px 15px rgba(5, 150, 105, 0.3);
-        }
-
-        .summary-content {
-            flex: 1;
-        }
-
-        .summary-label {
-            font-size: 11px;
-            color: var(--text-secondary);
+        .box-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #4a0e63;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 2px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 3px;
+            margin-bottom: 5px;
+            display: block;
         }
 
-        .summary-value {
-            font-size: 16px;
-            font-weight: 700;
-            color: var(--text-primary);
+        .box-content { font-size: 12px; line-height: 1.4; color: #333; }
+
+        /* Summary Stats */
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        .stats-table td {
+            padding: 12px 15px;
+            text-align: center;
+            border: 1px solid #eee;
+        }
+        .stat-value {
+            font-size: 22px;
+            font-weight: bold;
+            color: #4a0e63;
+            display: block;
+        }
+        .stat-label {
+            font-size: 10px;
+            color: #888;
+            text-transform: uppercase;
+            margin-top: 3px;
+            display: block;
         }
 
-        /* Müşteri bilgileri kompakt */
-        .customer-info {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 18px 20px;
-            margin-bottom: 20px;
+        .data-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .data-table th {
+            background: #fdfdfd;
+            border-bottom: 2px solid #4a0e63;
+            padding: 10px 8px;
+            font-size: 11px;
+            text-align: left;
+            color: #4a0e63;
         }
+        .data-table td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
 
-        .section-title {
-            font-size: 15px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            margin-bottom: 14px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid transparent;
-            border-image: linear-gradient(90deg, #7c3aed 0%, #ec4899 100%);
-            border-image-slice: 1;
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+
+        /* Status badges */
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
             display: inline-block;
         }
+        .status-beklemede { background: #fef3c7; color: #92400e; }
+        .status-onaylandi { background: #dbeafe; color: #1e40af; }
+        .status-tamamlandi { background: #d1fae5; color: #065f46; }
 
-        .info-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 10px;
+        /* Order cards */
+        .order-section {
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 15px;
+            margin-bottom: 15px;
+            page-break-inside: avoid;
         }
-
-        .info-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            background: var(--bg);
-            border-radius: 6px;
-            border: 1px solid var(--border);
-        }
-
-        .info-icon {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #7c3aed 0%, #a855f7 100%);
-            border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 14px;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(124, 58, 237, 0.2);
-        }
-
-        .info-content {
-            flex: 1;
-            min-width: 0;
-        }
-
-        .info-label {
-            font-size: 10px;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            margin-bottom: 1px;
-        }
-
-        .info-value {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            word-break: break-word;
-        }
-
-        /* Sipariş bölümü */
-        .orders-section {
-            margin-top: 20px;
-        }
-
-        .order-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            padding: 16px 18px;
-            margin-bottom: 14px;
-            transition: all 0.2s;
-        }
-
-        .order-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            transform: translateY(-2px);
-        }
-
         .order-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
             padding-bottom: 10px;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid #eee;
         }
-
         .order-title {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text-primary);
+            font-size: 14px;
+            font-weight: bold;
+            color: #222;
         }
-
-        .order-status {
-            padding: 4px 10px;
-            border-radius: 12px;
-            font-size: 11px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .status-beklemede {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .status-onaylandi {
-            background: #dbeafe;
-            color: #1e40af;
-        }
-
-        .status-tamamlandi {
-            background: #d1fae5;
-            color: #065f46;
-        }
-
-        .order-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .detail-item {
+        .order-meta {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 6px 10px;
-            background: var(--bg);
-            border-radius: 4px;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+        .order-meta-item {
             font-size: 12px;
         }
-
-        .detail-label {
-            font-weight: 600;
-            color: var(--text-secondary);
-            font-size: 11px;
-        }
-
-        .detail-value {
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-
-        /* Tablo kompakt */
-        .items-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 12px;
-            margin-top: 10px;
-        }
-
-        .items-table thead {
-            background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(236, 72, 153, 0.1));
-        }
-
-        .items-table th {
-            padding: 8px 10px;
-            text-align: left;
-            font-size: 11px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
+        .order-meta-item .label {
+            color: #888;
+            font-size: 10px;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 2px solid #7c3aed;
+        }
+        .order-meta-item .value {
+            color: #333;
+            font-weight: 500;
         }
 
-        .items-table td {
-            padding: 8px 10px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .items-table tr:hover {
-            background: var(--bg);
+        .notes-area { 
+            margin-top: 8px; 
+            padding: 10px; 
+            border: 1px dashed #ccc; 
+            font-size: 12px; 
+            color: #555; 
+            background: #fafafa; 
         }
 
         .no-orders {
             text-align: center;
             padding: 40px 20px;
-            color: var(--text-secondary);
-            background: var(--bg);
-            border-radius: 8px;
-            border: 2px dashed var(--border);
+            color: #888;
+            border: 2px dashed #ddd;
+            border-radius: 4px;
         }
 
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px 10px;
-            }
+        .section-divider {
+            border: none;
+            border-top: 2px solid #4a0e63;
+            margin: 25px 0;
+        }
 
-            .summary-cards {
-                grid-template-columns: 1fr;
-            }
-
-            .info-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .order-details {
-                grid-template-columns: 1fr;
-            }
-
-            .order-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
+        .footer-note {
+            margin-top: auto;
+            padding-top: 20px;
+            border-top: 1px solid #f0f0f0;
+            text-align: center;
+        }
+        .footer-note p {
+            font-size: 9px;
+            color: #bbb;
+            font-style: italic;
+            line-height: 1.5;
+            letter-spacing: 0.3px;
         }
 
         @media print {
-            .print-btn {
-                display: none !important;
-            }
-
-            body {
-                background: white !important;
-            }
-
-            .order-card:hover {
-                transform: none;
-                box-shadow: none;
-            }
+            #download-btn { display: none !important; }
+            body { background: white; }
+            .page { box-shadow: none; margin: 0; }
         }
     </style>
 </head>
-
 <body>
-    <button class="print-btn" onclick="window.print()">
-        <i class="fas fa-print"></i>
+
+    <button id="download-btn" onclick="generatePDF()">
+        <i class="fas fa-file-pdf"></i> PDF İNDİR
     </button>
 
-    <div class="container">
+    <div id="invoice-container" class="page">
+        
         <!-- Header -->
-        <div class="customer-header">
-            <h1><i class="fas fa-id-card"></i> <?php echo htmlspecialchars($customer['musteri_adi']); ?></h1>
-            <div class="subtitle">Müşteri Detay Kartı</div>
+        <table class="layout-table">
+            <tr>
+                <td>
+                    <div class="logo">IDO<span>KOZMETİK</span></div>
+                    <div class="sub-logo">Müşteri Yönetim Sistemi</div>
+                </td>
+                <td></td>
+            </tr>
+        </table>
+
+        <div style="height: 8px;"></div>
+
+        <!-- Customer Info -->
+        <table class="layout-table">
+            <tr>
+                <td style="width: 48%;">
+                    <span class="box-title"><i class="fas fa-user-tie"></i> MÜŞTERİ BİLGİLERİ</span>
+                    <div class="box-content">
+                        <strong><?php echo htmlspecialchars($customer['musteri_adi']); ?></strong><br>
+                        <?php if ($customer['telefon']): ?>
+                            <i class="fas fa-phone" style="color: #4a0e63; width: 16px;"></i> <?php echo htmlspecialchars($customer['telefon']); ?><br>
+                        <?php endif; ?>
+                        <?php if ($customer['telefon_2']): ?>
+                            <i class="fas fa-mobile-alt" style="color: #4a0e63; width: 16px;"></i> <?php echo htmlspecialchars($customer['telefon_2']); ?><br>
+                        <?php endif; ?>
+                        <?php if ($customer['e_posta']): ?>
+                            <i class="fas fa-envelope" style="color: #4a0e63; width: 16px;"></i> <?php echo htmlspecialchars($customer['e_posta']); ?><br>
+                        <?php endif; ?>
+                    </div>
+                </td>
+                <td style="width: 4%;"></td>
+                <td style="width: 48%;">
+                    <span class="box-title"><i class="fas fa-map-marker-alt"></i> ADRES & VERGİ BİLGİLERİ</span>
+                    <div class="box-content">
+                        <?php echo htmlspecialchars($customer['adres'] ?: 'Adres belirtilmemiş'); ?><br>
+                        <strong>Vergi/TC No:</strong> <?php echo htmlspecialchars($customer['vergi_no_tc'] ?: '-'); ?>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div style="height: 8px;"></div>
+
+        <!-- Bakiye ve Ödeme Özeti - Premium Design -->
+        <span class="box-title"><i class="fas fa-chart-pie"></i> HESAP ÖZETİ</span>
+        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
+            <!-- Son Sipariş Tarihi -->
+            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #4a0e63 0%, #7c3aed 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
+                    <i class="fas fa-calendar-alt" style="color: white; font-size: 14px;"></i>
+                </div>
+                <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Son Sipariş</div>
+                <div style="font-size: 14px; font-weight: 700; color: #4a0e63;"><?php echo $last_order_date ? formatDate($last_order_date) : '-'; ?></div>
+            </div>
+            
+            <!-- Toplam Sipariş Tutarı -->
+            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
+                    <i class="fas fa-file-invoice-dollar" style="color: white; font-size: 14px;"></i>
+                </div>
+                <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Toplam Tutar</div>
+                <div style="font-size: 14px; font-weight: 700; color: #1e40af;"><?php echo formatCurrency($toplam_siparis_tutari); ?></div>
+            </div>
+            
+            <!-- Ödenen Tutar -->
+            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
+                    <i class="fas fa-check-circle" style="color: white; font-size: 14px;"></i>
+                </div>
+                <div style="font-size: 8px; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Ödenen</div>
+                <div style="font-size: 14px; font-weight: 700; color: #059669;"><?php echo formatCurrency($toplam_odenen); ?></div>
+            </div>
+            
+            <!-- Kalan Bakiye -->
+            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, <?php echo $toplam_kalan_bakiye > 0 ? '#fef2f2 0%, #fecaca 100%' : '#ecfdf5 0%, #d1fae5 100%'; ?>); border: 1px solid <?php echo $toplam_kalan_bakiye > 0 ? '#fca5a5' : '#a7f3d0'; ?>; border-radius: 6px; padding: 12px; text-align: center;">
+                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, <?php echo $toplam_kalan_bakiye > 0 ? '#dc2626 0%, #ef4444 100%' : '#059669 0%, #10b981 100%'; ?>); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
+                    <i class="fas <?php echo $toplam_kalan_bakiye > 0 ? 'fa-exclamation-circle' : 'fa-check-double'; ?>" style="color: white; font-size: 14px;"></i>
+                </div>
+                <div style="font-size: 8px; color: <?php echo $toplam_kalan_bakiye > 0 ? '#b91c1c' : '#047857'; ?>; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Kalan Bakiye</div>
+                <div style="font-size: 14px; font-weight: 700; color: <?php echo $toplam_kalan_bakiye > 0 ? '#dc2626' : '#059669'; ?>;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></div>
+            </div>
         </div>
 
-        <!-- Özet Bilgiler -->
-        <div class="summary-cards">
-            <div class="summary-card">
-                <div class="summary-icon primary">
-                    <i class="fas fa-shopping-cart"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Toplam Sipariş</div>
-                    <div class="summary-value"><?php echo $total_orders; ?></div>
-                </div>
+        <?php if ($toplam_kalan_bakiye > 0.01): ?>
+        <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fca5a5; border-left: 4px solid #dc2626; border-radius: 6px; padding: 12px 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
+            <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <i class="fas fa-exclamation-triangle" style="color: white; font-size: 18px;"></i>
             </div>
-            <div class="summary-card">
-                <div class="summary-icon gold">
-                    <i class="fas fa-box"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Toplam Ürün</div>
-                    <div class="summary-value"><?php echo $total_products; ?> Adet</div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon success">
-                    <i class="fas fa-calendar-check"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Son Sipariş</div>
-                    <div class="summary-value">
-                        <?php echo $last_order_date ? date('d.m.Y', strtotime($last_order_date)) : '-'; ?>
-                    </div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon warning">
-                    <i class="fas fa-clock"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Beklemede</div>
-                    <div class="summary-value"><?php echo $status_beklemede; ?></div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon info">
-                    <i class="fas fa-check-circle"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Onaylandı</div>
-                    <div class="summary-value"><?php echo $status_onaylandi; ?></div>
-                </div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-icon success-dark">
-                    <i class="fas fa-check-double"></i>
-                </div>
-                <div class="summary-content">
-                    <div class="summary-label">Tamamlandı</div>
-                    <div class="summary-value"><?php echo $status_tamamlandi; ?></div>
-                </div>
+            <div>
+                <div style="font-size: 12px; font-weight: 700; color: #991b1b; margin-bottom: 2px;"><i class="fas fa-bell"></i> ÖDEME BEKLİYOR</div>
+                <div style="font-size: 11px; color: #b91c1c;">Bu müşterinin <strong><?php echo $odenmemis_siparis_sayisi; ?></strong> adet ödenmemiş siparişi bulunmaktadır. Toplam bakiye: <strong style="font-size: 13px;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></strong></div>
             </div>
         </div>
+        <?php endif; ?>
 
-        <!-- Müşteri Bilgileri -->
-        <div class="customer-info">
-            <div class="section-title"><i class="fas fa-info-circle"></i> Müşteri Bilgileri</div>
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Müşteri Adı</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['musteri_adi']); ?></div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-id-card"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Vergi/TC No</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['vergi_no_tc'] ?: '-'); ?></div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-phone"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Telefon</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['telefon'] ?: '-'); ?></div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-mobile-alt"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Telefon 2</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['telefon_2'] ?: '-'); ?></div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-envelope"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">E-posta</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['e_posta'] ?: '-'); ?></div>
-                    </div>
-                </div>
-                <div class="info-item">
-                    <div class="info-icon">
-                        <i class="fas fa-map-marker-alt"></i>
-                    </div>
-                    <div class="info-content">
-                        <div class="info-label">Adres</div>
-                        <div class="info-value"><?php echo htmlspecialchars($customer['adres'] ?: '-'); ?></div>
-                    </div>
-                </div>
-                <?php if ($customer['aciklama_notlar']): ?>
-                        <div class="info-item" style="grid-column: 1 / -1;">
-                            <div class="info-icon">
-                                <i class="fas fa-sticky-note"></i>
-                            </div>
-                            <div class="info-content">
-                                <div class="info-label">Açıklama</div>
-                                <div class="info-value"><?php echo htmlspecialchars($customer['aciklama_notlar']); ?></div>
-                            </div>
+        <hr class="section-divider">
+
+        <!-- Orders List -->
+        <span class="box-title"><i class="fas fa-history"></i> SİPARİŞ GEÇMİŞİ</span>
+
+        <?php if (count($orders) > 0): ?>
+            <?php foreach ($orders as $order): ?>
+                <?php 
+                    $is_unpaid = in_array($order['durum'], ['onaylandi', 'tamamlandi']) && $order['kalan_tutar'] > 0.01;
+                    $border_style = $is_unpaid ? 'border: 2px solid #ef4444; background: #fef2f2;' : '';
+                ?>
+                <div class="order-section" style="<?php echo $border_style; ?>">
+                    <div class="order-header">
+                        <div class="order-title">
+                            <i class="fas fa-file-invoice"></i> Sipariş #<?php echo $order['siparis_id']; ?>
                         </div>
-                <?php endif; ?>
-            </div>
-        </div>
-
-        <!-- Siparişler -->
-        <div class="orders-section">
-            <div class="section-title"><i class="fas fa-history"></i> Sipariş Geçmişi</div>
-
-            <?php if (count($orders) > 0): ?>
-                    <?php foreach ($orders as $order): ?>
-                            <div class="order-card">
-                                <div class="order-header">
-                                    <div class="order-title">
-                                        <i class="fas fa-file-invoice"></i> Sipariş #<?php echo $order['siparis_id']; ?>
-                                    </div>
-                                    <div class="order-status 
-                                <?php
-                                switch ($order['durum']) {
-                                    case 'beklemede':
-                                        echo 'status-beklemede';
-                                        break;
-                                    case 'onaylandi':
-                                        echo 'status-onaylandi';
-                                        break;
-                                    case 'tamamlandi':
-                                        echo 'status-tamamlandi';
-                                        break;
-                                    default:
-                                        echo 'status-beklemede';
-                                }
-                                ?>">
-                                        <?php
-                                        switch ($order['durum']) {
-                                            case 'beklemede':
-                                                echo '⏳ Beklemede';
-                                                break;
-                                            case 'onaylandi':
-                                                echo '✅ Onaylandı';
-                                                break;
-                                            case 'tamamlandi':
-                                                echo '🎉 Tamamlandı';
-                                                break;
-                                            default:
-                                                echo $order['durum'];
-                                        }
-                                        ?>
-                                    </div>
-                                </div>
-
-                                <div class="order-details">
-                                    <div class="detail-item">
-                                        <i class="fas fa-calendar" style="color: var(--primary);"></i>
-                                        <span class="detail-label">Tarih:</span>
-                                        <span class="detail-value"><?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?></span>
-                                    </div>
-                                    <div class="detail-item">
-                                        <i class="fas fa-user" style="color: var(--primary);"></i>
-                                        <span class="detail-label">Oluşturan:</span>
-                                        <span
-                                            class="detail-value"><?php echo htmlspecialchars($order['olusturan_musteri'] ?: '-'); ?></span>
-                                    </div>
-                                    <?php if ($order['onaylayan_personel_adi']): ?>
-                                            <div class="detail-item">
-                                                <i class="fas fa-user-check" style="color: var(--success);"></i>
-                                                <span class="detail-label">Onaylayan:</span>
-                                                <span
-                                                    class="detail-value"><?php echo htmlspecialchars($order['onaylayan_personel_adi']); ?></span>
-                                            </div>
-                                    <?php endif; ?>
-                                    <div class="detail-item">
-                                        <i class="fas fa-cubes" style="color: var(--gold);"></i>
-                                        <span class="detail-label">Toplam:</span>
-                                        <span class="detail-value"><?php echo $order['toplam_adet']; ?> adet</span>
-                                    </div>
-                                </div>
-
-                                <?php if ($order['aciklama']): ?>
-                                        <div class="detail-item" style="margin-top: 8px; width: 100%;">
-                                            <i class="fas fa-comment" style="color: var(--info);"></i>
-                                            <span class="detail-label">Not:</span>
-                                            <span class="detail-value"><?php echo htmlspecialchars($order['aciklama']); ?></span>
-                                        </div>
-                                <?php endif; ?>
-
-                                <?php if (count($order['items']) > 0): ?>
-                                        <table class="items-table">
-                                            <thead>
-                                                <tr>
-                                                    <th><i class="fas fa-box"></i> Ürün</th>
-                                                    <th style="text-align: center;"><i class="fas fa-hashtag"></i> Adet</th>
-                                                    <th><i class="fas fa-balance-scale"></i> Birim</th>
-                                                    <th style="text-align: right;"><i class="fas fa-lira-sign"></i> Birim Fiyat</th>
-                                                    <th style="text-align: right;"><i class="fas fa-calculator"></i> Toplam</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <?php foreach ($order['items'] as $item): ?>
-                                                        <tr>
-                                                            <td><strong><?php echo htmlspecialchars($item['urun_ismi']); ?></strong></td>
-                                                            <td style="text-align: center; font-weight: 600;"><?php echo $item['adet']; ?></td>
-                                                            <td><?php echo htmlspecialchars($item['birim']); ?></td>
-                                                            <td style="text-align: right;">
-                                                                <?php echo $item['birim_fiyat'] ? number_format($item['birim_fiyat'], 2, ',', '.') . ' ₺' : '-'; ?>
-                                                            </td>
-                                                            <td style="text-align: right; font-weight: 700; color: var(--primary);">
-                                                                <?php echo $item['toplam_tutar'] ? number_format($item['toplam_tutar'], 2, ',', '.') . ' ₺' : '-'; ?>
-                                                            </td>
-                                                        </tr>
-                                                <?php endforeach; ?>
-                                            </tbody>
-                                        </table>
-                                <?php endif; ?>
-                            </div>
-                    <?php endforeach; ?>
-            <?php else: ?>
-                    <div class="no-orders">
-                        <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
-                        <div style="font-size: 14px; font-weight: 600;">Bu müşteriye ait sipariş bulunmamaktadır.</div>
+                        <div class="status-badge <?php 
+                            switch ($order['durum']) {
+                                case 'beklemede': echo 'status-beklemede'; break;
+                                case 'onaylandi': echo 'status-onaylandi'; break;
+                                case 'tamamlandi': echo 'status-tamamlandi'; break;
+                                default: echo 'status-beklemede';
+                            }
+                        ?>">
+                            <?php 
+                            switch ($order['durum']) {
+                                case 'beklemede': echo '⏳ Beklemede'; break;
+                                case 'onaylandi': 
+                                    echo '✅ Onaylandı';
+                                    if ($order['kalan_tutar'] <= 0.01) {
+                                        echo ' <span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENDİ</span>';
+                                    } else {
+                                        echo ' <span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENMEDİ</span>';
+                                    }
+                                    break;
+                                case 'tamamlandi': 
+                                    echo '✔ Tamamlandı';
+                                    if ($order['kalan_tutar'] <= 0.01) {
+                                        echo ' <span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENDİ</span>';
+                                    } else {
+                                        echo ' <span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENMEDİ</span>';
+                                    }
+                                    break;
+                                default: echo $order['durum'];
+                            }
+                            ?>
+                        </div>
                     </div>
-            <?php endif; ?>
+
+                    <div class="order-meta">
+                        <div class="order-meta-item">
+                            <div class="label">Tarih</div>
+                            <div class="value"><?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?></div>
+                        </div>
+
+                        <div class="order-meta-item">
+                            <div class="label">Toplam Adet</div>
+                            <div class="value"><?php echo $order['toplam_adet']; ?> adet</div>
+                        </div>
+                        
+                        <div class="order-meta-item">
+                            <div class="label">Sipariş Tutarı</div>
+                            <div class="value" style="font-weight: bold;"><?php echo formatCurrency($order['hesaplanan_tutar']); ?></div>
+                        </div>
+                        
+                        <?php if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])): ?>
+                        <div class="order-meta-item">
+                            <div class="label">Ödenen</div>
+                            <div class="value" style="color: #10b981;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0); ?></div>
+                        </div>
+                        
+                        <?php if ($order['kalan_tutar'] > 0.01): ?>
+                        <div class="order-meta-item">
+                            <div class="label">Kalan</div>
+                            <div class="value" style="color: #ef4444; font-weight: bold;"><?php echo formatCurrency($order['kalan_tutar']); ?></div>
+                        </div>
+                        <?php endif; ?>
+                        <?php endif; ?>
+                    </div>
+
+                    <?php if ($order['aciklama']): ?>
+                        <div class="notes-area" style="margin-bottom: 10px;">
+                            <strong style="color: #4a0e63;">Not:</strong> <?php echo htmlspecialchars($order['aciklama']); ?>
+                        </div>
+                    <?php endif; ?>
+
+                    <?php if (count($order['items']) > 0): ?>
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 5%; text-align: center;">#</th>
+                                    <th style="width: 45%;">ÜRÜN</th>
+                                    <th style="width: 15%; text-align: center;">ADET</th>
+                                    <th style="width: 15%;">BİRİM</th>
+                                    <th style="width: 10%; text-align: right;">BİRİM FİYAT</th>
+                                    <th style="width: 10%; text-align: right;">TOPLAM</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($order['items'] as $index => $item): ?>
+                                <tr>
+                                    <td class="text-center"><?php echo $index + 1; ?></td>
+                                    <td><strong><?php echo htmlspecialchars($item['urun_ismi']); ?></strong></td>
+                                    <td class="text-center"><?php echo $item['adet']; ?></td>
+                                    <td><?php echo htmlspecialchars($item['birim']); ?></td>
+                                    <td class="text-right"><?php echo $item['birim_fiyat'] ? formatCurrency($item['birim_fiyat']) : '-'; ?></td>
+                                    <td class="text-right"><strong><?php echo $item['toplam_tutar'] ? formatCurrency($item['toplam_tutar']) : '-'; ?></strong></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    <?php endif; ?>
+                </div>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <div class="no-orders">
+                <i class="fas fa-inbox" style="font-size: 2.5rem; margin-bottom: 10px; opacity: 0.5;"></i>
+                <div style="font-size: 14px; font-weight: 600;">Bu müşteriye ait sipariş bulunmamaktadır.</div>
+            </div>
+        <?php endif; ?>
+
+        <!-- Footer -->
+        <div class="footer-note">
+            <p>
+                <i class="fas fa-shield-alt"></i> Bu doküman, IDO KOZMETİK ERP Kurumsal Bilgi Yönetim Sistemi altyapısı kullanılarak dijital ortamda güvenli olarak oluşturulmuştur. 
+                İşbu belge içeriğindeki tüm veriler, merkez veritabanı kayıtları ile anlık olarak senkronize edilmekte olup sistem tarafından doğruluğu teyit edilmiştir.
+                Elektronik ortamda onaylanan bu form, 5070 sayılı Elektronik İmza Kanunu standartlarına uygun olarak üretilmiş olup ıslak imza gerektirmeksizin hukuki geçerliliğini korumaktadır.
+                Veri bütünlüğü ve gizliliği uluslararası bilgi güvenliği standartları çerçevesinde korunmaktadır.
+                Belge üzerindeki bilgilerin sistem kayıtları dışında manuel olarak değiştirilmesi veya tahrif edilmesi durumunda belge geçersiz sayılacaktır.
+                Bu müşteri kartı, IDO KOZMETİK A.Ş. ticari faaliyetleri kapsamında müşteri ilişkileri yönetimi amacıyla hazırlanmış olup, içerdiği bilgiler gizlilik ilkesi çerçevesinde korunmaktadır.
+                Belgenin üçüncü şahıslarla paylaşılması, kopyalanması veya çoğaltılması şirket yazılı izni olmaksızın yasaktır.
+                6698 sayılı Kişisel Verilerin Korunması Kanunu (KVKK) kapsamında, bu belgede yer alan kişisel veriler yasal düzenlemelere uygun şekilde işlenmekte ve saklanmaktadır.
+                Müşteri bilgilerinin doğruluğu ve güncelliği, ilgili müşteri tarafından sağlanan beyanlar esas alınarak sisteme kaydedilmiştir.
+                IDO KOZMETİK, müşteri memnuniyeti ve kalite standartlarına bağlılığı ile ISO 9001:2015 sertifikasyon gerekliliklerini karşılamaktadır.
+                Bu belge, şirketimizin kurumsal arşiv yönetimi politikaları doğrultusunda elektronik ortamda saklanmakta olup, yasal saklama süreleri boyunca erişilebilir durumda tutulmaktadır.
+            </p>
         </div>
+
     </div>
 
-    <!-- jQuery and Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
+    <script>
+        function generatePDF() {
+            const element = document.getElementById('invoice-container');
+            const button = document.getElementById('download-btn');
+            
+            button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Dosya Hazırlanıyor...';
+            button.disabled = true;
 
+            const opt = {
+                margin:       0,
+                filename:     'Musteri_Karti_<?php echo $customer['musteri_id']; ?>.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, scrollY: 0 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function(){
+                 button.innerHTML = '<i class="fas fa-file-pdf"></i> PDF İNDİR';
+                 button.disabled = false;
+            });
+        }
+    </script>
+</body>
 </html>
