@@ -342,7 +342,7 @@ function formatCurrency($value) {
             text-align: left;
             color: #4a0e63;
         }
-        .data-table td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; }
+        .data-table td { padding: 10px 8px; border-bottom: 1px solid #eee; font-size: 13px; color: #333; white-space: nowrap; }
 
         .text-right { text-align: right; }
         .text-center { text-align: center; }
