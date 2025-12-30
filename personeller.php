@@ -55,6 +55,61 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
         .form-control {
             font-size: 0.8rem !important;
         }
+        /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        #employeeModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        #employeeModal .modal-header {
+            background: linear-gradient(135deg, #4a0e63, #7c2a99);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+        }
+        #employeeModal .modal-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        #employeeModal .modal-body {
+            padding: 10px 12px;
+            background: #fafafa;
+        }
+        #employeeModal .form-group {
+            margin-bottom: 0.4rem !important;
+        }
+        #employeeModal label {
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+            font-weight: 500;
+            color: #555;
+            display: block;
+        }
+        #employeeModal .form-control {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            height: 28px;
+            border-radius: 4px;
+        }
+        #employeeModal textarea.form-control {
+            height: auto;
+        }
+        #employeeModal .modal-footer {
+            background: #f5f5f5;
+            border-top: 1px solid #e5e7eb;
+            padding: 6px 12px;
+        }
+        #employeeModal .btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        #employeeModal .close {
+            opacity: 1;
+            text-shadow: none;
+            color: white;
+        }
     </style>
 </head>
 

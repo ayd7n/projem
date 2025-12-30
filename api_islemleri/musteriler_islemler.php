@@ -67,8 +67,70 @@ function getCustomers()
 
     $customers = [];
     while ($row = $result->fetch_assoc()) {
+        // Calculate balance for each customer
+        $musteri_id = $row['musteri_id'];
+        
+        // Get total order amount (only approved and completed orders)
+        $balance_query = "SELECT 
+            COALESCE(SUM(
+                (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id)
+            ), 0) as toplam_tutar,
+            COALESCE(SUM(s.odenen_tutar), 0) as odenen_tutar
+            FROM siparisler s 
+            WHERE s.musteri_id = $musteri_id 
+            AND s.durum IN ('onaylandi', 'tamamlandi')";
+        
+        $balance_result = $connection->query($balance_query);
+        $balance_data = $balance_result->fetch_assoc();
+        
+        $toplam_tutar = floatval($balance_data['toplam_tutar'] ?? 0);
+        $odenen_tutar = floatval($balance_data['odenen_tutar'] ?? 0);
+        $kalan_bakiye = $toplam_tutar - $odenen_tutar;
+        
+        // Count unpaid orders
+        $unpaid_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
+            WHERE s.musteri_id = $musteri_id 
+            AND s.durum IN ('onaylandi', 'tamamlandi')
+            AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+            AND (
+                (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
+                - COALESCE(s.odenen_tutar, 0)
+            ) > 0.01";
+        $unpaid_result = $connection->query($unpaid_query);
+        $unpaid_data = $unpaid_result->fetch_assoc();
+        $odenmemis_siparis = intval($unpaid_data['unpaid_count'] ?? 0);
+        
+        $row['toplam_tutar'] = $toplam_tutar;
+        $row['odenen_tutar'] = $odenen_tutar;
+        $row['kalan_bakiye'] = $kalan_bakiye;
+        $row['odenmemis_siparis'] = $odenmemis_siparis;
+        
         $customers[] = $row;
     }
+
+    // Calculate total balance for ALL customers (not just current page)
+    $total_balance_query = "SELECT 
+        COALESCE(SUM(
+            (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id)
+            - COALESCE(s.odenen_tutar, 0)
+        ), 0) as total_balance
+        FROM siparisler s 
+        WHERE s.durum IN ('onaylandi', 'tamamlandi')";
+    $total_balance_result = $connection->query($total_balance_query);
+    $total_balance_data = $total_balance_result->fetch_assoc();
+    $total_balance = max(0, floatval($total_balance_data['total_balance'] ?? 0));
+
+    // Calculate total unpaid orders count
+    $total_unpaid_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
+        WHERE s.durum IN ('onaylandi', 'tamamlandi')
+        AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+        AND (
+            (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
+            - COALESCE(s.odenen_tutar, 0)
+        ) > 0.01";
+    $total_unpaid_result = $connection->query($total_unpaid_query);
+    $total_unpaid_data = $total_unpaid_result->fetch_assoc();
+    $total_unpaid_orders = intval($total_unpaid_data['unpaid_count'] ?? 0);
 
     $response = [
         'status' => 'success',
@@ -77,6 +139,8 @@ function getCustomers()
             'current_page' => $page,
             'total_pages' => $total_pages,
             'total_customers' => $total_customers,
+            'total_balance' => $total_balance,
+            'total_unpaid_orders' => $total_unpaid_orders,
             'limit' => $limit
         ]
     ];

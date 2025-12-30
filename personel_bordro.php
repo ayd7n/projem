@@ -219,6 +219,10 @@ $current_month = date('n');
                                             <i class="fas fa-history"></i>
                                         </button>
                                     <?php endif; ?>
+                                    <a :href="'generate_bordro_pdf.php?personel_id=' + item.personel_id" 
+                                       target="_blank" class="btn btn-danger btn-sm" title="Bordro PDF">
+                                        <i class="fas fa-file-pdf"></i> PDF
+                                    </a>
                                 </td>
                                 <td><strong>{{ item.ad_soyad }}</strong></td>
                                 <td>{{ item.pozisyon || '-' }}</td>

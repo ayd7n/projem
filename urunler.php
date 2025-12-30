@@ -248,36 +248,64 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             font-size: 0.8rem;
         }
 
-        /* Modal Form Düzenlemeleri */
+        /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        #productModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
         #productModal .modal-header {
-            padding: 10px 15px;
+            background: linear-gradient(135deg, #4a0e63, #7c2a99);
+            color: white;
+            padding: 8px 15px;
+            border: none;
         }
         #productModal .modal-title {
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
         #productModal .modal-body {
-            padding: 15px 20px;
+            padding: 10px 12px;
+            background: #fafafa;
         }
         #productModal .form-group {
-            margin-bottom: 0.75rem !important;
+            margin-bottom: 0.4rem !important;
         }
         #productModal label {
-            font-size: 0.8rem;
+            font-size: 0.65rem;
             margin-bottom: 2px;
             font-weight: 500;
+            color: #555;
+            display: block;
         }
         #productModal .form-control {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            height: 28px;
+            border-radius: 4px;
+        }
+        #productModal textarea.form-control {
             height: auto;
         }
         #productModal .nav-tabs .nav-link {
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            padding: 4px 10px;
+            font-size: 0.75rem;
         }
         #productModal .btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        #productModal .modal-footer {
+            background: #f5f5f5;
+            border-top: 1px solid #e5e7eb;
             padding: 6px 12px;
-            font-size: 0.8rem;
+        }
+        #productModal .close {
+            opacity: 1;
+            text-shadow: none;
+            color: white;
         }
     </style>
 </head>

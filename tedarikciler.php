@@ -456,71 +456,125 @@ if (!yetkisi_var('page:view:tedarikciler')) {
         <!-- Supplier Modal -->
         <div class="modal fade" id="supplierModal" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg" role="document">
-                <div class="modal-content">
+                <div class="modal-content" style="border: none; border-radius: 8px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,0.12);">
                     <form @submit.prevent="saveSupplier">
-                        <div class="modal-header"
-                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                            <h5 class="modal-title">{{ modal.title }}</h5>
-                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
+                        <div class="modal-header" style="background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; padding: 8px 15px; border: none;">
+                            <h5 class="modal-title" style="font-size: 0.85rem; font-weight: 600;">
+                                <i class="fas fa-truck mr-1"></i>{{ modal.title }}
+                            </h5>
+                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 1; text-shadow: none;">
+                                <span aria-hidden="true" style="font-size: 1.2rem;">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body">
+                        <div class="modal-body" style="padding: 10px 12px; background: #fafafa;">
                             <input type="hidden" v-model="modal.data.tedarikci_id">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Tedarikçi Adı *</label>
-                                        <input type="text" class="form-control" v-model="modal.data.tedarikci_adi"
-                                            required>
+                            
+                            <!-- Temel Bilgiler -->
+                            <div style="background: white; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #e5e7eb;">
+                                <div style="font-size: 0.65rem; font-weight: 600; color: #4a0e63; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                                    <i class="fas fa-building"></i> Temel Bilgiler
+                                </div>
+                                <div class="row" style="margin: 0 -4px;">
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-1">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-user text-muted mr-1"></i>Tedarikçi Adı *
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.tedarikci_adi" required
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-1">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-id-card text-muted mr-1"></i>Vergi No / TC
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.vergi_no_tc"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Vergi No / TC</label>
-                                        <input type="text" class="form-control" v-model="modal.data.vergi_no_tc">
+                                <div class="form-group mb-0">
+                                    <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                        <i class="fas fa-user-tie text-muted mr-1"></i>Yetkili Kişi
+                                    </label>
+                                    <input type="text" class="form-control" v-model="modal.data.yetkili_kisi"
+                                        style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                </div>
+                            </div>
+
+                            <!-- İletişim Bilgileri -->
+                            <div style="background: white; border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; border: 1px solid #e5e7eb;">
+                                <div style="font-size: 0.65rem; font-weight: 600; color: #4a0e63; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                                    <i class="fas fa-address-book"></i> İletişim Bilgileri
+                                </div>
+                                <div class="row" style="margin: 0 -4px;">
+                                    <div class="col-md-4" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-phone text-muted mr-1"></i>Telefon
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.telefon"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-phone-alt text-muted mr-1"></i>Telefon 2
+                                            </label>
+                                            <input type="text" class="form-control" v-model="modal.data.telefon_2"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-envelope text-muted mr-1"></i>E-posta
+                                            </label>
+                                            <input type="email" class="form-control" v-model="modal.data.e_posta"
+                                                style="font-size: 0.75rem; padding: 4px 8px; height: 28px; border-radius: 4px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Telefon</label>
-                                        <input type="text" class="form-control" v-model="modal.data.telefon">
+
+                            <!-- Adres ve Notlar -->
+                            <div style="background: white; border-radius: 6px; padding: 8px 10px; border: 1px solid #e5e7eb;">
+                                <div style="font-size: 0.65rem; font-weight: 600; color: #4a0e63; text-transform: uppercase; margin-bottom: 6px; display: flex; align-items: center; gap: 4px;">
+                                    <i class="fas fa-sticky-note"></i> Adres & Notlar
+                                </div>
+                                <div class="row" style="margin: 0 -4px;">
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-map-marker-alt text-muted mr-1"></i>Adres
+                                            </label>
+                                            <textarea class="form-control" v-model="modal.data.adres" rows="2"
+                                                style="font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; resize: none;"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-6" style="padding: 0 4px;">
+                                        <div class="form-group mb-0">
+                                            <label style="font-size: 0.65rem; font-weight: 500; color: #555; margin-bottom: 2px; display: block;">
+                                                <i class="fas fa-comment-alt text-muted mr-1"></i>Açıklama / Notlar
+                                            </label>
+                                            <textarea class="form-control" v-model="modal.data.aciklama_notlar" rows="2"
+                                                style="font-size: 0.75rem; padding: 4px 8px; border-radius: 4px; resize: none;"></textarea>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>Telefon 2</label>
-                                        <input type="text" class="form-control" v-model="modal.data.telefon_2">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label>E-posta</label>
-                                        <input type="email" class="form-control" v-model="modal.data.e_posta">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Yetkili Kişi</label>
-                                <input type="text" class="form-control" v-model="modal.data.yetkili_kisi">
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Adres</label>
-                                <textarea class="form-control" v-model="modal.data.adres" rows="2"></textarea>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label>Açıklama / Notlar</label>
-                                <textarea class="form-control" v-model="modal.data.aciklama_notlar" rows="2"></textarea>
                             </div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                    class="fas fa-times"></i> İptal</button>
-                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Kaydet</button>
+                        <div class="modal-footer" style="background: #f5f5f5; border-top: 1px solid #e5e7eb; padding: 6px 12px;">
+                            <button type="button" class="btn btn-secondary" data-dismiss="modal"
+                                style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px;">
+                                <i class="fas fa-times mr-1"></i>İptal
+                            </button>
+                            <button type="submit" class="btn btn-primary"
+                                style="font-size: 0.75rem; padding: 4px 10px; border-radius: 4px; background: linear-gradient(135deg, #4a0e63, #7c2a99); border: none;">
+                                <i class="fas fa-save mr-1"></i>Kaydet
+                            </button>
                         </div>
                     </form>
                 </div>

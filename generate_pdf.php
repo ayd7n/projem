@@ -224,11 +224,9 @@ function formatDate($dateString) {
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 5%; text-align: center;">#</th>
-                    <th style="width: 50%;">MALZEME AÇIKLAMASI</th>
-                    <th style="width: 15%; text-align: center;">MİKTAR</th>
-                    <th style="width: 15%; text-align: right;">BİRİM FİYAT</th>
-                    <th style="width: 15%; text-align: right;">TOPLAM</th>
+                    <th style="width: 8%; text-align: center;">#</th>
+                    <th style="width: 70%;">MALZEME AÇIKLAMASI</th>
+                    <th style="width: 22%; text-align: center;">MİKTAR</th>
                 </tr>
             </thead>
             <tbody>
@@ -241,25 +239,10 @@ function formatDate($dateString) {
                             <br><small style="color: #666;"><?php echo htmlspecialchars($kalem['aciklama']); ?></small>
                         <?php endif; ?>
                     </td>
-                    <td class="text-center"><?php echo floatval($kalem['miktar']); ?> <?php echo htmlspecialchars($kalem['birim']); ?></td>
-                    <td class="text-right"><?php echo formatCurrency($kalem['birim_fiyat'], $kalem['para_birimi']); ?></td>
-                    <td class="text-right"><strong><?php echo formatCurrency($kalem['toplam_fiyat'], $kalem['para_birimi']); ?></strong></td>
+                    <td class="text-center"><strong><?php echo floatval($kalem['miktar']); ?> <?php echo htmlspecialchars($kalem['birim']); ?></strong></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
-        </table>
-
-        <table class="total-table">
-            <tr>
-                <td></td>
-                <td class="total-label">Ara Toplam:</td>
-                <td class="total-value"><?php echo formatCurrency($order['toplam_tutar'], $order['para_birimi']); ?></td>
-            </tr>
-            <tr class="grand-total">
-                <td></td>
-                <td class="total-label">GENEL TOPLAM:</td>
-                <td class="total-value"><?php echo formatCurrency($order['toplam_tutar'], $order['para_birimi']); ?></td>
-            </tr>
         </table>
 
         <?php if (!empty($order['aciklama'])): ?>

@@ -206,6 +206,61 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
         .form-control {
             font-size: 0.8rem !important;
         }
+        /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        #customerModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        #customerModal .modal-header {
+            background: linear-gradient(135deg, #4a0e63, #7c2a99);
+            color: white;
+            padding: 8px 15px;
+            border: none;
+        }
+        #customerModal .modal-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+        #customerModal .modal-body {
+            padding: 10px 12px;
+            background: #fafafa;
+        }
+        #customerModal .form-group {
+            margin-bottom: 0.4rem !important;
+        }
+        #customerModal label {
+            font-size: 0.65rem;
+            margin-bottom: 2px;
+            font-weight: 500;
+            color: #555;
+            display: block;
+        }
+        #customerModal .form-control {
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            height: 28px;
+            border-radius: 4px;
+        }
+        #customerModal textarea.form-control {
+            height: auto;
+        }
+        #customerModal .modal-footer {
+            background: #f5f5f5;
+            border-top: 1px solid #e5e7eb;
+            padding: 6px 12px;
+        }
+        #customerModal .btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        #customerModal .close {
+            opacity: 1;
+            text-shadow: none;
+            color: white;
+        }
     </style>
 </head>
 
@@ -274,12 +329,31 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                             @input="loadCustomers(1)" placeholder="Müşteri ara..."
                             style="font-size: 0.75rem; padding: 4px 8px;">
                     </div>
-                    <!-- Stat Kartı -->
+                    <!-- Stat Kartı - Müşteri Sayısı -->
                     <div class="stat-card-mini"
                         style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
                         <i class="fas fa-users mr-1"></i>
                         <span style="font-weight: 600;">{{ totalCustomers }}</span>
                         <span class="ml-1" style="opacity: 0.9;">Müşteri</span>
+                    </div>
+                    <!-- Stat Kartı - Toplam Bakiye -->
+                    <div v-if="totalBalance > 0" class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #dc2626, #ef4444); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-exclamation-triangle mr-1"></i>
+                        <span style="font-weight: 600;">{{ formatCurrency(totalBalance) }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Toplam Bakiye</span>
+                    </div>
+                    <div v-else class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #059669, #10b981); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-check-circle mr-1"></i>
+                        <span style="font-weight: 600;">Bakiye Yok</span>
+                    </div>
+                    <!-- Stat Kartı - Toplam Ödenmemiş Sipariş -->
+                    <div v-if="totalUnpaidOrders > 0" class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #d97706, #f59e0b); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span style="font-weight: 600;">{{ totalUnpaidOrders }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Ödenmemiş Sipariş</span>
                     </div>
                 </div>
             </div>
@@ -298,15 +372,17 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <th><i class="fas fa-envelope"></i> E-posta</th>
                                 <th><i class="fas fa-map-marker-alt"></i> Adres</th>
                                 <th><i class="fas fa-sticky-note"></i> Açıklama</th>
+                                <th><i class="fas fa-file-invoice"></i> Ödenmemiş</th>
+                                <th><i class="fas fa-wallet"></i> Bakiye</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="8" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="12" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="customers.length === 0">
-                                <td colspan="8" class="text-center p-4">Henüz kayıtlı müşteri bulunmuyor.</td>
+                                <td colspan="12" class="text-center p-4">Henüz kayıtlı müşteri bulunmuyor.</td>
                             </tr>
                             <tr v-for="customer in customers" :key="customer.musteri_id">
                                 <td class="actions">
@@ -338,6 +414,23 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 <td>{{ customer.e_posta || '-' }}</td>
                                 <td class="address-cell">{{ customer.adres || '-' }}</td>
                                 <td class="description-cell">{{ customer.aciklama_notlar || '-' }}</td>
+                                <td>
+                                    <span v-if="customer.odenmemis_siparis > 0" 
+                                          style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;">
+                                        <i class="fas fa-clock"></i> {{ customer.odenmemis_siparis }} sipariş
+                                    </span>
+                                    <span v-else style="color: #059669; font-size: 0.75rem;">-</span>
+                                </td>
+                                <td>
+                                    <span v-if="customer.kalan_bakiye > 0.01" 
+                                          style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;">
+                                        <i class="fas fa-exclamation-circle"></i> {{ formatCurrency(customer.kalan_bakiye) }}
+                                    </span>
+                                    <span v-else 
+                                          style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;">
+                                        <i class="fas fa-check-circle"></i> Temiz
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -516,6 +609,8 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                     currentPage: 1,
                     totalPages: 1,
                     totalCustomers: <?php echo $total_customers; ?>,
+                    totalBalance: 0,
+                    totalUnpaidOrders: 0,
                     limit: 10,
                     modal: {
                         title: '',
@@ -544,6 +639,9 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                 }
             },
             methods: {
+                formatCurrency(value) {
+                    return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' ₺';
+                },
                 showAlert(message, type) {
                     this.alert.message = message;
                     this.alert.type = type;
@@ -562,6 +660,23 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                 this.customers = response.data;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalCustomers = response.pagination.total_customers;
+                                
+                                // Calculate total balance from all customers on current page
+                                // Note: For accurate total, we use API's total_balance if available
+                                if (response.pagination.total_balance !== undefined) {
+                                    this.totalBalance = response.pagination.total_balance;
+                                } else {
+                                    // Fallback: calculate from current page data
+                                    this.totalBalance = this.customers.reduce((sum, c) => sum + (parseFloat(c.kalan_bakiye) || 0), 0);
+                                }
+                                
+                                // Get total unpaid orders
+                                if (response.pagination.total_unpaid_orders !== undefined) {
+                                    this.totalUnpaidOrders = response.pagination.total_unpaid_orders;
+                                } else {
+                                    // Fallback: calculate from current page data
+                                    this.totalUnpaidOrders = this.customers.reduce((sum, c) => sum + (parseInt(c.odenmemis_siparis) || 0), 0);
+                                }
                             } else {
                                 this.showAlert('Müşteriler yüklenirken hata oluştu.', 'danger');
                             }

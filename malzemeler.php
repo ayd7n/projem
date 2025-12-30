@@ -249,36 +249,64 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
             font-size: 0.8rem !important;
         }
 
-        /* Modal Form Düzenlemeleri */
+        /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        #materialModal .modal-content {
+            border: none;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
         #materialModal .modal-header {
-            padding: 10px 15px;
+            background: linear-gradient(135deg, #4a0e63, #7c2a99);
+            color: white;
+            padding: 8px 15px;
+            border: none;
         }
         #materialModal .modal-title {
-            font-size: 1.1rem;
+            font-size: 0.85rem;
+            font-weight: 600;
         }
         #materialModal .modal-body {
-            padding: 15px 20px;
+            padding: 10px 12px;
+            background: #fafafa;
         }
         #materialModal .form-group {
-            margin-bottom: 0.75rem !important;
+            margin-bottom: 0.4rem !important;
         }
         #materialModal label {
-            font-size: 0.8rem;
+            font-size: 0.65rem;
             margin-bottom: 2px;
             font-weight: 500;
+            color: #555;
+            display: block;
         }
         #materialModal .form-control {
-            font-size: 0.85rem;
-            padding: 0.4rem 0.75rem;
+            font-size: 0.75rem;
+            padding: 4px 8px;
+            height: 28px;
+            border-radius: 4px;
+        }
+        #materialModal textarea.form-control {
             height: auto;
         }
         #materialModal .nav-tabs .nav-link {
-            padding: 6px 12px;
-            font-size: 0.85rem;
+            padding: 4px 10px;
+            font-size: 0.75rem;
         }
         #materialModal .btn {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 4px;
+        }
+        #materialModal .modal-footer {
+            background: #f5f5f5;
+            border-top: 1px solid #e5e7eb;
             padding: 6px 12px;
-            font-size: 0.8rem;
+        }
+        #materialModal .close {
+            opacity: 1;
+            text-shadow: none;
+            color: white;
         }
     </style>
 </head>
