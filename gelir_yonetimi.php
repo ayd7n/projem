@@ -780,6 +780,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Tahsilat Ekle');
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
                 $('#para_birimi').val('TL'); // Set default currency
+                $('#currency-display').text('TL');
 
                 // Clear order selection
                 $('#siparis_secimi').val('');
@@ -803,6 +804,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#tarih').val(data.tarih.split(' ')[0]);
                         $('#tutar').val(data.tutar);
                         $('#para_birimi').val(data.para_birimi || 'TL');
+                        $('#currency-display').text(data.para_birimi || 'TL');
                         $('#kategori').val(data.kategori);
                         $('#odeme_tipi').val(data.odeme_tipi);
                         $('#musteri_adi').val(data.musteri_adi);
