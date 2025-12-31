@@ -70,7 +70,29 @@ function getCustomers()
         // Calculate balance for each customer
         $musteri_id = $row['musteri_id'];
         
-        // Get total order amount (only approved and completed orders)
+        // 1. Get active installment plan debt (sum of remaining amount of installments)
+        $plan_debt_query = "SELECT COALESCE(SUM(td.kalan_tutar), 0) as plan_debt 
+                            FROM taksit_detaylari td 
+                            JOIN taksit_planlari tp ON tp.plan_id = td.plan_id 
+                            WHERE tp.musteri_id = $musteri_id AND tp.durum != 'iptal'";
+        $plan_debt_res = $connection->query($plan_debt_query);
+        $plan_debt = ($plan_debt_res && $plan_debt_res->num_rows > 0) ? floatval($plan_debt_res->fetch_assoc()['plan_debt']) : 0;
+
+        // 2. Get IDs of orders linked to active plans (to exclude from regular balance)
+        $linked_orders_query = "SELECT tsb.siparis_id 
+                                FROM taksit_siparis_baglantisi tsb 
+                                JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id 
+                                WHERE tp.musteri_id = $musteri_id AND tp.durum != 'iptal'";
+        $linked_res = $connection->query($linked_orders_query);
+        $linked_ids = [];
+        if($linked_res) {
+            while($l = $linked_res->fetch_assoc()) {
+                $linked_ids[] = $l['siparis_id'];
+            }
+        }
+        $linked_ids_str = empty($linked_ids) ? "0" : implode(',', $linked_ids);
+
+        // 3. Get total order amount (excluding linked orders)
         $balance_query = "SELECT 
             COALESCE(SUM(
                 (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id)
@@ -78,27 +100,40 @@ function getCustomers()
             COALESCE(SUM(s.odenen_tutar), 0) as odenen_tutar
             FROM siparisler s 
             WHERE s.musteri_id = $musteri_id 
-            AND s.durum IN ('onaylandi', 'tamamlandi')";
+            AND s.durum IN ('onaylandi', 'tamamlandi')
+            AND s.siparis_id NOT IN ($linked_ids_str)";
         
         $balance_result = $connection->query($balance_query);
-        $balance_data = $balance_result->fetch_assoc();
+        $balance_data = ($balance_result) ? $balance_result->fetch_assoc() : ['toplam_tutar'=>0, 'odenen_tutar'=>0];
         
         $toplam_tutar = floatval($balance_data['toplam_tutar'] ?? 0);
         $odenen_tutar = floatval($balance_data['odenen_tutar'] ?? 0);
-        $kalan_bakiye = $toplam_tutar - $odenen_tutar;
+        
+        // Final Balance = (Regular Orders Total - Regular Orders Paid) + Plan Debt
+        $kalan_bakiye = ($toplam_tutar - $odenen_tutar) + $plan_debt;
         
         // Count unpaid orders
-        $unpaid_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
+        // 1. Regular unpaid orders (NOT in any active/completed plan)
+        $unpaid_regular_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
             WHERE s.musteri_id = $musteri_id 
             AND s.durum IN ('onaylandi', 'tamamlandi')
-            AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+            AND s.siparis_id NOT IN ($linked_ids_str)
             AND (
                 (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
                 - COALESCE(s.odenen_tutar, 0)
             ) > 0.01";
-        $unpaid_result = $connection->query($unpaid_query);
-        $unpaid_data = $unpaid_result->fetch_assoc();
-        $odenmemis_siparis = intval($unpaid_data['unpaid_count'] ?? 0);
+        $unpaid_regular_res = $connection->query($unpaid_regular_query);
+        $unpaid_regular_count = ($unpaid_regular_res) ? intval($unpaid_regular_res->fetch_assoc()['unpaid_count'] ?? 0) : 0;
+
+        // 2. Orders in ACTIVE plans (considered unpaid/in-progress)
+        $unpaid_plan_orders_query = "SELECT COUNT(DISTINCT tsb.siparis_id) as plan_orders 
+                                     FROM taksit_siparis_baglantisi tsb 
+                                     JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id 
+                                     WHERE tp.musteri_id = $musteri_id AND tp.durum = 'aktif'";
+        $unpaid_plan_orders_res = $connection->query($unpaid_plan_orders_query);
+        $unpaid_plan_orders_count = ($unpaid_plan_orders_res) ? intval($unpaid_plan_orders_res->fetch_assoc()['plan_orders'] ?? 0) : 0;
+        
+        $odenmemis_siparis = $unpaid_regular_count + $unpaid_plan_orders_count;
         
         $row['toplam_tutar'] = $toplam_tutar;
         $row['odenen_tutar'] = $odenen_tutar;
@@ -108,29 +143,52 @@ function getCustomers()
         $customers[] = $row;
     }
 
-    // Calculate total balance for ALL customers (not just current page)
+    // Calculate total balance for ALL customers
+    // 1. Total Debt from Active Plans
+    $plan_debt_total_query = "SELECT COALESCE(SUM(td.kalan_tutar), 0) as total 
+                              FROM taksit_detaylari td 
+                              JOIN taksit_planlari tp ON tp.plan_id = td.plan_id 
+                              WHERE tp.durum != 'iptal'";
+    $plan_debt_total_res = $connection->query($plan_debt_total_query);
+    $total_plan_debt = ($plan_debt_total_res) ? floatval($plan_debt_total_res->fetch_assoc()['total']) : 0;
+
+    // 2. Total Debt from Regular Orders (NOT in active plans)
     $total_balance_query = "SELECT 
         COALESCE(SUM(
             (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id)
             - COALESCE(s.odenen_tutar, 0)
-        ), 0) as total_balance
+        ), 0) as total_regular_debt
         FROM siparisler s 
-        WHERE s.durum IN ('onaylandi', 'tamamlandi')";
-    $total_balance_result = $connection->query($total_balance_query);
-    $total_balance_data = $total_balance_result->fetch_assoc();
-    $total_balance = max(0, floatval($total_balance_data['total_balance'] ?? 0));
+        WHERE s.durum IN ('onaylandi', 'tamamlandi')
+        AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')";
+    
+    $total_balance_res = $connection->query($total_balance_query);
+    $total_regular_debt = ($total_balance_res) ? floatval($total_balance_res->fetch_assoc()['total_regular_debt'] ?? 0) : 0;
+
+    $total_balance = max(0, $total_regular_debt + $total_plan_debt);
 
     // Calculate total unpaid orders count
-    $total_unpaid_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
+    // 1. Regular Unpaid
+    $total_unpaid_regular_query = "SELECT COUNT(*) as unpaid_count FROM siparisler s 
         WHERE s.durum IN ('onaylandi', 'tamamlandi')
         AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+        AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
         AND (
             (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
             - COALESCE(s.odenen_tutar, 0)
         ) > 0.01";
-    $total_unpaid_result = $connection->query($total_unpaid_query);
-    $total_unpaid_data = $total_unpaid_result->fetch_assoc();
-    $total_unpaid_orders = intval($total_unpaid_data['unpaid_count'] ?? 0);
+    $total_unpaid_regular_res = $connection->query($total_unpaid_regular_query);
+    $total_unpaid_regular = ($total_unpaid_regular_res) ? intval($total_unpaid_regular_res->fetch_assoc()['unpaid_count'] ?? 0) : 0;
+
+    // 2. Plan Linked (Active Plans)
+    $total_unpaid_plan_query = "SELECT COUNT(DISTINCT tsb.siparis_id) as plan_orders 
+                                FROM taksit_siparis_baglantisi tsb 
+                                JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id 
+                                WHERE tp.durum = 'aktif'";
+    $total_unpaid_plan_res = $connection->query($total_unpaid_plan_query);
+    $total_unpaid_plan = ($total_unpaid_plan_res) ? intval($total_unpaid_plan_res->fetch_assoc()['plan_orders'] ?? 0) : 0;
+
+    $total_unpaid_orders = $total_unpaid_regular + $total_unpaid_plan;
 
     $response = [
         'status' => 'success',

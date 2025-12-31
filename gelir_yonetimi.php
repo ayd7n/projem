@@ -458,7 +458,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 </div>
             </div>
 
-            <!-- Stat 3: Total Receivables -->
+            <!-- Stat 3: Total Receivables (Includes Installments) -->
             <div class="stat-card red">
                 <div class="stat-icon">
                     <i class="fas fa-hand-holding-usd"></i>
@@ -468,69 +468,239 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                     <div class="stat-label">Toplam Bekleyen Alacak</div>
                 </div>
             </div>
+            
+            <!-- Stat 4: Active Installment Plans -->
+            <div class="stat-card blue">
+                <div class="stat-icon">
+                    <i class="fas fa-file-invoice-dollar"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="activePlansCount">0</div>
+                    <div class="stat-label">Aktif Taksit Planı</div>
+                </div>
+            </div>
+
+            <!-- Stat 5: Overdue Installments -->
+            <div class="stat-card red">
+                <div class="stat-icon">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="overdueInstallmentsTotal">0,00 TL</div>
+                    <div class="stat-label text-danger font-weight-bold" id="overdueInstallmentsLabel">Gecikmiş Taksit (0)</div>
+                </div>
+            </div>
         </div>
 
-        <!-- Data Table Card -->
-        <div class="content-card">
-            <div class="card-header">
-                <div class="d-flex align-items-center">
-                    <button id="addIncomeBtn" class="btn btn-success">
-                        <i class="fas fa-plus"></i> Yeni Tahsilat Ekle
-                    </button>
-                </div>
+        <!-- Tabs -->
+        <ul class="nav nav-tabs mb-3" id="incomeTabs" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" id="tahsilat-tab" data-toggle="tab" href="#tahsilatlar" role="tab" aria-controls="tahsilatlar" aria-selected="true">
+                    <i class="fas fa-list"></i> Tahsilat Listesi
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" id="taksit-tab" data-toggle="tab" href="#taksitler" role="tab" aria-controls="taksitler" aria-selected="false">
+                    <i class="fas fa-calendar-alt"></i> Taksit Planları
+                </a>
+            </li>
+        </ul>
 
-                <div class="d-flex align-items-center" style="gap: 15px;">
-                    <!-- Search Box -->
-                    <div class="input-group search-group" style="width: 300px;">
-                        <input type="text" class="form-control" id="searchInput"
-                            placeholder="Müşteri veya Sipariş No ara...">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary border-left-0 bg-white" type="button"
-                                id="clearSearchBtn">
-                                <i class="fas fa-times"></i>
+        <div class="tab-content" id="incomeTabsContent">
+            <!-- Tahsilatlar Tab -->
+            <div class="tab-pane fade show active" id="tahsilatlar" role="tabpanel" aria-labelledby="tahsilat-tab">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <button id="addIncomeBtn" class="btn btn-success">
+                                <i class="fas fa-plus"></i> Yeni Tahsilat Ekle
                             </button>
+                        </div>
+
+                        <div class="d-flex align-items-center" style="gap: 15px;">
+                            <!-- Search Box -->
+                            <div class="input-group search-group" style="width: 300px;">
+                                <input type="text" class="form-control" id="searchInput"
+                                    placeholder="Müşteri veya Sipariş No ara...">
+                                <div class="input-group-append">
+                                    <button class="btn btn-outline-secondary border-left-0 bg-white" type="button"
+                                        id="clearSearchBtn">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>İşlemler</th>
+                                        <th>Tarih</th>
+                                        <th>Kategori</th>
+                                        <th>Tutar</th>
+                                        <th>Para Birimi</th>
+                                        <th>Ödeme Tipi</th>
+                                        <th>Müşteri</th>
+                                        <th>Açıklama</th>
+                                        <th>Kaydeden</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="incomesTableBody">
+                                    <tr>
+                                        <td colspan="9" class="text-center p-5 text-muted">Veriler yükleniyor...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top">
+                            <div class="records-per-page text-muted">
+                                <small>Sayfa başına: </small>
+                                <select class="custom-select custom-select-sm ml-2 form-control-sm d-inline-block"
+                                    id="perPageSelect" style="width: auto;">
+                                    <option value="10">10</option>
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0"
+                                    id="incomesPagination"></ul>
+                            </nav>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="table table-hover mb-0">
-                        <thead>
-                            <tr>
-                                <th>İşlemler</th>
-                                <th>Tarih</th>
-                                <th>Kategori</th>
-                                <th>Tutar</th>
-                                <th>Para Birimi</th>
-                                <th>Ödeme Tipi</th>
-                                <th>Müşteri</th>
-                                <th>Açıklama</th>
-                                <th>Kaydeden</th>
-                            </tr>
-                        </thead>
-                        <tbody id="incomesTableBody">
-                            <tr>
-                                <td colspan="9" class="text-center p-5 text-muted">Veriler yükleniyor...</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center p-3 border-top">
-                    <div class="records-per-page text-muted">
-                        <small>Sayfa başına: </small>
-                        <select class="custom-select custom-select-sm ml-2 form-control-sm d-inline-block"
-                            id="perPageSelect" style="width: auto;">
-                            <option value="10">10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                        </select>
+            <!-- Taksitler Tab -->
+            <div class="tab-pane fade" id="taksitler" role="tabpanel" aria-labelledby="taksit-tab">
+                <div class="content-card">
+                    <div class="card-header">
+                        <div class="d-flex align-items-center">
+                            <button id="createPlanBtn" class="btn btn-primary">
+                                <i class="fas fa-folder-plus"></i> Yeni Taksit Planı Oluştur
+                            </button>
+                        </div>
                     </div>
-                    <nav>
-                        <ul class="pagination pagination-sm justify-content-center justify-content-md-end mb-0"
-                            id="incomesPagination"></ul>
-                    </nav>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>İşlemler</th>
+                                        <th>Müşteri</th>
+                                        <th>Toplam Tutar</th>
+                                        <th>Taksit Sayısı</th>
+                                        <th>Ödenen</th>
+                                        <th>Başlangıç</th>
+                                        <th>Durum</th>
+                                        <th>Açıklama</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="plansTableBody">
+                                    <tr>
+                                        <td colspan="8" class="text-center p-5 text-muted">Planlar yükleniyor...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Plan Modal -->
+    <div class="modal fade" id="createPlanModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title"><i class="fas fa-file-invoice-dollar"></i> Taksit Planı Oluştur</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <form id="createPlanForm">
+                        <input type="hidden" name="action" value="create_installment_plan">
+                        
+                        <!-- Step 1: Select Customer -->
+                        <div class="form-group">
+                            <label class="font-weight-bold">1. Müşteri Seçimi</label>
+                            <select class="form-control" id="planCustomerSelect" name="musteri_id" required>
+                                <option value="">Yükleniyor...</option>
+                            </select>
+                            <small class="text-muted">Sadece borçlu siparişi olan müşteriler listelenir.</small>
+                        </div>
+
+                        <!-- Step 2: Select Orders -->
+                        <div class="form-group" id="orderSelectionArea" style="display:none;">
+                            <label class="font-weight-bold">2. Sipariş Seçimi (Bir veya Birden Fazla)</label>
+                            <div class="table-responsive" style="max-height: 200px; overflow-y: auto; border: 1px solid #ddd;">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <thead class="thead-light">
+                                        <tr>
+                                            <th style="width: 30px;"><input type="checkbox" id="selectAllOrders"></th>
+                                            <th>Sipariş No</th>
+                                            <th>Tarih</th>
+                                            <th>Toplam</th>
+                                            <th>Kalan</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="customerOrdersTable"></tbody>
+                                </table>
+                            </div>
+                            <div class="text-right mt-2 font-weight-bold text-danger">
+                                Seçilen Toplam Anapara: <span id="selectedPrincipal">0.00</span> TL
+                            </div>
+                        </div>
+
+                        <!-- Step 3: Plan Config -->
+                        <div class="form-row bg-light p-3 rounded border mb-3">
+                            <div class="form-group col-md-4">
+                                <label>Taksit Sayısı</label>
+                                <input type="number" class="form-control" name="taksit_sayisi" id="planInstallmentCount" value="3" min="1" max="60" required>
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>Vade Farkı Oranı (%)</label>
+                                <input type="number" class="form-control" name="vade_farki_orani" id="planInterestRate" value="0" min="0" step="0.01">
+                            </div>
+                            <div class="form-group col-md-4">
+                                <label>İlk Taksit Tarihi</label>
+                                <input type="date" class="form-control" name="baslangic_tarihi" value="<?php echo date('Y-m-d'); ?>" required>
+                            </div>
+                            <div class="col-12 mt-2">
+                                <div class="alert alert-info mb-0 p-2">
+                                    <strong>Hesaplanan Toplam:</strong> <span id="calculatedTotal">0.00</span> TL 
+                                    (Aylık Yaklaşık: <span id="monthlyAmount">0.00</span> TL)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Plan Açıklaması</label>
+                            <textarea class="form-control" name="aciklama" rows="2" placeholder="Örn: 2025 Yaz sezonu ödeme planı"></textarea>
+                        </div>
+
+                        <div class="text-right">
+                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Planı Oluştur</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plan Details Modal -->
+    <div class="modal fade" id="planDetailsModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-info text-white">
+                    <h5 class="modal-title">Plan Detayları</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body">
+                    <div id="planDetailsContent">Yükleniyor...</div>
                 </div>
             </div>
         </div>
@@ -725,29 +895,329 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $.get(api_url, { action: 'get_pending_stats' }, function (response) {
                     const res = JSON.parse(response);
                     if (res.status === 'success') {
-                        $('#pendingCount').text(res.data.count);
+                        // 1. Pending Orders Count
+                        $('#pendingCount').text(res.data.pending_orders_count);
 
-                        // Handle multiple currencies for pending totals
-                        let pendingHtml = '';
-                        if (res.data.totals && Object.keys(res.data.totals).length > 0) {
+                        // 2. Total Receivables (Orders + Installments)
+                        let receivablesHtml = '';
+                        if (res.data.total_receivables && Object.keys(res.data.total_receivables).length > 0) {
                             let parts = [];
-                            for (const [curr, val] of Object.entries(res.data.totals)) {
+                            for (const [curr, val] of Object.entries(res.data.total_receivables)) {
                                 if (parseFloat(val) > 0.01) {
                                     parts.push(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(val) + ' ' + curr);
                                 }
                             }
-                            pendingHtml = parts.length > 0 ? parts.join(' <br> ') : '0,00 TL';
+                            receivablesHtml = parts.length > 0 ? parts.join(' <br> ') : '0,00 TL';
                         } else {
-                            // Fallback or empty
-                            pendingHtml = '0,00 TL';
+                            receivablesHtml = '0,00 TL';
                         }
-                        $('#pendingTotal').html(pendingHtml);
+                        $('#pendingTotal').html(receivablesHtml);
+
+                        // 3. Active Plans Count
+                        $('#activePlansCount').text(res.data.active_plans_count);
+
+                        // 4. Overdue Installments
+                        const overdue = res.data.overdue_installments;
+                        $('#overdueInstallmentsLabel').text(`Gecikmiş Taksit (${overdue.count})`);
+                        
+                        let overdueHtml = '';
+                        if (overdue.totals && Object.keys(overdue.totals).length > 0) {
+                            let parts = [];
+                            for (const [curr, val] of Object.entries(overdue.totals)) {
+                                if (parseFloat(val) > 0.01) {
+                                    parts.push(new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2 }).format(val) + ' ' + curr);
+                                }
+                            }
+                            overdueHtml = parts.length > 0 ? parts.join(' <br> ') : '0,00 TL';
+                        } else {
+                            overdueHtml = '0,00 TL';
+                        }
+                        $('#overdueInstallmentsTotal').html(overdueHtml);
                     }
                 });
             }
 
+            // --- Installment Plan Logic ---
+
+            function loadInstallmentPlans(page = 1) {
+                $('#plansTableBody').html('<tr><td colspan="8" class="text-center">Yükleniyor...</td></tr>');
+                $.get(api_url, { action: 'get_installment_plans', page: page }, function(response) {
+                    const res = JSON.parse(response);
+                    if(res.status === 'success') {
+                        let html = '';
+                        if(res.data.length === 0) {
+                            html = '<tr><td colspan="8" class="text-center">Henüz plan oluşturulmamış.</td></tr>';
+                        } else {
+                            res.data.forEach(p => {
+                                const statusColors = {'aktif': 'badge-success', 'tamamlandi': 'badge-secondary', 'iptal': 'badge-danger'};
+                                const statusLabels = {'aktif': 'Aktif', 'tamamlandi': 'Tamamlandı', 'iptal': 'İptal'};
+                                
+                                html += `
+                                    <tr>
+                                        <td>
+                                            <button class="btn btn-info btn-sm view-plan-btn" data-id="${p.plan_id}"><i class="fas fa-eye"></i> Detay</button>
+                                            ${p.durum === 'aktif' ? `<button class="btn btn-danger btn-sm cancel-plan-btn" data-id="${p.plan_id}"><i class="fas fa-times"></i> İptal</button>` : ''}
+                                        </td>
+                                        <td>${p.musteri_adi}</td>
+                                        <td class="font-weight-bold">${new Intl.NumberFormat('tr-TR', {minimumFractionDigits:2}).format(p.toplam_odenecek)} ${p.para_birimi}</td>
+                                        <td>${p.odenen_taksit} / ${p.toplam_taksit_sayisi}</td>
+                                        <td>${new Intl.NumberFormat('tr-TR', {minimumFractionDigits:2}).format(p.odenen_tutar || 0)} ${p.para_birimi}</td>
+                                        <td>${new Date(p.baslangic_tarihi).toLocaleDateString('tr-TR')}</td>
+                                        <td><span class="badge ${statusColors[p.durum]}">${statusLabels[p.durum]}</span></td>
+                                        <td>${p.aciklama}</td>
+                                    </tr>
+                                `;
+                            });
+                        }
+                        $('#plansTableBody').html(html);
+                    }
+                });
+            }
+
+            // Tab Switch Listener
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+                if (e.target.id === 'taksit-tab') {
+                    loadInstallmentPlans();
+                } else {
+                    loadIncomes(); // Reload incomes when switching back
+                }
+            });
+
+            $('#createPlanBtn').click(function() {
+                // Load customers
+                $.get(api_url, { action: 'get_customers_with_debt' }, function(response) {
+                    const res = JSON.parse(response);
+                    let opts = '<option value="">Seçiniz...</option>';
+                    if(res.status === 'success') {
+                        res.data.forEach(c => {
+                            opts += `<option value="${c.musteri_id}">${c.musteri_adi}</option>`;
+                        });
+                    }
+                    $('#planCustomerSelect').html(opts);
+                    $('#orderSelectionArea').hide();
+                    $('#customerOrdersTable').empty();
+                    $('#createPlanForm')[0].reset();
+                    $('#createPlanModal').modal('show');
+                });
+            });
+
+            $('#planCustomerSelect').change(function() {
+                const cid = $(this).val();
+                if(!cid) {
+                    $('#orderSelectionArea').hide();
+                    return;
+                }
+                
+                $.get(api_url, { action: 'get_customer_orders_for_plan', musteri_id: cid }, function(response) {
+                    const res = JSON.parse(response);
+                    let html = '';
+                    if(res.status === 'success' && res.data.length > 0) {
+                        res.data.forEach(o => {
+                            html += `
+                                <tr>
+                                    <td><input type="checkbox" class="order-check" value="${o.siparis_id}" data-amount="${o.kalan_tutar}"></td>
+                                    <td>#${o.siparis_id}</td>
+                                    <td>${new Date(o.tarih).toLocaleDateString('tr-TR')}</td>
+                                    <td>${new Intl.NumberFormat('tr-TR').format(o.toplam_tutar)} ${o.para_birimi}</td>
+                                    <td class="text-danger font-weight-bold">${new Intl.NumberFormat('tr-TR').format(o.kalan_tutar)} ${o.para_birimi}</td>
+                                </tr>
+                            `;
+                        });
+                        $('#customerOrdersTable').html(html);
+                        $('#orderSelectionArea').show();
+                    } else {
+                        $('#customerOrdersTable').html('<tr><td colspan="5">Borçlu sipariş bulunamadı.</td></tr>');
+                        $('#orderSelectionArea').show();
+                    }
+                });
+            });
+
+            // Calculation Logic
+            function calculatePlan() {
+                let principal = 0;
+                $('.order-check:checked').each(function() {
+                    principal += parseFloat($(this).data('amount'));
+                });
+                $('#selectedPrincipal').text(new Intl.NumberFormat('tr-TR').format(principal));
+
+                const count = parseInt($('#planInstallmentCount').val()) || 1;
+                const rate = parseFloat($('#planInterestRate').val()) || 0;
+                
+                const interest = principal * (rate / 100);
+                const total = principal + interest;
+                const monthly = total / count;
+
+                $('#calculatedTotal').text(new Intl.NumberFormat('tr-TR').format(total));
+                $('#monthlyAmount').text(new Intl.NumberFormat('tr-TR').format(monthly));
+            }
+
+            $(document).on('change', '.order-check, #planInstallmentCount, #planInterestRate', calculatePlan);
+            
+            $('#selectAllOrders').change(function() {
+                $('.order-check').prop('checked', $(this).prop('checked'));
+                calculatePlan();
+            });
+
+            $('#createPlanForm').submit(function(e) {
+                e.preventDefault();
+                // Check if orders selected
+                if($('.order-check:checked').length === 0) {
+                    Swal.fire('Hata', 'En az bir sipariş seçmelisiniz.', 'warning');
+                    return;
+                }
+                
+                const orderIds = [];
+                $('.order-check:checked').each(function() { orderIds.push($(this).val()); });
+                
+                const formData = $(this).serializeArray();
+                formData.push({name: 'siparis_ids[]', value: orderIds}); // Use map if backend expects multiple keys, but simple push works if tailored or use jQuery param properly
+                
+                // Construct proper data object for arrays
+                let data = {
+                    action: 'create_installment_plan',
+                    musteri_id: $('#planCustomerSelect').val(),
+                    siparis_ids: orderIds,
+                    taksit_sayisi: $('#planInstallmentCount').val(),
+                    vade_farki_orani: $('#planInterestRate').val(),
+                    baslangic_tarihi: $('input[name="baslangic_tarihi"]').val(),
+                    aciklama: $('textarea[name="aciklama"]').val()
+                };
+
+                $.post(api_url, data, function(response) {
+                    const res = JSON.parse(response);
+                    if(res.status === 'success') {
+                        $('#createPlanModal').modal('hide');
+                        Swal.fire('Başarılı', res.message, 'success');
+                        loadInstallmentPlans();
+                        loadPendingStats(); // Anlık kutucuk güncellemesi
+                        loadPendingOrders(); // Bekleyen sipariş listesi güncellemesi
+                    } else {
+                        Swal.fire('Hata', res.message, 'error');
+                    }
+                });
+            });
+
+            $(document).on('click', '.cancel-plan-btn', function() {
+                const pid = $(this).data('id');
+                Swal.fire({
+                    title: 'Emin misiniz?',
+                    text: 'Bu taksit planı iptal edilecek. Bağlı siparişler tekrar tahsilat listesinde borçlu olarak görünecek.',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Evet, İptal Et',
+                    cancelButtonText: 'Hayır'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(api_url, { action: 'cancel_installment_plan', plan_id: pid }, function(response) {
+                            const res = JSON.parse(response);
+                            if(res.status === 'success') {
+                                Swal.fire('İptal Edildi', res.message, 'success');
+                                loadInstallmentPlans();
+                                loadPendingStats();
+                                loadPendingOrders();
+                            } else {
+                                Swal.fire('Hata', res.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
+            $(document).on('click', '.view-plan-btn', function() {
+                const pid = $(this).data('id');
+                $('#planDetailsContent').html('Yükleniyor...');
+                $('#planDetailsModal').modal('show');
+                
+                $.get(api_url, { action: 'get_plan_details', plan_id: pid }, function(response) {
+                    const res = JSON.parse(response);
+                    if(res.status === 'success') {
+                        const p = res.plan;
+                        let html = `
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <h6>Müşteri: <b>${p.musteri_adi}</b></h6>
+                                    <h6>Toplam Borç: <b>${new Intl.NumberFormat('tr-TR').format(p.toplam_odenecek)} ${p.para_birimi}</b></h6>
+                                </div>
+                                <div class="col-md-6 text-right">
+                                    <span class="badge badge-secondary">Plan #${p.plan_id}</span>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-sm">
+                                <thead class="thead-light"><tr><th>No</th><th>Vade</th><th>Tutar</th><th>Kalan</th><th>Durum</th><th>İşlem</th></tr></thead>
+                                <tbody>
+                        `;
+                        
+                        res.installments.forEach(i => {
+                            let btn = '';
+                            if(i.durum !== 'odendi') {
+                                btn = `<button class="btn btn-success btn-sm btn-action pay-installment-btn" data-id="${i.taksit_id}" title="Ödeme Al"><i class="fas fa-check"></i></button>`;
+                            } else {
+                                btn = `<i class="fas fa-check-circle text-success"></i> ${new Date(i.odeme_tarihi).toLocaleDateString('tr-TR')}`;
+                            }
+                            
+                            // Check overdue
+                            let rowClass = '';
+                            if(i.durum !== 'odendi' && new Date(i.vade_tarihi) < new Date()) {
+                                rowClass = 'table-danger';
+                            }
+                            
+                            html += `
+                                <tr class="${rowClass}">
+                                    <td>${i.sira_no}</td>
+                                    <td>${new Date(i.vade_tarihi).toLocaleDateString('tr-TR')}</td>
+                                    <td>${new Intl.NumberFormat('tr-TR').format(i.tutar)}</td>
+                                    <td>${new Intl.NumberFormat('tr-TR').format(i.kalan_tutar)}</td>
+                                    <td>${i.durum}</td>
+                                    <td>${btn}</td>
+                                </tr>
+                            `;
+                        });
+                        html += '</tbody></table>';
+                        
+                        html += '<h6 class="mt-3">Kapsanan Siparişler</h6><ul>';
+                        res.orders.forEach(o => {
+                            html += `<li>Sipariş #${o.siparis_id} - ${new Intl.NumberFormat('tr-TR').format(o.tutar_katkisi)} katkı</li>`;
+                        });
+                        html += '</ul>';
+                        
+                        $('#planDetailsContent').html(html);
+                    }
+                });
+            });
+
+            $(document).on('click', '.pay-installment-btn', function() {
+                const tid = $(this).data('id');
+                Swal.fire({
+                    title: 'Ödeme Al',
+                    text: 'Bu taksit için ödeme kaydı oluşturulacak.',
+                    input: 'select',
+                    inputOptions: {
+                        'Nakit': 'Nakit',
+                        'Kredi Kartı': 'Kredi Kartı',
+                        'Havale/EFT': 'Havale/EFT'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Öde'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        $.post(api_url, { action: 'pay_installment', taksit_id: tid, odeme_tipi: result.value }, function(response) {
+                            const res = JSON.parse(response);
+                            if(res.status === 'success') {
+                                Swal.fire('Ödendi', res.message, 'success');
+                                $('#planDetailsModal').modal('hide');
+                                loadInstallmentPlans();
+                                loadPendingStats(); // Anlık kutucuk güncellemesi
+                            } else {
+                                Swal.fire('Hata', res.message, 'error');
+                            }
+                        });
+                    }
+                });
+            });
+
             // Initial load
             loadIncomes();
+
             loadPendingStats();
 
             $('#searchInput').on('input', function () {

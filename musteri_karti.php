@@ -139,19 +139,53 @@ if (!$customer) {
     die('Müşteri bulunamadı.');
 }
 
-// Get all orders for this customer (excluding cancelled orders)
-// Sort by payment status (unpaid first) then by date
+// Get all orders for this customer
+// Sort by date DESC (Newest first) as requested
 $orders_query = "SELECT s.*, 
                  (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam_tutar_hesaplanan
                  FROM siparisler s 
                  WHERE s.musteri_id = ? AND s.durum != 'iptal_edildi' 
-                 ORDER BY 
-                    CASE WHEN s.odeme_durumu IS NULL OR s.odeme_durumu = 'bekliyor' OR s.odeme_durumu = 'kismi_odendi' THEN 0 ELSE 1 END,
-                    s.tarih DESC";
+                 ORDER BY s.tarih DESC";
 $orders_stmt = $connection->prepare($orders_query);
 $orders_stmt->bind_param('i', $musteri_id);
 $orders_stmt->execute();
 $orders_result = $orders_stmt->get_result();
+
+// --- INSTALLMENT PLAN LOGIC ---
+// Fetch active installment plans
+$plans_query = "SELECT * FROM taksit_planlari WHERE musteri_id = $musteri_id AND durum != 'iptal' ORDER BY baslangic_tarihi DESC";
+$plans_result = $connection->query($plans_query);
+$installment_plans = [];
+$total_plan_debt = 0;
+$order_plan_map = []; // Map siparis_id -> plan details
+
+while($plan = $plans_result->fetch_assoc()) {
+    // Calculate paid amount for this plan from details
+    $stats = $connection->query("SELECT SUM(odenen_tutar) as paid, SUM(kalan_tutar) as remaining, COUNT(*) as total_installments, SUM(CASE WHEN durum='odendi' THEN 1 ELSE 0 END) as paid_installments FROM taksit_detaylari WHERE plan_id = {$plan['plan_id']}")->fetch_assoc();
+    
+    $plan['odenen_tutar'] = $stats['paid'] ?? 0;
+    $plan['kalan_tutar'] = $stats['remaining'] ?? 0;
+    $plan['toplam_taksit'] = $stats['total_installments'] ?? 0;
+    $plan['odenen_taksit'] = $stats['paid_installments'] ?? 0;
+    
+    $installment_plans[] = $plan;
+    
+    if($plan['durum'] == 'aktif') {
+        $total_plan_debt += $plan['kalan_tutar'];
+    }
+
+    // Map linked orders to this plan
+    $linked_q = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = {$plan['plan_id']}");
+    while($l = $linked_q->fetch_assoc()) {
+        $order_plan_map[$l['siparis_id']] = [
+            'plan_status' => $plan['durum'],
+            'paid_inst' => $plan['odenen_taksit'],
+            'total_inst' => $plan['toplam_taksit'],
+            'remaining_plan' => $plan['kalan_tutar']
+        ];
+    }
+}
+// -----------------------------
 
 $orders = [];
 $total_orders = 0;
@@ -164,8 +198,11 @@ $status_tamamlandi = 0;
 // Bakiye hesaplama değişkenleri
 $toplam_siparis_tutari = 0;
 $toplam_odenen = 0;
-$toplam_kalan_bakiye = 0;
+$toplam_kalan_bakiye = 0; // Will start with Plan Debts
 $odenmemis_siparis_sayisi = 0;
+
+// Initial debt from installments
+$toplam_kalan_bakiye += $total_plan_debt;
 
 while ($order = $orders_result->fetch_assoc()) {
     // Get order items for this order
@@ -189,12 +226,20 @@ while ($order = $orders_result->fetch_assoc()) {
     $odenen = floatval($order['odenen_tutar'] ?? 0);
     $order['kalan_tutar'] = $order_item_total - $odenen;
     
+    // Check if this order is linked to a plan
+    $is_in_plan = isset($order_plan_map[$order['siparis_id']]);
+    $order['is_in_plan'] = $is_in_plan;
+    if($is_in_plan) {
+        $order['plan_details'] = $order_plan_map[$order['siparis_id']];
+    }
+
     // Sadece onaylanmış veya tamamlanmış siparişler için bakiye hesapla
     if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])) {
         $toplam_siparis_tutari += $order_item_total;
         $toplam_odenen += $odenen;
         
-        if ($order['kalan_tutar'] > 0.01) {
+        // ONLY add to balance if NOT in a plan
+        if (!$is_in_plan && $order['kalan_tutar'] > 0.01) {
             $toplam_kalan_bakiye += $order['kalan_tutar'];
             $odenmemis_siparis_sayisi++;
         }
@@ -495,56 +540,79 @@ function formatCurrency($value) {
 
         <div style="height: 8px;"></div>
 
-        <!-- Bakiye ve Ödeme Özeti - Premium Design -->
-        <span class="box-title"><i class="fas fa-chart-pie"></i> HESAP ÖZETİ</span>
-        <div style="display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;">
-            <!-- Son Sipariş Tarihi -->
-            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; text-align: center;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #4a0e63 0%, #7c3aed 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
-                    <i class="fas fa-calendar-alt" style="color: white; font-size: 14px;"></i>
-                </div>
-                <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Son Sipariş</div>
-                <div style="font-size: 14px; font-weight: 700; color: #4a0e63;"><?php echo $last_order_date ? formatDate($last_order_date) : '-'; ?></div>
-            </div>
-            
-            <!-- Toplam Sipariş Tutarı -->
-            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border: 1px solid #cbd5e1; border-radius: 6px; padding: 12px; text-align: center;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
-                    <i class="fas fa-file-invoice-dollar" style="color: white; font-size: 14px;"></i>
-                </div>
-                <div style="font-size: 8px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Toplam Tutar</div>
-                <div style="font-size: 14px; font-weight: 700; color: #1e40af;"><?php echo formatCurrency($toplam_siparis_tutari); ?></div>
-            </div>
-            
-            <!-- Ödenen Tutar -->
-            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border: 1px solid #a7f3d0; border-radius: 6px; padding: 12px; text-align: center;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, #059669 0%, #10b981 100%); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
-                    <i class="fas fa-check-circle" style="color: white; font-size: 14px;"></i>
-                </div>
-                <div style="font-size: 8px; color: #047857; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Ödenen</div>
-                <div style="font-size: 14px; font-weight: 700; color: #059669;"><?php echo formatCurrency($toplam_odenen); ?></div>
-            </div>
-            
-            <!-- Kalan Bakiye -->
-            <div style="flex: 1; min-width: 140px; background: linear-gradient(135deg, <?php echo $toplam_kalan_bakiye > 0 ? '#fef2f2 0%, #fecaca 100%' : '#ecfdf5 0%, #d1fae5 100%'; ?>); border: 1px solid <?php echo $toplam_kalan_bakiye > 0 ? '#fca5a5' : '#a7f3d0'; ?>; border-radius: 6px; padding: 12px; text-align: center;">
-                <div style="width: 32px; height: 32px; background: linear-gradient(135deg, <?php echo $toplam_kalan_bakiye > 0 ? '#dc2626 0%, #ef4444 100%' : '#059669 0%, #10b981 100%'; ?>); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 6px;">
-                    <i class="fas <?php echo $toplam_kalan_bakiye > 0 ? 'fa-exclamation-circle' : 'fa-check-double'; ?>" style="color: white; font-size: 14px;"></i>
-                </div>
-                <div style="font-size: 8px; color: <?php echo $toplam_kalan_bakiye > 0 ? '#b91c1c' : '#047857'; ?>; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px;">Kalan Bakiye</div>
-                <div style="font-size: 14px; font-weight: 700; color: <?php echo $toplam_kalan_bakiye > 0 ? '#dc2626' : '#059669'; ?>;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></div>
-            </div>
-        </div>
 
-        <?php if ($toplam_kalan_bakiye > 0.01): ?>
+        <?php 
+        $active_plan_count = 0;
+        foreach($installment_plans as $p) {
+            if($p['kalan_tutar'] > 0.01) $active_plan_count++;
+        }
+
+        if ($toplam_kalan_bakiye > 0.01): 
+            $alert_parts = [];
+            if($odenmemis_siparis_sayisi > 0) {
+                $alert_parts[] = "<strong>$odenmemis_siparis_sayisi</strong> adet ödenmemiş sipariş";
+            }
+            if($active_plan_count > 0) {
+                $alert_parts[] = "<strong>$active_plan_count</strong> adet ödemesi süren taksit planı";
+            }
+            
+            $detail_text = implode(" ve ", $alert_parts);
+            if(empty($detail_text)) $detail_text = "Ödenmemiş bakiye";
+        ?>
         <div style="background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%); border: 2px solid #fca5a5; border-left: 4px solid #dc2626; border-radius: 6px; padding: 12px 15px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px;">
             <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
                 <i class="fas fa-exclamation-triangle" style="color: white; font-size: 18px;"></i>
             </div>
             <div>
                 <div style="font-size: 12px; font-weight: 700; color: #991b1b; margin-bottom: 2px;"><i class="fas fa-bell"></i> ÖDEME BEKLİYOR</div>
-                <div style="font-size: 11px; color: #b91c1c;">Bu müşterinin <strong><?php echo $odenmemis_siparis_sayisi; ?></strong> adet ödenmemiş siparişi bulunmaktadır. Toplam bakiye: <strong style="font-size: 13px;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></strong></div>
+                <div style="font-size: 11px; color: #b91c1c;">Bu müşterinin <?php echo $detail_text; ?> bulunmaktadır. Toplam bakiye: <strong style="font-size: 13px;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></strong></div>
             </div>
         </div>
+        <?php endif; ?>
+
+
+        <!-- Installment Plans Section -->
+        <?php if(count($installment_plans) > 0): ?>
+            <hr class="section-divider">
+            <span class="box-title"><i class="fas fa-calendar-alt"></i> TAKSİT PLANLARI</span>
+            <table class="data-table" style="margin-bottom: 20px;">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 30%;">Plan Açıklaması</th>
+                        <th style="width: 15%;">Oluşturma</th>
+                        <th style="width: 15%; text-align: right;">Toplam Tutar</th>
+                        <th style="width: 15%; text-align: right;">Kalan Tutar</th>
+                        <th style="width: 10%; text-align: center;">Taksit</th>
+                        <th style="width: 10%; text-align: center;">Durum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php foreach ($installment_plans as $idx => $plan): ?>
+                        <tr>
+                            <td><?php echo $idx + 1; ?></td>
+                            <td><?php echo htmlspecialchars($plan['aciklama']); ?></td>
+                            <td><?php echo formatDate($plan['olusturma_tarihi']); ?></td>
+                            <td class="text-right"><?php echo formatCurrency($plan['toplam_odenecek']); ?></td>
+                            <td class="text-right" style="font-weight: bold; color: <?php echo $plan['kalan_tutar'] > 0 ? '#dc2626' : '#059669'; ?>">
+                                <?php echo formatCurrency($plan['kalan_tutar']); ?>
+                            </td>
+                            <td class="text-center">
+                                <?php echo $plan['odenen_taksit'] . '/' . $plan['toplam_taksit']; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if($plan['durum'] == 'aktif'): ?>
+                                    <span style="background: #dbeafe; color: #1e40af; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">AKTİF</span>
+                                <?php elseif($plan['durum'] == 'tamamlandi'): ?>
+                                    <span style="background: #d1fae5; color: #065f46; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;">TAMAMLANDI</span>
+                                <?php else: ?>
+                                    <span style="background: #f3f4f6; color: #4b5563; padding: 3px 8px; border-radius: 12px; font-size: 10px; font-weight: bold;"><?php echo strtoupper($plan['durum']); ?></span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                </tbody>
+            </table>
         <?php endif; ?>
 
         <hr class="section-divider">
@@ -555,110 +623,120 @@ function formatCurrency($value) {
         <?php if (count($orders) > 0): ?>
             <?php foreach ($orders as $order): ?>
                 <?php 
-                    $is_unpaid = in_array($order['durum'], ['onaylandi', 'tamamlandi']) && $order['kalan_tutar'] > 0.01;
-                    $border_style = $is_unpaid ? 'border: 2px solid #ef4444; background: #fef2f2;' : '';
+                    $is_unpaid = in_array($order['durum'], ['onaylandi', 'tamamlandi']) && $order['kalan_tutar'] > 0.01 && !$order['is_in_plan'];
+                    $border_color = $is_unpaid ? '#fca5a5' : '#e5e7eb';
+                    $bg_color = $is_unpaid ? '#fef2f2' : '#ffffff';
+                    
+                    // Specific logic for plan status
+                    $status_badge = '';
+                    $status_class = '';
+                    
+                    if ($order['is_in_plan']) {
+                        $pd = $order['plan_details'];
+                        $is_finished = $pd['remaining_plan'] <= 0;
+                        if($is_finished) {
+                            $status_badge = 'TAKSİTLİ - ÖDENDİ';
+                            $status_color = '#059669'; // Green
+                            $status_bg = '#d1fae5';
+                        } else {
+                            $status_badge = "TAKSİTLİ ({$pd['paid_inst']}/{$pd['total_inst']} Ödendi)";
+                            $status_color = '#d97706'; // Orange/Amber
+                            $status_bg = '#fef3c7';
+                        }
+                    } elseif ($order['kalan_tutar'] <= 0.01 && in_array($order['durum'], ['onaylandi', 'tamamlandi'])) {
+                        $status_badge = 'ÖDENDİ';
+                        $status_color = '#059669';
+                        $status_bg = '#d1fae5';
+                    } elseif ($is_unpaid) {
+                        $status_badge = 'ÖDEME BEKLİYOR';
+                        $status_color = '#dc2626';
+                        $status_bg = '#fee2e2';
+                    } else {
+                        $status_badge = strtoupper($order['durum']);
+                        $status_color = '#4b5563';
+                        $status_bg = '#f3f4f6';
+                    }
                 ?>
-                <div class="order-section" style="<?php echo $border_style; ?>">
-                    <div class="order-header">
-                        <div class="order-title">
-                            <i class="fas fa-file-invoice"></i> Sipariş #<?php echo $order['siparis_id']; ?>
+                <div class="order-section" style="border: 1px solid <?php echo $border_color; ?>; background: <?php echo $bg_color; ?>; border-radius: 8px; margin-bottom: 20px; transition: all 0.2s;">
+                    <div class="order-header" style="border-bottom: 1px solid <?php echo $border_color; ?>; padding-bottom: 12px; margin-bottom: 12px;">
+                        <div class="d-flex align-items-center" style="gap: 10px;">
+                             <div style="font-weight: 700; font-size: 15px; color: #1f2937;">
+                                <i class="fas fa-file-invoice" style="color: #9ca3af; margin-right: 5px;"></i> 
+                                Sipariş #<?php echo $order['siparis_id']; ?>
+                             </div>
+                             <div style="font-size: 12px; color: #6b7280;">
+                                <?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?>
+                             </div>
                         </div>
-                        <div class="status-badge <?php 
-                            switch ($order['durum']) {
-                                case 'beklemede': echo 'status-beklemede'; break;
-                                case 'onaylandi': echo 'status-onaylandi'; break;
-                                case 'tamamlandi': echo 'status-tamamlandi'; break;
-                                default: echo 'status-beklemede';
-                            }
-                        ?>">
-                            <?php 
-                            switch ($order['durum']) {
-                                case 'beklemede': echo '⏳ Beklemede'; break;
-                                case 'onaylandi': 
-                                    echo '✅ Onaylandı';
-                                    if ($order['kalan_tutar'] <= 0.01) {
-                                        echo ' <span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENDİ</span>';
-                                    } else {
-                                        echo ' <span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENMEDİ</span>';
-                                    }
-                                    break;
-                                case 'tamamlandi': 
-                                    echo '✔ Tamamlandı';
-                                    if ($order['kalan_tutar'] <= 0.01) {
-                                        echo ' <span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENDİ</span>';
-                                    } else {
-                                        echo ' <span style="background: #ef4444; color: white; padding: 2px 6px; border-radius: 8px; font-size: 9px; margin-left: 4px;">ÖDENMEDİ</span>';
-                                    }
-                                    break;
-                                default: echo $order['durum'];
-                            }
-                            ?>
+                        
+                        <div style="background: <?php echo $status_bg; ?>; color: <?php echo $status_color; ?>; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">
+                            <?php echo $status_badge; ?>
                         </div>
                     </div>
 
-                    <div class="order-meta">
-                        <div class="order-meta-item">
-                            <div class="label">Tarih</div>
-                            <div class="value"><?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?></div>
+                    <div class="order-body">
+                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                            <div class="meta-box">
+                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Toplam Tutar</div>
+                                <div style="font-size: 14px; font-weight: 700; color: #111827;"><?php echo formatCurrency($order['hesaplanan_tutar']); ?></div>
+                            </div>
+                            
+                            <?php if(!$order['is_in_plan']): ?>
+                                <div class="meta-box">
+                                    <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Ödenen</div>
+                                    <div style="font-size: 14px; font-weight: 600; color: #059669;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0); ?></div>
+                                </div>
+                                <?php if($order['kalan_tutar'] > 0.01): ?>
+                                    <div class="meta-box">
+                                        <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Kalan</div>
+                                        <div style="font-size: 14px; font-weight: 700; color: #dc2626;"><?php echo formatCurrency($order['kalan_tutar']); ?></div>
+                                    </div>
+                                <?php endif; ?>
+                            <?php else: ?>
+                                <div class="meta-box">
+                                    <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Plan Durumu</div>
+                                    <div style="font-size: 13px; font-weight: 600; color: #3b82f6;">
+                                        Plan Dahilinde
+                                        <?php if($order['plan_details']['remaining_plan'] > 0): ?>
+                                            Plan Borcu: <?php echo formatCurrency($order['plan_details']['remaining_plan']); ?>
+                                        <?php endif; ?>
+                                    </div>
+                                </div>
+                            <?php endif; ?>
                         </div>
 
-                        <div class="order-meta-item">
-                            <div class="label">Toplam Adet</div>
-                            <div class="value"><?php echo $order['toplam_adet']; ?> adet</div>
-                        </div>
-                        
-                        <div class="order-meta-item">
-                            <div class="label">Sipariş Tutarı</div>
-                            <div class="value" style="font-weight: bold;"><?php echo formatCurrency($order['hesaplanan_tutar']); ?></div>
-                        </div>
-                        
-                        <?php if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])): ?>
-                        <div class="order-meta-item">
-                            <div class="label">Ödenen</div>
-                            <div class="value" style="color: #10b981;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0); ?></div>
-                        </div>
-                        
-                        <?php if ($order['kalan_tutar'] > 0.01): ?>
-                        <div class="order-meta-item">
-                            <div class="label">Kalan</div>
-                            <div class="value" style="color: #ef4444; font-weight: bold;"><?php echo formatCurrency($order['kalan_tutar']); ?></div>
-                        </div>
+                        <?php if ($order['aciklama']): ?>
+                            <div style="background: #f9fafb; border: 1px dashed #d1d5db; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #4b5563; margin-bottom: 15px;">
+                                <i class="fas fa-sticky-note" style="margin-right: 5px; opacity: 0.5;"></i> <?php echo htmlspecialchars($order['aciklama']); ?>
+                            </div>
                         <?php endif; ?>
-                        <?php endif; ?>
+
+                        <!-- Compact Item List -->
+                        <div style="background: white; border: 1px solid #f3f4f6; border-radius: 6px; overflow: hidden;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead style="background: #f9fafb; font-size: 11px; color: #6b7280; text-transform: uppercase;">
+                                    <tr>
+                                        <th style="padding: 8px 12px; text-align: left; font-weight: 600;">Ürün</th>
+                                        <th style="padding: 8px 12px; text-align: center; font-weight: 600;">Adet</th>
+                                        <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Toplam</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="font-size: 13px; color: #374151;">
+                                    <?php foreach ($order['items'] as $item): ?>
+                                    <tr style="border-top: 1px solid #f3f4f6;">
+                                        <td style="padding: 8px 12px;"><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
+                                        <td style="padding: 8px 12px; text-align: center;">
+                                            <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
+                                                <?php echo $item['adet']; ?> <?php echo htmlspecialchars($item['birim']); ?>
+                                            </span>
+                                        </td>
+                                        <td style="padding: 8px 12px; text-align: right; font-weight: 500;"><?php echo formatCurrency($item['toplam_tutar']); ?></td>
+                                    </tr>
+                                    <?php endforeach; ?>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
-
-                    <?php if ($order['aciklama']): ?>
-                        <div class="notes-area" style="margin-bottom: 10px;">
-                            <strong style="color: #4a0e63;">Not:</strong> <?php echo htmlspecialchars($order['aciklama']); ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <?php if (count($order['items']) > 0): ?>
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th style="width: 5%; text-align: center;">#</th>
-                                    <th style="width: 45%;">ÜRÜN</th>
-                                    <th style="width: 15%; text-align: center;">ADET</th>
-                                    <th style="width: 15%;">BİRİM</th>
-                                    <th style="width: 10%; text-align: right;">BİRİM FİYAT</th>
-                                    <th style="width: 10%; text-align: right;">TOPLAM</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($order['items'] as $index => $item): ?>
-                                <tr>
-                                    <td class="text-center"><?php echo $index + 1; ?></td>
-                                    <td><strong><?php echo htmlspecialchars($item['urun_ismi']); ?></strong></td>
-                                    <td class="text-center"><?php echo $item['adet']; ?></td>
-                                    <td><?php echo htmlspecialchars($item['birim']); ?></td>
-                                    <td class="text-right"><?php echo $item['birim_fiyat'] ? formatCurrency($item['birim_fiyat']) : '-'; ?></td>
-                                    <td class="text-right"><strong><?php echo $item['toplam_tutar'] ? formatCurrency($item['toplam_tutar']) : '-'; ?></strong></td>
-                                </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    <?php endif; ?>
                 </div>
             <?php endforeach; ?>
         <?php else: ?>
