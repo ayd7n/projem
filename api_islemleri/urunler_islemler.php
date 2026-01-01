@@ -390,28 +390,31 @@ if (isset($_GET['action'])) {
                             $malzeme_turu_value = $type['value'];
                             $malzeme_turu_label = $type['label'];
                             $malzeme_ismi = $urun_ismi . ", " . $malzeme_turu_label;
-                            
+
                             // Malzeme zaten var mı kontrol et (Unique constraint hatası almamak için)
                             $m_check = "SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '" . $connection->real_escape_string($malzeme_ismi) . "'";
                             $m_check_res = $connection->query($m_check);
-                            
+
                             if ($m_check_res && $m_check_res->num_rows == 0) {
-                                $m_query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, birim, para_birimi, depo, raf) 
-                                           VALUES ('" . $connection->real_escape_string($malzeme_ismi) . "', 
-                                                   '" . $connection->real_escape_string($malzeme_turu_value) . "', 
-                                                   'adet', 'TRY', 
-                                                   " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", 
+                                $m_query = "INSERT INTO malzemeler (malzeme_ismi, malzeme_turu, birim, para_birimi, depo, raf)
+                                           VALUES ('" . $connection->real_escape_string($malzeme_ismi) . "',
+                                                   '" . $connection->real_escape_string($malzeme_turu_value) . "',
+                                                   'adet', 'TRY',
+                                                   " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ",
                                                    " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ")";
                                 if ($connection->query($m_query)) {
                                     $new_material_id = $connection->insert_id;
-                                    
-                                    // Ürün Ağacına Bağla
-                                    $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) 
-                                                VALUES (?, ?, ?, ?, ?, 1.00, 'urun')";
-                                    $ua_stmt = $connection->prepare($ua_query);
-                                    $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $malzeme_turu_label, $new_material_id, $malzeme_ismi);
-                                    $ua_stmt->execute();
-                                    $ua_stmt->close();
+
+                                    // Ham esans malzemesini ürün ağacına bağlama (kullanıcı istemedi)
+                                    if ($malzeme_turu_value !== 'ham_esans') {
+                                        // Ürün Ağacına Bağla
+                                        $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu)
+                                                    VALUES (?, ?, ?, ?, ?, 1.00, 'urun')";
+                                        $ua_stmt = $connection->prepare($ua_query);
+                                        $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $malzeme_turu_value, $new_material_id, $malzeme_ismi);
+                                        $ua_stmt->execute();
+                                        $ua_stmt->close();
+                                    }
                                 }
                             }
                         }
@@ -456,23 +459,17 @@ if (isset($_GET['action'])) {
                         // $esans_stmt yapısını kaldırdık, düz sorgu çalıştırıyoruz
                         if ($connection->query($esans_query)) {
                             $new_essence_id = $connection->insert_id;
-                            
-                            // Ürün Ağacına Bağla
-                            // Burası da düz sorguya çevrilebilir ama hata burda değildi, yine de tutarlılık için çevirelim.
-                            $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu) 
-                                        VALUES (
-                                        " . (int)$new_product_id . ",
-                                        '" . $connection->real_escape_string($urun_ismi) . "',
-                                        'esans',
-                                        '" . $connection->real_escape_string($esans_kodu) . "',
-                                        '" . $connection->real_escape_string($esans_ismi) . "',
-                                        1.00,
-                                        'urun'
-                                        )";
-                             
-                            $connection->query($ua_query);
-                            
+
                             log_islem($connection, $_SESSION['kullanici_adi'], "Otomatik esans oluşturuldu: $esans_ismi (Tank: $tank_kodu)", 'CREATE');
+
+                            // Oluşturulan Esansı Ürün Ağacına Bağla
+                            $ua_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu)
+                                        VALUES (?, ?, ?, ?, ?, 1.00, 'urun')";
+                            $ua_stmt = $connection->prepare($ua_query);
+                            $esans_type = 'esans';
+                            $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $esans_type, $esans_kodu, $esans_ismi);
+                            $ua_stmt->execute();
+                            $ua_stmt->close();
                         }
                     }
                     

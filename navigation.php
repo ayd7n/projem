@@ -893,6 +893,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Ürün reçetelerini ve bileşenlerini oluşturun.</p>
                             </div>
                         </a>
+                        <a href="kokpit.php" class="module-card">
+                            <div class="icon"><i class="fas fa-tachometer-alt"></i></div>
+                            <div class="card-content">
+                                <span class="title">Kokpit</span>
+                                <p class="description">Ürün bileşen durumlarını kontrol edin.</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
 
