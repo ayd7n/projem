@@ -262,162 +262,177 @@ while ($kur_row = $kur_result->fetch_assoc()) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <title>Tedarikçi Kartı - <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?> - Parfüm ERP</title>
+    <title>Cari Hesap Ekstresi - <?php echo htmlspecialchars($supplier['tedarikci_adi']); ?> - İDO Kozmetik</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #374151;
-            --border: #e5e7eb;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
-            --bg: #f9fafb;
+            --primary: #4a0e63;
+            --primary-light: #6b2d8a;
+            --primary-dark: #3a0b4d;
+            --gold: #d4af37;
+            --border: #eee;
+            --text-primary: #222;
+            --text-secondary: #666;
+            --text-muted: #888;
+            --bg: #f0f0f0;
         }
 
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Roboto', sans-serif;
             background: var(--bg);
             color: var(--text-primary);
             font-size: 13px;
-            line-height: 1.5;
+            line-height: 1.4;
+            margin: 0;
+            padding: 0;
         }
 
         .print-btn {
             position: fixed;
-            top: 12px;
-            right: 12px;
+            top: 20px;
+            right: 20px;
             z-index: 1000;
-            width: 36px;
-            height: 36px;
             background: var(--primary);
-            border: none;
-            border-radius: 4px;
             color: white;
-            font-size: 14px;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
             cursor: pointer;
+            font-weight: bold;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
         }
 
         .print-btn:hover {
-            background: #1f2937;
+            background: var(--primary-dark);
         }
 
         .container {
-            max-width: 100%;
-            padding: 8px 16px;
+            max-width: 210mm;
+            padding: 15mm;
+            margin: 20px auto;
+            background: white;
+            box-shadow: 0 0 15px rgba(0,0,0,0.1);
+            box-sizing: border-box;
         }
 
-        /* Header */
+        /* Header - Logo Tarzı */
         .customer-header {
             background: white;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 8px 16px;
-            margin-bottom: 8px;
+            border: none;
+            border-radius: 0;
+            padding: 0 0 15px 0;
+            margin-bottom: 15px;
             display: flex;
             justify-content: space-between;
-            align-items: center;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border);
         }
 
         .header-left {
             display: flex;
-            align-items: center;
-            gap: 8px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 3px;
         }
 
         .header-left .logo-text {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .header-left .logo-text span {
+            color: var(--gold);
+        }
+
+        .header-left .sub-logo {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .header-right {
             display: flex;
-            align-items: center;
-            gap: 10px;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 5px;
         }
 
         .customer-header h1 {
-            font-size: 15px;
-            font-weight: 600;
+            font-size: 22px;
+            font-weight: bold;
             color: var(--text-primary);
             margin: 0;
+            text-align: right;
         }
 
         .customer-header .subtitle {
-            font-size: 11px;
-            font-weight: 500;
-            color: #92400e;
-            background: #fef3c7;
-            padding: 3px 8px;
-            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--primary);
+            background: none;
+            padding: 0;
+            border-radius: 0;
             margin: 0;
         }
 
-        /* Özet kartları */
-        .summary-cards {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 6px;
-            margin-bottom: 8px;
-        }
-
-        .summary-card {
-            background: white;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 6px 10px;
-        }
-
-        .summary-icon {
-            display: none;
-        }
-
-        .summary-label {
+        /* Box Title - PDF tarzı */
+        .box-title {
             font-size: 11px;
-            color: var(--text-secondary);
-            font-weight: 500;
-            margin-bottom: 2px;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+            margin-bottom: 8px;
+            display: block;
         }
 
-        .summary-value {
-            font-size: 15px;
-            font-weight: 600;
-            color: var(--text-primary);
+        .box-content {
+            font-size: 13px;
+            line-height: 1.4;
+            color: #333;
         }
 
         /* Bilgi kartı */
         .customer-info {
             background: white;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 8px 14px;
-            margin-bottom: 8px;
+            border: none;
+            border-radius: 0;
+            padding: 0;
+            margin-bottom: 20px;
         }
 
         .section-title {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 6px;
-            padding-bottom: 4px;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
             border-bottom: 1px solid var(--border);
         }
 
         .info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 4px 16px;
+            gap: 8px 24px;
         }
 
         .info-item {
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px;
         }
 
         .info-icon {
@@ -425,67 +440,74 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         }
 
         .info-label {
-            font-size: 11px;
-            color: var(--text-secondary);
+            font-size: 10px;
+            color: var(--text-muted);
+            text-transform: uppercase;
             font-weight: 500;
         }
 
         .info-value {
             font-size: 13px;
             color: var(--text-primary);
+            font-weight: 500;
         }
 
-        /* Tablo başlığı - Kurumsal */
+        /* Tablo başlığı - PDF Tarzı */
         .table-header {
-            background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%);
+            background: #fdfdfd;
             border: none;
-            border-radius: 6px 6px 0 0;
-            padding: 14px 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 0;
+            padding: 12px 0;
+            box-shadow: none;
+            border-bottom: 2px solid var(--primary);
+            margin-top: 25px;
         }
 
         .table-header h5 {
-            font-size: 14px;
-            font-weight: 600;
-            color: white;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--primary);
             margin: 0;
-            letter-spacing: 0.3px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .table-header h5 small {
-            color: rgba(255, 255, 255, 0.7) !important;
+            color: var(--text-muted) !important;
+            font-weight: normal;
+            text-transform: none;
         }
 
         .card {
             background: white;
-            border: 1px solid #e2e8f0;
+            border: none;
             border-top: none;
-            border-radius: 0 0 6px 6px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            overflow: hidden;
+            border-radius: 0;
+            box-shadow: none;
+            overflow: visible;
         }
 
         .card-body {
             padding: 0;
         }
 
+        /* Data Table - PDF tarzı */
         .table {
+            width: 100%;
             margin: 0;
             font-size: 13px;
-            border-collapse: separate;
-            border-spacing: 0;
+            border-collapse: collapse;
         }
 
         .table thead th {
-            background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
-            border-bottom: 2px solid #cbd5e1;
-            padding: 12px 16px;
-            font-weight: 600;
-            color: #334155;
+            background: #fdfdfd;
+            border-bottom: 2px solid var(--primary);
+            padding: 10px 8px;
             font-size: 11px;
+            text-align: left;
+            color: var(--primary);
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
         }
 
         .table thead th i {
@@ -494,22 +516,23 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         }
 
         .table tbody tr {
-            transition: all 0.15s ease;
+            transition: background-color 0.15s ease;
         }
 
         .table tbody tr:nth-child(even) {
-            background-color: #f8fafc;
+            background-color: #fafafa;
         }
 
         .table tbody tr:hover {
-            background-color: #e0f2fe;
+            background-color: #f5f0f7;
         }
 
         .table tbody td {
-            padding: 12px 16px;
-            border-bottom: 1px solid #e2e8f0;
-            color: #1e293b;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--border);
+            color: #333;
             vertical-align: middle;
+            font-size: 13px;
         }
 
         .table tbody tr:last-child td {
@@ -517,24 +540,62 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         }
 
         .table tbody td.text-right {
-            font-family: 'Roboto Mono', 'Consolas', monospace;
+            font-family: 'Roboto', sans-serif;
             font-weight: 500;
         }
 
         .no-items {
             text-align: center;
             padding: 40px 20px;
-            color: #64748b;
+            color: var(--text-muted);
             font-style: italic;
         }
 
+        /* Toplam Kutuları - PDF tarzı */
+        .total-box {
+            background: #fafafa;
+            border: 1px dashed #ccc;
+            padding: 12px;
+            margin-top: 15px;
+        }
+
+        .total-label {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .total-value {
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Notes Area */
+        .notes-area {
+            margin-top: 30px;
+            padding: 12px;
+            border: 1px dashed #ccc;
+            font-size: 12px;
+            color: #555;
+            background: #fafafa;
+        }
+
         @media (max-width: 768px) {
-            .summary-cards {
-                grid-template-columns: repeat(2, 1fr);
+            .container {
+                padding: 10px;
+                margin: 10px;
             }
 
             .info-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .customer-header {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .header-right {
+                align-items: flex-start;
             }
         }
 
@@ -546,34 +607,40 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             body {
                 background: white !important;
             }
+
+            .container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 15mm !important;
+            }
         }
     </style>
 </head>
 
 <body>
     <button class="print-btn" onclick="window.print()">
-        <i class="fas fa-print"></i>
+        <i class="fas fa-print"></i> YAZDIR
     </button>
 
     <div class="container">
         <!-- Header -->
         <div class="customer-header">
             <div class="header-left">
-                <i class="fas fa-flask" style="color: #7c3aed;"></i>
-                <span class="logo-text">İdo Kozmetik Tedarikçi Yönetim Sistemi</span>
+                <div class="logo-text">IDO<span>KOZMETİK</span></div>
+                <div class="sub-logo">Cari Hesap Ekstresi</div>
             </div>
             <div class="header-right">
                 <h1><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></h1>
-                <div class="subtitle">Tedarikçi Kartı</div>
+                <div class="subtitle">Hesap Özeti</div>
             </div>
         </div>
 
         <!-- Tedarikçi Bilgileri -->
         <div class="customer-info">
-            <div class="section-title"><i class="fas fa-info-circle"></i> Tedarikçi Bilgileri</div>
+            <div class="section-title"><i class="fas fa-info-circle"></i> Firma Bilgileriniz</div>
             <div class="info-grid">
                 <div class="info-item">
-                    <div class="info-label"><i class="fas fa-building"></i> Tedarikçi Adı</div>
+                    <div class="info-label"><i class="fas fa-building"></i> Firma Ünvanı</div>
                     <div class="info-value"><?php echo htmlspecialchars($supplier['tedarikci_adi']); ?></div>
                 </div>
                 <div class="info-item">
@@ -610,37 +677,33 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         </div>
 
         <!-- Tarih Filtresi ve Ayarlar -->
-        <div
-            style="background: white; border: 1px solid var(--border); border-radius: 6px; padding: 10px 16px; margin-bottom: 8px;">
-            <div
-                style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
+        <div style="padding: 12px 0; margin-bottom: 20px; border-bottom: 1px solid var(--border);">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 10px;">
                 <!-- Tarih Filtresi -->
                 <form method="GET" action="tedarikci_karti.php"
                     style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                     <input type="hidden" name="tedarikci_id" value="<?php echo $tedarikci_id; ?>">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-filter" style="color: var(--text-secondary);"></i>
-                        <span style="font-weight: 600; color: var(--text-primary); font-size: 13px;">Tarih
-                            Filtresi:</span>
+                        <span style="font-size: 11px; font-weight: bold; color: var(--primary); text-transform: uppercase;">Tarih Filtresi:</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <label style="font-size: 12px; color: var(--text-secondary);">Başlangıç:</label>
+                        <label style="font-size: 12px; color: var(--text-muted);">Başlangıç:</label>
                         <input type="date" name="baslangic"
                             value="<?php echo htmlspecialchars($baslangic_tarihi ?? ''); ?>"
                             style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <label style="font-size: 12px; color: var(--text-secondary);">Bitiş:</label>
+                        <label style="font-size: 12px; color: var(--text-muted);">Bitiş:</label>
                         <input type="date" name="bitis" value="<?php echo htmlspecialchars($bitis_tarihi ?? ''); ?>"
                             style="padding: 6px 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 13px;">
                     </div>
                     <button type="submit"
-                        style="background: linear-gradient(135deg, #1e3a5f 0%, #2d5a87 100%); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;">
+                        style="background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; cursor: pointer;">
                         <i class="fas fa-search"></i> Filtrele
                     </button>
                     <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
                         <a href="tedarikci_karti.php?tedarikci_id=<?php echo $tedarikci_id; ?>"
-                            style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; text-decoration: none;">
+                            style="background: #fafafa; color: var(--text-secondary); border: 1px dashed #ccc; padding: 8px 16px; border-radius: 4px; font-size: 13px; font-weight: 500; text-decoration: none;">
                             <i class="fas fa-times"></i> Temizle
                         </a>
                     <?php endif; ?>
@@ -648,9 +711,9 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
                 <!-- Para Birimi Toggle -->
                 <div style="display: flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 12px; color: var(--text-secondary);">Döviz Karşılıkları:</span>
+                    <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase;">Döviz Karşılıkları:</span>
                     <button type="button" id="toggleCurrencyBtn" onclick="toggleCurrencyView()"
-                        style="background: #059669; color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                        style="background: var(--primary); color: white; border: none; padding: 6px 14px; border-radius: 4px; font-size: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px;">
                         <i class="fas fa-eye" id="toggleCurrencyIcon"></i>
                         <span id="toggleCurrencyText">Gösteriliyor</span>
                     </button>
@@ -658,7 +721,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             </div>
 
             <?php if ($baslangic_tarihi || $bitis_tarihi): ?>
-                <div style="margin-top: 10px; font-size: 12px; color: #059669;">
+                <div style="margin-top: 10px; font-size: 12px; color: var(--primary);">
                     <i class="fas fa-info-circle"></i> Filtre aktif:
                     <?php if ($baslangic_tarihi): ?>
                         <strong><?php echo date('d.m.Y', strtotime($baslangic_tarihi)); ?></strong>
@@ -774,39 +837,32 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         <?php if (count($acceptance_rows) > 0): ?>
             <!-- Mal Kabul Toplamları -->
-            <div
-                style="background: #f0fdf4; border: 1px solid #bbf7d0; border-left: 4px solid #22c55e; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px;">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="background: #dcfce7; border: 1px solid #86efac; border-left: 4px solid #22c55e; border-radius: 6px; padding: 16px 20px; margin-top: 25px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
-                        <div style="font-size: 14px; font-weight: 600; color: #166534;">
-                            <i class="fas fa-boxes"></i> Toplam Alım (Bu Tedarikçiden Alınan Mallar)
-                        </div>
-                        <div style="font-size: 11px; color: #15803d;">Aşağıdaki "Mal Kabul Kayıtları" tablosunun toplamı
-                        </div>
+                        <strong style="color: #166534; font-size: 14px;"><i class="fas fa-truck"></i> TOPLAM SATIŞ TUTARINIZ</strong><br>
+                        <small style="color: #15803d;">Firmamıza sağladığınız mal ve hizmetlerin toplamı</small>
                     </div>
                     <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (TL)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                            <div style="font-size: 10px; color: #15803d; text-transform: uppercase;">Toplam (TL)</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #166534;">
                                 <?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?> ₺
                             </div>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
-                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (USD)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                            <div style="font-size: 10px; color: #15803d; text-transform: uppercase;">Toplam (USD)</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #166534;">
                                 <?php echo number_format($genel_toplam_usd, 2, ',', '.'); ?> $
                             </div>
-                            <small style="font-size: 10px; color: #15803d;">(1 USD =
-                                <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 9px; color: #15803d;">(1 USD = <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
-                            <div style="font-size: 11px; color: #15803d; margin-bottom: 2px;">Toplam (EUR)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #166534;">
+                            <div style="font-size: 10px; color: #15803d; text-transform: uppercase;">Toplam (EUR)</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #166534;">
                                 <?php echo number_format($genel_toplam_eur, 2, ',', '.'); ?> €
                             </div>
-                            <small style="font-size: 10px; color: #15803d;">(1 EUR =
-                                <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 9px; color: #15803d;">(1 EUR = <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                     </div>
                 </div>
@@ -814,7 +870,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         <?php endif; ?>
 
         <div class="table-header">
-            <h5>Mal Kabul Kayıtları <small
+            <h5>TESLİMAT DETAYLARI <small
                     style="font-size: 12px; color: var(--text-secondary); font-weight: 400;">(<?php echo count($calculated_rows); ?>
                     kayıt)</small></h5>
         </div>
@@ -885,38 +941,32 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         <?php if (count($expenses) > 0): ?>
             <!-- Ödeme Toplamları -->
-            <div
-                style="background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; border-radius: 4px; padding: 12px 16px; margin-bottom: 12px; margin-top: 24px;">
-                <div
-                    style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+            <div style="background: #fee2e2; border: 1px solid #fca5a5; border-left: 4px solid #ef4444; border-radius: 6px; padding: 16px 20px; margin-top: 25px; margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
                     <div>
-                        <div style="font-size: 14px; font-weight: 600; color: #991b1b;">
-                            <i class="fas fa-money-bill-wave"></i> Toplam Ödeme (Bu Tedarikçiye Yapılan Ödemeler)
-                        </div>
-                        <div style="font-size: 11px; color: #b91c1c;">Aşağıdaki "Ödeme Kayıtları" tablosunun toplamı</div>
+                        <strong style="color: #991b1b; font-size: 14px;"><i class="fas fa-hand-holding-usd"></i> TARAFINIZA YAPILAN ÖDEMELER</strong><br>
+                        <small style="color: #b91c1c;">Firmamız tarafından tarafınıza yapılan ödemelerin toplamı</small>
                     </div>
                     <div style="display: flex; gap: 24px; flex-wrap: wrap;">
                         <div style="text-align: right;">
-                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (TL)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                            <div style="font-size: 10px; color: #b91c1c; text-transform: uppercase;">Toplam (TL)</div>
+                            <div style="font-size: 20px; font-weight: bold; color: #991b1b;">
                                 <?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?> ₺
                             </div>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
-                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (USD)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                            <div style="font-size: 10px; color: #b91c1c; text-transform: uppercase;">Toplam (USD)</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #991b1b;">
                                 <?php echo number_format($odeme_toplam_usd, 2, ',', '.'); ?> $
                             </div>
-                            <small style="font-size: 10px; color: #b91c1c;">(1 USD =
-                                <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 9px; color: #b91c1c;">(1 USD = <?php echo number_format($dolar_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                         <div style="text-align: right;" class="currency-toggle">
-                            <div style="font-size: 11px; color: #b91c1c; margin-bottom: 2px;">Toplam (EUR)</div>
-                            <div style="font-size: 16px; font-weight: 600; color: #991b1b;">
+                            <div style="font-size: 10px; color: #b91c1c; text-transform: uppercase;">Toplam (EUR)</div>
+                            <div style="font-size: 16px; font-weight: bold; color: #991b1b;">
                                 <?php echo number_format($odeme_toplam_eur, 2, ',', '.'); ?> €
                             </div>
-                            <small style="font-size: 10px; color: #b91c1c;">(1 EUR =
-                                <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
+                            <small style="font-size: 9px; color: #b91c1c;">(1 EUR = <?php echo number_format($euro_kuru, 4, ',', '.'); ?> TL)</small>
                         </div>
                     </div>
                 </div>
@@ -924,7 +974,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         <?php endif; ?>
 
         <div class="table-header">
-            <h5>Ödeme Kayıtları <small
+            <h5>ÖDEME DETAYLARI <small
                     style="font-size: 12px; color: var(--text-secondary); font-weight: 400;">(<?php echo count($expenses); ?>
                     kayıt)</small></h5>
         </div>
@@ -973,75 +1023,66 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         $bakiye_usd = $dolar_kuru > 0 ? $bakiye_tl / $dolar_kuru : 0;
         $bakiye_eur = $euro_kuru > 0 ? $bakiye_tl / $euro_kuru : 0;
 
-        // Durum belirleme
+        // Durum belirleme - Tedarikçinin bakış açısından
         if ($bakiye_tl > 0) {
-            $bakiye_durum = "Tedarikçiye borcumuz var";
-            $bakiye_renk = "#dc2626"; // Kırmızı - borç
-            $bakiye_bg = "#fef2f2";
-            $bakiye_border = "#ef4444";
-            $bakiye_ikon = "fa-exclamation-triangle";
-        } elseif ($bakiye_tl < 0) {
-            $bakiye_durum = "Tedarikçiden alacağımız var";
-            $bakiye_renk = "#059669"; // Yeşil - alacak
-            $bakiye_bg = "#f0fdf4";
+            $bakiye_durum = "Alacak Bakiyeniz";
+            $bakiye_renk = "#166534"; // Yeşil - tedarikçinin alacağı var
+            $bakiye_bg = "#dcfce7";
             $bakiye_border = "#22c55e";
-            $bakiye_ikon = "fa-check-circle";
+            $bakiye_ikon = "fa-arrow-up";
+        } elseif ($bakiye_tl < 0) {
+            $bakiye_durum = "Borç Bakiyeniz";
+            $bakiye_renk = "#991b1b"; // Kırmızı - tedarikçinin borcu var
+            $bakiye_bg = "#fee2e2";
+            $bakiye_border = "#ef4444";
+            $bakiye_ikon = "fa-arrow-down";
             $bakiye_tl = abs($bakiye_tl);
             $bakiye_usd = abs($bakiye_usd);
             $bakiye_eur = abs($bakiye_eur);
         } else {
-            $bakiye_durum = "Hesap kapalı";
+            $bakiye_durum = "Hesabınız Kapalıdır";
             $bakiye_renk = "#6b7280"; // Gri - sıfır
             $bakiye_bg = "#f9fafb";
             $bakiye_border = "#d1d5db";
-            $bakiye_ikon = "fa-balance-scale";
+            $bakiye_ikon = "fa-check-circle";
         }
         ?>
 
-        <div
-            style="background: <?php echo $bakiye_bg; ?>; border: 2px solid <?php echo $bakiye_border; ?>; border-radius: 8px; padding: 20px; margin-top: 24px;">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+        <div style="background: <?php echo $bakiye_bg; ?>; border: 2px solid <?php echo $bakiye_border; ?>; border-left: 5px solid <?php echo $bakiye_border; ?>; border-radius: 6px; padding: 20px 24px; margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <div>
-                    <div
-                        style="font-size: 16px; font-weight: 700; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">
-                        <i class="fas <?php echo $bakiye_ikon; ?>"></i> Bakiye Durumu
-                    </div>
-                    <div style="font-size: 13px; color: <?php echo $bakiye_renk; ?>;"><?php echo $bakiye_durum; ?></div>
+                    <strong style="color: <?php echo $bakiye_renk; ?>; font-size: 16px;">
+                        <i class="fas <?php echo $bakiye_ikon; ?>"></i> BAKİYE DURUMU
+                    </strong><br>
+                    <span style="font-size: 14px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;"><?php echo $bakiye_durum; ?></span>
                 </div>
                 <div style="display: flex; gap: 32px; flex-wrap: wrap;">
                     <div style="text-align: center;">
-                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
-                            (TL)</div>
-                        <div style="font-size: 24px; font-weight: 700; color: <?php echo $bakiye_renk; ?>;">
+                        <div style="font-size: 10px; color: <?php echo $bakiye_renk; ?>; text-transform: uppercase; opacity: 0.8;">Bakiye (TL)</div>
+                        <div style="font-size: 28px; font-weight: bold; color: <?php echo $bakiye_renk; ?>;">
                             <?php echo number_format($bakiye_tl, 2, ',', '.'); ?> ₺
                         </div>
                     </div>
                     <div style="text-align: center;" class="currency-toggle">
-                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
-                            (USD)</div>
-                        <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
+                        <div style="font-size: 10px; color: <?php echo $bakiye_renk; ?>; text-transform: uppercase; opacity: 0.8;">Bakiye (USD)</div>
+                        <div style="font-size: 18px; font-weight: bold; color: <?php echo $bakiye_renk; ?>;">
                             <?php echo number_format($bakiye_usd, 2, ',', '.'); ?> $
                         </div>
                     </div>
                     <div style="text-align: center;" class="currency-toggle">
-                        <div style="font-size: 11px; color: <?php echo $bakiye_renk; ?>; margin-bottom: 4px;">Bakiye
-                            (EUR)</div>
-                        <div style="font-size: 18px; font-weight: 600; color: <?php echo $bakiye_renk; ?>;">
+                        <div style="font-size: 10px; color: <?php echo $bakiye_renk; ?>; text-transform: uppercase; opacity: 0.8;">Bakiye (EUR)</div>
+                        <div style="font-size: 18px; font-weight: bold; color: <?php echo $bakiye_renk; ?>;">
                             <?php echo number_format($bakiye_eur, 2, ',', '.'); ?> €
                         </div>
                     </div>
                 </div>
             </div>
-            <div
-                style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed <?php echo $bakiye_border; ?>; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
-                <div style="font-size: 12px; color: var(--text-secondary);">
-                    <i class="fas fa-boxes" style="color: #22c55e;"></i> Toplam Alım: <strong
-                        style="color: #166534;"><?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?> ₺</strong>
+            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px dashed <?php echo $bakiye_border; ?>; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+                <div style="font-size: 12px; color: <?php echo $bakiye_renk; ?>;">
+                    <i class="fas fa-truck"></i> Satış Tutarınız: <strong><?php echo number_format($genel_toplam_tl, 2, ',', '.'); ?> ₺</strong>
                 </div>
-                <div style="font-size: 12px; color: var(--text-secondary);">
-                    <i class="fas fa-money-bill-wave" style="color: #ef4444;"></i> Toplam Ödeme: <strong
-                        style="color: #991b1b;"><?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?> ₺</strong>
+                <div style="font-size: 12px; color: <?php echo $bakiye_renk; ?>;">
+                    <i class="fas fa-hand-holding-usd"></i> Aldığınız Ödeme: <strong><?php echo number_format($odeme_toplam_tl, 2, ',', '.'); ?> ₺</strong>
                 </div>
             </div>
         </div>
@@ -1069,11 +1110,11 @@ while ($kur_row = $kur_result->fetch_assoc()) {
             });
 
             if (currencyVisible) {
-                btn.style.background = '#059669';
+                btn.style.background = '#4a0e63';
                 icon.className = 'fas fa-eye';
                 text.textContent = 'Gösteriliyor';
             } else {
-                btn.style.background = '#64748b';
+                btn.style.background = '#888';
                 icon.className = 'fas fa-eye-slash';
                 text.textContent = 'Gizlendi';
             }
