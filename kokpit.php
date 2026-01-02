@@ -378,7 +378,7 @@ if ($_SESSION['taraf'] !== 'personel') {
             methods: {
                 getProductIssues(product) {
                     const issues = [];
-                    
+
                     // Type labels for better readability
                     const typeLabels = {
                         'kutu': 'Kutu',
@@ -388,22 +388,22 @@ if ($_SESSION['taraf'] !== 'personel') {
                         'jelatin': 'Jelatin',
                         'esans': 'Esans'
                     };
-                    
+
                     // Missing component types - consolidated message
                     if (product.missing_types.length > 0) {
                         const missingLabels = product.missing_types
                             .map(type => typeLabels[type] || type)
                             .join(', ');
-                        issues.push(`Eksik bileşenler: ${missingLabels}`);
+                        issues.push(`Anaveri Eksik: Eksik bileşenler: ${missingLabels}`);
                     }
-                    
+
                     // Essence status
                     if (!product.has_esans) {
                         // Already covered in missing_types if esans is missing
                     } else if (product.esans_has_bom === false) {
-                        issues.push('Esans reçetesi oluşturulmamış');
+                        issues.push('Anaveri Eksik: Esans reçetesi oluşturulmamış');
                     }
-                    
+
                     return issues;
                 },
                 loadProducts() {
