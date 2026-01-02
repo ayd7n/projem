@@ -2,7 +2,10 @@ Prompt:
 
 Aşağıdaki PHP dosyaları incelenerek kokpit.php sayfasını bir tedarik zinciri kontrol paneline dönüştürmeni istiyorum:
 
+tek sayfa sekme olmayacak tek cümlelik özet olacak.
+
 **İNCELENECEK PHP DOSYALARI:**
+
 - `kokpit.php`: Mevcut kontrol paneli sayfası
 - `ne_uretsem.php`: Üretim kapasitesi ve önceliklendirme sayfası
 - `esans_is_emirleri.php`: Esans üretim iş emirleri sayfası
@@ -24,6 +27,7 @@ Sayfa şu mantıkla çalışmalı:
 
 **VERİ TABANI YAPISI VE TABLOLAR:**
 Sistem aşağıdaki MySQL veritabanı tablolarını (parfum_erp) kullanarak çalışmalı:
+
 - `urunler`: Ürün bilgileri, stok miktarları, kritik seviye tanımları
 - `urun_agaci`: Ürün bileşenleri (kutu, takm, etiket, paket, jelatin, esans) ve miktarları
 - `esanslar`: Esans bilgileri ve stok miktarları
@@ -50,6 +54,7 @@ Sistem aşağıdaki MySQL veritabanı tablolarını (parfum_erp) kullanarak çal
 4. **Çerçeve Sözleşme Kontrolü (cerceve_sozlesmeler tablosu):** Sistem cerceve_sozlesmeler tablosunda her bileşen (malzeme_kodu) için sözleşme olup olmadığını kontrol etmeli. Eğer bir bileşen için çerçeve sözleşmesi yoksa şu mesaj verilmeli: "Şu bileşenler için çerçeve sözleşme eksik: [bileşen adı]". Bu kontrol cerceve_sozlesmeler.malzeme_kodu ile urun_agaci.bilesen_kodu eşleşmesi üzerinden yapılmalı.
 
 5. **Üretim Kapasitesi Hesabı (urun_agaci, esans_agaci ve stok verileri):** Sistem ne_uretsem.php sayfasındaki mantıkla şu sorguları çalıştırmalı:
+
    - Her ürün için urun_agaci'deki bileşen miktarlarını ve mevcut stok miktarlarını karşılaştır
    - Esanslar için esans_agaci'deki reçete verilerini ve mevcut esans stok miktarlarını karşılaştır
    - Aktif üretim emirlerini (montaj_is_emirleri ve esans_is_emirleri) dikkate al - bu emirlerde kullanılan malzemeleri mevcut stoktan düş
@@ -64,6 +69,7 @@ Sistem aşağıdaki MySQL veritabanı tablolarını (parfum_erp) kullanarak çal
 7. **Müşteri Siparişleri Takibi (siparisler ve siparis_kalemleri tabloları):** Sistem siparis_kalemleri tablosundaki miktarları ve siparisler tablosundaki durumu 'onaylandi' olan kayıtları toplayarak kullanıcıya şu bilgiyi vermelidir: "Şu müşteri siparişleri için ürün eksik: [ürün adı] - [toplam miktar] adet". Bu hesaplama siparis_kalemleri.urun_kodu ile urunler.urun_kodu eşleşmesi üzerinden yapılmalı.
 
 8. **Sipariş ve Malzeme Takibi (satinalma_siparisler ve satinalma_siparis_kalemleri tabloları):** Eğer bir ürünün üretimi veya esans üretimi için gerekli malzeme stokta yoksa, sistem satinalma_siparisler ve satinalma_siparis_kalemleri tablolarını kontrol etmeli:
+
    - Malzeme için sipariş var mı? (satinalma_siparis_kalemleri.malzeme_kodu ile urun_agaci.bilesen_kodu veya esans_agaci.bilesen_kodu eşleşmesi)
    - Toplam sipariş miktarı nedir? (satinalma_siparis_kalemleri.miktar)
    - Teslim edilen miktar nedir? (satinalma_siparis_kalemleri.teslim_edilen_miktar)
@@ -77,46 +83,50 @@ Sistem aşağıdaki MySQL veritabanı tablolarını (parfum_erp) kullanarak çal
 
 9. **Esans Sipariş ve Üretim Takibi:** Esanslar için satinalma_siparis_kalemleri ve esans_is_emirleri tabloları kontrol edilmeli. Eğer bir esans eksikse ve sipariş verilmişse, teslim durumu takip edilmeli: "[esans_adı] için [sipariş_no] nolu siparişten [bekleyen_miktar] adet teslimi bekleniyor." Ayrıca, esans üretimi için oluşturulan iş emirlerinin durumu da takip edilmeli: "[esans_adı] için [is_emri_no] nolu iş emri [durum] durumunda, [planlanan_miktar] adet üretim planlanmış." Bu esans üretimi için gerekli hammaddelerin mevcut stoklara ve diğer üretim planlarına etkisi de hesaplanmalı. Esans üretim iş emirleri başlatıldığında, kullanılan bileşenlerin (esans_is_emri_malzeme_listesi) stoktan düşmesi dikkate alınmalı. Esans üretimi tamamlandığında, üretilen esansın stoğa eklenmesi sağlanmalı.
 
-10. **Bileşen Hesaplama ve Stok Takibi:** Ürün ve esans üretimi için gerekli bileşenlerin miktarları urun_agaci ve esans_agaci tablolarındaki reçetelere göre hesaplanmalı. Her bileşen için gereken miktar = (ürün/esans reçetesindeki miktar) * (üretilecek miktar) formülü kullanılmalı. Bu hesaplamalar sırasında mevcut stok miktarları, aktif iş emirlerinde rezerve edilen miktarlar ve beklenen siparişler dikkate alınmalı.
+10. **Bileşen Hesaplama ve Stok Takibi:** Ürün ve esans üretimi için gerekli bileşenlerin miktarları urun_agaci ve esans_agaci tablolarındaki reçetelere göre hesaplanmalı. Her bileşen için gereken miktar = (ürün/esans reçetesindeki miktar) \* (üretilecek miktar) formülü kullanılmalı. Bu hesaplamalar sırasında mevcut stok miktarları, aktif iş emirlerinde rezerve edilen miktarlar ve beklenen siparişler dikkate alınmalı.
 
 11. **Kaynak Çakışması ve Talep Yönetimi:** Ürün ve esans üretimi için ortak kullanılan hammaddeler (örneğin alkol, aroma maddeleri) için talep çakışmaları kontrol edilmeli. Sistem şu analizi yapmalı: "Şu malzeme hem ürün hem esans üretimi için talep görüyor: [malzeme_adı] - ürün üretimi için [miktar1], esans üretimi için [miktar2], toplam talep [toplam] > mevcut stok [stok_miktari]". Bu durumda kullanıcıya şu bilgi verilmeli: "Dikkat! [malzeme_adı] için talep çakışması var: [ürün_adı] ve [esans_adı] üretimi için aynı malzeme gerekli."
 
 12. **Aksiyon Önerileri:** Her durumda kullanıcıya net aksiyon önerileri sunulmalı:
-   - "Yeni çerçeve sözleşme oluştur: [bileşen_adı]"
-   - "Eksik bileşen tanımla: [ürün_adı] - [bileşen_türü]"
-   - "Malzeme siparişi ver: [malzeme_adı]"
-   - "Esans reçetesi oluştur: [esans_adı]"
-   - "Üretim emri başlat: [ürün_adı]"
-   - "Esans üretim emri oluştur: [esans_adı]"
-   - "Tedarikçiyle iletişime geç: [tedarikçi_adı]"
-   - "Kaynak çakışması için üretim planını gözden geçir: [malzeme_adı] hem ürün hem esans üretiminde gerekli"
-   - "Üretim emri tamamla: [ürün_adı] - [miktar] adet üretildi"
-   - "Esans üretim emri tamamla: [esans_adı] - [miktar] adet üretildi"
+
+- "Yeni çerçeve sözleşme oluştur: [bileşen_adı]"
+- "Eksik bileşen tanımla: [ürün_adı] - [bileşen_türü]"
+- "Malzeme siparişi ver: [malzeme_adı]"
+- "Esans reçetesi oluştur: [esans_adı]"
+- "Üretim emri başlat: [ürün_adı]"
+- "Esans üretim emri oluştur: [esans_adı]"
+- "Tedarikçiyle iletişime geç: [tedarikçi_adı]"
+- "Kaynak çakışması için üretim planını gözden geçir: [malzeme_adı] hem ürün hem esans üretiminde gerekli"
+- "Üretim emri tamamla: [ürün_adı] - [miktar] adet üretildi"
+- "Esans üretim emri tamamla: [esans_adı] - [miktar] adet üretildi"
 
 13. **Görsel ve Renk Kodlaması:** Kullanıcı dostu bir arayüz için durumlara göre renk kodlaması yapılmalı:
-   - Kırmızı: Acil aksiyon gerektiren durumlar (kritik eksiklik, sipariş geç kalmış)
-   - Sarı: Uyarı durumları (düşük stok, bekleyen sipariş)
-   - Yeşil: Güvenli durumlar (yeterli stok ve sözleşme)
-   - Mavi: Bilgilendirme amaçlı durumlar (planlanan üretim)
+
+- Kırmızı: Acil aksiyon gerektiren durumlar (kritik eksiklik, sipariş geç kalmış)
+- Sarı: Uyarı durumları (düşük stok, bekleyen sipariş)
+- Yeşil: Güvenli durumlar (yeterli stok ve sözleşme)
+- Mavi: Bilgilendirme amaçlı durumlar (planlanan üretim)
 
 14. **Stok Hareketleri ve Etkileri:** Sistem, üretim süreçlerinin stoklara etkisini takip etmeli:
-   - İş emri başlatıldığında kullanılan malzeme miktarı stoktan düşmeli
-   - İş emri tamamlandığında üretilen ürün/esans miktarı stoğa eklenmeli
-   - İş emri geri alındığında stok hareketleri tersine dönmeli
-   - Tüm stok hareketleri (giriş/çıkış) detaylı şekilde kaydedilmeli
+
+- İş emri başlatıldığında kullanılan malzeme miktarı stoktan düşmeli
+- İş emri tamamlandığında üretilen ürün/esans miktarı stoğa eklenmeli
+- İş emri geri alındığında stok hareketleri tersine dönmeli
+- Tüm stok hareketleri (giriş/çıkış) detaylı şekilde kaydedilmeli
 
 15. **Tüm Bilgiyi Tek Noktada Sunma:** Kullanıcı bu sayfaya baktığında aşağıdaki tüm bilgileri net şekilde görmelidir:
-   - Hangi ürünlerin bileşenleri eksik?
-   - Hangi ürünler kritik seviyenin altında?
-   - Hangi ürünler üretilebilir ve ne kadar?
-   - Hangi ürünler için üretim emri devam ediyor?
-   - Hangi esanslar üretilebilir ve ne kadar?
-   - Hangi esanslar için üretim emri devam ediyor?
-   - Hangi ürünler için müşteri siparişi bekliyor?
-   - Hangi malzemeler için çerçeve sözleşme eksik?
-   - Hangi malzemeler için sipariş verilmiş ve teslim durumu nedir?
-   - Hangi esanslar için reçete eksik?
-   - Hangi hammaddeler hem ürün hem de esans üretimi için gerekli ve talep çakışması var mı?
-   - Hangi aksiyonların acil olarak yapılması gerekiyor?
+
+- Hangi ürünlerin bileşenleri eksik?
+- Hangi ürünler kritik seviyenin altında?
+- Hangi ürünler üretilebilir ve ne kadar?
+- Hangi ürünler için üretim emri devam ediyor?
+- Hangi esanslar üretilebilir ve ne kadar?
+- Hangi esanslar için üretim emri devam ediyor?
+- Hangi ürünler için müşteri siparişi bekliyor?
+- Hangi malzemeler için çerçeve sözleşme eksik?
+- Hangi malzemeler için sipariş verilmiş ve teslim durumu nedir?
+- Hangi esanslar için reçete eksik?
+- Hangi hammaddeler hem ürün hem de esans üretimi için gerekli ve talep çakışması var mı?
+- Hangi aksiyonların acil olarak yapılması gerekiyor?
 
 Bu sayede kullanıcı, tedarik zinciri yönetimi konusunda tüm kararları bu tek sayfada alabilecek ve sistemin sunduğu bilgiler doğrultusunda hareket edebilecek. Kullanıcı sadece bu sayfayı takip ederek, üretim planlaması yapabilir, eksiklikleri görebilir ve gerekli aksiyonları zamanında alabilir.

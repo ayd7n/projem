@@ -473,31 +473,12 @@ while ($row = $products_result->fetch_assoc()) {
                 const currency = selectedOption.data('currency') || 'TRY';
                 const price = parseFloat(selectedOption.data('price'));
 
-                if (quantity > stock) {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Stok Yetersiz',
-                        text: `Mevcut stok: ${stock} ${unit}`,
-                        confirmButtonColor: '#333'
-                    });
-                    return;
-                }
-
                 // Check if product already exists in list
                 const existingItemIndex = orderItems.findIndex(item => item.id === productId);
 
                 if (existingItemIndex > -1) {
                     // Update quantity
                     const newQuantity = orderItems[existingItemIndex].quantity + quantity;
-                    if (newQuantity > stock) {
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Stok Sınırı',
-                            text: `Toplam miktar stoktan fazla olamaz. Mevcut stok: ${stock}`,
-                            confirmButtonColor: '#333'
-                        });
-                        return;
-                    }
                     orderItems[existingItemIndex].quantity = newQuantity;
                     orderItems[existingItemIndex].total = newQuantity * price;
                 } else {
