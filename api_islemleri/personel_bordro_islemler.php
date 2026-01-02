@@ -295,23 +295,34 @@ function kaydetMaasOdemesi()
                             AND donem_ay = $donem_ay 
                             AND maas_odemesinde_kullanildi = 0";
 
-            if (!$connection->query($avans_update)) {
-                throw new Exception('Avanslar güncellenemedi: ' . $connection->error);
-            }
+        // Döviz kurlarını çek
+        $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
+        $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+        while ($row = $rate_query->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
+            if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
+        }
+
+        // Ödenecek tutar TL (net_odenen). Seçilen kasa döviz ise, kasadan düşülecek miktarı hesapla.
+        $dusulecek_miktar = $net_odenen;
+        if ($kasa_secimi === 'USD') {
+            $dusulecek_miktar = $net_odenen / $rates['USD'];
+        } elseif ($kasa_secimi === 'EUR') {
+            $dusulecek_miktar = $net_odenen / $rates['EUR'];
         }
 
         // 4. Kasa bakiyesini düşür
         if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
             $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
             if ($bakiye_check->num_rows > 0) {
-                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $net_odenen WHERE para_birimi = '$kasa_secimi'");
+                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_miktar WHERE para_birimi = '$kasa_secimi'");
             }
         }
 
         // 5. Kasa hareketi kaydet
         $hareket_aciklama = "$personel_adi - $donem_yil/$donem_ay dönemi maaş ödemesi. $aciklama";
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
-            VALUES ('$odeme_tarihi', 'personel_odemesi', '$kasa_secimi', $net_odenen, '$kasa_secimi', $net_odenen, 'personel_maas_odemeleri', " . $connection->insert_id . ", '$hareket_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
+            VALUES ('$odeme_tarihi', 'personel_odemesi', '$kasa_secimi', $dusulecek_miktar, '$kasa_secimi', $net_odenen, 'personel_maas_odemeleri', " . $connection->insert_id . ", '$hareket_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
         $connection->query($hareket_sql);
 
         $connection->commit();
@@ -380,19 +391,35 @@ function kaydetAvans()
             throw new Exception('Avans kaydı oluşturulamadı: ' . $connection->error);
         }
 
+        // Döviz kurlarını çek
+        $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
+        $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+        while ($row = $rate_query->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
+            if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
+        }
+
+        // Avans tutarı TL (avans_tutari). Seçilen kasa döviz ise, kasadan düşülecek miktarı hesapla.
+        $dusulecek_miktar = $avans_tutari;
+        if ($kasa_secimi === 'USD') {
+            $dusulecek_miktar = $avans_tutari / $rates['USD'];
+        } elseif ($kasa_secimi === 'EUR') {
+            $dusulecek_miktar = $avans_tutari / $rates['EUR'];
+        }
+
         $avans_kayit_id = $connection->insert_id;
 
         // 3. Kasa bakiyesini düşür
         if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
             $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
             if ($bakiye_check->num_rows > 0) {
-                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $avans_tutari WHERE para_birimi = '$kasa_secimi'");
+                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_miktar WHERE para_birimi = '$kasa_secimi'");
             }
         }
 
         // 4. Kasa hareketi kaydet
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
-            VALUES ('$avans_tarihi', 'personel_avansi', '$kasa_secimi', $avans_tutari, '$kasa_secimi', $avans_tutari, 'personel_avanslar', $avans_kayit_id, '$gider_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
+            VALUES ('$avans_tarihi', 'personel_avansi', '$kasa_secimi', $dusulecek_miktar, '$kasa_secimi', $avans_tutari, 'personel_avanslar', $avans_kayit_id, '$gider_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
         $connection->query($hareket_sql);
 
         $connection->commit();

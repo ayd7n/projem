@@ -260,9 +260,19 @@ function addIncome()
         // Kasa hareketi kaydet
         $kasa_adi = ($kasa_secimi === 'cek_kasasi') ? 'cek_kasasi' : $kasa_secimi;
         $cek_id_col = ($cek_secimi !== 'NULL') ? $cek_secimi : "NULL";
+
+        // Döviz kurlarını çek
+        $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
+        $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+        while ($row = $rate_query->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
+            if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
+        }
+        
+        $tl_karsiligi = $tutar * ($rates[$para_birimi] ?? 1);
         
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, cek_id, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_musteri, odeme_tipi)
-            VALUES ('$tarih', 'gelir_girisi', '$kasa_adi', $cek_id_col, $tutar, '$para_birimi', $tutar, 'gelir_yonetimi', $gelir_id, '$aciklama', '$personel_adi', '$musteri_adi', '$odeme_tipi')";
+            VALUES ('$tarih', 'gelir_girisi', '$kasa_adi', $cek_id_col, $tutar, '$para_birimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$aciklama', '$personel_adi', '$musteri_adi', '$odeme_tipi')";
         $connection->query($hareket_sql);
 
         if ($siparis_id > 0) {

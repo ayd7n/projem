@@ -381,13 +381,22 @@ switch ($action) {
             if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
                 $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc'");
                 if ($bakiye_check->num_rows > 0) {
-                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $final_tl_amount WHERE para_birimi = '$kasa_secimi_esc'");
+                    // DİKKAT: USD kasasından USD tutarını düşmeliyiz, TL karşılığını değil!
+                    $dusulecek_tutar = ($para_birimi === $kasa_secimi) ? $amount_in_foreign_currency : $final_tl_amount;
+                    
+                    // Eğer Kasa TL ise ve ödeme USD ise, zaten yukarıda hesaplanan final_tl_amount TL'dir.
+                    // Eğer Kasa USD ise ve ödeme USD ise, amount_in_foreign_currency kullanılmalı.
+                    
+                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_tutar WHERE para_birimi = '$kasa_secimi_esc'");
                 }
             }
 
             // 4. Kasa hareketi kaydet
+            // Tutar: Orijinal para birimindeki miktar (Kasa USD ise USD miktarı)
+            $kayit_tutar = ($para_birimi === $kasa_secimi) ? $amount_in_foreign_currency : $final_tl_amount;
+            
             $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
-                VALUES ('$gider_tarih', 'gider_cikisi', '$kasa_secimi_esc', $final_tl_amount, '$kasa_secimi_esc', $final_tl_amount, 'cerceve_sozlesmeler', $sozlesme_id, '$gider_aciklama', '$personel_adi', '$tedarikci_adi', '$odeme_tipi')";
+                VALUES ('$gider_tarih', 'gider_cikisi', '$kasa_secimi_esc', $kayit_tutar, '$kasa_secimi_esc', $final_tl_amount, 'cerceve_sozlesmeler', $sozlesme_id, '$gider_aciklama', '$personel_adi', '$tedarikci_adi', '$odeme_tipi')";
             $connection->query($hareket_sql);
 
             $connection->commit();
