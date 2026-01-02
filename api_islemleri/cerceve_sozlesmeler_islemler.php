@@ -305,6 +305,7 @@ switch ($action) {
     case 'make_payment':
         $sozlesme_id = $_POST['sozlesme_id'] ?? 0;
         $payment_quantity = $_POST['quantity'] ?? 0;
+        $kasa_secimi = $_POST['kasa_secimi'] ?? 'TL';
 
         if (!$sozlesme_id || !$payment_quantity || $payment_quantity <= 0) {
             echo json_encode(['status' => 'error', 'message' => 'Geçersiz parametreler.']);
@@ -367,11 +368,26 @@ switch ($action) {
             $gider_aciklama .= $exchange_rate_info;
 
             $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
-            $gider_query = "INSERT INTO gider_yonetimi (tarih, kategori, tutar, odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_yapilan_firma) VALUES ('$gider_tarih', 'Malzeme Gideri', $final_tl_amount, 'Diğer', '$gider_aciklama', $user_id, '$personel_adi', '$tedarikci_adi')";
+            $kasa_secimi_esc = $connection->real_escape_string($kasa_secimi);
+            $gider_query = "INSERT INTO gider_yonetimi (tarih, kategori, tutar, odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_yapilan_firma, kasa_secimi) VALUES ('$gider_tarih', 'Malzeme Gideri', $final_tl_amount, 'Diğer', '$gider_aciklama', $user_id, '$personel_adi', '$tedarikci_adi', '$kasa_secimi_esc')";
 
             if (!$connection->query($gider_query)) {
                 throw new Exception("Gider kaydı oluşturulamadı: " . $connection->error);
             }
+            $gider_id = $connection->insert_id;
+
+            // 3. Kasa bakiyesini düşür
+            if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
+                $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc'");
+                if ($bakiye_check->num_rows > 0) {
+                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $final_tl_amount WHERE para_birimi = '$kasa_secimi_esc'");
+                }
+            }
+
+            // 4. Kasa hareketi kaydet
+            $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
+                VALUES ('$gider_tarih', 'gider_cikisi', '$kasa_secimi_esc', $final_tl_amount, '$kasa_secimi_esc', $final_tl_amount, 'cerceve_sozlesmeler', $sozlesme_id, '$gider_aciklama', '$personel_adi', '$tedarikci_adi', 'Diğer')";
+            $connection->query($hareket_sql);
 
             $connection->commit();
             echo json_encode(['status' => 'success', 'message' => 'Ödeme başarıyla gerçekleştirildi ve giderlere işlendi.']);

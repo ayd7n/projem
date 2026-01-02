@@ -908,6 +908,14 @@ function display_date($date_string)
                             <input type="number" id="payment-amount" class="form-control" value="${maxQuantity}" max="${maxQuantity}" min="1">
                             <small class="text-muted">Maksimum ödenebilir: ${maxQuantity} Adet</small>
                         </div>
+                        <div class="form-group">
+                            <label>Kasa Seçimi</label>
+                            <select id="payment-kasa" class="form-control">
+                                <option value="TL">TL Kasası</option>
+                                <option value="USD">USD Kasası</option>
+                                <option value="EUR">EUR Kasası</option>
+                            </select>
+                        </div>
                         <p><strong>Birim Fiyat:</strong> ${price} ${currencySymbol}</p>
                         <p class="h5 mt-3"><strong>Toplam Tutar:</strong> <span id="total-amount" class="text-success">${(maxQuantity * price).toFixed(2)} ${currencySymbol}</span></p>
                         <p class="text-muted mt-2 small">Bu işlem onaylandığında Giderler tablosuna "Ara Ödeme" olarak kaydedilecektir.</p>
@@ -940,14 +948,16 @@ function display_date($date_string)
                     },
                     preConfirm: () => {
                         const quantity = Swal.getPopup().querySelector('#payment-amount').value;
+                        const kasa = Swal.getPopup().querySelector('#payment-kasa').value;
                         if (!quantity || quantity <= 0) {
                             Swal.showValidationMessage('Lütfen geçerli bir miktar giriniz');
                         }
-                        return { quantity: quantity };
+                        return { quantity: quantity, kasa: kasa };
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const quantity = result.value.quantity;
+                        const kasa = result.value.kasa;
 
                         $.ajax({
                             url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
@@ -955,7 +965,8 @@ function display_date($date_string)
                             data: {
                                 action: 'make_payment',
                                 sozlesme_id: contractId,
-                                quantity: quantity
+                                quantity: quantity,
+                                kasa_secimi: kasa
                             },
                             dataType: 'json',
                             success: function (response) {

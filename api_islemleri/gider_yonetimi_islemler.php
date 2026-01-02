@@ -186,20 +186,54 @@ function addExpense() {
     $personel_id = $_SESSION['user_id'];
     $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
     $odeme_yapilan_firma = $connection->real_escape_string($_POST['odeme_yapilan_firma'] ?? '');
+    $kasa_secimi = $connection->real_escape_string($_POST['kasa_secimi'] ?? 'TL');
+    $cek_secimi = !empty($_POST['cek_secimi']) ? intval($_POST['cek_secimi']) : null;
 
     if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
         echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, açıklama ve ödeme tipi alanları zorunludur.']);
         return;
     }
 
-    $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi', '$odeme_yapilan_firma')";
+    $connection->begin_transaction();
+    try {
+        // Çek kasası seçildiyse çek durumunu güncelle
+        if ($kasa_secimi === 'cek_kasasi' && $cek_secimi) {
+            $cek_update = "UPDATE cek_kasasi SET cek_durumu = 'kullanildi', cek_kullanim_tarihi = NOW() WHERE cek_id = $cek_secimi";
+            if (!$connection->query($cek_update)) throw new Exception("Çek durumu güncellenemedi.");
+            $odeme_tipi = 'Çek';
+        } else {
+            // Nakit kasalardan bakiye düş
+            if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
+                $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
+                if ($bakiye_check->num_rows > 0) {
+                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $tutar WHERE para_birimi = '$kasa_secimi'");
+                }
+            }
+        }
 
-    if ($connection->query($query)) {
-        // Log ekleme
+        // Gider kaydı ekle
+        $cek_col = $cek_secimi ? ", cek_secimi" : "";
+        $cek_val = $cek_secimi ? ", $cek_secimi" : "";
+        $query = "INSERT INTO gider_yonetimi (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, fatura_no, odeme_tipi, odeme_yapilan_firma, kasa_secimi $cek_col) VALUES ('$tarih', $tutar, '$kategori', '$aciklama', $personel_id, '$personel_adi', '$fatura_no', '$odeme_tipi', '$odeme_yapilan_firma', '$kasa_secimi' $cek_val)";
+
+        if (!$connection->query($query)) throw new Exception("Gider eklenemedi: " . $connection->error);
+        $gider_id = $connection->insert_id;
+
+        // Kasa hareketi kaydet
+        $kasa_adi = ($kasa_secimi === 'cek_kasasi') ? 'cek_kasasi' : $kasa_secimi;
+        $para_birimi = in_array($kasa_secimi, ['TL', 'USD', 'EUR']) ? $kasa_secimi : 'TL';
+        $cek_id_col = $cek_secimi ? $cek_secimi : "NULL";
+        
+        $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, cek_id, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
+            VALUES ('$tarih', 'gider_cikisi', '$kasa_adi', $cek_id_col, $tutar, '$para_birimi', $tutar, 'gider_yonetimi', $gider_id, '$aciklama', '$personel_adi', '$odeme_yapilan_firma', '$odeme_tipi')";
+        $connection->query($hareket_sql);
+
+        $connection->commit();
         log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar TL tutarında gider eklendi", 'CREATE');
         echo json_encode(['status' => 'success', 'message' => 'Gider başarıyla eklendi.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gider eklenirken hata oluştu: ' . $connection->error]);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 

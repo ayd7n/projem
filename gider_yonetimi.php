@@ -611,7 +611,29 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                                         <option value="Nakit">Nakit</option>
                                         <option value="Kredi Kartı">Kredi Kartı</option>
                                         <option value="Havale">Havale/EFT</option>
+                                        <option value="Çek">Çek</option>
                                         <option value="Diğer">Diğer</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group mb-3">
+                                    <label for="kasa_secimi">Kasa Seçimi *</label>
+                                    <select class="form-control" id="kasa_secimi" name="kasa_secimi" required>
+                                        <option value="TL">TL Kasası</option>
+                                        <option value="USD">USD Kasası</option>
+                                        <option value="EUR">EUR Kasası</option>
+                                        <option value="cek_kasasi">Çek Kasası</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6" id="cekSecimiDiv" style="display: none;">
+                                <div class="form-group mb-3">
+                                    <label for="cek_secimi">Çek Seçimi *</label>
+                                    <select class="form-control" id="cek_secimi" name="cek_secimi">
+                                        <option value="">Çek Seçin...</option>
                                     </select>
                                 </div>
                             </div>
@@ -1023,12 +1045,46 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                 }
             });
 
+            // Kasa seçimi değiştiğinde çek listesini göster/gizle
+            $('#kasa_secimi').on('change', function() {
+                const selected = $(this).val();
+                if (selected === 'cek_kasasi') {
+                    $('#cekSecimiDiv').show();
+                    $('#cek_secimi').attr('required', true);
+                    loadCekler();
+                } else {
+                    $('#cekSecimiDiv').hide();
+                    $('#cek_secimi').attr('required', false);
+                }
+            });
+
+            // Çekleri yükle
+            function loadCekler() {
+                $.ajax({
+                    url: 'api_islemleri/kasa_yonetimi_islemler.php',
+                    data: { action: 'get_cekler', cek_durumu: 'alindi', per_page: 100 },
+                    dataType: 'json',
+                    success: function(response) {
+                        let options = '<option value="">Çek Seçin...</option>';
+                        if (response.status === 'success' && response.data.length > 0) {
+                            response.data.forEach(function(cek) {
+                                const tutar = Number(cek.cek_tutari).toLocaleString('tr-TR', {minimumFractionDigits: 2});
+                                options += `<option value="${cek.cek_id}">${cek.cek_no} - ${cek.cek_sahibi} (${tutar} ${cek.cek_para_birimi})</option>`;
+                            });
+                        }
+                        $('#cek_secimi').html(options);
+                    }
+                });
+            }
+
             $('#addExpenseBtn').on('click', function () {
                 $('#expenseForm')[0].reset();
                 $('#modalTitle').text('Yeni Gider Ekle');
                 $('#action').val('add_expense');
                 $('#gider_id').val('');
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
+                $('#kasa_secimi').val('TL');
+                $('#cekSecimiDiv').hide();
                 $('#submitBtn').text('Ekle').removeClass('btn-success').addClass('btn-primary');
                 $('#expenseModal').modal('show');
             });
@@ -1061,6 +1117,17 @@ $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
                             $('#aciklama').val(expense.aciklama);
                             $('#fatura_no').val(expense.fatura_no);
                             $('#odeme_yapilan_firma').val(expense.odeme_yapilan_firma);
+                            // Kasa seçimi
+                            $('#kasa_secimi').val(expense.kasa_secimi || 'TL');
+                            if (expense.kasa_secimi === 'cek_kasasi') {
+                                $('#cekSecimiDiv').show();
+                                loadCekler();
+                                setTimeout(function() {
+                                    $('#cek_secimi').val(expense.cek_secimi);
+                                }, 300);
+                            } else {
+                                $('#cekSecimiDiv').hide();
+                            }
                             $('#submitBtn').text('Güncelle').removeClass('btn-primary').addClass('btn-success');
                             $('#expenseModal').modal('show');
                         } else {

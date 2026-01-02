@@ -782,6 +782,25 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                                 placeholder="Opsiyonel">
                         </div>
 
+                        <!-- Kasa Seçimi -->
+                        <div class="form-row">
+                            <div class="form-group col-md-6 mb-2">
+                                <label for="kasa_secimi" class="small font-weight-bold">Kasa Seçimi *</label>
+                                <select class="form-control form-control-sm" id="kasa_secimi" name="kasa_secimi" required>
+                                    <option value="TL">TL Kasası</option>
+                                    <option value="USD">USD Kasası</option>
+                                    <option value="EUR">EUR Kasası</option>
+                                    <option value="cek_kasasi">Çek Kasası (Çek ile ödeme alındı)</option>
+                                </select>
+                            </div>
+                            <div class="form-group col-md-6 mb-2" id="cekBilgileriDiv" style="display: none;">
+                                <label class="small font-weight-bold">Çek Bilgileri</label>
+                                <input type="text" class="form-control form-control-sm mb-1" id="cek_no" name="cek_no" placeholder="Çek No">
+                                <input type="text" class="form-control form-control-sm mb-1" id="cek_sahibi" name="cek_sahibi" placeholder="Çek Sahibi">
+                                <input type="date" class="form-control form-control-sm" id="cek_vade" name="cek_vade">
+                            </div>
+                        </div>
+
                         <!-- Açıklama -->
                         <div class="form-group mb-3">
                             <label for="aciklama" class="small font-weight-bold">Açıklama</label>
@@ -1243,6 +1262,21 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 if (page) { currentPage = page; loadIncomes(page); }
             });
 
+            // Kasa seçimi değiştiğinde çek bilgileri alanını göster/gizle
+            $('#kasa_secimi').on('change', function() {
+                if ($(this).val() === 'cek_kasasi') {
+                    $('#cekBilgileriDiv').show();
+                    $('#cek_no').attr('required', true);
+                    $('#cek_sahibi').attr('required', true);
+                    $('#cek_vade').attr('required', true);
+                } else {
+                    $('#cekBilgileriDiv').hide();
+                    $('#cek_no').attr('required', false);
+                    $('#cek_sahibi').attr('required', false);
+                    $('#cek_vade').attr('required', false);
+                }
+            });
+
             $('#addIncomeBtn').click(function () {
                 $('#incomeForm')[0].reset();
                 $('#action').val('add_income');
@@ -1251,6 +1285,8 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
                 $('#para_birimi').val('TL'); // Set default currency
                 $('#currency-display').text('TL');
+                $('#kasa_secimi').val('TL');
+                $('#cekBilgileriDiv').hide();
 
                 // Clear order selection
                 $('#siparis_secimi').val('');
