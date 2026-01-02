@@ -771,6 +771,82 @@ function getDashboardSummary() {
     }
     $borcTL = $borclar['TL'] + ($borclar['USD'] * $rates['USD']) + ($borclar['EUR'] * $rates['EUR']);
     
+    // Bekleyen Personel Ödemeleri (Bu Ay)
+    $yil = date('Y');
+    $ay = date('n');
+    
+    // Bekleyen Personel Ödemeleri Hesaplama ve Detay Alma
+    $bekleyenPersonelListesi = [];
+    $bekleyenPersonelOdeme = 0;
+    
+    // Tüm bordrolu personeli çek
+    $personelQuery = "SELECT 
+                        p.personel_id, p.ad_soyad, p.aylik_brut_ucret 
+                      FROM personeller p 
+                      WHERE p.bordrolu_calisan_mi = 1 
+                      ORDER BY p.ad_soyad";
+    $personelResult = $connection->query($personelQuery);
+    
+    while ($p = $personelResult->fetch_assoc()) {
+        $pId = $p['personel_id'];
+        $brutUcret = floatval($p['aylik_brut_ucret']);
+        
+        // Bu personelin bu ay ödenmiş maaşı var mı?
+        $mOdeme = $connection->query("SELECT SUM(net_odenen) as toplam FROM personel_maas_odemeleri WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay")->fetch_assoc();
+        $odenenMaas = floatval($mOdeme['toplam'] ?? 0);
+        
+        // Bu personelin bu ay kullanılmış avansı var mı?
+        // Not: Burada sadece maaş ödemesi sırasında düşülmüş avansları değil, genel olarak henüz düşülmemiş avansları hesaba katmalıyız ki net ödeme tahmini doğru olsun.
+        // Ancak basitlik adına "maaş ödemesinde kullanıldı = 0" olanları düşüyoruz.
+        $kAvans = $connection->query("SELECT SUM(avans_tutari) as toplam FROM personel_avanslar WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay AND maas_odemesinde_kullanildi = 0")->fetch_assoc();
+        $kullanilmamisAvans = floatval($kAvans['toplam'] ?? 0);
+        
+        // Kalan ödenecek tahmini tutar
+        $kalanOdeme = ($brutUcret - $kullanilmamisAvans) - $odenenMaas;
+        
+        // Eğer kalan ödeme 0'dan büyükse listeye ekle
+        if ($kalanOdeme > 0) {
+            $bekleyenPersonelListesi[] = [
+                'ad_soyad' => $p['ad_soyad'],
+                'brut_ucret' => $brutUcret,
+                'avans' => $kullanilmamisAvans,
+                'odenen' => $odenenMaas,
+                'kalan_odeme' => round($kalanOdeme, 2)
+            ];
+            $bekleyenPersonelOdeme += $kalanOdeme;
+        }
+    }
+    
+    
+    // Bekleyen Tekrarlı Ödemeler Hesaplama ve Detay Alma
+    $bugunGun = date('d');
+    $bekleyenTekrarliListesi = [];
+    
+    $tekrarliQuery = "SELECT t.odeme_adi, t.tutar, t.odeme_gunu, t.alici_firma
+                      FROM tekrarli_odemeler t 
+                      WHERE t.aktif = 1 
+                      AND NOT EXISTS (
+                          SELECT 1 FROM tekrarli_odeme_gecmisi g 
+                          WHERE g.odeme_id = t.odeme_id 
+                          AND g.donem_yil = $yil 
+                          AND g.donem_ay = $ay
+                      )
+                      ORDER BY t.odeme_gunu";
+    $tekrarliResult = $connection->query($tekrarliQuery);
+    
+    $bekleyenTekrarliOdeme = 0;
+    while ($row = $tekrarliResult->fetch_assoc()) {
+        $tutar = floatval($row['tutar']);
+        $bekleyenTekrarliOdeme += $tutar;
+        
+        $bekleyenTekrarliListesi[] = [
+            'odeme_adi' => $row['odeme_adi'],
+            'alici_firma' => $row['alici_firma'],
+            'odeme_gunu' => $row['odeme_gunu'],
+            'tutar' => $tutar
+        ];
+    }
+    
     echo json_encode([
         'status' => 'success',
         'data' => [
@@ -785,6 +861,15 @@ function getDashboardSummary() {
                 'malzemeler' => round(floatval($malzemeDeger), 2),
                 'esanslar' => round(floatval($esansDeger), 2),
                 'toplam' => round(floatval($urunDeger) + floatval($malzemeDeger) + floatval($esansDeger), 2)
+            ],
+            'bekleyen_odemeler' => [
+                'personel' => round($bekleyenPersonelOdeme, 2),
+                'sabit_giderler' => round($bekleyenTekrarliOdeme, 2),
+                'toplam' => round($bekleyenPersonelOdeme + $bekleyenTekrarliOdeme, 2),
+                'detaylar' => [
+                    'personel' => $bekleyenPersonelListesi,
+                    'sabit_giderler' => $bekleyenTekrarliListesi
+                ]
             ],
             'tedarikci_borclari' => [
                 'detay' => $borclar,

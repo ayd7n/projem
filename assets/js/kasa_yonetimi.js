@@ -3,6 +3,9 @@
  * Dashboard verilerini yükler ve kasa işlemlerini yönetir
  */
 
+// Global değişken
+let dashboardData = {};
+
 $(document).ready(function () {
   // Başlangıç ayarları
   initializePage();
@@ -32,6 +35,76 @@ function initializePage() {
 
 // Event listener'ları kur
 function setupEventListeners() {
+  // Personel detay butonu
+  $("#personelDetayBtn").click(function () {
+    if (
+      dashboardData &&
+      dashboardData.bekleyen_odemeler &&
+      dashboardData.bekleyen_odemeler.detaylar &&
+      dashboardData.bekleyen_odemeler.detaylar.personel
+    ) {
+      const personelListesi = dashboardData.bekleyen_odemeler.detaylar.personel;
+      let html = "";
+
+      if (personelListesi.length > 0) {
+        personelListesi.forEach((p) => {
+          html += `
+                      <tr>
+                          <td>${p.ad_soyad}</td>
+                          <td>${formatMoney(p.brut_ucret)} ₺</td>
+                          <td>${formatMoney(p.avans)} ₺</td>
+                          <td>${formatMoney(p.odenen)} ₺</td>
+                          <td class="text-danger font-weight-bold">${formatMoney(
+                            p.kalan_odeme
+                          )} ₺</td>
+                      </tr>
+                  `;
+        });
+      } else {
+        html =
+          '<tr><td colspan="5" class="text-center">Ödenmemiş personel maaşı bulunamadı.</td></tr>';
+      }
+
+      $("#personelDetayTableBody").html(html);
+      $("#personelMaasDetayModal").modal("show");
+    }
+  });
+
+  // Sabit gider detay butonu
+  $("#sabitGiderDetayBtn").click(function () {
+    if (
+      dashboardData &&
+      dashboardData.bekleyen_odemeler &&
+      dashboardData.bekleyen_odemeler.detaylar &&
+      dashboardData.bekleyen_odemeler.detaylar.sabit_giderler
+    ) {
+      const giderListesi =
+        dashboardData.bekleyen_odemeler.detaylar.sabit_giderler;
+      let html = "";
+
+      if (giderListesi.length > 0) {
+        giderListesi.forEach((g) => {
+          html += `
+                      <tr>
+                          <td>${g.odeme_gunu}</td>
+                          <td>${g.odeme_adi}</td>
+                          <td>${g.alici_firma}</td>
+                          <td class="text-danger font-weight-bold">${formatMoney(
+                            g.tutar
+                          )} ₺</td>
+                      </tr>
+                  `;
+        });
+      } else {
+        html =
+          '<tr><td colspan="4" class="text-center">Ödenmemiş sabit gider bulunamadı.</td></tr>';
+      }
+
+      $("#sabitGiderDetayTableBody").html(html);
+      $("#sabitGiderDetayModal").modal("show");
+    }
+  });
+
   // Kasa işlem butonu
   $("#kasaIslemBtn").click(function () {
     $("#kasaIslemTipi").val("kasa_ekle");
@@ -172,6 +245,9 @@ function loadDashboardData() {
 
 // Dashboard'u güncelle
 function updateDashboard(data) {
+  // Veriyi global değişkene kaydet (Modallar için)
+  dashboardData = data;
+
   // Stok değerleri
   $("#stokUrunler").text(formatMoney(data.stok_degerleri.urunler) + " ₺");
   $("#stokMalzemeler").text(formatMoney(data.stok_degerleri.malzemeler) + " ₺");
@@ -196,6 +272,16 @@ function updateDashboard(data) {
   );
   $("#borcTL").text(formatMoney(data.tedarikci_borclari.detay.TL || 0) + " ₺");
   $("#borcToplam").text(formatMoney(data.tedarikci_borclari.tl_toplam) + " ₺");
+
+  // Bekleyen Ödemeler (Yeni)
+  if (data.bekleyen_odemeler) {
+    $("#bekleyenPersonel").text(
+      formatMoney(data.bekleyen_odemeler.personel) + " ₺"
+    );
+    $("#bekleyenSabit").text(
+      formatMoney(data.bekleyen_odemeler.sabit_giderler) + " ₺"
+    );
+  }
 
   // Müşteri alacakları
   if (data.musteri_alacaklari) {

@@ -513,6 +513,30 @@ if (!yetkisi_var('page:view:gider_yonetimi')) {
             </div>
         </div>
 
+        <!-- Bekleyen Ödemeler Grid (Yeni) -->
+        <div class="kasa-grid" style="grid-template-columns: repeat(2, 1fr);">
+            <div class="kasa-card" style="background: linear-gradient(135deg, #FF9966, #FF5E62); color: white; border: none; position: relative;">
+                <button class="btn btn-sm btn-light btn-circle" id="personelDetayBtn" style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; padding: 0; line-height: 30px; border-radius: 50%; color: #FF5E62;">
+                    <i class="fas fa-list"></i>
+                </button>
+                <div class="icon" style="background: rgba(255,255,255,0.2); color: white;"><i class="fas fa-users"></i></div>
+                <div class="kasa-info">
+                    <div class="value" id="bekleyenPersonel">0,00 ₺</div>
+                    <div class="label" style="color: rgba(255,255,255,0.9);">Personel Maaşları (Bekleyen)</div>
+                </div>
+            </div>
+            <div class="kasa-card" style="background: linear-gradient(135deg, #56CCF2, #2F80ED); color: white; border: none; position: relative;">
+                <button class="btn btn-sm btn-light btn-circle" id="sabitGiderDetayBtn" style="position: absolute; top: 10px; right: 10px; width: 30px; height: 30px; padding: 0; line-height: 30px; border-radius: 50%; color: #2F80ED;">
+                    <i class="fas fa-list"></i>
+                </button>
+                <div class="icon" style="background: rgba(255,255,255,0.2); color: white;"><i class="fas fa-redo-alt"></i></div>
+                <div class="kasa-info">
+                    <div class="value" id="bekleyenSabit">0,00 ₺</div>
+                    <div class="label" style="color: rgba(255,255,255,0.9);">Sabit Giderler (Bekleyen)</div>
+                </div>
+            </div>
+        </div>
+
         <!-- Info Cards -->
         <div class="info-grid">
             <!-- Tedarikçi Borçları -->
@@ -928,6 +952,73 @@ if (!yetkisi_var('page:view:gider_yonetimi')) {
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Personel Maaşları Detay Modal -->
+    <div class="modal fade" id="personelMaasDetayModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #FF9966, #FF5E62);">
+                    <h5 class="modal-title" style="color: #fff;"><i class="fas fa-users"></i> Personel Maaşları Detayı</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Personel</th>
+                                    <th>Brüt Ücret</th>
+                                    <th>Düşülmemiş Avans</th>
+                                    <th>Ödenen Maaş</th>
+                                    <th>Tahmini Ödenecek</th>
+                                </tr>
+                            </thead>
+                            <tbody id="personelDetayTableBody">
+                                <tr><td colspan="5" class="text-center p-4">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                    <a href="personel_bordro.php" class="btn btn-primary">Bordro Sayfasına Git</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sabit Giderler Detay Modal -->
+    <div class="modal fade" id="sabitGiderDetayModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #56CCF2, #2F80ED);">
+                    <h5 class="modal-title" style="color: #fff;"><i class="fas fa-redo-alt"></i> Sabit Giderler Detayı</h5>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Vade Günü</th>
+                                    <th>Ödeme Adı</th>
+                                    <th>Alıcı Firma</th>
+                                    <th>Tutar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sabitGiderDetayTableBody">
+                                <tr><td colspan="4" class="text-center p-4">Yükleniyor...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+                    <a href="tekrarli_odemeler.php" class="btn btn-primary">Ödemeler Sayfasına Git</a>
                 </div>
             </div>
         </div>
