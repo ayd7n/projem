@@ -235,6 +235,7 @@ function kaydetMaasOdemesi()
     $net_odenen = floatval($_POST['net_odenen'] ?? 0);
     $odeme_tarihi = $connection->real_escape_string($_POST['odeme_tarihi'] ?? date('Y-m-d'));
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Havale');
+    $kasa_secimi = $connection->real_escape_string($_POST['kasa_secimi'] ?? 'TL');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $kaydeden_personel_id = $_SESSION['user_id'];
     $kaydeden_personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
@@ -259,11 +260,11 @@ function kaydetMaasOdemesi()
     try {
         // 1. Gider kaydı oluştur
         $gider_query = "INSERT INTO gider_yonetimi 
-                        (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma) 
+                        (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma, kasa_secimi) 
                         VALUES 
                         ('$odeme_tarihi', $net_odenen, 'Personel Gideri', 
                          '$personel_adi - $donem_yil/$donem_ay dönemi maaş ödemesi. $aciklama', 
-                         $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi')";
+                         $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi', '$kasa_secimi')";
 
         if (!$connection->query($gider_query)) {
             throw new Exception('Gider kaydı oluşturulamadı: ' . $connection->error);
@@ -299,6 +300,20 @@ function kaydetMaasOdemesi()
             }
         }
 
+        // 4. Kasa bakiyesini düşür
+        if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
+            $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
+            if ($bakiye_check->num_rows > 0) {
+                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $net_odenen WHERE para_birimi = '$kasa_secimi'");
+            }
+        }
+
+        // 5. Kasa hareketi kaydet
+        $hareket_aciklama = "$personel_adi - $donem_yil/$donem_ay dönemi maaş ödemesi. $aciklama";
+        $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
+            VALUES ('$odeme_tarihi', 'personel_odemesi', '$kasa_secimi', $net_odenen, '$kasa_secimi', $net_odenen, 'personel_maas_odemeleri', " . $connection->insert_id . ", '$hareket_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
+        $connection->query($hareket_sql);
+
         $connection->commit();
 
         // Log kaydı
@@ -328,6 +343,7 @@ function kaydetAvans()
     $donem_yil = isset($_POST['donem_yil']) ? (int) $_POST['donem_yil'] : date('Y');
     $donem_ay = isset($_POST['donem_ay']) ? (int) $_POST['donem_ay'] : date('n');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Nakit');
+    $kasa_secimi = $connection->real_escape_string($_POST['kasa_secimi'] ?? 'TL');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $kaydeden_personel_id = $_SESSION['user_id'];
     $kaydeden_personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
@@ -343,10 +359,10 @@ function kaydetAvans()
         // 1. Gider kaydı oluştur
         $gider_aciklama = "$personel_adi - $donem_yil/$donem_ay dönemi avans ödemesi. $aciklama";
         $gider_query = "INSERT INTO gider_yonetimi 
-                        (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma) 
+                        (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma, kasa_secimi) 
                         VALUES 
                         ('$avans_tarihi', $avans_tutari, 'Personel Avansı', '$gider_aciklama', 
-                         $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi')";
+                         $kaydeden_personel_id, '$kaydeden_personel_adi', '$odeme_tipi', '$personel_adi', '$kasa_secimi')";
 
         if (!$connection->query($gider_query)) {
             throw new Exception('Gider kaydı oluşturulamadı: ' . $connection->error);
@@ -363,6 +379,21 @@ function kaydetAvans()
         if (!$connection->query($query)) {
             throw new Exception('Avans kaydı oluşturulamadı: ' . $connection->error);
         }
+
+        $avans_kayit_id = $connection->insert_id;
+
+        // 3. Kasa bakiyesini düşür
+        if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
+            $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
+            if ($bakiye_check->num_rows > 0) {
+                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $avans_tutari WHERE para_birimi = '$kasa_secimi'");
+            }
+        }
+
+        // 4. Kasa hareketi kaydet
+        $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
+            VALUES ('$avans_tarihi', 'personel_avansi', '$kasa_secimi', $avans_tutari, '$kasa_secimi', $avans_tutari, 'personel_avanslar', $avans_kayit_id, '$gider_aciklama', '$kaydeden_personel_adi', '$personel_adi', '$odeme_tipi')";
+        $connection->query($hareket_sql);
 
         $connection->commit();
 

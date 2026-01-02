@@ -752,6 +752,15 @@ if (!yetkisi_var('page:view:gider_yonetimi')) {
                             </div>
                         </div>
                         <div class="form-group">
+                            <label>İşlem Yöntemi</label>
+                            <select class="form-control" id="kasaOdemeTipi" name="odeme_tipi_detay">
+                                <option value="Nakit">Nakit</option>
+                                <option value="Havale/EFT">Havale/EFT</option>
+                                <option value="Kredi Kartı">Kredi Kartı</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Tarih</label>
                             <input type="datetime-local" class="form-control" id="kasaTarih" name="tarih">
                         </div>

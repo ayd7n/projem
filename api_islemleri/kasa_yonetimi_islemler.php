@@ -225,6 +225,8 @@ function addKasaIslemi() {
     $kasaAdi = $_POST['kasa_adi'] ?? 'TL';   // TL, USD, EUR
     $tutar = floatval($_POST['tutar'] ?? 0);
     $aciklama = $_POST['aciklama'] ?? '';
+    // Formdaki name="odeme_tipi_detay" ama db'de "odeme_tipi" olarak saklayacağız
+    $odemeTipi = $_POST['odeme_tipi_detay'] ?? 'Nakit'; 
     $personel = $_SESSION['kullanici_adi'] ?? 'Sistem';
     
     if ($tutar <= 0) throw new Exception('Geçersiz tutar.');
@@ -254,11 +256,11 @@ function addKasaIslemi() {
         
         // Kasa hareketleri tablosuna kaydet
         $stmt = $connection->prepare("
-            INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, doviz_kuru, tl_karsiligi, aciklama, kaydeden_personel)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, doviz_kuru, tl_karsiligi, aciklama, kaydeden_personel, odeme_tipi)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
         $dovizKuru = $rates[$kasaAdi];
-        $stmt->bind_param("sssdsddss", $tarih, $islemTipi, $kasaAdi, $tutar, $kasaAdi, $dovizKuru, $tlKarsiligi, $aciklama, $personel);
+        $stmt->bind_param("sssdsddsss", $tarih, $islemTipi, $kasaAdi, $tutar, $kasaAdi, $dovizKuru, $tlKarsiligi, $aciklama, $personel, $odemeTipi);
         $stmt->execute();
         
         $connection->commit();

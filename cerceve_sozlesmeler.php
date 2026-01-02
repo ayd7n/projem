@@ -909,6 +909,16 @@ function display_date($date_string)
                             <small class="text-muted">Maksimum ödenebilir: ${maxQuantity} Adet</small>
                         </div>
                         <div class="form-group">
+                            <label>Ödeme Tipi</label>
+                            <select id="payment-odeme-tipi" class="form-control">
+                                <option value="Nakit">Nakit</option>
+                                <option value="Kredi Kartı">Kredi Kartı</option>
+                                <option value="Havale/EFT" selected>Havale/EFT</option>
+                                <option value="Çek">Çek</option>
+                                <option value="Diğer">Diğer</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
                             <label>Kasa Seçimi</label>
                             <select id="payment-kasa" class="form-control">
                                 <option value="TL">TL Kasası</option>
@@ -918,7 +928,7 @@ function display_date($date_string)
                         </div>
                         <p><strong>Birim Fiyat:</strong> ${price} ${currencySymbol}</p>
                         <p class="h5 mt-3"><strong>Toplam Tutar:</strong> <span id="total-amount" class="text-success">${(maxQuantity * price).toFixed(2)} ${currencySymbol}</span></p>
-                        <p class="text-muted mt-2 small">Bu işlem onaylandığında Giderler tablosuna "Ara Ödeme" olarak kaydedilecektir.</p>
+                        <p class="text-muted mt-2 small">Bu işlem onaylandığında Giderler tablosuna kaydedilecektir.</p>
                     </div>
                 `,
                     icon: 'question',
@@ -949,15 +959,17 @@ function display_date($date_string)
                     preConfirm: () => {
                         const quantity = Swal.getPopup().querySelector('#payment-amount').value;
                         const kasa = Swal.getPopup().querySelector('#payment-kasa').value;
+                        const odemeTipi = Swal.getPopup().querySelector('#payment-odeme-tipi').value;
                         if (!quantity || quantity <= 0) {
                             Swal.showValidationMessage('Lütfen geçerli bir miktar giriniz');
                         }
-                        return { quantity: quantity, kasa: kasa };
+                        return { quantity: quantity, kasa: kasa, odemeTipi: odemeTipi };
                     }
                 }).then((result) => {
                     if (result.isConfirmed) {
                         const quantity = result.value.quantity;
                         const kasa = result.value.kasa;
+                        const odemeTipi = result.value.odemeTipi;
 
                         $.ajax({
                             url: 'api_islemleri/cerceve_sozlesmeler_islemler.php',
@@ -966,7 +978,8 @@ function display_date($date_string)
                                 action: 'make_payment',
                                 sozlesme_id: contractId,
                                 quantity: quantity,
-                                kasa_secimi: kasa
+                                kasa_secimi: kasa,
+                                odeme_tipi: odemeTipi
                             },
                             dataType: 'json',
                             success: function (response) {

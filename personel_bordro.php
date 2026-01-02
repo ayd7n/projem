@@ -301,6 +301,14 @@ $current_month = date('n');
                                 </div>
                             </div>
                             <div class="form-group">
+                                <label>Kasa Seçimi *</label>
+                                <select class="form-control" v-model="maasOdemeData.kasa_secimi" required>
+                                    <option value="TL">TL Kasası</option>
+                                    <option value="USD">USD Kasası</option>
+                                    <option value="EUR">EUR Kasası</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
                                 <label>Açıklama</label>
                                 <textarea class="form-control" v-model="maasOdemeData.aciklama" rows="2"></textarea>
                             </div>
@@ -349,13 +357,27 @@ $current_month = date('n');
                                     </div>
                                 </div>
                             </div>
-                            <div class="form-group">
-                                <label>Ödeme Tipi *</label>
-                                <select class="form-control" v-model="avansData.odeme_tipi" required>
-                                    <option value="Nakit">Nakit</option>
-                                    <option value="Havale">Havale/EFT</option>
-                                    <option value="Çek">Çek</option>
-                                </select>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Ödeme Tipi *</label>
+                                        <select class="form-control" v-model="avansData.odeme_tipi" required>
+                                            <option value="Nakit">Nakit</option>
+                                            <option value="Havale">Havale/EFT</option>
+                                            <option value="Çek">Çek</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label>Kasa Seçimi *</label>
+                                        <select class="form-control" v-model="avansData.kasa_secimi" required>
+                                            <option value="TL">TL Kasası</option>
+                                            <option value="USD">USD Kasası</option>
+                                            <option value="EUR">EUR Kasası</option>
+                                        </select>
+                                    </div>
+                                </div>
                             </div>
                             <div class="form-group">
                                 <label>Açıklama</label>
@@ -500,6 +522,7 @@ $current_month = date('n');
                         net_odenen: 0,
                         odeme_tarihi: new Date().toISOString().split('T')[0],
                         odeme_tipi: 'Havale',
+                        kasa_secimi: 'TL',
                         aciklama: ''
                     },
                     avansData: {
@@ -508,6 +531,7 @@ $current_month = date('n');
                         avans_tutari: 0,
                         avans_tarihi: new Date().toISOString().split('T')[0],
                         odeme_tipi: 'Nakit',
+                        kasa_secimi: 'TL',
                         aciklama: ''
                     },
                     gecmisData: {
@@ -577,6 +601,7 @@ $current_month = date('n');
                         net_odenen: item.net_odenecek,
                         odeme_tarihi: new Date().toISOString().split('T')[0],
                         odeme_tipi: 'Havale',
+                        kasa_secimi: 'TL',
                         aciklama: ''
                     };
                     $('#maasOdemeModal').modal('show');
@@ -593,7 +618,51 @@ $current_month = date('n');
                     formData.append('net_odenen', this.maasOdemeData.net_odenen);
                     formData.append('odeme_tarihi', this.maasOdemeData.odeme_tarihi);
                     formData.append('odeme_tipi', this.maasOdemeData.odeme_tipi);
+                    formData.append('kasa_secimi', this.maasOdemeData.kasa_secimi);
                     formData.append('aciklama', this.maasOdemeData.aciklama);
+
+                    fetch('api_islemleri/personel_bordro_islemler.php', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(response => response.json())
+                        .then(response => {
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success');
+                                $('#maasOdemeModal').modal('hide');
+                                this.loadBordroOzeti();
+                            } else {
+                                this.showAlert(response.message, 'danger');
+                            }
+                        })
+                        .catch(error => {
+                            this.showAlert('Maaş ödemesi kaydedilirken bir hata oluştu.', 'danger');
+                        });
+                },
+                openAvansModal(item) {
+                    this.avansData = {
+                        personel_id: item.personel_id,
+                        personel_adi: item.ad_soyad,
+                        avans_tutari: 0,
+                        avans_tarihi: new Date().toISOString().split('T')[0],
+                        odeme_tipi: 'Nakit',
+                        kasa_secimi: 'TL',
+                        aciklama: ''
+                    };
+                    $('#avansModal').modal('show');
+                },
+                kaydetAvans() {
+                    let formData = new FormData();
+                    formData.append('action', 'kaydet_avans');
+                    formData.append('personel_id', this.avansData.personel_id);
+                    formData.append('personel_adi', this.avansData.personel_adi);
+                    formData.append('avans_tutari', this.avansData.avans_tutari);
+                    formData.append('avans_tarihi', this.avansData.avans_tarihi);
+                    formData.append('donem_yil', this.selectedYear);
+                    formData.append('donem_ay', this.selectedMonth);
+                    formData.append('odeme_tipi', this.avansData.odeme_tipi);
+                    formData.append('kasa_secimi', this.avansData.kasa_secimi);
+                    formData.append('aciklama', this.avansData.aciklama);
 
                     fetch('api_islemleri/personel_bordro_islemler.php', {
                         method: 'POST',
