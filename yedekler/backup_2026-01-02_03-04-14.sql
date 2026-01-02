@@ -28,7 +28,7 @@ CREATE TABLE `ayarlar` (
   `ayar_deger` varchar(255) NOT NULL,
   PRIMARY KEY (`ayar_id`),
   UNIQUE KEY `ayar_anahtar` (`ayar_anahtar`)
-) ENGINE=InnoDB AUTO_INCREMENT=63 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -37,8 +37,51 @@ CREATE TABLE `ayarlar` (
 
 LOCK TABLES `ayarlar` WRITE;
 /*!40000 ALTER TABLE `ayarlar` DISABLE KEYS */;
-INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2025-12-31 16:08:53'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
+INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2026-01-02 01:58:31'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
 /*!40000 ALTER TABLE `ayarlar` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cek_kasasi`
+--
+
+DROP TABLE IF EXISTS `cek_kasasi`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cek_kasasi` (
+  `cek_id` int(11) NOT NULL AUTO_INCREMENT,
+  `cek_no` varchar(50) NOT NULL COMMENT 'Cek numarasi veya referans numarasi',
+  `cek_tutari` decimal(15,2) NOT NULL COMMENT 'Cek tutari',
+  `cek_para_birimi` varchar(3) NOT NULL DEFAULT 'TL' COMMENT 'Cekin para birimi (TL, USD, EUR)',
+  `cek_sahibi` varchar(255) NOT NULL COMMENT 'Cekin sahibi veya veren kisi',
+  `cek_banka_adi` varchar(255) DEFAULT NULL COMMENT 'Cekin ait oldugu banka',
+  `cek_subesi` varchar(255) DEFAULT NULL COMMENT 'Cekin ait oldugu sube',
+  `vade_tarihi` date NOT NULL COMMENT 'Cekin vade tarihi',
+  `cek_tipi` enum('alacak','verilen') NOT NULL DEFAULT 'alacak' COMMENT 'Cekin turu: alacak veya verilen',
+  `cek_durumu` enum('alindi','kullanildi','iptal','geri_odendi','teminat_verildi','tahsilde') NOT NULL DEFAULT 'alindi' COMMENT 'Cekin durumu',
+  `cek_alim_tarihi` datetime NOT NULL DEFAULT current_timestamp() COMMENT 'Cekin alindigi tarih',
+  `cek_kullanim_tarihi` datetime DEFAULT NULL COMMENT 'Cekin kullanildigi tarih',
+  `cek_son_durum_tarihi` datetime DEFAULT NULL COMMENT 'Cekin son durum degisikligi tarihi',
+  `aciklama` text DEFAULT NULL COMMENT 'Cek aciklamasi',
+  `kaydeden_personel` varchar(100) DEFAULT NULL COMMENT 'Ceki kaydeden personel',
+  `ilgili_tablo` varchar(50) DEFAULT NULL COMMENT 'Cekin iliskili oldugu tablo',
+  `ilgili_id` int(11) DEFAULT NULL COMMENT 'Cekin iliskili oldugu kayit ID',
+  PRIMARY KEY (`cek_id`),
+  KEY `vade_tarihi` (`vade_tarihi`),
+  KEY `cek_durumu` (`cek_durumu`),
+  KEY `cek_para_birimi` (`cek_para_birimi`),
+  KEY `cek_no` (`cek_no`),
+  KEY `cek_tipi` (`cek_tipi`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cek_kasasi`
+--
+
+LOCK TABLES `cek_kasasi` WRITE;
+/*!40000 ALTER TABLE `cek_kasasi` DISABLE KEYS */;
+/*!40000 ALTER TABLE `cek_kasasi` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -64,6 +107,8 @@ CREATE TABLE `cerceve_sozlesmeler` (
   `olusturulma_tarihi` datetime DEFAULT current_timestamp(),
   `aciklama` text DEFAULT NULL,
   `oncelik` int(11) DEFAULT 0,
+  `odeme_kasasi` varchar(20) NOT NULL DEFAULT 'TL' COMMENT 'TL, USD, EUR, cek_kasasi',
+  `odenen_cek_id` int(11) DEFAULT NULL COMMENT 'cek_kasasi tablosundaki cek_id',
   PRIMARY KEY (`sozlesme_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -74,7 +119,7 @@ CREATE TABLE `cerceve_sozlesmeler` (
 
 LOCK TABLES `cerceve_sozlesmeler` WRITE;
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` DISABLE KEYS */;
-INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'kırmızıgül ',2,'CHANEL COCO TAKIM',2.20,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:42:26','',1),(2,3,'luzi',1,'CHANEL COCO HAM ESANS',120.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:18','',1),(3,4,'paket',5,'CHANEL COCO paket',1.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:58','',1),(4,2,'şener şimşek',3,'CHANEL COCO kutu',0.50,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:46:44','',1),(5,5,'jilatin ',4,'CHANEL COCO jelatin',1.00,'TL',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:47:47','',1),(7,8,'alkol',7,'alkol',1.50,'USD',9999,250,'2025-12-12','2025-12-30','Admin User','2025-12-25 12:11:14','',1),(8,3,'luzi',1,'CHANEL COCO HAM ESANS',110.00,'USD',9999,15,'2025-12-12','2026-12-30','Admin User','2025-12-26 14:37:52','',1);
+INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'kırmızıgül ',2,'CHANEL COCO TAKIM',2.20,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:42:26','',1,'TL',NULL),(2,3,'luzi',1,'CHANEL COCO HAM ESANS',120.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:18','',1,'TL',NULL),(3,4,'paket',5,'CHANEL COCO paket',1.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:58','',1,'TL',NULL),(4,2,'şener şimşek',3,'CHANEL COCO kutu',0.50,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:46:44','',1,'TL',NULL),(5,5,'jilatin ',4,'CHANEL COCO jelatin',1.00,'TL',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:47:47','',1,'TL',NULL),(7,8,'alkol',7,'alkol',1.50,'USD',9999,250,'2025-12-12','2025-12-30','Admin User','2025-12-25 12:11:14','',1,'TL',NULL),(8,3,'luzi',1,'CHANEL COCO HAM ESANS',110.00,'USD',9999,15,'2025-12-12','2026-12-30','Admin User','2025-12-26 14:37:52','',1,'TL',NULL);
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -321,6 +366,8 @@ CREATE TABLE `gelir_yonetimi` (
   `musteri_id` int(11) DEFAULT NULL,
   `musteri_adi` varchar(255) DEFAULT NULL,
   `taksit_id` int(11) DEFAULT NULL,
+  `kasa_secimi` varchar(20) NOT NULL DEFAULT 'TL' COMMENT 'TL, USD, EUR, cek_kasasi',
+  `cek_secimi` int(11) DEFAULT NULL COMMENT 'cek_kasasi tablosundaki cek_id',
   PRIMARY KEY (`gelir_id`),
   KEY `siparis_id` (`siparis_id`),
   KEY `musteri_id` (`musteri_id`),
@@ -334,7 +381,7 @@ CREATE TABLE `gelir_yonetimi` (
 
 LOCK TABLES `gelir_yonetimi` WRITE;
 /*!40000 ALTER TABLE `gelir_yonetimi` DISABLE KEYS */;
-INSERT INTO `gelir_yonetimi` VALUES (7,'2025-12-30 00:00:00',1950.00,'USD','Sipariş Ödemesi','Sipariş No: #5 tahsilatı',1,'Admin User',5,'Nakit',1,'MEHMET FATİH GÜZEN',NULL),(8,'2025-12-30 00:00:00',1740.00,'USD','Sipariş Ödemesi','Sipariş No: #6 tahsilatı',1,'Admin User',6,'Nakit',3,'OSMAN GÜZEN',NULL);
+INSERT INTO `gelir_yonetimi` VALUES (7,'2025-12-30 00:00:00',1950.00,'USD','Sipariş Ödemesi','Sipariş No: #5 tahsilatı',1,'Admin User',5,'Nakit',1,'MEHMET FATİH GÜZEN',NULL,'TL',NULL),(8,'2025-12-30 00:00:00',1740.00,'USD','Sipariş Ödemesi','Sipariş No: #6 tahsilatı',1,'Admin User',6,'Nakit',3,'OSMAN GÜZEN',NULL,'TL',NULL);
 /*!40000 ALTER TABLE `gelir_yonetimi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -356,6 +403,8 @@ CREATE TABLE `gider_yonetimi` (
   `fatura_no` varchar(100) DEFAULT NULL,
   `odeme_tipi` varchar(50) DEFAULT NULL,
   `odeme_yapilan_firma` varchar(255) DEFAULT NULL,
+  `kasa_secimi` varchar(20) NOT NULL DEFAULT 'TL' COMMENT 'TL, USD, EUR, cek_kasasi',
+  `cek_secimi` int(11) DEFAULT NULL COMMENT 'cek_kasasi tablosundaki cek_id',
   PRIMARY KEY (`gider_id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -366,7 +415,7 @@ CREATE TABLE `gider_yonetimi` (
 
 LOCK TABLES `gider_yonetimi` WRITE;
 /*!40000 ALTER TABLE `gider_yonetimi` DISABLE KEYS */;
-INSERT INTO `gider_yonetimi` VALUES (1,'2025-12-26',70702.50,'Malzeme Gideri','CHANEL COCO HAM ESANS için 15 adet ara ödeme (1.650,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','luzi'),(2,'2025-12-26',16068.75,'Malzeme Gideri','alkol için 250 adet ara ödeme (375,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','alkol');
+INSERT INTO `gider_yonetimi` VALUES (1,'2025-12-26',70702.50,'Malzeme Gideri','CHANEL COCO HAM ESANS için 15 adet ara ödeme (1.650,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','luzi','TL',NULL),(2,'2025-12-26',16068.75,'Malzeme Gideri','alkol için 250 adet ara ödeme (375,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','alkol','TL',NULL);
 /*!40000 ALTER TABLE `gider_yonetimi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -395,6 +444,56 @@ LOCK TABLES `is_merkezleri` WRITE;
 /*!40000 ALTER TABLE `is_merkezleri` DISABLE KEYS */;
 INSERT INTO `is_merkezleri` VALUES (5,'AHMET ERSİN GÜZEN','ATÖLYE A'),(6,'ABUBEKİR ÖNEL','ATÖLYE B');
 /*!40000 ALTER TABLE `is_merkezleri` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `kasa_hareketleri`
+--
+
+DROP TABLE IF EXISTS `kasa_hareketleri`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `kasa_hareketleri` (
+  `hareket_id` int(11) NOT NULL AUTO_INCREMENT,
+  `tarih` datetime NOT NULL DEFAULT current_timestamp(),
+  `islem_tipi` varchar(50) NOT NULL COMMENT 'kasa_ekle, kasa_cikar, cek_alma, cek_odeme, cek_kullanimi, cek_tahsile_gonderme, cek_tahsildi, gelir_girisi, gider_cikisi, transfer_giris, transfer_cikis',
+  `kasa_adi` varchar(20) NOT NULL COMMENT 'TL, USD, EUR, cek_kasasi',
+  `cek_id` int(11) DEFAULT NULL COMMENT 'Islem cekle ilgili ise cek_kasasi tablosundaki ID',
+  `tutar` decimal(15,2) NOT NULL COMMENT 'Islem tutari',
+  `para_birimi` varchar(3) NOT NULL DEFAULT 'TL' COMMENT 'Tutarin para birimi',
+  `doviz_kuru` decimal(10,4) DEFAULT NULL COMMENT 'Islem dovizliyse kullanilan kur',
+  `tl_karsiligi` decimal(15,2) NOT NULL DEFAULT 0.00 COMMENT 'Tutarin TL karsiligi',
+  `kaynak_tablo` varchar(50) DEFAULT NULL COMMENT 'Islemin kaynagi (gider_yonetimi, gelir_yonetimi, cerceve_sozlesmeler, tekrarli_odemeler, personel_bordro)',
+  `kaynak_id` int(11) DEFAULT NULL COMMENT 'Kaynak tablodaki kayit ID',
+  `aciklama` text DEFAULT NULL COMMENT 'Islem aciklamasi',
+  `kaydeden_personel` varchar(100) DEFAULT NULL COMMENT 'Islemi yapan personel',
+  `ilgili_firma` varchar(255) DEFAULT NULL COMMENT 'Islemin ilgili oldugu firma',
+  `ilgili_musteri` varchar(255) DEFAULT NULL COMMENT 'Islemin ilgili oldugu musteri',
+  `fatura_no` varchar(100) DEFAULT NULL COMMENT 'Islemin bagli oldugu fatura numarasi',
+  `odeme_tipi` varchar(50) DEFAULT NULL COMMENT 'Nakit, Kredi Karti, Havale, Cek vs.',
+  `proje_kodu` varchar(50) DEFAULT NULL COMMENT 'Islemin ait oldugu proje',
+  `is_merkezi` varchar(100) DEFAULT NULL COMMENT 'Is merkezi bilgisi',
+  `ekstra_veri` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'Isleme ozel ekstra veriler' CHECK (json_valid(`ekstra_veri`)),
+  PRIMARY KEY (`hareket_id`),
+  KEY `tarih` (`tarih`),
+  KEY `islem_tipi` (`islem_tipi`),
+  KEY `kasa_adi` (`kasa_adi`),
+  KEY `kaynak_tablo` (`kaynak_tablo`),
+  KEY `kaynak_id` (`kaynak_id`),
+  KEY `para_birimi` (`para_birimi`),
+  KEY `cek_id` (`cek_id`),
+  KEY `tutar` (`tutar`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `kasa_hareketleri`
+--
+
+LOCK TABLES `kasa_hareketleri` WRITE;
+/*!40000 ALTER TABLE `kasa_hareketleri` DISABLE KEYS */;
+INSERT INTO `kasa_hareketleri` VALUES (1,'2025-12-31 09:57:00','kasa_ekle','TL',NULL,1000.00,'TL',NULL,1000.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(2,'2025-12-31 15:55:00','kasa_ekle','TL',NULL,500.00,'TL',NULL,500.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(4,'2026-01-02 02:07:00','kasa_ekle','TL',NULL,600.00,'TL',1.0000,600.00,NULL,NULL,'Deneme...','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(5,'2026-01-02 02:08:00','kasa_ekle','TL',NULL,700.00,'TL',1.0000,700.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `kasa_hareketleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -446,7 +545,7 @@ CREATE TABLE `log_tablosu` (
   `islem_turu` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=207 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=211 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -455,7 +554,7 @@ CREATE TABLE `log_tablosu` (
 
 LOCK TABLES `log_tablosu` WRITE;
 /*!40000 ALTER TABLE `log_tablosu` DISABLE KEYS */;
-INSERT INTO `log_tablosu` VALUES (1,'2025-12-25 11:17:20','Admin User','log_tablosu tabloları temizlendi','DELETE','2025-12-25 08:17:20'),(2,'2025-12-25 11:21:25','Admin User','Malzeme türü silindi: HAM ESANS (_)','DELETE','2025-12-25 08:21:25'),(3,'2025-12-25 11:21:28','Admin User','Malzeme türü silindi: TAKIM ()','DELETE','2025-12-25 08:21:28'),(4,'2025-12-25 11:21:49','Admin User','Yeni malzeme türü eklendi: kutu (kutu)','CREATE','2025-12-25 08:21:49'),(5,'2025-12-25 11:22:01','Admin User','Yeni malzeme türü eklendi: etiket (etiket)','CREATE','2025-12-25 08:22:01'),(6,'2025-12-25 11:22:10','Admin User','Yeni malzeme türü eklendi: takım (takm)','CREATE','2025-12-25 08:22:10'),(7,'2025-12-25 11:22:38','Admin User','Yeni malzeme türü eklendi: ham esans (ham_esans)','CREATE','2025-12-25 08:22:38'),(8,'2025-12-25 11:22:52','Admin User','Yeni malzeme türü eklendi: alkol (alkol)','CREATE','2025-12-25 08:22:52'),(9,'2025-12-25 11:23:11','Admin User','Yeni malzeme türü eklendi: paket (paket)','CREATE','2025-12-25 08:23:11'),(10,'2025-12-25 11:23:23','Admin User','Yeni malzeme türü eklendi: jelatin (jelatin)','CREATE','2025-12-25 08:23:23'),(11,'2025-12-25 11:24:17','Admin User','CHANEL COCO TAKIM malzemesi CHANEL COCO TAKIM olarak güncellendi','UPDATE','2025-12-25 08:24:17'),(12,'2025-12-25 11:24:27','Admin User','CHANEL COCO HAM ESANS malzemesi CHANEL COCO HAM ESANS olarak güncellendi','UPDATE','2025-12-25 08:24:27'),(13,'2025-12-25 11:24:54','Admin User','CHANEL COCO TAKIM malzemesi CHANEL COCO TAKIM olarak güncellendi','UPDATE','2025-12-25 08:24:54'),(14,'2025-12-25 11:25:02','Admin User','CHANEL COCO HAM ESANS malzemesi CHANEL COCO HAM ESANS olarak güncellendi','UPDATE','2025-12-25 08:25:02'),(15,'2025-12-25 11:26:10','Admin User','CHANEL COCO kutu malzemesi sisteme eklendi','CREATE','2025-12-25 08:26:10'),(16,'2025-12-25 11:27:19','Admin User','CHANEL COCO jelatin malzemesi sisteme eklendi','CREATE','2025-12-25 08:27:19'),(17,'2025-12-25 11:27:57','Admin User','CHANEL COCO paket malzemesi sisteme eklendi','CREATE','2025-12-25 08:27:57'),(18,'2025-12-25 11:29:04','Admin User','CHANEL COCO  malzemesi sisteme eklendi','CREATE','2025-12-25 08:29:04'),(19,'2025-12-25 11:30:19','Admin User','chanel coco ürün ağacına CHANEL COCO HAM ESANS bileşeni eklendi','CREATE','2025-12-25 08:30:19'),(20,'2025-12-25 11:30:42','Admin User','chanel coco ürün ağacına CHANEL COCO jelatin bileşeni eklendi','CREATE','2025-12-25 08:30:42'),(21,'2025-12-25 11:30:55','Admin User','chanel coco ürün ağacına CHANEL COCO kutu bileşeni eklendi','CREATE','2025-12-25 08:30:55'),(22,'2025-12-25 11:31:42','Admin User','chanel coco ürün ağacına CHANEL COCO TAKIM bileşeni eklendi','CREATE','2025-12-25 08:31:42'),(23,'2025-12-25 11:34:10','Admin User','w 501 adlı tank sisteme eklendi','CREATE','2025-12-25 08:34:10'),(24,'2025-12-25 11:35:17','Admin User','chanel coco esansı sisteme eklendi','CREATE','2025-12-25 08:35:17'),(25,'2025-12-25 11:37:06','Admin User','chanel coco ürün ağacına CHANEL COCO HAM ESANS bileşeni eklendi','CREATE','2025-12-25 08:37:06'),(26,'2025-12-25 11:38:53','Admin User','kırmızıgül  tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:38:53'),(27,'2025-12-25 11:39:16','Admin User','kırmızıgül  tedarikçisi kırmızıgül  olarak güncellendi','UPDATE','2025-12-25 08:39:16'),(28,'2025-12-25 11:39:37','Admin User','şener şimşek tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:39:37'),(29,'2025-12-25 11:40:02','Admin User','luzi tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:40:02'),(30,'2025-12-25 11:40:21','Admin User','paket tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:40:21'),(31,'2025-12-25 11:40:39','Admin User','jilatin  tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:40:39'),(32,'2025-12-25 11:41:12','Admin User','alkol tedarikçisi sisteme eklendi','CREATE','2025-12-25 08:41:12'),(33,'2025-12-25 11:42:26','Admin User','kırmızıgül  tedarikçisine CHANEL COCO TAKIM malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:42:26'),(34,'2025-12-25 11:43:18','Admin User','luzi tedarikçisine CHANEL COCO HAM ESANS malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:43:18'),(35,'2025-12-25 11:43:58','Admin User','paket tedarikçisine CHANEL COCO paket malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:43:58'),(36,'2025-12-25 11:46:44','Admin User','şener şimşek tedarikçisine CHANEL COCO kutu malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:46:44'),(37,'2025-12-25 11:47:47','Admin User','jilatin  tedarikçisine CHANEL COCO jelatin malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:47:47'),(38,'2025-12-25 11:48:46','Admin User','alkol tedarikçisine CHANEL COCO  malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 08:48:46'),(39,'2025-12-25 11:50:47','Admin User','CHANEL COCO  malzemesi CHANEL COCO  olarak güncellendi','UPDATE','2025-12-25 08:50:47'),(40,'2025-12-25 11:54:14','Admin User','CHANEL COCO  malzemesi CHANEL COCO alkol olarak güncellendi','UPDATE','2025-12-25 08:54:14'),(41,'2025-12-25 11:54:59','Admin User','CHANEL COCO alkol malzemesi CHANEL COCO alkol olarak güncellendi','UPDATE','2025-12-25 08:54:59'),(42,'2025-12-25 11:56:15','Admin User','alkol tedarikçisine CHANEL COCO alkol malzemesi için çerçeve sözleşme güncellendi','UPDATE','2025-12-25 08:56:15'),(43,'2025-12-25 11:57:46','Admin User','alkol tedarikçisine ait CHANEL COCO alkol malzemesi için çerçeve sözleşme ve ilişkili stok hareketleri silindi','DELETE','2025-12-25 08:57:46'),(44,'2025-12-25 11:59:02','Admin User','alkol tedarikçisi osman  olarak güncellendi','UPDATE','2025-12-25 08:59:02'),(45,'2025-12-25 11:59:33','Admin User','kırmızıgül  tedarikçisi takım olarak güncellendi','UPDATE','2025-12-25 08:59:33'),(46,'2025-12-25 11:59:51','Admin User','luzi tedarikçisi luzi olarak güncellendi','UPDATE','2025-12-25 08:59:51'),(47,'2025-12-25 12:04:04','Admin User','osman  tedarikçisi sistemden silindi','DELETE','2025-12-25 09:04:04'),(48,'2025-12-25 12:04:53','Admin User','gökan  tedarikçisi sisteme eklendi','CREATE','2025-12-25 09:04:53'),(49,'2025-12-25 12:05:01','Admin User','gökan  tedarikçisi sistemden silindi','DELETE','2025-12-25 09:05:01'),(50,'2025-12-25 12:05:36','Admin User','alkol tedarikçisi sisteme eklendi','CREATE','2025-12-25 09:05:36'),(51,'2025-12-25 12:07:13','Admin User','şener şimşek tedarikçisi kutu olarak güncellendi','UPDATE','2025-12-25 09:07:13'),(52,'2025-12-25 12:09:44','Admin User','alkol malzemesi sisteme eklendi','CREATE','2025-12-25 09:09:44'),(53,'2025-12-25 12:11:14','Admin User','alkol tedarikçisine alkol malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-25 09:11:14'),(54,'2025-12-25 12:15:17','Admin User','CHANEL COCO alkol malzemesi sistemden silindi','DELETE','2025-12-25 09:15:17'),(55,'2025-12-25 12:18:12','Admin User','chanel coco ürünü için montaj iş emri oluşturuldu','CREATE','2025-12-25 09:18:12'),(56,'2025-12-25 12:21:32','Admin User','chanel coco ürünü için montaj iş emri oluşturuldu','CREATE','2025-12-25 09:21:32'),(57,'2025-12-25 12:27:27','Admin User','alkol tedarikçisi zülkür  olarak güncellendi','UPDATE','2025-12-25 09:27:27'),(58,'2025-12-25 12:27:57','Admin User','takım tedarikçisi mehmet kırmızıgül olarak güncellendi','UPDATE','2025-12-25 09:27:57'),(59,'2025-12-25 12:28:17','Admin User','paket tedarikçisi ramazan olarak güncellendi','UPDATE','2025-12-25 09:28:17'),(60,'2025-12-25 12:28:37','Admin User','jilatin  tedarikçisi gökan olarak güncellendi','UPDATE','2025-12-25 09:28:37'),(61,'2025-12-25 12:28:54','Admin User','kutu tedarikçisi şener olarak güncellendi','UPDATE','2025-12-25 09:28:54'),(62,'2025-12-25 12:30:14','Admin User','LUZKİM tedarikçisine ait CHANEL NO5 HAM ESANS malzemesi siparişi silindi','DELETE','2025-12-25 09:30:14'),(63,'2025-12-25 12:30:17','Admin User','LUZKİM tedarikçisine ait bacarat ret HAM ESANS malzemesi siparişi silindi','DELETE','2025-12-25 09:30:17'),(64,'2025-12-25 12:32:33','Admin User','kahve ürünü sisteme eklendi','CREATE','2025-12-25 09:32:33'),(65,'2025-12-25 12:33:49','Admin User','kahve kutu malzemesi sisteme eklendi','CREATE','2025-12-25 09:33:49'),(66,'2025-12-25 12:53:10','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-25 09:53:10'),(67,'2025-12-25 13:01:55','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-25 10:01:55'),(68,'2025-12-25 13:04:28','Admin User','luzi tedarikçisine CHANEL COCO HAM ESANS malzemesi için sipariş oluşturuldu','CREATE','2025-12-25 10:04:28'),(69,'2025-12-25 13:35:34','Admin User','OSMAN GÜZEN personeli sisteme eklendi','CREATE','2025-12-25 10:35:34'),(70,'2025-12-25 14:14:50','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-25 11:14:50'),(71,'2025-12-25 14:15:20','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-25 11:15:20'),(72,'2025-12-25 14:17:03','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-25 11:17:03'),(73,'2025-12-25 14:17:11','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-25 11:17:11'),(74,'2025-12-25 14:17:44','OSMAN GÜZEN','Müşteri giriş yaptı (E-posta/Telefon: 05325083018)','Giriş Yapıldı','2025-12-25 11:17:44'),(75,'2025-12-25 14:18:11','OSMAN GÜZEN','OSMAN GÜZEN müşterisi tarafından sipariş oluşturuldu (ID: 1)','CREATE','2025-12-25 11:18:11'),(76,'2025-12-25 14:18:52','Admin User','OSMAN GÜZEN müşterisine ait 1 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-25 11:18:52'),(77,'2025-12-25 14:19:53','Admin User','OSMAN GÜZEN müşterisine ait 1 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-25 11:19:53'),(78,'2025-12-25 14:21:14','OSMAN GÜZEN','Müşteri giriş yaptı (E-posta/Telefon: 05325083018)','Giriş Yapıldı','2025-12-25 11:21:14'),(79,'2025-12-25 14:22:01','OSMAN GÜZEN','OSMAN GÜZEN müşterisi tarafından sipariş oluşturuldu (ID: 2)','CREATE','2025-12-25 11:22:01'),(80,'2025-12-25 14:22:18','Admin User','OSMAN GÜZEN müşterisine ait 2 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-25 11:22:18'),(81,'2025-12-25 14:22:26','Admin User','OSMAN GÜZEN müşterisine ait 2 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-25 11:22:26'),(82,'2025-12-25 14:30:09','Admin User','DİOR SAVAGE ürünü sisteme eklendi','CREATE','2025-12-25 11:30:09'),(83,'2025-12-25 14:35:30','Admin User','armani intense ürününe fotoğraf eklendi','CREATE','2025-12-25 11:35:30'),(84,'2025-12-25 15:06:26','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-25 12:06:26'),(85,'2025-12-25 15:08:57','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-25 12:08:57'),(86,'2025-12-26 09:38:40','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-26 06:38:40'),(87,'2025-12-26 10:05:43','Admin User','OSMAN GÜZEN müşterisi için yeni sipariş oluşturuldu (ID: 3)','CREATE','2025-12-26 07:05:43'),(88,'2025-12-26 10:05:54','Admin User','OSMAN GÜZEN müşterisine ait 3 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-26 07:05:54'),(89,'2025-12-26 10:06:04','Admin User','OSMAN GÜZEN müşterisine ait 3 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-26 07:06:04'),(90,'2025-12-26 10:37:41','Admin User','DİOR , SAVAGE esansı sisteme eklendi','CREATE','2025-12-26 07:37:41'),(91,'2025-12-26 10:38:44','Admin User','bacarat red esansı sisteme eklendi','CREATE','2025-12-26 07:38:44'),(92,'2025-12-26 10:39:51','Admin User','VIKTORIA SECRET , BOM ŞHEL esansı sisteme eklendi','CREATE','2025-12-26 07:39:51'),(93,'2025-12-26 10:55:08','Admin User','İDRİS GÜZEN müşterisi için yeni sipariş oluşturuldu (ID: 4)','CREATE','2025-12-26 07:55:08'),(94,'2025-12-26 10:55:18','Admin User','İDRİS GÜZEN müşterisine ait 4 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-26 07:55:18'),(95,'2025-12-26 10:55:28','Admin User','İDRİS GÜZEN müşterisine ait 4 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-26 07:55:28'),(96,'2025-12-26 11:48:03','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-26 08:48:03'),(97,'2025-12-26 12:06:42','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-26 09:06:42'),(98,'2025-12-26 13:33:06','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-26 10:33:06'),(99,'2025-12-26 13:51:01','mehmet mutlu','Personel giriş yaptı (E-posta/Telefon: 05384191740)','Giriş Yapıldı','2025-12-26 10:51:01'),(100,'2025-12-26 13:51:41','Admin User','MEHMET FATİH GÜZEN müşterisi için yeni sipariş oluşturuldu (ID: 5)','CREATE','2025-12-26 10:51:41'),(101,'2025-12-26 13:51:54','Admin User','MEHMET FATİH GÜZEN müşterisine ait 5 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-26 10:51:54'),(102,'2025-12-26 13:53:54','mehmet mutlu','Personel giriş yaptı (E-posta/Telefon: 05384191740)','Giriş Yapıldı','2025-12-26 10:53:54'),(103,'2025-12-26 13:55:31','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-26 10:55:31'),(104,'2025-12-26 13:55:38','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-26 10:55:38'),(105,'2025-12-26 13:55:59','mehmet mutlu','personel oturumu kapattı (ID: 295)','Çıkış Yapıldı','2025-12-26 10:55:59'),(106,'2025-12-26 13:56:09','mehmet mutlu','Personel giriş yaptı (E-posta/Telefon: 05384191740)','Giriş Yapıldı','2025-12-26 10:56:09'),(107,'2025-12-26 14:02:20','Admin User','OSMAN GÜZEN müşterisi için yeni sipariş oluşturuldu (ID: 6)','CREATE','2025-12-26 11:02:20'),(108,'2025-12-26 14:04:08','Admin User','Sipariş kalemi güncellendi: chanel coco ürünü chanel coco olarak değiştirildi (ID: 6)','UPDATE','2025-12-26 11:04:08'),(109,'2025-12-26 14:05:32','Admin User','OSMAN GÜZEN müşterisine ait 6 nolu siparişin yeni durumu: Onaylandı','UPDATE','2025-12-26 11:05:32'),(110,'2025-12-26 14:05:59','Admin User','OSMAN GÜZEN müşterisine ait 6 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-26 11:05:59'),(111,'2025-12-26 14:06:07','Admin User','MEHMET FATİH GÜZEN müşterisine ait 5 nolu siparişin yeni durumu: Tamamlandı','UPDATE','2025-12-26 11:06:07'),(112,'2025-12-26 14:11:16','Admin User','w 501 adlı tank w 501 olarak güncellendi','UPDATE','2025-12-26 11:11:16'),(113,'2025-12-26 14:21:19','Admin User','chanel coco ürünü için montaj iş emri oluşturuldu','CREATE','2025-12-26 11:21:19'),(114,'2025-12-26 14:37:52','Admin User','luzi tedarikçisine CHANEL COCO HAM ESANS malzemesi için çerçeve sözleşme eklendi','CREATE','2025-12-26 11:37:52'),(115,'2025-12-26 15:37:16','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-26 12:37:16'),(116,'2025-12-26 15:39:15','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-26 12:39:15'),(117,'2025-12-27 11:49:34','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-27 08:49:34'),(118,'2025-12-27 13:13:04','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-27 10:13:04'),(119,'2025-12-27 13:14:29','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-27 10:14:29'),(120,'2025-12-27 17:09:37','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-27 14:09:37'),(121,'2025-12-29 04:30:09','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-29 01:30:09'),(122,'2025-12-29 18:07:15','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-29 15:07:15'),(123,'2025-12-30 15:42:46','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-30 12:42:46'),(124,'2025-12-30 15:59:56','Admin User','Sipariş Ödemesi kategorisinde 1950 USD tutarında gelir eklendi','CREATE','2025-12-30 12:59:56'),(125,'2025-12-30 16:00:45','Admin User','Sipariş Ödemesi kategorisindeki 17.00 TL tutarlı gelir silindi','DELETE','2025-12-30 13:00:45'),(126,'2025-12-30 16:04:27','Admin User','Sipariş Ödemesi kategorisinde 1740 USD tutarında gelir eklendi','CREATE','2025-12-30 13:04:27'),(127,'2025-12-30 16:57:25','Admin User','gökan tedarikçisi gökan olarak güncellendi','UPDATE','2025-12-30 13:57:25'),(128,'2025-12-30 17:17:15','Admin User','gökan tedarikçisi gökan olarak güncellendi','UPDATE','2025-12-30 14:17:15'),(129,'2025-12-30 17:19:59','Admin User','Deneme ürünü sisteme eklendi','CREATE','2025-12-30 14:19:59'),(130,'2025-12-30 17:27:17','Admin User','Barış ürünü sisteme eklendi','CREATE','2025-12-30 14:27:17'),(131,'2025-12-30 17:31:11','Admin User','vvv ürünü sisteme eklendi','CREATE','2025-12-30 14:31:11'),(132,'2025-12-30 17:33:45','Admin User','memoş ürünü sisteme eklendi','CREATE','2025-12-30 14:33:45'),(133,'2025-12-30 17:33:45','Admin User','Otomatik esans oluşturuldu: memoş (Tank: )','CREATE','2025-12-30 14:33:45'),(134,'2025-12-30 17:35:08','Admin User','aaasda ürünü sisteme eklendi','CREATE','2025-12-30 14:35:08'),(135,'2025-12-30 17:35:09','Admin User','Otomatik esans oluşturuldu: aaasda (Tank: )','CREATE','2025-12-30 14:35:09'),(136,'2025-12-30 17:36:21','Admin User','XXX ürünü sisteme eklendi','CREATE','2025-12-30 14:36:21'),(137,'2025-12-30 17:36:22','Admin User','Otomatik esans oluşturuldu: XXX, Esans (Tank: )','CREATE','2025-12-30 14:36:22'),(138,'2025-12-31 09:51:25','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-31 06:51:25'),(139,'2025-12-31 09:58:53','Admin User','personel oturumu kapattı (ID: 1)','Çıkış Yapıldı','2025-12-31 06:58:53'),(140,'2025-12-31 10:02:00','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-31 07:02:00'),(141,'2025-12-31 15:06:31','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2025-12-31 12:06:31'),(142,'2025-12-31 15:16:00','Admin User','Sipariş Ödemesi kategorisindeki 126.67 TL tutarlı gelir silindi','DELETE','2025-12-31 12:16:00'),(143,'2025-12-31 15:21:50','Admin User','Sipariş Ödemesi kategorisindeki 126.67 TL tutarlı gelir silindi','DELETE','2025-12-31 12:21:50'),(144,'2025-12-31 15:24:29','Admin User','Sipariş Ödemesi kategorisindeki 585.33 TL tutarlı gelir silindi','DELETE','2025-12-31 12:24:29'),(145,'2025-12-31 15:25:50','Admin User','Sipariş Ödemesi kategorisindeki 585.33 TL tutarlı gelir silindi','DELETE','2025-12-31 12:25:50'),(146,'2025-12-31 15:26:07','Admin User','Taksit Planı #2 iptal edildi.','UPDATE','2025-12-31 12:26:07'),(147,'2025-12-31 15:53:48','Admin User','Sipariş Ödemesi kategorisindeki 40.00 TL tutarlı gelir silindi','DELETE','2025-12-31 12:53:48'),(148,'2025-12-31 15:53:56','Admin User',' kategorisindeki 0 TL tutarlı gelir silindi','DELETE','2025-12-31 12:53:56'),(149,'2025-12-31 15:54:36','Admin User','Sipariş Ödemesi kategorisindeki 126.66 TL tutarlı gelir silindi','DELETE','2025-12-31 12:54:36'),(150,'2025-12-31 15:54:47','Admin User','Sipariş Ödemesi kategorisindeki 40.00 TL tutarlı gelir silindi','DELETE','2025-12-31 12:54:47'),(151,'2025-12-31 16:14:08','Admin User','XXX, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:14:08'),(152,'2025-12-31 16:14:11','Admin User','aaasda, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:14:11'),(153,'2025-12-31 16:14:40','Admin User','fff ürünü sisteme eklendi','CREATE','2025-12-31 13:14:40'),(154,'2025-12-31 16:19:27','Admin User','ozhann ürünü sisteme eklendi','CREATE','2025-12-31 13:19:27'),(155,'2025-12-31 16:19:39','Admin User','fff, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:19:39'),(156,'2025-12-31 16:19:46','Admin User','memoş, ham esans malzemesi memoş, ham esans olarak güncellendi','UPDATE','2025-12-31 13:19:46'),(157,'2025-12-31 16:20:12','Admin User','jkjl malzemesi sisteme eklendi','CREATE','2025-12-31 13:20:12'),(158,'2025-12-31 16:20:41','Admin User','vvv, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:20:41'),(159,'2025-12-31 16:20:44','Admin User','Barış, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:20:44'),(160,'2025-12-31 16:20:48','Admin User','vvv, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:20:48'),(161,'2025-12-31 16:20:51','Admin User','memoş, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:20:51'),(162,'2025-12-31 16:20:54','Admin User','XXX, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:20:54'),(163,'2025-12-31 16:20:56','Admin User','jkjl malzemesi sistemden silindi','DELETE','2025-12-31 13:20:56'),(164,'2025-12-31 16:21:00','Admin User','ozhann, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:21:00'),(165,'2025-12-31 16:21:02','Admin User','ozhann, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:21:02'),(166,'2025-12-31 16:21:05','Admin User','fff, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:21:05'),(167,'2025-12-31 16:21:08','Admin User','aaasda, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:21:08'),(168,'2025-12-31 16:21:12','Admin User','memoş, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:21:12'),(169,'2025-12-31 16:21:15','Admin User','Barış, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:21:15'),(170,'2025-12-31 16:21:19','Admin User','Deneme, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:21:19'),(171,'2025-12-31 16:21:22','Admin User','Deneme, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:21:22'),(172,'2025-12-31 16:21:29','Admin User','aaasda ürünü sistemden silindi','DELETE','2025-12-31 13:21:29'),(173,'2025-12-31 16:21:32','Admin User','armani intense ürünü sistemden silindi','DELETE','2025-12-31 13:21:32'),(174,'2025-12-31 16:21:37','Admin User','fff ürünü sistemden silindi','DELETE','2025-12-31 13:21:37'),(175,'2025-12-31 16:21:45','Admin User','ozhann ürünü sistemden silindi','DELETE','2025-12-31 13:21:45'),(176,'2025-12-31 16:21:48','Admin User','vvv ürünü sistemden silindi','DELETE','2025-12-31 13:21:48'),(177,'2025-12-31 16:21:51','Admin User','XXX ürünü sistemden silindi','DELETE','2025-12-31 13:21:51'),(178,'2025-12-31 16:21:54','Admin User','memoş ürünü sistemden silindi','DELETE','2025-12-31 13:21:54'),(179,'2025-12-31 16:22:31','Admin User','m malzemesi sisteme eklendi','CREATE','2025-12-31 13:22:31'),(180,'2025-12-31 16:22:48','Admin User','abc ürünü sisteme eklendi','CREATE','2025-12-31 13:22:48'),(181,'2025-12-31 16:24:26','Admin User','abc, ham esans malzemesi sistemden silindi','DELETE','2025-12-31 13:24:26'),(182,'2025-12-31 16:24:29','Admin User','abc, etiket malzemesi sistemden silindi','DELETE','2025-12-31 13:24:29'),(183,'2025-12-31 16:24:44','Admin User','abc ürünü sistemden silindi','DELETE','2025-12-31 13:24:44'),(184,'2025-12-31 16:24:57','Admin User','abc ürünü sisteme eklendi','CREATE','2025-12-31 13:24:57'),(185,'2025-12-31 16:35:14','Admin User','abc ürünü sistemden silindi','DELETE','2025-12-31 13:35:14'),(186,'2025-12-31 16:35:46','Admin User','Guzel Urun ürünü sisteme eklendi','CREATE','2025-12-31 13:35:46'),(187,'2025-12-31 16:35:47','Admin User','Otomatik esans oluşturuldu: Guzel Urun, Esans (Tank: )','CREATE','2025-12-31 13:35:47'),(188,'2025-12-31 16:37:04','Admin User','memoş esansı sistemden silindi','DELETE','2025-12-31 13:37:04'),(189,'2025-12-31 16:37:07','Admin User','Guzel Urun, Esans esansı sistemden silindi','DELETE','2025-12-31 13:37:07'),(190,'2025-12-31 16:37:12','Admin User','XXX, Esans esansı sistemden silindi','DELETE','2025-12-31 13:37:12'),(191,'2025-12-31 16:37:16','Admin User','aaasda esansı sistemden silindi','DELETE','2025-12-31 13:37:16'),(192,'2025-12-31 16:37:49','Admin User','chanel coco esansı sistemden silindi','DELETE','2025-12-31 13:37:49'),(193,'2025-12-31 16:38:25','Admin User','Guzel Urun Esansi esansı sisteme eklendi','CREATE','2025-12-31 13:38:25'),(194,'2025-12-31 16:38:52','Admin User','Guzel Urun ürün ağacına Guzel Urun Esansi bileşeni eklendi','CREATE','2025-12-31 13:38:52'),(195,'2025-12-31 16:43:39','Admin User','Urun 2 ürünü sisteme eklendi','CREATE','2025-12-31 13:43:39'),(196,'2025-12-31 16:43:40','Admin User','Otomatik esans oluşturuldu: Urun 2, Esans (Tank: )','CREATE','2025-12-31 13:43:40'),(197,'2025-12-31 16:52:01','Admin User','URUN3 ürünü sisteme eklendi','CREATE','2025-12-31 13:52:01'),(198,'2025-12-31 16:52:01','Admin User','Otomatik esans oluşturuldu: URUN3, Esans (Tank: )','CREATE','2025-12-31 13:52:01'),(199,'2025-12-31 16:57:18','Admin User','Urun4 ürünü sisteme eklendi','CREATE','2025-12-31 13:57:18'),(200,'2025-12-31 16:57:19','Admin User','Otomatik esans oluşturuldu: Urun4, Esans (Tank: )','CREATE','2025-12-31 13:57:19'),(201,'2025-12-31 17:15:12','Admin User','Urun4, Esans ürün ağacına alkol bileşeni eklendi','CREATE','2025-12-31 14:15:12'),(202,'2025-12-31 17:15:24','Admin User','Urun4, Esans ürün ağacına alkol bileşeni eklendi','CREATE','2025-12-31 14:15:24'),(203,'2025-12-31 17:15:54','Admin User','Urun4, Esans ürün ağacına alkol bileşeni eklendi','CREATE','2025-12-31 14:15:54'),(204,'2025-12-31 17:16:02','Admin User','Urun4, Esans ürün ağacından alkol bileşeni silindi','DELETE','2025-12-31 14:16:02'),(205,'2025-12-31 17:16:05','Admin User','Urun4, Esans ürün ağacından alkol bileşeni silindi','DELETE','2025-12-31 14:16:05'),(206,'2025-12-31 17:30:59','Admin User','armani you ürün ağacına VIKTORIA SECRET , BOM ŞHEL bileşeni eklendi','CREATE','2025-12-31 14:30:59');
+INSERT INTO `log_tablosu` VALUES (208,'2026-01-01 18:39:11','Admin User','Taksit Planı #3 iptal edildi.','UPDATE','2026-01-01 15:39:11'),(209,'2026-01-02 02:01:46','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:01:46'),(210,'2026-01-02 02:06:51','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:06:51');
 /*!40000 ALTER TABLE `log_tablosu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1337,7 +1436,7 @@ CREATE TABLE `sirket_kasasi` (
 
 LOCK TABLES `sirket_kasasi` WRITE;
 /*!40000 ALTER TABLE `sirket_kasasi` DISABLE KEYS */;
-INSERT INTO `sirket_kasasi` VALUES (1,'TL',1500.00,'2025-12-31 15:56:02'),(2,'USD',17.00,'2025-12-29 01:04:59'),(3,'EUR',0.00,'2025-12-29 00:54:20');
+INSERT INTO `sirket_kasasi` VALUES (1,'TL',2800.00,'2026-01-02 02:09:06'),(2,'USD',17.00,'2025-12-29 01:04:59'),(3,'EUR',0.00,'2025-12-29 00:54:20');
 /*!40000 ALTER TABLE `sirket_kasasi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1517,7 +1616,7 @@ CREATE TABLE `taksit_planlari` (
 
 LOCK TABLES `taksit_planlari` WRITE;
 /*!40000 ALTER TABLE `taksit_planlari` DISABLE KEYS */;
-INSERT INTO `taksit_planlari` VALUES (1,2,'İDRİS GÜZEN',380.00,0.00,0.00,380.00,'USD',3,'2025-12-31 13:38:15','2025-12-31','tamamlandi','',1),(2,3,'OSMAN GÜZEN',1756.00,0.00,0.00,1756.00,'USD',3,'2025-12-31 15:24:10','2025-12-31','iptal','',1),(3,3,'OSMAN GÜZEN',120.00,0.00,0.00,120.00,'USD',3,'2025-12-31 15:27:16','2025-12-31','aktif','',1);
+INSERT INTO `taksit_planlari` VALUES (1,2,'İDRİS GÜZEN',380.00,0.00,0.00,380.00,'USD',3,'2025-12-31 13:38:15','2025-12-31','tamamlandi','',1),(2,3,'OSMAN GÜZEN',1756.00,0.00,0.00,1756.00,'USD',3,'2025-12-31 15:24:10','2025-12-31','iptal','',1),(3,3,'OSMAN GÜZEN',120.00,0.00,0.00,120.00,'USD',3,'2025-12-31 15:27:16','2025-12-31','iptal','',1);
 /*!40000 ALTER TABLE `taksit_planlari` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1873,4 +1972,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-01 16:47:48
+-- Dump completed on 2026-01-02  3:04:15
