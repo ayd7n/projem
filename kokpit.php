@@ -282,7 +282,13 @@ function getSupplyChainData($connection) {
                             WHEN ur.urun_kodu IS NOT NULL THEN ur.stok_miktari
                             WHEN e.esans_kodu IS NOT NULL THEN e.stok_miktari
                             ELSE 0
-                         END as bilesen_stok
+                         END as bilesen_stok,
+                         CASE
+                            WHEN m.malzeme_kodu IS NOT NULL THEN m.malzeme_ismi
+                            WHEN ur.urun_kodu IS NOT NULL THEN ur.urun_ismi
+                            WHEN e.esans_kodu IS NOT NULL THEN e.esans_ismi
+                            ELSE ua.bilesen_kodu
+                         END as bilesen_ismi
                          FROM urun_agaci ua
                          LEFT JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
                          LEFT JOIN urunler ur ON ua.bilesen_kodu = ur.urun_kodu
@@ -292,11 +298,15 @@ function getSupplyChainData($connection) {
             $bom_stmt->bind_param('i', $row['urun_kodu']);
             $bom_stmt->execute();
             $bom_result = $bom_stmt->get_result();
+            
+            // Bileşen detayları (eksik miktar hesabı için)
+            $bilesen_detaylari = [];
 
             while ($bom_row = $bom_result->fetch_assoc()) {
                 $gerekli = floatval($bom_row['bilesen_miktari']);
                 $mevcut = floatval($bom_row['bilesen_stok']);
                 $bilesen_turu_lower = strtolower($bom_row['bilesen_turu']);
+                $bilesen_ismi = $bom_row['bilesen_ismi'];
                 
                 // Mevcut bileşen türlerini kaydet
                 if (!in_array($bilesen_turu_lower, $existing_types)) {
@@ -311,6 +321,15 @@ function getSupplyChainData($connection) {
                 if ($gerekli > 0) {
                     $bu_bilesenden = max(0, floor($mevcut / $gerekli));
                     
+                    // Bileşen detaylarını kaydet
+                    $bilesen_detaylari[] = [
+                        'isim' => $bilesen_ismi,
+                        'tur' => $bilesen_turu_lower,
+                        'gerekli_adet' => $gerekli,
+                        'mevcut_stok' => $mevcut,
+                        'uretilebilir' => $bu_bilesenden
+                    ];
+                    
                     // Her bileşen türü için ayrı üretilebilir hesapla
                     if (isset($bilesen_uretilebilir[$bilesen_turu_lower])) {
                         $bilesen_uretilebilir[$bilesen_turu_lower] = min($bilesen_uretilebilir[$bilesen_turu_lower], $bu_bilesenden);
@@ -322,6 +341,8 @@ function getSupplyChainData($connection) {
                 }
             }
             $bom_stmt->close();
+            
+            $row['bilesen_detaylari'] = $bilesen_detaylari;
             
             // PHP_INT_MAX olanları 0'a çevir (bileşen yok demek)
             foreach ($bilesen_uretilebilir as $key => $val) {
@@ -424,6 +445,62 @@ function getSupplyChainData($connection) {
             }
             
             $row['sozlesme_eksik_malzemeler'] = $sozlesme_eksik_malzemeler;
+            
+            // 4. Esans üretim bilgisi kontrolü (açık iş emri ve malzeme durumu)
+            $esans_uretim_bilgisi = [];
+            foreach ($esans_kodu_bilesenler as $esans_kodu) {
+                // Esans ismini al
+                $esans_isim_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
+                $esans_isim_stmt = $connection->prepare($esans_isim_query);
+                $esans_isim_stmt->bind_param('s', $esans_kodu);
+                $esans_isim_stmt->execute();
+                $esans_isim_result = $esans_isim_stmt->get_result()->fetch_assoc();
+                $esans_ismi = $esans_isim_result ? $esans_isim_result['esans_ismi'] : $esans_kodu;
+                $esans_isim_stmt->close();
+                
+                // Açık iş emirlerini kontrol et (olusturuldu veya uretimde durumunda)
+                $is_emri_query = "SELECT SUM(planlanan_miktar) as toplam_miktar 
+                                  FROM esans_is_emirleri 
+                                  WHERE esans_kodu = ? AND durum IN ('olusturuldu', 'uretimde')";
+                $is_emri_stmt = $connection->prepare($is_emri_query);
+                $is_emri_stmt->bind_param('s', $esans_kodu);
+                $is_emri_stmt->execute();
+                $is_emri_result = $is_emri_stmt->get_result()->fetch_assoc();
+                $acik_is_emri_miktar = floatval($is_emri_result['toplam_miktar'] ?? 0);
+                $is_emri_stmt->close();
+                
+                // Esans formülündeki malzemelerin stok durumunu kontrol et
+                $esans_malzeme_eksik = [];
+                $esans_malzeme_yeterli = true;
+                
+                $esans_formul_query = "SELECT ua.bilesen_kodu, ua.bilesen_miktari, 
+                                       m.malzeme_ismi, m.stok_miktari
+                                       FROM urun_agaci ua
+                                       JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
+                                       WHERE ua.agac_turu = 'esans' AND ua.urun_ismi = ?";
+                $esans_formul_stmt = $connection->prepare($esans_formul_query);
+                $esans_formul_stmt->bind_param('s', $esans_ismi);
+                $esans_formul_stmt->execute();
+                $esans_formul_result = $esans_formul_stmt->get_result();
+                
+                while ($formul_row = $esans_formul_result->fetch_assoc()) {
+                    // Basit kontrol: malzeme stoğu 0 ise eksik
+                    if (floatval($formul_row['stok_miktari']) <= 0) {
+                        $esans_malzeme_eksik[] = $formul_row['malzeme_ismi'];
+                        $esans_malzeme_yeterli = false;
+                    }
+                }
+                $esans_formul_stmt->close();
+                
+                $esans_uretim_bilgisi[$esans_kodu] = [
+                    'esans_kodu' => $esans_kodu,
+                    'esans_ismi' => $esans_ismi,
+                    'acik_is_emri_miktar' => $acik_is_emri_miktar,
+                    'malzeme_yeterli' => $esans_malzeme_yeterli,
+                    'eksik_malzemeler' => $esans_malzeme_eksik
+                ];
+            }
+            $row['esans_uretim_bilgisi'] = $esans_uretim_bilgisi;
             
             $row['eksik_bilesenler'] = $eksik_bilesenler;
             $row['esans_agaci_eksik'] = $esans_agaci_eksik;
@@ -698,7 +775,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         body {
             font-family: 'Ubuntu', sans-serif;
             background: var(--bg-color);
-            font-size: 12px;
+            font-size: 14px;
         }
         .main-content { padding: 15px 20px; }
 
@@ -715,12 +792,12 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             gap: 6px;
             padding: 6px 12px;
             border-radius: 20px;
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 600;
             background: #fff;
             border: 1px solid #e5e7eb;
         }
-        .stat-chip .num { font-size: 14px; font-weight: 700; }
+        .stat-chip .num { font-size: 16px; font-weight: 700; }
         .stat-chip.danger { border-color: #fecaca; background: #fef2f2; }
         .stat-chip.danger .num { color: #dc2626; }
         .stat-chip.warning { border-color: #fde68a; background: #fffbeb; }
@@ -737,7 +814,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             border-radius: 6px;
             padding: 8px 12px;
             margin-bottom: 12px;
-            font-size: 11px;
+            font-size: 13px;
             color: #0369a1;
             display: flex;
             align-items: center;
@@ -751,22 +828,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: #fff;
             padding: 10px 15px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 600;
         }
-        .table { margin: 0; font-size: 11px; }
+        .table { margin: 0; font-size: 13px; }
         .table th {
             background: #f9fafb;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             color: #6b7280;
-            padding: 8px 6px;
+            padding: 10px 8px;
             border-bottom: 2px solid #e5e7eb;
             white-space: nowrap;
         }
-        .table td { padding: 6px; vertical-align: middle; border-color: #f3f4f6; }
+        .table td { padding: 8px; vertical-align: middle; border-color: #f3f4f6; }
         .table tbody tr:hover { background: #f9fafb; }
         .table tbody tr.row-acil { background: rgba(239,68,68,0.04); }
         .table tbody tr.row-acil:hover { background: rgba(239,68,68,0.08); }
@@ -1128,7 +1205,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 data-kritik="<?php echo $kritik; ?>"
                                 data-acik="<?php echo $p['acik']; ?>"
                                 data-yuzde-fark="<?php echo $p['yuzde_fark']; ?>"
-                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>">
+                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>"
+                                data-bilesen-detaylari='<?php echo json_encode(isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : []); ?>'
+                                data-esans-uretim-bilgisi='<?php echo json_encode(isset($p['esans_uretim_bilgisi']) ? $p['esans_uretim_bilgisi'] : []); ?>'>
                                 <?php echo $yorum; ?>
                             </td>
                         </tr>
@@ -1215,7 +1294,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 
                 var yorum = '';
                 
-                if (kritik <= 0 && siparis <= 0) {
+                // Stok yeterli kontrolü: kritik ve sipariş mevcut stokla karşılanabiliyorsa
+                var stokYeterli = (stok >= kritik) && (stok >= siparis);
+                
+                if (stokYeterli && siparis <= 0) {
                     yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
                 } else if (kritik <= 0 && siparis > 0) {
                     if (siparis > stok) {
@@ -1255,21 +1337,96 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     }
                     
                     if (detaylar.length > 0) {
-                        yorum = '<div class="small">' + detaylar.join('<br>') + '</div>';
+                        yorum = '<div>' + detaylar.join('<br>') + '</div>';
+                    }
+                    
+                    // Montaj iş emri açılması gereken miktar
+                    if (onerilen > 0) {
+                        yorum += '<br><span class="text-info"><i class="fas fa-cogs"></i> Montaj iş emri açılmalı: ' + onerilen.toLocaleString('tr-TR') + ' adet</span>';
                     }
                     
                     if (!siparisKarsilanir || !kritikKarsilanir) {
-                        yorum += '<small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Daha fazla bileşen gerekli!</small>';
+                        // Eksik malzeme miktarlarını hesapla
+                        var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                        var gerekliUretim = Math.max(siparis - stok, kritik) - uretilebilir;
+                        var eksikSiparisDetay = [];
+                        var eksikUretimDetay = [];
+                        
+                        bilesenDetaylari.forEach(function(bilesen) {
+                            var gerekliMiktar = bilesen.gerekli_adet * gerekliUretim;
+                            var eksikMiktar = Math.max(0, gerekliMiktar);
+                            if (eksikMiktar > 0) {
+                                if (bilesen.tur === 'esans') {
+                                    eksikUretimDetay.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
+                                } else {
+                                    eksikSiparisDetay.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
+                                }
+                            }
+                        });
+                        
+                        yorum += '<div class="mt-2 p-2" style="background:#fff8f0; border-radius:4px; border-left:3px solid #f59e0b;">';
+                        yorum += '<strong><i class="fas fa-shopping-cart text-warning"></i> Malzeme Sipariş:</strong> ' + (eksikSiparisDetay.length > 0 ? eksikSiparisDetay.join(', ') : '-');
+                        
+                        if (eksikUretimDetay.length > 0) {
+                            yorum += '<br><strong><i class="fas fa-flask text-info"></i> Esans iş emri açılmalı:</strong> ' + eksikUretimDetay.join(', ');
+                            
+                            // Esans üretim bilgilerini göster
+                            var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
+                            for (var esansKodu in esansUretimBilgisi) {
+                                var esansInfo = esansUretimBilgisi[esansKodu];
+                                if (esansInfo.acik_is_emri_miktar > 0) {
+                                    yorum += ' <span class="badge badge-success">İş emri: ' + esansInfo.acik_is_emri_miktar.toLocaleString('tr-TR') + '</span>';
+                                } else {
+                                    yorum += ' <span class="badge badge-warning">İş emri açılmalı</span>';
+                                }
+                                if (!esansInfo.malzeme_yeterli && esansInfo.eksik_malzemeler.length > 0) {
+                                    yorum += ' <span class="badge badge-danger">Malzeme eksik</span>';
+                                }
+                            }
+                        }
+                        yorum += '</div>';
                     }
                 } else {
-                    yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> Bileşen yetersiz! ';
-                    if (siparis > 0) {
-                        yorum += siparis.toLocaleString('tr-TR') + ' sipariş ';
+                    // Bileşen yetersiz durumunda eksik malzeme miktarlarını hesapla
+                    var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                    var gerekliUretim = Math.max(siparis - stok, kritik);
+                    var eksikSiparis = [];
+                    var eksikUretim = [];
+                    
+                    bilesenDetaylari.forEach(function(bilesen) {
+                        var gerekliMiktar = bilesen.gerekli_adet * gerekliUretim;
+                        var eksikMiktar = Math.max(0, gerekliMiktar - bilesen.mevcut_stok);
+                        if (eksikMiktar > 0) {
+                            if (bilesen.tur === 'esans') {
+                                eksikUretim.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
+                            } else {
+                                eksikSiparis.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
+                            }
+                        }
+                    });
+                    
+                    yorum = '<div class="p-2" style="background:#fef2f2; border-radius:4px; border-left:3px solid #dc3545;">';
+                    yorum += '<strong class="text-danger"><i class="fas fa-times-circle"></i> Bileşen Yetersiz</strong>';
+                    yorum += '<br><strong><i class="fas fa-shopping-cart"></i> Sipariş:</strong> ' + (eksikSiparis.length > 0 ? eksikSiparis.join(', ') : '-');
+                    
+                    if (eksikUretim.length > 0) {
+                        yorum += '<br><strong><i class="fas fa-flask"></i> Esans iş emri açılmalı:</strong> ' + eksikUretim.join(', ');
+                        
+                        // Esans üretim bilgilerini göster
+                        var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
+                        for (var esansKodu in esansUretimBilgisi) {
+                            var esansInfo = esansUretimBilgisi[esansKodu];
+                            if (esansInfo.acik_is_emri_miktar > 0) {
+                                yorum += ' <span class="badge badge-success">İş emri: ' + esansInfo.acik_is_emri_miktar.toLocaleString('tr-TR') + '</span>';
+                            } else {
+                                yorum += ' <span class="badge badge-warning">İş emri aç</span>';
+                            }
+                            if (!esansInfo.malzeme_yeterli && esansInfo.eksik_malzemeler.length > 0) {
+                                yorum += ' <span class="badge badge-danger">Malzeme eksik</span>';
+                            }
+                        }
                     }
-                    if (kritik > 0) {
-                        yorum += '+ kritik stok için ';
-                    }
-                    yorum += 'malzeme siparişi verin.</span>';
+                    yorum += '</div>';
                 }
                 
                 // Üretimde varsa ekle
