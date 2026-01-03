@@ -260,8 +260,13 @@ function getSupplyChainData($connection) {
             $uretilebilir_miktar = 0;
             $kritik_bilesen_turleri = ['kutu', 'takim', 'esans'];
             $uretilebilir_kritik = PHP_INT_MAX;
+            
+            // Bileşen durumu için değişkenler
+            $required_types = ['esans', 'kutu', 'etiket', 'takm', 'paket', 'jelatin'];
+            $existing_types = [];
+            $esans_kodu_bilesenler = []; // Esans bileşenlerinin kodları
 
-            $bom_query = "SELECT ua.bilesen_miktari, ua.bilesenin_malzeme_turu as bilesen_turu,
+            $bom_query = "SELECT ua.bilesen_miktari, ua.bilesenin_malzeme_turu as bilesen_turu, ua.bilesen_kodu,
                          CASE
                             WHEN m.malzeme_kodu IS NOT NULL THEN m.stok_miktari
                             WHEN ur.urun_kodu IS NOT NULL THEN ur.stok_miktari
@@ -281,15 +286,69 @@ function getSupplyChainData($connection) {
             while ($bom_row = $bom_result->fetch_assoc()) {
                 $gerekli = floatval($bom_row['bilesen_miktari']);
                 $mevcut = floatval($bom_row['bilesen_stok']);
+                $bilesen_turu_lower = strtolower($bom_row['bilesen_turu']);
+                
+                // Mevcut bileşen türlerini kaydet
+                if (!in_array($bilesen_turu_lower, $existing_types)) {
+                    $existing_types[] = $bilesen_turu_lower;
+                }
+                
+                // Esans bileşenlerinin kodlarını kaydet
+                if ($bilesen_turu_lower === 'esans') {
+                    $esans_kodu_bilesenler[] = $bom_row['bilesen_kodu'];
+                }
 
                 if ($gerekli > 0) {
                     $bu_bilesenden = max(0, floor($mevcut / $gerekli));
-                    if (in_array(strtolower($bom_row['bilesen_turu']), $kritik_bilesen_turleri)) {
+                    if (in_array($bilesen_turu_lower, $kritik_bilesen_turleri)) {
                         $uretilebilir_kritik = min($uretilebilir_kritik, $bu_bilesenden);
                     }
                 }
             }
             $bom_stmt->close();
+            
+            // Eksik bileşen türlerini hesapla
+            $eksik_bilesenler = [];
+            foreach ($required_types as $type) {
+                if (!in_array($type, $existing_types)) {
+                    switch ($type) {
+                        case 'esans': $eksik_bilesenler[] = 'Esans'; break;
+                        case 'kutu': $eksik_bilesenler[] = 'Kutu'; break;
+                        case 'etiket': $eksik_bilesenler[] = 'Etiket'; break;
+                        case 'takm': $eksik_bilesenler[] = 'Takım'; break;
+                        case 'paket': $eksik_bilesenler[] = 'Paket'; break;
+                        case 'jelatin': $eksik_bilesenler[] = 'Jelatin'; break;
+                    }
+                }
+            }
+            
+            // Esans ağacı kontrolü - ürünün esans bileşenlerinin ağacı var mı?
+            $esans_agaci_eksik = [];
+            foreach ($esans_kodu_bilesenler as $esans_kodu) {
+                // Bu esansın ağacı (formülü) var mı kontrol et
+                $esans_agac_query = "SELECT COUNT(*) as cnt FROM urun_agaci WHERE agac_turu = 'esans' AND urun_kodu = ?";
+                $esans_agac_stmt = $connection->prepare($esans_agac_query);
+                $esans_agac_stmt->bind_param('s', $esans_kodu);
+                $esans_agac_stmt->execute();
+                $esans_agac_result = $esans_agac_stmt->get_result()->fetch_assoc();
+                
+                if ($esans_agac_result['cnt'] == 0) {
+                    // Esans ismini al
+                    $esans_isim_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
+                    $esans_isim_stmt = $connection->prepare($esans_isim_query);
+                    $esans_isim_stmt->bind_param('s', $esans_kodu);
+                    $esans_isim_stmt->execute();
+                    $esans_isim_result = $esans_isim_stmt->get_result()->fetch_assoc();
+                    $esans_ismi = $esans_isim_result ? $esans_isim_result['esans_ismi'] : $esans_kodu;
+                    $esans_isim_stmt->close();
+                    
+                    $esans_agaci_eksik[] = $esans_ismi;
+                }
+                $esans_agac_stmt->close();
+            }
+            
+            $row['eksik_bilesenler'] = $eksik_bilesenler;
+            $row['esans_agaci_eksik'] = $esans_agaci_eksik;
 
             $uretilebilir_miktar = ($uretilebilir_kritik === PHP_INT_MAX) ? 0 : $uretilebilir_kritik;
             
@@ -740,6 +799,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-right">Üretilebilir</th>
                             <th class="text-right">Önerilen</th>
                             <th class="text-center">Durum</th>
+                            <th>Veri Bilgisi</th>
                             <th style="min-width: 220px;">Yorum</th>
                         </tr>
                     </thead>
@@ -769,8 +829,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             
                             // Durum ve yorum belirleme
                             if ($kritik <= 0 && $siparis_miktari <= 0) {
-                                $badge = ['class' => 'badge-belirsiz', 'text' => '-'];
-                                $yorum = '<span class="text-muted"><i class="fas fa-info-circle"></i> Kritik seviye tanımlı değil, bekleyen sipariş yok.</span>';
+                                $badge = ['class' => 'badge-iyi', 'text' => 'İYİ'];
+                                $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
                             } elseif ($kritik <= 0 && $siparis_miktari > 0) {
                                 // Kritik yok ama sipariş var
                                 if ($siparis_miktari > $stok) {
@@ -862,12 +922,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     $mesajlar[] = 'Sipariş (' . number_format($siparis_miktari, 0, ',', '.') . ') karşılanır';
                                 }
                                 if ($kritik > 0) {
-                                    $fazla = max(0, $stok - $siparis_miktari - $kritik);
-                                    if ($fazla > 0) {
-                                        $mesajlar[] = 'Kritik stok OK (+' . number_format($fazla, 0, ',', '.') . ' fazla)';
-                                    } else {
-                                        $mesajlar[] = 'Kritik stok OK';
-                                    }
+                                    $mesajlar[] = 'Stok yeterli';
                                 }
                                 
                                 if (!empty($mesajlar)) {
@@ -912,8 +967,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </td>
                             <td class="text-right">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0): ?>
-                                    <span class="font-semibold <?php echo $p['yuzde_fark'] > 50 ? 'text-danger' : ($p['yuzde_fark'] > 0 ? 'text-warning' : 'text-success'); ?>">
-                                        %<?php echo number_format($p['yuzde_fark'], 0); ?>
+                                    <?php $gosterilecek_fark = max(0, $p['yuzde_fark']); ?>
+                                    <span class="font-semibold <?php echo $gosterilecek_fark > 50 ? 'text-danger' : ($gosterilecek_fark > 0 ? 'text-warning' : 'text-success'); ?>">
+                                        %<?php echo number_format($gosterilecek_fark, 0); ?>
                                     </span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
@@ -930,11 +986,27 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <?php else: ?>-<?php endif; ?>
                             </td>
                             <td class="text-center"><span class="badge-sm <?php echo $badge['class']; ?>"><?php echo $badge['text']; ?></span></td>
+                            <td>
+                                <?php 
+                                $eksik_bilesenler = isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : [];
+                                $esans_agaci_eksik = isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : [];
+                                
+                                if (empty($eksik_bilesenler) && empty($esans_agaci_eksik)): ?>
+                                    <span class="text-success"><i class="fas fa-check-circle"></i> Ürün ağacı tam</span>
+                                <?php else: ?>
+                                    <?php if (!empty($eksik_bilesenler)): ?>
+                                        <span class="text-warning" style="font-size: 10px;"><i class="fas fa-sitemap"></i> <?php echo implode(', ', $eksik_bilesenler); ?> ürün ağacında bağlı değil</span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($esans_agaci_eksik)): ?>
+                                        <br><span class="text-danger" style="font-size: 10px;"><i class="fas fa-flask"></i> Esansın formülü yok</span>
+                                    <?php endif; ?>
+                                <?php endif; ?>
+                            </td>
                             <td class="yorum-cell"><?php echo $yorum; ?></td>
                         </tr>
                         <?php endforeach; ?>
                         <?php if (empty($supply_chain_data['uretilebilir_urunler'])): ?>
-                        <tr><td colspan="13" class="text-center py-4 text-muted">Henüz ürün kaydı bulunmuyor.</td></tr>
+                        <tr><td colspan="14" class="text-center py-4 text-muted">Henüz ürün kaydı bulunmuyor.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
