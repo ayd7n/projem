@@ -258,13 +258,23 @@ function getSupplyChainData($connection) {
 
             // Üretilebilir miktar hesapla
             $uretilebilir_miktar = 0;
-            $kritik_bilesen_turleri = ['kutu', 'takim', 'esans'];
+            $kritik_bilesen_turleri = ['kutu', 'takm', 'esans'];
             $uretilebilir_kritik = PHP_INT_MAX;
             
             // Bileşen durumu için değişkenler
             $required_types = ['esans', 'kutu', 'etiket', 'takm', 'paket', 'jelatin'];
             $existing_types = [];
             $esans_kodu_bilesenler = []; // Esans bileşenlerinin kodları
+            
+            // Her bileşen türü için üretilebilir miktarlar (JavaScript için)
+            $bilesen_uretilebilir = [
+                'kutu' => PHP_INT_MAX,
+                'etiket' => PHP_INT_MAX,
+                'takm' => PHP_INT_MAX,
+                'esans' => PHP_INT_MAX,
+                'paket' => PHP_INT_MAX,
+                'jelatin' => PHP_INT_MAX
+            ];
 
             $bom_query = "SELECT ua.bilesen_miktari, ua.bilesenin_malzeme_turu as bilesen_turu, ua.bilesen_kodu,
                          CASE
@@ -300,12 +310,26 @@ function getSupplyChainData($connection) {
 
                 if ($gerekli > 0) {
                     $bu_bilesenden = max(0, floor($mevcut / $gerekli));
+                    
+                    // Her bileşen türü için ayrı üretilebilir hesapla
+                    if (isset($bilesen_uretilebilir[$bilesen_turu_lower])) {
+                        $bilesen_uretilebilir[$bilesen_turu_lower] = min($bilesen_uretilebilir[$bilesen_turu_lower], $bu_bilesenden);
+                    }
+                    
                     if (in_array($bilesen_turu_lower, $kritik_bilesen_turleri)) {
                         $uretilebilir_kritik = min($uretilebilir_kritik, $bu_bilesenden);
                     }
                 }
             }
             $bom_stmt->close();
+            
+            // PHP_INT_MAX olanları 0'a çevir (bileşen yok demek)
+            foreach ($bilesen_uretilebilir as $key => $val) {
+                if ($val === PHP_INT_MAX) {
+                    $bilesen_uretilebilir[$key] = null; // null = bu bileşen yok
+                }
+            }
+            $row['bilesen_uretilebilir'] = $bilesen_uretilebilir;
             
             // Eksik bileşen türlerini hesapla
             $eksik_bilesenler = [];
@@ -796,7 +820,41 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-right">Kritik</th>
                             <th class="text-right">Açık</th>
                             <th class="text-right">Fark%</th>
-                            <th class="text-right">Üretilebilir</th>
+                            <th class="text-right">
+                                Üretilebilir 
+                                <div class="dropdown d-inline-block">
+                                    <button class="btn btn-xs btn-light" type="button" id="uretilebilirAyar" data-toggle="dropdown" title="Hesaplama ayarları">
+                                        <i class="fas fa-cog" style="font-size: 9px;"></i>
+                                    </button>
+                                    <div class="dropdown-menu dropdown-menu-right p-2" style="min-width: 180px;" onclick="event.stopPropagation();">
+                                        <div class="small font-weight-bold mb-2"><i class="fas fa-filter"></i> Hesaba Katılacak Türler:</div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="kutu" id="chk_kutu" checked>
+                                            <label class="form-check-label" for="chk_kutu">Kutu</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="etiket" id="chk_etiket">
+                                            <label class="form-check-label" for="chk_etiket">Etiket</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="takm" id="chk_takm" checked>
+                                            <label class="form-check-label" for="chk_takm">Takım</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="esans" id="chk_esans" checked>
+                                            <label class="form-check-label" for="chk_esans">Esans</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="paket" id="chk_paket">
+                                            <label class="form-check-label" for="chk_paket">Paket</label>
+                                        </div>
+                                        <div class="form-check">
+                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="jelatin" id="chk_jelatin">
+                                            <label class="form-check-label" for="chk_jelatin">Jelatin</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </th>
                             <th class="text-right">Önerilen</th>
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
@@ -973,11 +1031,13 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     </span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="text-right">
+                            <td class="text-right uretilebilir-hucre" 
+                                data-bilesen-uretilebilir='<?php echo json_encode($p['bilesen_uretilebilir']); ?>'
+                                data-acik="<?php echo $p['acik']; ?>">
                                 <?php if ($p['uretilebilir_miktar'] > 0): ?>
-                                    <span class="text-success font-semibold"><?php echo number_format($p['uretilebilir_miktar'], 0, ',', '.'); ?></span>
+                                    <span class="text-success font-semibold uretilebilir-deger"><?php echo number_format($p['uretilebilir_miktar'], 0, ',', '.'); ?></span>
                                 <?php else: ?>
-                                    <span class="text-muted">0</span>
+                                    <span class="text-muted uretilebilir-deger">0</span>
                                 <?php endif; ?>
                             </td>
                             <td class="text-right">
@@ -1002,7 +1062,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
-                            <td class="yorum-cell"><?php echo $yorum; ?></td>
+                            <td class="yorum-cell"
+                                data-stok="<?php echo $stok; ?>"
+                                data-siparis="<?php echo $siparis_miktari; ?>"
+                                data-kritik="<?php echo $kritik; ?>"
+                                data-acik="<?php echo $p['acik']; ?>"
+                                data-yuzde-fark="<?php echo $p['yuzde_fark']; ?>"
+                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>">
+                                <?php echo $yorum; ?>
+                            </td>
                         </tr>
                         <?php endforeach; ?>
                         <?php if (empty($supply_chain_data['uretilebilir_urunler'])): ?>
@@ -1017,5 +1085,150 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <script>
+    // Üretilebilir hesaplama fonksiyonu
+    function hesaplaUretilebilir() {
+        // Seçili bileşen türlerini al
+        var seciliTurler = [];
+        document.querySelectorAll('.bilesen-checkbox:checked').forEach(function(chk) {
+            seciliTurler.push(chk.value);
+        });
+        
+        // Her üretilebilir hücresini güncelle
+        document.querySelectorAll('.uretilebilir-hucre').forEach(function(hucre) {
+            var bilesenData = JSON.parse(hucre.getAttribute('data-bilesen-uretilebilir') || '{}');
+            var acik = parseFloat(hucre.getAttribute('data-acik') || 0);
+            
+            // Seçili türlere göre minimum üretilebilir hesapla
+            // SEÇİLİ TÜM bileşenler üründe tanımlı olmalı, yoksa 0
+            var minUretilebilir = Infinity;
+            var tumSeciliTanimli = true;
+            var herhangiSecili = seciliTurler.length > 0;
+            
+            seciliTurler.forEach(function(tur) {
+                // null = bu bileşen üründe tanımlı değil
+                if (bilesenData[tur] === null || bilesenData[tur] === undefined) {
+                    // Seçili bileşen tanımlı değil = üretilemez
+                    tumSeciliTanimli = false;
+                } else {
+                    if (bilesenData[tur] < minUretilebilir) {
+                        minUretilebilir = bilesenData[tur];
+                    }
+                }
+            });
+            
+            // Sonucu güncelle - seçili bileşenlerden biri bile eksikse 0
+            var uretilebilir = (herhangiSecili && tumSeciliTanimli) ? minUretilebilir : 0;
+            if (uretilebilir === Infinity) uretilebilir = 0;
+            
+            var span = hucre.querySelector('.uretilebilir-deger');
+            if (span) {
+                span.textContent = uretilebilir.toLocaleString('tr-TR');
+                span.className = uretilebilir > 0 ? 'text-success font-semibold uretilebilir-deger' : 'text-muted uretilebilir-deger';
+            }
+            
+            // Önerilen üretimi de güncelle (bir sonraki td)
+            var onerilen = Math.max(0, Math.min(acik, uretilebilir));
+            var onerilenTd = hucre.nextElementSibling;
+            if (onerilenTd) {
+                if (onerilen > 0) {
+                    onerilenTd.innerHTML = '<span class="font-semibold" style="color: var(--primary);">' + onerilen.toLocaleString('tr-TR') + '</span>';
+                } else {
+                    onerilenTd.innerHTML = '-';
+                }
+            }
+            
+            // Yorum kolonunu güncelle (satırın son td'si)
+            var row = hucre.closest('tr');
+            var yorumTd = row.querySelector('.yorum-cell');
+            if (yorumTd) {
+                var stok = parseFloat(yorumTd.getAttribute('data-stok') || 0);
+                var siparis = parseFloat(yorumTd.getAttribute('data-siparis') || 0);
+                var kritik = parseFloat(yorumTd.getAttribute('data-kritik') || 0);
+                var yuzdeFark = parseFloat(yorumTd.getAttribute('data-yuzde-fark') || 0);
+                var uretimde = parseFloat(yorumTd.getAttribute('data-uretimde') || 0);
+                
+                // Üretim sonrası hesaplamalar
+                var uretimSonrasiStok = stok + onerilen;
+                var siparisSonrasiStok = uretimSonrasiStok - siparis;
+                
+                var yorum = '';
+                
+                if (kritik <= 0 && siparis <= 0) {
+                    yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
+                } else if (kritik <= 0 && siparis > 0) {
+                    if (siparis > stok) {
+                        var eksik = siparis - stok;
+                        if (uretilebilir >= eksik) {
+                            yorum = '<span class="text-danger"><i class="fas fa-shopping-cart"></i> ' + siparis.toLocaleString('tr-TR') + ' sipariş var. ' + eksik.toLocaleString('tr-TR') + ' adet üretilmeli.</span>';
+                        } else if (uretilebilir > 0) {
+                            var kalanEksik = eksik - uretilebilir;
+                            yorum = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> ' + siparis.toLocaleString('tr-TR') + ' sipariş var. Max ' + uretilebilir.toLocaleString('tr-TR') + ' üretilebilir, ' + kalanEksik.toLocaleString('tr-TR') + ' eksik kalır!</span>';
+                        } else {
+                            yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> ' + siparis.toLocaleString('tr-TR') + ' sipariş var ama bileşen yetersiz! Malzeme siparişi verin.</span>';
+                        }
+                    } else {
+                        yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> ' + siparis.toLocaleString('tr-TR') + ' sipariş stoktan karşılanabilir.</span>';
+                    }
+                } else if (uretilebilir > 0) {
+                    var siparisKarsilanir = (siparis <= 0) || (uretimSonrasiStok >= siparis);
+                    var kritikKarsilanir = (kritik <= 0) || (siparisSonrasiStok >= kritik);
+                    var detaylar = [];
+                    
+                    if (siparis > 0) {
+                        if (siparisKarsilanir) {
+                            detaylar.push('<span class="text-success">✓ Sipariş (' + siparis.toLocaleString('tr-TR') + ') karşılanır</span>');
+                        } else {
+                            var siparisEksik = Math.max(0, siparis - uretimSonrasiStok);
+                            detaylar.push('<span class="text-danger">✗ Sipariş (' + siparis.toLocaleString('tr-TR') + ') için ' + siparisEksik.toLocaleString('tr-TR') + ' eksik</span>');
+                        }
+                    }
+                    
+                    if (kritik > 0) {
+                        if (kritikKarsilanir) {
+                            detaylar.push('<span class="text-success">✓ Kritik stok karşılanır</span>');
+                        } else {
+                            var kritikEksik = Math.max(0, kritik - Math.max(0, siparisSonrasiStok));
+                            detaylar.push('<span class="text-danger">✗ Kritik için ' + kritikEksik.toLocaleString('tr-TR') + ' eksik</span>');
+                        }
+                    }
+                    
+                    if (detaylar.length > 0) {
+                        yorum = '<div class="small">' + detaylar.join('<br>') + '</div>';
+                    }
+                    
+                    if (!siparisKarsilanir || !kritikKarsilanir) {
+                        yorum += '<small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Daha fazla bileşen gerekli!</small>';
+                    }
+                } else {
+                    yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> Bileşen yetersiz! ';
+                    if (siparis > 0) {
+                        yorum += siparis.toLocaleString('tr-TR') + ' sipariş ';
+                    }
+                    if (kritik > 0) {
+                        yorum += '+ kritik stok için ';
+                    }
+                    yorum += 'malzeme siparişi verin.</span>';
+                }
+                
+                // Üretimde varsa ekle
+                if (uretimde > 0) {
+                    yorum += ' <small class="text-info d-block mt-1"><i class="fas fa-cog fa-spin"></i> Üretimde: ' + uretimde.toLocaleString('tr-TR') + '</small>';
+                }
+                
+                yorumTd.innerHTML = yorum;
+            }
+        });
+    }
+    
+    // Checkbox değişikliklerini dinle
+    document.querySelectorAll('.bilesen-checkbox').forEach(function(chk) {
+        chk.addEventListener('change', hesaplaUretilebilir);
+    });
+    
+    // Sayfa yüklendiğinde de hesapla
+    document.addEventListener('DOMContentLoaded', hesaplaUretilebilir);
+    </script>
 </body>
 </html>
