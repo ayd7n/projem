@@ -349,27 +349,81 @@ function getSupplyChainData($connection) {
             // Esans ağacı kontrolü - ürünün esans bileşenlerinin ağacı var mı?
             $esans_agaci_eksik = [];
             foreach ($esans_kodu_bilesenler as $esans_kodu) {
-                // Bu esansın ağacı (formülü) var mı kontrol et
-                $esans_agac_query = "SELECT COUNT(*) as cnt FROM urun_agaci WHERE agac_turu = 'esans' AND urun_kodu = ?";
-                $esans_agac_stmt = $connection->prepare($esans_agac_query);
-                $esans_agac_stmt->bind_param('s', $esans_kodu);
-                $esans_agac_stmt->execute();
-                $esans_agac_result = $esans_agac_stmt->get_result()->fetch_assoc();
+                // Önce esans ismini al
+                $esans_isim_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
+                $esans_isim_stmt = $connection->prepare($esans_isim_query);
+                $esans_isim_stmt->bind_param('s', $esans_kodu);
+                $esans_isim_stmt->execute();
+                $esans_isim_result = $esans_isim_stmt->get_result()->fetch_assoc();
+                $esans_ismi = $esans_isim_result ? $esans_isim_result['esans_ismi'] : null;
+                $esans_isim_stmt->close();
                 
-                if ($esans_agac_result['cnt'] == 0) {
-                    // Esans ismini al
-                    $esans_isim_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
-                    $esans_isim_stmt = $connection->prepare($esans_isim_query);
-                    $esans_isim_stmt->bind_param('s', $esans_kodu);
-                    $esans_isim_stmt->execute();
-                    $esans_isim_result = $esans_isim_stmt->get_result()->fetch_assoc();
-                    $esans_ismi = $esans_isim_result ? $esans_isim_result['esans_ismi'] : $esans_kodu;
-                    $esans_isim_stmt->close();
+                if ($esans_ismi) {
+                    // Bu esans ismiyle ürün ağacında esans formülü var mı kontrol et
+                    $esans_agac_query = "SELECT COUNT(*) as cnt FROM urun_agaci WHERE agac_turu = 'esans' AND urun_ismi = ?";
+                    $esans_agac_stmt = $connection->prepare($esans_agac_query);
+                    $esans_agac_stmt->bind_param('s', $esans_ismi);
+                    $esans_agac_stmt->execute();
+                    $esans_agac_result = $esans_agac_stmt->get_result()->fetch_assoc();
                     
-                    $esans_agaci_eksik[] = $esans_ismi;
+                    if ($esans_agac_result['cnt'] == 0) {
+                        $esans_agaci_eksik[] = $esans_ismi;
+                    }
+                    $esans_agac_stmt->close();
                 }
-                $esans_agac_stmt->close();
             }
+            
+            // Sözleşme durumu kontrolü
+            $sozlesme_eksik_malzemeler = [];
+            $tum_malzeme_kodlari = [];
+            
+            // 1. Ürün ağacındaki esans harici bileşenlerin malzeme kodlarını al
+            $malzeme_query = "SELECT ua.bilesen_kodu, m.malzeme_ismi 
+                              FROM urun_agaci ua
+                              JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
+                              WHERE ua.agac_turu = 'urun' AND ua.urun_kodu = ? 
+                              AND LOWER(ua.bilesenin_malzeme_turu) != 'esans'";
+            $malzeme_stmt = $connection->prepare($malzeme_query);
+            $malzeme_stmt->bind_param('i', $row['urun_kodu']);
+            $malzeme_stmt->execute();
+            $malzeme_result = $malzeme_stmt->get_result();
+            while ($malzeme_row = $malzeme_result->fetch_assoc()) {
+                $tum_malzeme_kodlari[$malzeme_row['bilesen_kodu']] = $malzeme_row['malzeme_ismi'];
+            }
+            $malzeme_stmt->close();
+            
+            // 2. Esans bileşenlerinin ağaçlarındaki malzeme kodlarını al
+            foreach ($esans_kodu_bilesenler as $esans_kodu) {
+                $esans_malz_query = "SELECT ua.bilesen_kodu, m.malzeme_ismi 
+                                     FROM urun_agaci ua
+                                     JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
+                                     WHERE ua.agac_turu = 'esans' AND ua.urun_kodu = ?";
+                $esans_malz_stmt = $connection->prepare($esans_malz_query);
+                $esans_malz_stmt->bind_param('s', $esans_kodu);
+                $esans_malz_stmt->execute();
+                $esans_malz_result = $esans_malz_stmt->get_result();
+                while ($esans_malz_row = $esans_malz_result->fetch_assoc()) {
+                    $tum_malzeme_kodlari[$esans_malz_row['bilesen_kodu']] = $esans_malz_row['malzeme_ismi'];
+                }
+                $esans_malz_stmt->close();
+            }
+            
+            // 3. Her malzeme için kullanılabilir sözleşme var mı kontrol et
+            foreach ($tum_malzeme_kodlari as $malzeme_kodu => $malzeme_ismi) {
+                $sozlesme_query = "SELECT COUNT(*) as cnt FROM cerceve_sozlesmeler_gecerlilik 
+                                   WHERE malzeme_kodu = ? AND gecerli_mi = 1";
+                $sozlesme_stmt = $connection->prepare($sozlesme_query);
+                $sozlesme_stmt->bind_param('s', $malzeme_kodu);
+                $sozlesme_stmt->execute();
+                $sozlesme_result = $sozlesme_stmt->get_result()->fetch_assoc();
+                
+                if ($sozlesme_result['cnt'] == 0) {
+                    $sozlesme_eksik_malzemeler[] = $malzeme_ismi;
+                }
+                $sozlesme_stmt->close();
+            }
+            
+            $row['sozlesme_eksik_malzemeler'] = $sozlesme_eksik_malzemeler;
             
             $row['eksik_bilesenler'] = $eksik_bilesenler;
             $row['esans_agaci_eksik'] = $esans_agaci_eksik;
@@ -795,11 +849,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             </div>
         </div>
 
-        <!-- Info Compact -->
-        <div class="info-compact">
-            <i class="fas fa-info-circle"></i>
-            <span><strong>Formül:</strong> <code>Fark% = (Kritik - Toplam) / Kritik × 100</code></span>
-        </div>
 
         <!-- Production Planning Section - TEK TABLO -->
         <div class="card mb-3">
@@ -858,7 +907,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-right">Önerilen</th>
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
-                            <th style="min-width: 220px;">Yorum</th>
+                            <th>Sözleşme Durumu</th>
+                            <th style="min-width: 220px;">Karşılanma Durumu</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1062,6 +1112,16 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
+                            <td>
+                                <?php 
+                                $sozlesme_eksik = isset($p['sozlesme_eksik_malzemeler']) ? $p['sozlesme_eksik_malzemeler'] : [];
+                                
+                                if (empty($sozlesme_eksik)): ?>
+                                    <span class="text-success"><i class="fas fa-file-contract"></i> Tanımlı malzemelerin sözleşmesi tam</span>
+                                <?php else: ?>
+                                    <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
+                                <?php endif; ?>
+                            </td>
                             <td class="yorum-cell"
                                 data-stok="<?php echo $stok; ?>"
                                 data-siparis="<?php echo $siparis_miktari; ?>"
@@ -1074,7 +1134,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         </tr>
                         <?php endforeach; ?>
                         <?php if (empty($supply_chain_data['uretilebilir_urunler'])): ?>
-                        <tr><td colspan="14" class="text-center py-4 text-muted">Henüz ürün kaydı bulunmuyor.</td></tr>
+                        <tr><td colspan="15" class="text-center py-4 text-muted">Henüz ürün kaydı bulunmuyor.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
