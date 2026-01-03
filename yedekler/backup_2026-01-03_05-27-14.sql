@@ -28,7 +28,7 @@ CREATE TABLE `ayarlar` (
   `ayar_deger` varchar(255) NOT NULL,
   PRIMARY KEY (`ayar_id`),
   UNIQUE KEY `ayar_anahtar` (`ayar_anahtar`)
-) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=68 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -37,7 +37,7 @@ CREATE TABLE `ayarlar` (
 
 LOCK TABLES `ayarlar` WRITE;
 /*!40000 ALTER TABLE `ayarlar` DISABLE KEYS */;
-INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2026-01-02 01:58:31'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
+INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2026-01-03 05:26:52'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
 /*!40000 ALTER TABLE `ayarlar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -110,7 +110,7 @@ CREATE TABLE `cerceve_sozlesmeler` (
   `odeme_kasasi` varchar(20) NOT NULL DEFAULT 'TL' COMMENT 'TL, USD, EUR, cek_kasasi',
   `odenen_cek_id` int(11) DEFAULT NULL COMMENT 'cek_kasasi tablosundaki cek_id',
   PRIMARY KEY (`sozlesme_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -119,7 +119,7 @@ CREATE TABLE `cerceve_sozlesmeler` (
 
 LOCK TABLES `cerceve_sozlesmeler` WRITE;
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` DISABLE KEYS */;
-INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'kırmızıgül ',2,'CHANEL COCO TAKIM',2.20,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:42:26','',1,'TL',NULL),(2,3,'luzi',1,'CHANEL COCO HAM ESANS',120.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:18','',1,'TL',NULL),(3,4,'paket',5,'CHANEL COCO paket',1.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:58','',1,'TL',NULL),(4,2,'şener şimşek',3,'CHANEL COCO kutu',0.50,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:46:44','',1,'TL',NULL),(5,5,'jilatin ',4,'CHANEL COCO jelatin',1.00,'TL',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:47:47','',1,'TL',NULL),(7,8,'alkol',7,'alkol',1.50,'USD',9999,250,'2025-12-12','2025-12-30','Admin User','2025-12-25 12:11:14','',1,'TL',NULL),(8,3,'luzi',1,'CHANEL COCO HAM ESANS',110.00,'USD',9999,15,'2025-12-12','2026-12-30','Admin User','2025-12-26 14:37:52','',1,'TL',NULL);
+INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'kırmızıgül ',2,'CHANEL COCO TAKIM',2.20,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:42:26','',1,'TL',NULL),(2,3,'luzi',1,'CHANEL COCO HAM ESANS',120.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:18','',1,'TL',NULL),(3,4,'paket',5,'CHANEL COCO paket',1.00,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:43:58','',1,'TL',NULL),(4,2,'şener şimşek',3,'CHANEL COCO kutu',0.50,'USD',9999,0,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:46:44','',1,'TL',NULL),(5,5,'jilatin ',4,'CHANEL COCO jelatin',1.00,'TL',9999,1002,'2025-12-12','2025-12-30','Admin User','2025-12-25 11:47:47','',1,'TL',NULL),(7,8,'alkol',7,'alkol',1.50,'USD',9999,560,'2025-12-12','2025-12-30','Admin User','2025-12-25 12:11:14','',1,'TL',NULL),(8,3,'luzi',1,'CHANEL COCO HAM ESANS',110.00,'USD',9999,15,'2025-12-12','2026-12-30','Admin User','2025-12-26 14:37:52','',1,'TL',NULL),(9,5,'gökan',49,'Urun4, etiket',1.00,'TL',9999999,0,'2026-01-01','2026-01-18','Admin User','2026-01-03 04:28:44','',1,'TL',NULL),(10,5,'gökan',50,'Urun4, ham esans',12.00,'TL',1213,0,'2026-01-01','2026-01-11','Admin User','2026-01-03 04:29:25','',1,'TL',NULL),(11,5,'gökan',51,'Urun4, jelatin',1.00,'TL',999,0,'2026-01-02','2026-01-11','Admin User','2026-01-03 04:29:49','',1,'TL',NULL),(12,5,'gökan',52,'Urun4, kutu',1.00,'TL',12,0,'2026-01-02','2026-01-11','Admin User','2026-01-03 04:30:22','',1,'TL',NULL),(13,5,'gökan',53,'Urun4, paket',1.00,'TL',123,0,'2026-01-02','2026-01-11','Admin User','2026-01-03 04:30:44','',1,'TL',NULL),(14,5,'gökan',54,'Urun4, takım',12.00,'TL',123,0,'2026-01-02','2026-01-11','Admin User','2026-01-03 04:31:10','',1,'TL',NULL);
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -276,7 +276,7 @@ CREATE TABLE `esanslar` (
 
 LOCK TABLES `esanslar` WRITE;
 /*!40000 ALTER TABLE `esanslar` DISABLE KEYS */;
-INSERT INTO `esanslar` VALUES (2,'001','DİOR , SAVAGE','',0.00,'lt',25.00,'',''),(3,'004','bacarat red','',0.00,'lt',25.00,'',''),(4,'005','VIKTORIA SECRET , BOM ŞHEL','',0.00,'lt',20.00,'',''),(9,'ES010','Guzel Urun Esansi','',100.00,'lt',46.00,'001','w 501'),(10,'ES-251231-686','Urun 2, Esans','',0.00,'lt',1.00,NULL,NULL),(11,'ES-251231-837','URUN3, Esans','',0.00,'lt',1.00,NULL,NULL),(12,'ES-251231-749','Urun4, Esans','',0.00,'lt',1.00,NULL,NULL);
+INSERT INTO `esanslar` VALUES (2,'001','DİOR , SAVAGE','',0.00,'lt',25.00,'',''),(3,'004','bacarat red','',0.00,'lt',25.00,'',''),(4,'005','VIKTORIA SECRET , BOM ŞHEL','',0.00,'lt',20.00,'',''),(9,'ES010','Guzel Urun Esansi','',100.00,'lt',46.00,'001','w 501'),(10,'ES-251231-686','Urun 2, Esans','',0.00,'lt',1.00,NULL,NULL),(11,'ES-251231-837','URUN3, Esans','',0.00,'lt',1.00,NULL,NULL),(12,'ES-251231-749','Urun4, Esans','',20.00,'lt',1.00,NULL,NULL);
 /*!40000 ALTER TABLE `esanslar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -406,7 +406,7 @@ CREATE TABLE `gider_yonetimi` (
   `kasa_secimi` varchar(20) NOT NULL DEFAULT 'TL' COMMENT 'TL, USD, EUR, cek_kasasi',
   `cek_secimi` int(11) DEFAULT NULL COMMENT 'cek_kasasi tablosundaki cek_id',
   PRIMARY KEY (`gider_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -415,7 +415,7 @@ CREATE TABLE `gider_yonetimi` (
 
 LOCK TABLES `gider_yonetimi` WRITE;
 /*!40000 ALTER TABLE `gider_yonetimi` DISABLE KEYS */;
-INSERT INTO `gider_yonetimi` VALUES (1,'2025-12-26',70702.50,'Malzeme Gideri','CHANEL COCO HAM ESANS için 15 adet ara ödeme (1.650,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','luzi','TL',NULL),(2,'2025-12-26',16068.75,'Malzeme Gideri','alkol için 250 adet ara ödeme (375,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','alkol','TL',NULL);
+INSERT INTO `gider_yonetimi` VALUES (1,'2025-12-26',70702.50,'Malzeme Gideri','CHANEL COCO HAM ESANS için 15 adet ara ödeme (1.650,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','luzi','TL',NULL),(2,'2025-12-26',16068.75,'Malzeme Gideri','alkol için 250 adet ara ödeme (375,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','alkol','TL',NULL),(3,'2026-01-02',19925.25,'Malzeme Gideri','alkol için 310 adet ara ödeme (465,00 USD @ 42,8500)',1,'Admin User',NULL,'Diğer','alkol','TL',NULL),(4,'2026-01-02',1002.00,'Malzeme Gideri','CHANEL COCO jelatin için 1002 adet ara ödeme',1,'Admin User',NULL,'Kredi Kartı','jilatin ','TL',NULL),(5,'2026-01-02',100.00,'İşletme Gideri','cc',1,'Admin User','','Nakit','','USD',NULL),(6,'2026-01-02',100.00,'Enerji','dd',1,'Admin User','','Nakit','','EUR',NULL);
 /*!40000 ALTER TABLE `gider_yonetimi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -483,7 +483,7 @@ CREATE TABLE `kasa_hareketleri` (
   KEY `para_birimi` (`para_birimi`),
   KEY `cek_id` (`cek_id`),
   KEY `tutar` (`tutar`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_turkish_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -492,7 +492,7 @@ CREATE TABLE `kasa_hareketleri` (
 
 LOCK TABLES `kasa_hareketleri` WRITE;
 /*!40000 ALTER TABLE `kasa_hareketleri` DISABLE KEYS */;
-INSERT INTO `kasa_hareketleri` VALUES (1,'2025-12-31 09:57:00','kasa_ekle','TL',NULL,1000.00,'TL',NULL,1000.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(2,'2025-12-31 15:55:00','kasa_ekle','TL',NULL,500.00,'TL',NULL,500.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(4,'2026-01-02 02:07:00','kasa_ekle','TL',NULL,600.00,'TL',1.0000,600.00,NULL,NULL,'Deneme...','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(5,'2026-01-02 02:08:00','kasa_ekle','TL',NULL,700.00,'TL',1.0000,700.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL);
+INSERT INTO `kasa_hareketleri` VALUES (5,'2026-01-02 02:08:00','kasa_ekle','TL',NULL,700.00,'TL',1.0000,700.00,NULL,NULL,'','Admin User',NULL,NULL,NULL,NULL,NULL,NULL,NULL),(6,'2026-01-02 00:00:00','gider_cikisi','TL',NULL,19925.25,'TL',NULL,19925.25,'cerceve_sozlesmeler',7,'alkol için 310 adet ara ödeme (465,00 USD @ 42,8500)','Admin User','alkol',NULL,NULL,'Diğer',NULL,NULL,NULL),(7,'2026-01-02 00:00:00','gider_cikisi','TL',NULL,1002.00,'TL',NULL,1002.00,'cerceve_sozlesmeler',5,'CHANEL COCO jelatin için 1002 adet ara ödeme','Admin User','jilatin ',NULL,NULL,'Kredi Kartı',NULL,NULL,NULL),(8,'2026-01-02 00:00:00','gider_cikisi','USD',NULL,100.00,'USD',NULL,100.00,'gider_yonetimi',5,'cc','Admin User','',NULL,NULL,'Nakit',NULL,NULL,NULL),(9,'2026-01-02 00:00:00','gider_cikisi','EUR',NULL,100.00,'EUR',NULL,5050.70,'gider_yonetimi',6,'dd','Admin User','',NULL,NULL,'Nakit',NULL,NULL,NULL);
 /*!40000 ALTER TABLE `kasa_hareketleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -545,7 +545,7 @@ CREATE TABLE `log_tablosu` (
   `islem_turu` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=211 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=234 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -554,7 +554,7 @@ CREATE TABLE `log_tablosu` (
 
 LOCK TABLES `log_tablosu` WRITE;
 /*!40000 ALTER TABLE `log_tablosu` DISABLE KEYS */;
-INSERT INTO `log_tablosu` VALUES (208,'2026-01-01 18:39:11','Admin User','Taksit Planı #3 iptal edildi.','UPDATE','2026-01-01 15:39:11'),(209,'2026-01-02 02:01:46','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:01:46'),(210,'2026-01-02 02:06:51','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:06:51');
+INSERT INTO `log_tablosu` VALUES (208,'2026-01-01 18:39:11','Admin User','Taksit Planı #3 iptal edildi.','UPDATE','2026-01-01 15:39:11'),(209,'2026-01-02 02:01:46','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:01:46'),(210,'2026-01-02 02:06:51','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-01 23:06:51'),(211,'2026-01-02 04:23:00','Admin User','İşletme Gideri kategorisinde 100 TL tutarında gider eklendi','CREATE','2026-01-02 01:23:00'),(212,'2026-01-02 04:28:21','Admin User','Enerji kategorisinde 100 TL tutarında gider eklendi','CREATE','2026-01-02 01:28:21'),(213,'2026-01-02 05:18:08','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-02 02:18:08'),(214,'2026-01-02 19:24:06','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-02 16:24:06'),(215,'2026-01-03 01:02:46','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-02 22:02:46'),(216,'2026-01-03 01:17:11','Admin User','armani you ürünü armani you olarak güncellendi','UPDATE','2026-01-02 22:17:11'),(217,'2026-01-03 01:19:30','Admin User','MEHMET FATİH GÜZEN müşterisi için yeni sipariş oluşturuldu (ID: 7)','CREATE','2026-01-02 22:19:30'),(218,'2026-01-03 01:19:45','Admin User','MEHMET FATİH GÜZEN müşterisine ait 7 nolu siparişin yeni durumu: Onaylandı','UPDATE','2026-01-02 22:19:45'),(219,'2026-01-03 01:20:37','Admin User','armani you ürünü armani you olarak güncellendi','UPDATE','2026-01-02 22:20:37'),(220,'2026-01-03 04:28:44','Admin User','gökan tedarikçisine Urun4, etiket malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:28:44'),(221,'2026-01-03 04:29:25','Admin User','gökan tedarikçisine Urun4, ham esans malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:29:25'),(222,'2026-01-03 04:29:49','Admin User','gökan tedarikçisine Urun4, jelatin malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:29:49'),(223,'2026-01-03 04:30:22','Admin User','gökan tedarikçisine Urun4, kutu malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:30:22'),(224,'2026-01-03 04:30:44','Admin User','gökan tedarikçisine Urun4, paket malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:30:44'),(225,'2026-01-03 04:31:10','Admin User','gökan tedarikçisine Urun4, takım malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-03 01:31:10'),(226,'2026-01-03 04:31:42','Admin User','Urun4 ürünü Urun4 olarak güncellendi','UPDATE','2026-01-03 01:31:42'),(227,'2026-01-03 04:45:05','Admin User','Urun4, takım malzemesi Urun4, takım olarak güncellendi','UPDATE','2026-01-03 01:45:05'),(228,'2026-01-03 04:45:11','Admin User','Urun4, paket malzemesi Urun4, paket olarak güncellendi','UPDATE','2026-01-03 01:45:11'),(229,'2026-01-03 04:45:21','Admin User','Urun4, kutu malzemesi Urun4, kutu olarak güncellendi','UPDATE','2026-01-03 01:45:21'),(230,'2026-01-03 04:45:31','Admin User','Urun4, jelatin malzemesi Urun4, jelatin olarak güncellendi','UPDATE','2026-01-03 01:45:31'),(231,'2026-01-03 04:45:41','Admin User','Urun4, ham esans malzemesi Urun4, ham esans olarak güncellendi','UPDATE','2026-01-03 01:45:41'),(232,'2026-01-03 04:45:51','Admin User','Urun4, etiket malzemesi Urun4, etiket olarak güncellendi','UPDATE','2026-01-03 01:45:51'),(233,'2026-01-03 04:46:31','Admin User','Urun4, Esans esansı güncellendi','UPDATE','2026-01-03 01:46:31');
 /*!40000 ALTER TABLE `log_tablosu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -770,7 +770,7 @@ CREATE TABLE `malzemeler` (
 
 LOCK TABLES `malzemeler` WRITE;
 /*!40000 ALTER TABLE `malzemeler` DISABLE KEYS */;
-INSERT INTO `malzemeler` VALUES (1,'CHANEL COCO HAM ESANS','ham_esans','',906.35,'kg',119.83,'USD',0,5,'KUTU','raf 1',0),(2,'CHANEL COCO TAKIM','takm','',9.00,'adet',2.20,'USD',0,5,'yazıcı','1',0),(3,'CHANEL COCO kutu','kutu','',9.00,'adet',0.50,'USD',0,7,'KUTU','raf 1',0),(4,'CHANEL COCO jelatin','jelatin','',992.09,'kg',1.00,'TL',0,5,'JELATİN','1',0),(5,'CHANEL COCO paket','paket','',1000.00,'adet',1.00,'USD',0,5,'DIŞ KUTU','1',0),(7,'alkol','alkol','',560.00,'lt',1.50,'USD',0,5,'ALKOL','1',0),(8,'kahve kutu','kutu','',0.00,'adet',0.00,'USD',0,5,'DEPO A','A 1',0),(26,'m','ham_esans','',0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(29,'abc, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(30,'abc, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(31,'Guzel Urun, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(32,'Guzel Urun, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(33,'Guzel Urun, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(34,'Guzel Urun, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(35,'Guzel Urun, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(36,'Guzel Urun, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(37,'Urun 2, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(38,'Urun 2, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(39,'Urun 2, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(40,'Urun 2, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(41,'Urun 2, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(42,'Urun 2, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(43,'URUN3, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(44,'URUN3, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(45,'URUN3, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(46,'URUN3, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(47,'URUN3, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(48,'URUN3, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(49,'Urun4, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(50,'Urun4, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(51,'Urun4, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(52,'Urun4, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(53,'Urun4, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(54,'Urun4, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0);
+INSERT INTO `malzemeler` VALUES (1,'CHANEL COCO HAM ESANS','ham_esans','',906.35,'kg',119.83,'USD',0,5,'KUTU','raf 1',0),(2,'CHANEL COCO TAKIM','takm','',9.00,'adet',2.20,'USD',0,5,'yazıcı','1',0),(3,'CHANEL COCO kutu','kutu','',9.00,'adet',0.50,'USD',0,7,'KUTU','raf 1',0),(4,'CHANEL COCO jelatin','jelatin','',992.09,'kg',1.00,'TL',0,5,'JELATİN','1',0),(5,'CHANEL COCO paket','paket','',1000.00,'adet',1.00,'USD',0,5,'DIŞ KUTU','1',0),(7,'alkol','alkol','',560.00,'lt',1.50,'USD',0,5,'ALKOL','1',0),(8,'kahve kutu','kutu','',0.00,'adet',0.00,'USD',0,5,'DEPO A','A 1',0),(26,'m','ham_esans','',0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(29,'abc, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(30,'abc, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(31,'Guzel Urun, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(32,'Guzel Urun, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(33,'Guzel Urun, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(34,'Guzel Urun, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(35,'Guzel Urun, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(36,'Guzel Urun, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'ALKOL','1',0),(37,'Urun 2, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(38,'Urun 2, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(39,'Urun 2, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(40,'Urun 2, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(41,'Urun 2, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(42,'Urun 2, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(43,'URUN3, etiket','etiket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(44,'URUN3, ham esans','ham_esans',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(45,'URUN3, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(46,'URUN3, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(47,'URUN3, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(48,'URUN3, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(49,'Urun4, etiket','etiket','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(50,'Urun4, ham esans','ham_esans','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(51,'Urun4, jelatin','jelatin','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(52,'Urun4, kutu','kutu','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(53,'Urun4, paket','paket','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0),(54,'Urun4, takım','takm','null',20.00,'adet',0.00,'TRY',0,0,'DEPO A','A 1',0);
 /*!40000 ALTER TABLE `malzemeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1372,7 +1372,7 @@ CREATE TABLE `siparis_kalemleri` (
 
 LOCK TABLES `siparis_kalemleri` WRITE;
 /*!40000 ALTER TABLE `siparis_kalemleri` DISABLE KEYS */;
-INSERT INTO `siparis_kalemleri` VALUES (1,1,'chanel coco',12,'adet',10.00,120.00,'USD'),(2,1,'chanel coco',88,'adet',10.00,880.00,'USD'),(3,1,'chanel coco',142,'adet',10.00,1420.00,'USD'),(3,7,'DİOR SAVAGE',18,'adet',12.00,216.00,'USD'),(4,7,'DİOR SAVAGE',20,'adet',12.00,240.00,'USD'),(4,1,'chanel coco',14,'adet',10.00,140.00,'USD'),(5,1,'chanel coco',15,'adet',10.00,150.00,'USD'),(5,7,'DİOR SAVAGE',150,'adet',12.00,1800.00,'USD'),(6,1,'chanel coco',30,'0',10.00,300.00,'USD'),(6,7,'DİOR SAVAGE',120,'adet',12.00,1440.00,'USD');
+INSERT INTO `siparis_kalemleri` VALUES (1,1,'chanel coco',12,'adet',10.00,120.00,'USD'),(2,1,'chanel coco',88,'adet',10.00,880.00,'USD'),(3,1,'chanel coco',142,'adet',10.00,1420.00,'USD'),(3,7,'DİOR SAVAGE',18,'adet',12.00,216.00,'USD'),(4,7,'DİOR SAVAGE',20,'adet',12.00,240.00,'USD'),(4,1,'chanel coco',14,'adet',10.00,140.00,'USD'),(5,1,'chanel coco',15,'adet',10.00,150.00,'USD'),(5,7,'DİOR SAVAGE',150,'adet',12.00,1800.00,'USD'),(6,1,'chanel coco',30,'0',10.00,300.00,'USD'),(6,7,'DİOR SAVAGE',120,'adet',12.00,1440.00,'USD'),(7,4,'armani you',100,'adet',25.00,2500.00,'USD');
 /*!40000 ALTER TABLE `siparis_kalemleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1400,7 +1400,7 @@ CREATE TABLE `siparisler` (
   `odenen_tutar` decimal(10,2) DEFAULT 0.00,
   `para_birimi` varchar(3) NOT NULL DEFAULT 'TL',
   PRIMARY KEY (`siparis_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1409,7 +1409,7 @@ CREATE TABLE `siparisler` (
 
 LOCK TABLES `siparisler` WRITE;
 /*!40000 ALTER TABLE `siparisler` DISABLE KEYS */;
-INSERT INTO `siparisler` VALUES (1,3,'OSMAN GÜZEN','2025-12-25 14:18:11','tamamlandi',12,'OSMAN GÜZEN',1,'Admin User','2025-12-25 14:18:52','','bekliyor',NULL,0.00,'USD'),(2,3,'OSMAN GÜZEN','2025-12-25 14:22:00','tamamlandi',88,'OSMAN GÜZEN',1,'Admin User','2025-12-25 14:22:18','','bekliyor',NULL,0.00,'USD'),(3,3,'OSMAN GÜZEN','2025-12-26 10:05:43','tamamlandi',160,'Personel: Admin User',1,'Admin User','2025-12-26 10:05:54','habersiz sipariş','bekliyor',NULL,0.00,'USD'),(4,2,'İDRİS GÜZEN','2025-12-26 10:55:08','tamamlandi',34,'Personel: Admin User',1,'Admin User','2025-12-26 10:55:18','','odendi',NULL,380.00,'USD'),(5,1,'MEHMET FATİH GÜZEN','2025-12-26 13:51:41','tamamlandi',165,'Personel: Admin User',1,'Admin User','2025-12-26 13:51:54','','odendi',NULL,1950.00,'USD'),(6,3,'OSMAN GÜZEN','2025-12-26 14:02:20','tamamlandi',150,'Personel: Admin User',1,'Admin User','2025-12-26 14:05:32','','odendi',NULL,1740.00,'USD');
+INSERT INTO `siparisler` VALUES (1,3,'OSMAN GÜZEN','2025-12-25 14:18:11','tamamlandi',12,'OSMAN GÜZEN',1,'Admin User','2025-12-25 14:18:52','','bekliyor',NULL,0.00,'USD'),(2,3,'OSMAN GÜZEN','2025-12-25 14:22:00','tamamlandi',88,'OSMAN GÜZEN',1,'Admin User','2025-12-25 14:22:18','','bekliyor',NULL,0.00,'USD'),(3,3,'OSMAN GÜZEN','2025-12-26 10:05:43','tamamlandi',160,'Personel: Admin User',1,'Admin User','2025-12-26 10:05:54','habersiz sipariş','bekliyor',NULL,0.00,'USD'),(4,2,'İDRİS GÜZEN','2025-12-26 10:55:08','tamamlandi',34,'Personel: Admin User',1,'Admin User','2025-12-26 10:55:18','','odendi',NULL,380.00,'USD'),(5,1,'MEHMET FATİH GÜZEN','2025-12-26 13:51:41','tamamlandi',165,'Personel: Admin User',1,'Admin User','2025-12-26 13:51:54','','odendi',NULL,1950.00,'USD'),(6,3,'OSMAN GÜZEN','2025-12-26 14:02:20','tamamlandi',150,'Personel: Admin User',1,'Admin User','2025-12-26 14:05:32','','odendi',NULL,1740.00,'USD'),(7,1,'MEHMET FATİH GÜZEN','2026-01-03 01:19:30','onaylandi',100,'Personel: Admin User',1,'Admin User','2026-01-03 01:19:45','','bekliyor',NULL,0.00,'USD');
 /*!40000 ALTER TABLE `siparisler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1436,7 +1436,7 @@ CREATE TABLE `sirket_kasasi` (
 
 LOCK TABLES `sirket_kasasi` WRITE;
 /*!40000 ALTER TABLE `sirket_kasasi` DISABLE KEYS */;
-INSERT INTO `sirket_kasasi` VALUES (1,'TL',2800.00,'2026-01-02 02:09:06'),(2,'USD',17.00,'2025-12-29 01:04:59'),(3,'EUR',0.00,'2025-12-29 00:54:20');
+INSERT INTO `sirket_kasasi` VALUES (1,'TL',-20227.25,'2026-01-02 04:21:24'),(2,'USD',-83.00,'2026-01-02 04:23:00'),(3,'EUR',-100.00,'2026-01-02 04:28:21');
 /*!40000 ALTER TABLE `sirket_kasasi` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1879,7 +1879,7 @@ CREATE TABLE `urunler` (
 
 LOCK TABLES `urunler` WRITE;
 /*!40000 ALTER TABLE `urunler` DISABLE KEYS */;
-INSERT INTO `urunler` VALUES (1,'chanel coco','',667,'adet',10.00,'USD',0.00,'TRY',100,'DEPO A','A 1','uretilen',NULL),(2,'invektus','',0,'adet',12.00,'USD',0.00,'TRY',0,'DEPO B','B 1','uretilen',NULL),(3,'lavi bel','',0,'adet',15.00,'TRY',0.00,'TRY',80,'DEPO A','A 1','uretilen',NULL),(4,'armani you','',0,'adet',25.00,'USD',0.00,'TRY',100,'DEPO A','A 1','uretilen',NULL),(6,'kahve','',0,'adet',5.00,'USD',0.00,'TRY',100,'DEPO A','A 1','uretilen',NULL),(7,'DİOR SAVAGE','',192,'adet',12.00,'USD',0.00,'TRY',10,'DEPO C','C 1','hazir_alinan',NULL),(8,'Deneme','',12,'adet',0.00,'TRY',0.00,'TRY',111,'ALKOL','1','uretilen',NULL),(9,'Barış','',0,'adet',0.00,'TRY',0.00,'TRY',0,'ALKOL','1','uretilen',NULL),(18,'Guzel Urun','',100,'adet',0.00,'TRY',0.00,'TRY',0,'ALKOL','1','uretilen',NULL),(19,'Urun 2','',100,'adet',0.00,'TRY',0.00,'TRY',0,'DEPO A','A 1','uretilen',NULL),(20,'URUN3','',11,'adet',0.00,'TRY',0.00,'TRY',0,'DEPO A','A 1','uretilen',NULL),(21,'Urun4','',0,'adet',0.00,'TRY',0.00,'TRY',0,'DEPO A','A 1','uretilen',NULL);
+INSERT INTO `urunler` VALUES (1,'chanel coco','',667,'adet',10.00,'USD',0.00,'TRY',100,'DEPO A','A 1','uretilen',NULL),(2,'invektus','',0,'adet',12.00,'USD',0.00,'TRY',0,'DEPO B','B 1','uretilen',NULL),(3,'lavi bel','',0,'adet',15.00,'TRY',0.00,'TRY',80,'DEPO A','A 1','uretilen',NULL),(4,'armani you','',1,'adet',25.00,'USD',0.00,'TRY',10,'DEPO A','A 1','uretilen',NULL),(6,'kahve','',0,'adet',5.00,'USD',0.00,'TRY',100,'DEPO A','A 1','uretilen',NULL),(7,'DİOR SAVAGE','',192,'adet',12.00,'USD',0.00,'TRY',10,'DEPO C','C 1','hazir_alinan',NULL),(8,'Deneme','',12,'adet',0.00,'TRY',0.00,'TRY',111,'ALKOL','1','uretilen',NULL),(9,'Barış','',0,'adet',0.00,'TRY',0.00,'TRY',0,'ALKOL','1','uretilen',NULL),(18,'Guzel Urun','',100,'adet',0.00,'TRY',0.00,'TRY',0,'ALKOL','1','uretilen',NULL),(19,'Urun 2','',100,'adet',0.00,'TRY',0.00,'TRY',0,'DEPO A','A 1','uretilen',NULL),(20,'URUN3','',11,'adet',0.00,'TRY',0.00,'TRY',0,'DEPO A','A 1','uretilen',NULL),(21,'Urun4','',0,'adet',0.00,'TRY',0.00,'TRY',444,'DEPO A','A 1','uretilen',NULL);
 /*!40000 ALTER TABLE `urunler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1972,4 +1972,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-02  3:04:15
+-- Dump completed on 2026-01-03  5:27:14
