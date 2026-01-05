@@ -1367,26 +1367,43 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 } else if (uretilebilir > 0) {
                     var siparisKarsilanir = (siparis <= 0) || (uretimSonrasiStok >= siparis);
                     var kritikKarsilanir = (kritik <= 0) || (siparisSonrasiStok >= kritik);
+                    
+                    // Hesaplama mantığı:
+                    // 1. Sipariş için eksik: Max(0, Sipariş - (Stok + ÜretimSonrasi)) -> Yanlış, ÜretimSonrasi zaten stok+önerilen
+                    // Doğrusu: SiparişGereken = Max(0, Sipariş - (Stok + Önerilen))
+                    var siparisIcınEksik = Math.max(0, siparis - uretimSonrasiStok);
+                    
+                    // 2. Kritik için eksik: Max(0, Kritik - (Stok + Önerilen - Sipariş)) 
+                    // Sipariş öncelikli olduğu için, stoktan siparişi düşüp kalana bakıyoruz
+                    var kritikIcınEksik = (kritik > 0) ? Math.max(0, kritik - Math.max(0, uretimSonrasiStok - siparis)) : 0;
+                    
                     var detaylar = [];
                     
-                    if (siparis > 0) {
-                        if (siparisKarsilanir) {
+                    // Eğer eksik varsa breakdown göster
+                    if (siparisIcınEksik > 0 || kritikIcınEksik > 0) {
+                        var kaynaklar = [];
+                        if (siparisIcınEksik > 0) kaynaklar.push('<span class="text-nowrap"><b>' + siparisIcınEksik.toLocaleString('tr-TR') + '</b> Sipariş</span>');
+                        if (kritikIcınEksik > 0) kaynaklar.push('<span class="text-nowrap"><b>' + kritikIcınEksik.toLocaleString('tr-TR') + '</b> Kritik Stok</span>');
+                        
+                        var toplamEksik = siparisIcınEksik + kritikIcınEksik;
+                        
+                        var breakdownHtml = '<div class="mb-2 text-danger" style="line-height:1.2;">';
+                        breakdownHtml += '<i class="fas fa-arrow-down"></i> ' + kaynaklar.join(' + ') + ' için<br>';
+                        breakdownHtml += '<span class="font-weight-bold" style="font-size:1.1em; margin-left:18px;">Toplam ' + toplamEksik.toLocaleString('tr-TR') + ' adet eksik</span>';
+                        breakdownHtml += '</div>';
+                        
+                        detaylar.push(breakdownHtml);
+                    } 
+                    // Eksik yoksa başarı mesajları
+                    else {
+                         if (siparisKarsilanir && siparis > 0) {
                             detaylar.push('<span class="text-success">✓ Sipariş (' + siparis.toLocaleString('tr-TR') + ') karşılanır</span>');
-                        } else {
-                            var siparisEksik = Math.max(0, siparis - uretimSonrasiStok);
-                            detaylar.push('<span class="text-danger">✗ Sipariş (' + siparis.toLocaleString('tr-TR') + ') için ' + siparisEksik.toLocaleString('tr-TR') + ' eksik</span>');
                         }
-                    }
-                    
-                    if (kritik > 0) {
-                        if (kritikKarsilanir) {
+                        if (kritikKarsilanir && kritik > 0) {
                             detaylar.push('<span class="text-success">✓ Kritik stok karşılanır</span>');
-                        } else {
-                            var kritikEksik = Math.max(0, kritik - Math.max(0, siparisSonrasiStok));
-                            detaylar.push('<span class="text-danger">✗ Kritik için ' + kritikEksik.toLocaleString('tr-TR') + ' eksik</span>');
                         }
                     }
-                    
+
                     if (detaylar.length > 0) {
                         yorum = '<div>' + detaylar.join('<br>') + '</div>';
                     }
@@ -1416,10 +1433,25 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         });
                         
                         yorum += '<div class="mt-2 p-2" style="background:#fff8f0; border-radius:4px; border-left:3px solid #f59e0b;">';
-                        yorum += '<strong><i class="fas fa-shopping-cart text-warning"></i> Malzeme Sipariş:</strong> ' + (eksikSiparisDetay.length > 0 ? eksikSiparisDetay.join(', ') : '-');
+                        
+                        if (eksikSiparisDetay.length > 0) {
+                            yorum += '<div class="font-weight-bold text-warning mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Malzeme Sipariş:</div>';
+                            yorum += '<div class="ml-1 mt-0">';
+                            eksikSiparisDetay.forEach(function(tekilOge) {
+                                yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
+                            });
+                            yorum += '</div>';
+                        } else {
+                            yorum += '<div class="font-weight-bold text-warning mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Malzeme Sipariş: -</div>';
+                        }
                         
                         if (eksikUretimDetay.length > 0) {
-                            yorum += '<br><strong><i class="fas fa-flask text-info"></i> Esans iş emri açılmalı:</strong> ' + eksikUretimDetay.join(', ');
+                            yorum += '<div class="font-weight-bold text-info mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-flask"></i> Esans iş emri açılmalı:</div>';
+                            yorum += '<div class="ml-1 mt-0">';
+                            eksikUretimDetay.forEach(function(tekilOge) {
+                                yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
+                            });
+                            yorum += '</div>';
                             
                             // Esans üretim bilgilerini göster
                             var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
@@ -1458,10 +1490,25 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     
                     yorum = '<div class="p-2" style="background:#fef2f2; border-radius:4px; border-left:3px solid #dc3545;">';
                     yorum += '<strong class="text-danger"><i class="fas fa-times-circle"></i> Bileşen Yetersiz</strong>';
-                    yorum += '<br><strong><i class="fas fa-shopping-cart"></i> Sipariş:</strong> ' + (eksikSiparis.length > 0 ? eksikSiparis.join(', ') : '-');
+                    
+                    if (eksikSiparis.length > 0) {
+                        yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Sipariş:</div>';
+                        yorum += '<div class="ml-1 mt-0">';
+                        eksikSiparis.forEach(function(tekilOge) {
+                            yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
+                        });
+                        yorum += '</div>';
+                    } else {
+                         yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Sipariş: -</div>';
+                    }
                     
                     if (eksikUretim.length > 0) {
-                        yorum += '<br><strong><i class="fas fa-flask"></i> Esans iş emri açılmalı:</strong> ' + eksikUretim.join(', ');
+                        yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-flask"></i> Esans iş emri açılmalı:</div>';
+                        yorum += '<div class="ml-1 mt-0">';
+                        eksikUretim.forEach(function(tekilOge) {
+                            yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
+                        });
+                        yorum += '</div>';
                         
                         // Esans üretim bilgilerini göster
                         var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
