@@ -939,6 +939,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
+                            <th class="text-center" style="width: 50px;">Detay</th>
                             <th>Ürün</th>
                             <th class="text-right">Stok</th>
                             <th class="text-right">Sipariş</th>
@@ -1002,6 +1003,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             $kritik = floatval($p['kritik_stok_seviyesi']);
                             $onerilen = floatval($p['onerilen_uretim']);
                             $uretilebilir = floatval($p['uretilebilir_miktar']);
+                            $acik = floatval($p['acik']);
                             
                             // Üretim sonrası hesaplamalar
                             $uretim_sonrasi_stok = $stok + $onerilen;
@@ -1125,9 +1127,17 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             if ($p['uretimde_miktar'] > 0) {
                                 $yorum .= ' <small class="text-info d-block mt-1"><i class="fas fa-cog fa-spin"></i> Üretimde: ' . number_format($p['uretimde_miktar'], 0, ',', '.') . '</small>';
                             }
+                            
+                            // Toplam Mevcut Hesabı (Eksik olduğu için NaN hatası veriyordu)
+                            $toplam_mevcut = $stok + floatval($p['uretimde_miktar']);
                         ?>
                         <tr class="<?php echo $row_class; ?>">
                             <td class="text-center text-muted"><?php echo $sira++; ?></td>
+                            <td class="text-center">
+                                <a href="urun_analiz.php?urun_kodu=<?php echo urlencode($p['urun_kodu']); ?>" target="_blank" class="btn btn-sm btn-outline-info btn-detay shadow-sm" title="Hesaplama Detayı">
+                                    <i class="fas fa-search"></i>
+                                </a>
+                            </td>
                             <td>
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
@@ -1320,6 +1330,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script> src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
     <script>
