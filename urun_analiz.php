@@ -1,25 +1,7 @@
 <?php
-include 'config.php';
-// Remove navigation.php include as it breaks the layout by outputting a full page
-
-// Check if user is logged in
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-// Only staff can access this page
-if ($_SESSION['taraf'] !== 'personel') {
-    header('Location: login.php');
-    exit;
-}
-
-if (!isset($_GET['urun_kodu'])) {
-    echo '<div class="alert alert-danger m-4">Ürün kodu belirtilmedi!</div>';
-    exit;
-}
-
-$urun_kodu = $_GET['urun_kodu'];
+// Page disabled per project request - redirect to dashboard
+header('Location: kokpit.php');
+exit;
 
 // 1. Ürün Temel Bilgilerini Çek
 $urun_query = "SELECT * FROM urunler WHERE urun_kodu = ?";
@@ -140,6 +122,82 @@ $stmt->close();
 
 if (empty($bilesenler)) $uretilebilir_limit = 0;
 
+// 4. Kokpit Özeti İçin Ek Kontroller
+$required_types = ['kutu', 'takm', 'etiket', 'paket', 'jelatin', 'esans'];
+$existing_types = [];
+$sozlesme_eksik_malzemeler = [];
+$sozlesme_eksik_kodlar = [];
+$esans_agaci_eksik = [];
+
+// Mevcut tipleri ve sözleşmeleri kontrol et
+foreach ($bilesenler as $b) {
+    // Tip kontrolü
+    $type = strtolower($b['bilesenin_malzeme_turu']);
+    if (!in_array($type, $existing_types)) {
+        $existing_types[] = $type;
+    }
+
+    // Sözleşme kontrolü
+    $malzeme_kodu = $b['bilesen_kodu'];
+    // Malzeme tablosundan mı geliyor? (Genelde evet, ama ürün veya esans da olabilir)
+    // Basitlik için sadece malzemeler tablosunda varsa kontrol edelim, yoksa es geçelim (veya ürün/esans ise sözleşme aranmaz varsayalım)
+    
+    // Malzeme mi diye koddan anlamak zor, join ile kontrol edelim.
+    // Ancak performans için basit bir query yapalım bu malzeme için
+    $sozlesme_sql = "SELECT COUNT(*) as cnt FROM cerceve_sozlesmeler_gecerlilik WHERE malzeme_kodu = ? AND gecerli_mi = 1";
+    $s_stmt = $connection->prepare($sozlesme_sql);
+    $s_stmt->bind_param('s', $malzeme_kodu);
+    $s_stmt->execute();
+    $s_res = $s_stmt->get_result()->fetch_assoc();
+    if ($s_res['cnt'] == 0) {
+        // Esans veya Yarı Mamül (Ürün) değilse sözleşme eksik sayalım.
+        // Bunu anlamak için türüne bakalım.
+        if (!in_array($type, ['esans', 'yari mamul'])) {
+             $sozlesme_eksik_malzemeler[] = $b['isim'];
+             $sozlesme_eksik_kodlar[] = $b['bilesen_kodu'];
+        }
+    }
+    $s_stmt->close();
+}
+
+// Eksik Tipler
+$eksik_bilesenler = [];
+foreach ($required_types as $type) {
+    if (!in_array($type, $existing_types)) {
+        switch ($type) {
+            case 'kutu': $eksik_bilesenler[] = 'Kutu'; break;
+            case 'takm': $eksik_bilesenler[] = 'Takım'; break;
+            case 'etiket': $eksik_bilesenler[] = 'Etiket'; break;
+            case 'paket': $eksik_bilesenler[] = 'Paket'; break;
+            case 'jelatin': $eksik_bilesenler[] = 'Jelatin'; break;
+            case 'esans': $eksik_bilesenler[] = 'Esans'; break;
+        }
+    }
+}
+
+// Esans Reçete Kontrolü (Zaten $esans_bilgileri var, onu kullanalım ama reçete var mı bakmamıştık)
+foreach ($esans_bilgileri as $eb) {
+    $esans_adi_sql = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
+    $ea_stmt = $connection->prepare($esans_adi_sql);
+    $ea_stmt->bind_param('s', $eb['kod']);
+    $ea_stmt->execute();
+    $ea_res = $ea_stmt->get_result()->fetch_assoc();
+    $esans_ismi_gercek = $ea_res ? $ea_res['esans_ismi'] : null;
+    $ea_stmt->close();
+
+    if ($esans_ismi_gercek) {
+        $recete_sql = "SELECT COUNT(*) as cnt FROM urun_agaci WHERE agac_turu = 'esans' AND urun_ismi = ?";
+        $r_stmt = $connection->prepare($recete_sql);
+        $r_stmt->bind_param('s', $esans_ismi_gercek);
+        $r_stmt->execute();
+        $r_res = $r_stmt->get_result()->fetch_assoc();
+        if ($r_res['cnt'] == 0) {
+            $esans_agaci_eksik[] = $esans_ismi_gercek;
+        }
+        $r_stmt->close();
+    }
+}
+
 // Önerilen Üretim
 $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
 
@@ -250,6 +308,69 @@ $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
 
     <div class="container pb-5">
         
+        <!-- ADIM 1: Analiz Ön Kontrolü (Veri Bütünlüğü) -->
+        <?php if (!empty($eksik_bilesenler) || !empty($esans_agaci_eksik)): ?>
+            <div class="card shadow border-0 mb-4 bg-white" style="border-left: 5px solid #dc3545 !important;">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-start">
+                        <div class="nr-auto p-3 bg-danger-light rounded-circle text-danger mr-4">
+                            <i class="fas fa-exclamation-circle fa-2x"></i>
+                        </div>
+                        <div class="w-100">
+                            <h4 class="text-danger font-weight-bold mb-2">Dikkat: Eksik Veriyle Analiz Yapılıyor</h4>
+                            <p class="text-muted mb-3">Bu ürünün sağlıklı analiz edilebilmesi için aşağıdaki eksik verilerin tamamlanması önerilir. Analiz mevcut verilerle devam etmektedir.</p>
+                            
+                            <?php if (!empty($eksik_bilesenler)): ?>
+                                <div class="alert alert-danger mb-2">
+                                    <h6 class="alert-heading font-weight-bold"><i class="fas fa-sitemap mr-1"></i> Ürün Ağacı Eksikleri</h6>
+                                    <p class="mb-0 small">Şu bileşen türleri ürün ağacında tanımlanmamış: <strong><?php echo implode(', ', $eksik_bilesenler); ?></strong></p>
+                                </div>
+                            <?php endif; ?>
+
+                            <?php if (!empty($esans_agaci_eksik)): ?>
+                                <div class="alert alert-danger mb-0">
+                                    <h6 class="alert-heading font-weight-bold"><i class="fas fa-flask mr-1"></i> Esans Reçetesi Eksik</h6>
+                                    <p class="mb-0 small">Şu esansların kendi üretim reçeteleri (BOM) sisteme girilmemiş: <strong><?php echo implode(', ', $esans_agaci_eksik); ?></strong></p>
+                                </div>
+                            <?php endif; ?>
+                            
+                            <hr>
+                            <a href="urunler.php?search=<?php echo urlencode($urun['urun_ismi']); ?>" class="btn btn-danger btn-sm"><i class="fas fa-edit"></i> Ürün Düzenlemeye Git</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        <?php endif; ?>
+            <!-- Veri Sorunu Olsa Bile Analiz Devam Eder -->
+
+            <!-- ADIM 2: Sözleşme Kontrolü (Uyarı) -->
+            <?php if (!empty($sozlesme_eksik_malzemeler)): ?>
+            <div class="alert alert-warning shadow-sm border-0 mb-4" role="alert">
+                <div class="d-flex align-items-center">
+                    <div style="font-size: 2rem;" class="mr-3"><i class="fas fa-exclamation-triangle"></i></div>
+                    <div>
+                        <h5 class="alert-heading font-weight-bold mb-1">Dikkat: Çerçeve Sözleşme Eksik</h5>
+                        <p class="mb-0">
+                            Analiz yapılıyor ancak bazı bileşenlerin tedarik sözleşmesi bulunmuyor: 
+                            <strong><?php echo implode(', ', array_slice($sozlesme_eksik_malzemeler, 0, 5)); ?><?php if(count($sozlesme_eksik_malzemeler)>5) echo '...'; ?></strong>.
+                            Maliyet hesaplamaları eksik olabilir.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+            
+            <?php if (empty($sozlesme_eksik_malzemeler)): ?>
+            <div class="alert alert-success shadow-sm border-0 mb-4 py-2">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-check-circle mr-2 text-success"></i>
+                    <div>
+                        <span class="font-weight-bold">Sözleşme Kontrolü:</span> Tüm bileşenlerin tedarik sözleşmesi mevcut.
+                    </div>
+                </div>
+            </div>
+            <?php endif; ?>
+
         <!-- Üst İstatistikler -->
         <div class="row mb-4">
             <!-- Varlıklar -->
@@ -351,6 +472,7 @@ $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
                                     <th class="text-center">Birim İhtiyaç</th>
                                     <th class="text-center">Üretilebilir Kapasite</th>
                                     <th class="text-center">Sipariş İhtiyacı</th>
+                                    <th class="text-center">Sözleşme</th>
                                     <th>Durum</th>
                                 </tr>
                             </thead>
@@ -386,6 +508,20 @@ $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
                                                 echo '<span class="text-muted">-</span>';
                                             }
                                         ?>
+                                        ?>
+                                    </td>
+                                    <td class="text-center">
+                                        <?php if (in_array($b['bilesen_kodu'], $sozlesme_eksik_kodlar)): ?>
+                                            <span class="badge badge-warning" title="Çerçeve Sözleşme Yok">
+                                                <i class="fas fa-exclamation-triangle"></i> Yok
+                                            </span>
+                                        <?php elseif (in_array(strtolower($b['bilesenin_malzeme_turu']), ['esans', 'yari mamul'])): ?>
+                                            <span class="text-muted small">-</span>
+                                        <?php else: ?>
+                                            <span class="text-success" title="Sözleşme Mevcut">
+                                                <i class="fas fa-check-circle"></i> Var
+                                            </span>
+                                        <?php endif; ?>
                                     </td>
                                     <td>
                                         <?php if ($b['uretilebilir_adet'] == 0): ?>
@@ -489,6 +625,7 @@ $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
                 </div>
             </div>
         </div>
+
 
     </div>
 

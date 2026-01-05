@@ -17,6 +17,26 @@ if ($_SESSION['taraf'] !== 'personel') {
 function getSupplyChainData($connection) {
     $data = [];
 
+    // 0. Bekleyen Satınalma Siparişlerini Malzeme Bazında Al
+    $pending_purchase_orders = [];
+    $p_orders_query = "SELECT ssk.malzeme_kodu, 
+                              SUM(ssk.miktar - ssk.teslim_edilen_miktar) as bekleyen,
+                              GROUP_CONCAT(DISTINCT ss.siparis_no SEPARATOR ', ') as po_list
+                       FROM satinalma_siparisler ss
+                       JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
+                       WHERE ss.durum IN ('taslak', 'onaylandi', 'olusturuldu', 'gonderildi', 'kismen_teslim', 'yollandi')
+                       GROUP BY ssk.malzeme_kodu
+                       HAVING bekleyen > 0";
+    $p_orders_result = $connection->query($p_orders_query);
+    if ($p_orders_result) {
+        while ($po = $p_orders_result->fetch_assoc()) {
+            $pending_purchase_orders[$po['malzeme_kodu']] = [
+                'miktar' => floatval($po['bekleyen']),
+                'po_list' => $po['po_list']
+            ];
+        }
+    }
+
     // 1. Bileşen Eksiklik Kontrolü
     $products_query = "SELECT urun_kodu, urun_ismi FROM urunler ORDER BY urun_ismi";
     $products_result = $connection->query($products_query);
@@ -473,9 +493,12 @@ function getSupplyChainData($connection) {
                 // Esans formülündeki malzemelerin stok durumunu kontrol et
                 $esans_malzeme_eksik = [];
                 $esans_malzeme_yeterli = true;
+                $esans_hammaddeden_uretilebilir = PHP_INT_MAX; // Hammadde ile ne kadar üretilebilir
+                $formul_var = false;
+                $esans_formul_detaylari = [];
                 
                 $esans_formul_query = "SELECT ua.bilesen_kodu, ua.bilesen_miktari, 
-                                       m.malzeme_ismi, m.stok_miktari
+                                       m.malzeme_ismi, m.stok_miktari, m.birim
                                        FROM urun_agaci ua
                                        JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
                                        WHERE ua.agac_turu = 'esans' AND ua.urun_ismi = ?";
@@ -485,20 +508,46 @@ function getSupplyChainData($connection) {
                 $esans_formul_result = $esans_formul_stmt->get_result();
                 
                 while ($formul_row = $esans_formul_result->fetch_assoc()) {
+                    $formul_var = true;
+                    $gerekli = floatval($formul_row['bilesen_miktari']);
+                    $mevcut = floatval($formul_row['stok_miktari']);
+
+                    $esans_formul_detaylari[] = [
+                        'malzeme_kodu' => $formul_row['bilesen_kodu'],
+                        'malzeme_ismi' => $formul_row['malzeme_ismi'],
+                        'recete_miktari' => $gerekli,
+                        'mevcut_stok' => $mevcut,
+                        'birim' => $formul_row['birim'],
+                        'bekleyen_siparis' => $pending_purchase_orders[$formul_row['bilesen_kodu']]['miktar'] ?? 0,
+                        'po_list' => $pending_purchase_orders[$formul_row['bilesen_kodu']]['po_list'] ?? ''
+                    ];
+
                     // Basit kontrol: malzeme stoğu 0 ise eksik
-                    if (floatval($formul_row['stok_miktari']) <= 0) {
+                    if ($mevcut <= 0) {
                         $esans_malzeme_eksik[] = $formul_row['malzeme_ismi'];
                         $esans_malzeme_yeterli = false;
+                    }
+
+                    // Üretilebilir miktar hesabı
+                    if ($gerekli > 0) {
+                        $bu_malzemeden = floor($mevcut / $gerekli);
+                        $esans_hammaddeden_uretilebilir = min($esans_hammaddeden_uretilebilir, $bu_malzemeden);
                     }
                 }
                 $esans_formul_stmt->close();
                 
+                if (!$formul_var) {
+                    $esans_hammaddeden_uretilebilir = 0;
+                }
+
                 $esans_uretim_bilgisi[$esans_kodu] = [
                     'esans_kodu' => $esans_kodu,
                     'esans_ismi' => $esans_ismi,
                     'acik_is_emri_miktar' => $acik_is_emri_miktar,
                     'malzeme_yeterli' => $esans_malzeme_yeterli,
-                    'eksik_malzemeler' => $esans_malzeme_eksik
+                    'eksik_malzemeler' => $esans_malzeme_eksik,
+                    'uretilebilir_miktar' => ($esans_hammaddeden_uretilebilir === PHP_INT_MAX) ? 0 : $esans_hammaddeden_uretilebilir,
+                    'formul_detaylari' => $esans_formul_detaylari
                 ];
             }
             $row['esans_uretim_bilgisi'] = $esans_uretim_bilgisi;
@@ -740,11 +789,10 @@ function getSupplyChainData($connection) {
 $supply_chain_data = getSupplyChainData($connection);
 
 // Calculate statistics for the compact view
-$acil_count = 0; $uyari_count = 0; $iyi_count = 0; $belirsiz_count = 0;
+$kotu_count = 0; $iyi_count = 0; $belirsiz_count = 0;
 foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
-    if ($p['kritik_stok_seviyesi'] <= 0) $belirsiz_count++;
-    elseif ($p['yuzde_fark'] > 50) $acil_count++;
-    elseif ($p['yuzde_fark'] > 0) $uyari_count++;
+    if ($p['kritik_stok_seviyesi'] <= 0 && $p['siparis_miktari'] <= 0) $belirsiz_count++;
+    elseif ($p['acik'] > 0) $kotu_count++;
     else $iyi_count++;
 }
 ?>
@@ -857,7 +905,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             font-weight: 600;
             text-transform: uppercase;
         }
-        .badge-acil { background: #fef2f2; color: #dc2626; }
+        .badge-acil, .badge-kotu { background: #fef2f2; color: #dc2626; }
         .badge-uyari { background: #fffbeb; color: #d97706; }
         .badge-iyi { background: #f0fdf4; color: #16a34a; }
         .badge-belirsiz { background: #f3f4f6; color: #6b7280; }
@@ -910,12 +958,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         <!-- Stats Inline -->
         <div class="stats-inline">
             <div class="stat-chip danger">
-                <i class="fas fa-exclamation-triangle"></i>
-                <span class="num"><?php echo $acil_count; ?></span> Acil
-            </div>
-            <div class="stat-chip warning">
-                <i class="fas fa-exclamation-circle"></i>
-                <span class="num"><?php echo $uyari_count; ?></span> Uyarı
+                <i class="fas fa-times-circle"></i>
+                <span class="num"><?php echo $kotu_count; ?></span> Kötü
             </div>
             <div class="stat-chip success">
                 <i class="fas fa-check-circle"></i>
@@ -987,10 +1031,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
                             <th>Sözleşme Durumu</th>
-                            <th>Montaj</th>
-                            <th>Malzeme</th>
-                            <th>Esans</th>
-                            <th style="min-width: 150px;">Durum</th>
+                            <th class="text-right">Toplam Esans İhtiyacı</th>
+                            <th class="text-right">Esans Stok</th>
+                            <th class="text-right">Esans Üretimde</th>
+                            <th class="text-right">Net Esans İhtiyacı</th>
+                            <th class="text-right">Esans İş Emri Açılması Gereken Miktar</th>
+                            <th class="text-right">Malzeme Siparişi Gereken Esans Miktarı</th>
+                            <th class="text-right">Sipariş Gereken Esans Hammaddeleri</th>
+                            <th class="text-right">Yoldaki Esans Hammaddeleri</th>
+                            <th class="text-right">Net Sipariş Verilecek Esans Hammaddeleri</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1019,35 +1068,19 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             $kritik_eksik = ($kritik > 0) ? max(0, $kritik - max(0, $siparis_sonrasi_stok)) : 0;
                             
                             // Durum ve yorum belirleme
-                            if ($kritik <= 0 && $siparis_miktari <= 0) {
-                                $badge = ['class' => 'badge-iyi', 'text' => 'İYİ'];
-                                $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
-                            } elseif ($kritik <= 0 && $siparis_miktari > 0) {
-                                // Kritik yok ama sipariş var
-                                if ($siparis_miktari > $stok) {
-                                    $eksik = $siparis_miktari - $stok;
-                                    $row_class = 'row-acil';
-                                    $badge = ['class' => 'badge-acil', 'text' => 'ACİL'];
-                                    if ($uretilebilir >= $eksik) {
-                                        $yorum = '<span class="text-danger"><i class="fas fa-shopping-cart"></i> ' . number_format($siparis_miktari, 0, ',', '.') . ' sipariş var. ' . number_format($eksik, 0, ',', '.') . ' adet üretilmeli.</span>';
-                                    } else if ($uretilebilir > 0) {
-                                        $kalan_eksik = $eksik - $uretilebilir;
-                                        $yorum = '<span class="text-danger"><i class="fas fa-exclamation-triangle"></i> ' . number_format($siparis_miktari, 0, ',', '.') . ' sipariş var. Max ' . number_format($uretilebilir, 0, ',', '.') . ' üretilebilir, ' . number_format($kalan_eksik, 0, ',', '.') . ' eksik kalır!</span>';
-                                    } else {
-                                        $yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> ' . number_format($siparis_miktari, 0, ',', '.') . ' sipariş var ama bileşen yetersiz! Malzeme siparişi verin.</span>';
-                                    }
-                                } else {
-                                    $badge = ['class' => 'badge-iyi', 'text' => 'İYİ'];
-                                    $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> ' . number_format($siparis_miktari, 0, ',', '.') . ' sipariş stoktan karşılanabilir.</span>';
-                                }
-                            } elseif ($p['yuzde_fark'] > 50 || ($siparis_miktari > 0 && $p['acik'] > 0)) {
+                            if ($p['acik'] > 0) {
                                 $row_class = 'row-acil';
-                                $badge = ['class' => 'badge-acil', 'text' => 'ACİL'];
-                                
+                                $badge = ['class' => 'badge-kotu', 'text' => 'KÖTÜ'];
+                            } else {
+                                $badge = ['class' => 'badge-iyi', 'text' => 'İYİ'];
+                            }
+                            
+                            // Yorum ve Detaylar (Durum Hücresi İçin Gerekli Veriler)
+                            if ($kritik <= 0 && $siparis_miktari <= 0) {
+                                $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
+                            } elseif ($p['acik'] > 0) {
                                 if ($uretilebilir > 0) {
                                     $detaylar = [];
-                                    
-                                    // Sipariş durumu
                                     if ($siparis_miktari > 0) {
                                         if ($siparis_karsilanir) {
                                             $detaylar[] = '<span class="text-success">✓ Sipariş (' . number_format($siparis_miktari, 0, ',', '.') . ') karşılanır</span>';
@@ -1055,8 +1088,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                             $detaylar[] = '<span class="text-danger">✗ Sipariş (' . number_format($siparis_miktari, 0, ',', '.') . ') için ' . number_format($siparis_eksik, 0, ',', '.') . ' eksik</span>';
                                         }
                                     }
-                                    
-                                    // Kritik stok durumu
                                     if ($kritik > 0) {
                                         if ($kritik_karsilanir) {
                                             $detaylar[] = '<span class="text-success">✓ Kritik stok (' . number_format($kritik, 0, ',', '.') . ') karşılanır</span>';
@@ -1064,63 +1095,12 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                             $detaylar[] = '<span class="text-danger">✗ Kritik stok için ' . number_format($kritik_eksik, 0, ',', '.') . ' eksik kalır</span>';
                                         }
                                     }
-                                    
-                                    $yorum = '<div class="small">' . implode('<br>', $detaylar) . '</div>';
-                                    
-                                    if (!$siparis_karsilanir || !$kritik_karsilanir) {
-                                        $yorum .= '<small class="text-muted d-block mt-1"><i class="fas fa-info-circle"></i> Daha fazla bileşen gerekli!</small>';
-                                    }
-                                } else {
-                                    $yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> Bileşen yetersiz! ';
-                                    if ($siparis_miktari > 0) {
-                                        $yorum .= number_format($siparis_miktari, 0, ',', '.') . ' sipariş ';
-                                    }
-                                    if ($kritik > 0) {
-                                        $yorum .= '+ kritik stok için ';
-                                    }
-                                    $yorum .= 'malzeme siparişi verin.</span>';
-                                }
-                            } elseif ($p['yuzde_fark'] > 0) {
-                                $badge = ['class' => 'badge-uyari', 'text' => 'UYARI'];
-                                if ($uretilebilir > 0) {
-                                    $detaylar = [];
-                                    
-                                    if ($siparis_miktari > 0) {
-                                        if ($siparis_karsilanir) {
-                                            $detaylar[] = '<span class="text-success">✓ Sipariş (' . number_format($siparis_miktari, 0, ',', '.') . ') karşılanır</span>';
-                                        } else {
-                                            $detaylar[] = '<span class="text-warning">! Sipariş için ' . number_format($siparis_eksik, 0, ',', '.') . ' eksik</span>';
-                                        }
-                                    }
-                                    
-                                    if ($kritik > 0) {
-                                        if ($kritik_karsilanir) {
-                                            $detaylar[] = '<span class="text-success">✓ Kritik stok karşılanır</span>';
-                                        } else {
-                                            $detaylar[] = '<span class="text-warning">! Kritik için ' . number_format($kritik_eksik, 0, ',', '.') . ' eksik</span>';
-                                        }
-                                    }
-                                    
                                     $yorum = '<div class="small">' . implode('<br>', $detaylar) . '</div>';
                                 } else {
-                                    $yorum = '<span class="text-warning"><i class="fas fa-box-open"></i> Bileşen stoku kontrol edilmeli.</span>';
+                                    $yorum = '<span class="text-danger"><i class="fas fa-times-circle"></i> Bileşen yetersiz! Malzeme siparişi verin.</span>';
                                 }
                             } else {
-                                $badge = ['class' => 'badge-iyi', 'text' => 'İYİ'];
-                                $mesajlar = [];
-                                
-                                if ($siparis_miktari > 0) {
-                                    $mesajlar[] = 'Sipariş (' . number_format($siparis_miktari, 0, ',', '.') . ') karşılanır';
-                                }
-                                if ($kritik > 0) {
-                                    $mesajlar[] = 'Stok yeterli';
-                                }
-                                
-                                if (!empty($mesajlar)) {
-                                    $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> ' . implode(', ', $mesajlar) . '</span>';
-                                } else {
-                                    $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
-                                }
+                                $yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
                             }
                             
                             // Üretimde varsa bilgi ekle
@@ -1133,11 +1113,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         ?>
                         <tr class="<?php echo $row_class; ?>">
                             <td class="text-center text-muted"><?php echo $sira++; ?></td>
-                            <td class="text-center">
-                                <a href="urun_analiz.php?urun_kodu=<?php echo urlencode($p['urun_kodu']); ?>" target="_blank" class="btn btn-sm btn-outline-info btn-detay shadow-sm" title="Hesaplama Detayı">
-                                    <i class="fas fa-search"></i>
-                                </a>
-                            </td>
+                            <td class="text-center text-muted">-</td>
                             <td>
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
@@ -1213,21 +1189,279 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="montaj-cell text-center vertical-align-middle"></td>
-                            <td class="malzeme-cell small"></td>
-                            <td class="esans-cell small"></td>
-                            <td class="durum-cell"
-                                data-stok="<?php echo $stok; ?>"
-                                data-siparis="<?php echo $siparis_miktari; ?>"
-                                data-kritik="<?php echo $kritik; ?>"
-                                data-acik="<?php echo $p['acik']; ?>"
-                                data-yuzde-fark="<?php echo $p['yuzde_fark']; ?>"
-                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>"
-                                data-bilesen-detaylari='<?php echo json_encode(isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : []); ?>'
-                                data-esans-uretim-bilgisi='<?php echo json_encode(isset($p['esans_uretim_bilgisi']) ? $p['esans_uretim_bilgisi'] : []); ?>'
-                                data-eksik-bilesenler='<?php echo json_encode(isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : []); ?>'
-                                data-esans-agaci-eksik='<?php echo json_encode(isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : []); ?>'>
-                                <?php echo $yorum; ?>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            echo '<div class="text-nowrap">' . number_format($toplam_ihtiyac, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if (!empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            echo '<div class="text-nowrap">' . number_format($bilesen['mevcut_stok'], 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if (!empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            $uretimde = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                            }
+                                            if ($uretimde > 0) {
+                                                 echo '<div class="text-nowrap text-info">' . number_format($uretimde, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                            } else {
+                                                 echo '0';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            
+                                            $stok = floatval($bilesen['mevcut_stok']);
+                                            $uretimde = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                            }
+                                            
+                                            $toplam_mevcut_esans = $stok + $uretimde;
+                                            $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
+                                            
+                                            if ($net_ihtiyac > 0) {
+                                                echo '<div class="text-nowrap"><span class="font-weight-bold" style="color: var(--danger);">' . number_format($net_ihtiyac, 2, ',', '.') . '</span> <small class="text-muted">ml</small></div>';
+                                                echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
+                                            } else {
+                                                 echo '<span class="text-success"><i class="fas fa-check"></i> Yeterli</span>';
+                                                 echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if (!empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            $uretilebilir = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
+                                            }
+                                            
+                                            if ($uretilebilir > 0) {
+                                                echo '<div class="text-nowrap text-success">' . number_format($uretilebilir, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                            } else {
+                                                echo '<div class="text-nowrap text-danger">0</div>';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            
+                                            // 1. Net İhtiyaç Hesapla
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            $stok = floatval($bilesen['mevcut_stok']);
+                                            $uretimde = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                            }
+                                            $toplam_mevcut_esans = $stok + $uretimde;
+                                            $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
+                                            
+                                            // 2. Üretilebilir Hesapla
+                                            $uretilebilir = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
+                                            }
+                                            
+                                            // 3. Sipariş Gereken = Net İhtiyaç - Hammadde ile Üretilebilir
+                                            $siparis_gereken = max(0, $net_ihtiyac - $uretilebilir);
+                                            
+                                            if ($siparis_gereken > 0) {
+                                                echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>ml</small></div>';
+                                            } else {
+                                                echo '0';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            
+                                            // 1. Net Esans İhtiyacını Al
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            $stok_esans = floatval($bilesen['mevcut_stok']);
+                                            $uretimde_esans = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                            }
+                                            $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
+                                            
+                                            // 2. Eğer net ihtiyaç varsa hammaddeleri hesapla
+                                            if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                $eksik_hammaddeler = [];
+                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                    $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
+                                                    $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
+                                                    
+                                                    if ($eksik_h > 0) {
+                                                        $eksik_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
+                                                            number_format($eksik_h, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
+                                                    }
+                                                }
+                                                
+                                                if (!empty($eksik_hammaddeler)) {
+                                                    echo implode('', $eksik_hammaddeler);
+                                                } else {
+                                                    echo '<span class="text-success small">Hammaddeler yeterli</span>';
+                                                }
+                                            } else {
+                                                echo '0';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                $mevcut_siparisler = [];
+                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                    if ($h['bekleyen_siparis'] > 0) {
+                                                        $mevcut_siparisler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-info font-weight-bold">' . 
+                                                            number_format($h['bekleyen_siparis'], 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small>' .
+                                                            ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($h['po_list']) . ')</span></div>';
+                                                    }
+                                                }
+                                                
+                                                if (!empty($mevcut_siparisler)) {
+                                                    echo implode('', $mevcut_siparisler);
+                                                } else {
+                                                    echo '0';
+                                                }
+                                            } else {
+                                                echo '0';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $esans_bulundu = false;
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] === 'esans') {
+                                            $esans_bulundu = true;
+                                            
+                                            // 1. Net Esans İhtiyacını Al
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            $stok_esans = floatval($bilesen['mevcut_stok']);
+                                            $uretimde_esans = 0;
+                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                            }
+                                            $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
+                                            
+                                            // 2. Net hammadde sipariş ihtiyacı hesapla
+                                            if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                $net_siparis_hammaddeler = [];
+                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                    $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
+                                                    $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
+                                                    
+                                                    // Net Sipariş = (Gereken - Mevcut Stok) - Yoldaki Sipariş
+                                                    $net_h_siparis = max(0, $eksik_h - $h['bekleyen_siparis']);
+                                                    
+                                                    if ($net_h_siparis > 0) {
+                                                        $net_siparis_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
+                                                            number_format($net_h_siparis, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
+                                                    }
+                                                }
+                                                
+                                                if (!empty($net_siparis_hammaddeler)) {
+                                                    echo implode('', $net_siparis_hammaddeler);
+                                                } else {
+                                                    echo '<span class="text-success small">Ek sipariş gerekmiyor</span>';
+                                                }
+                                            } else {
+                                                echo '0';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$esans_bulundu) echo '0';
+                                ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
@@ -1240,94 +1474,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         </div>
     </div>
 
-    <div class="row mt-5 mb-5 mx-3">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm" style="border-radius: 12px; background-color: #f8f9fa;">
-                <div class="card-body p-4">
-                    <h5 class="font-weight-bold mb-4" style="color: var(--primary);"><i class="fas fa-list-ol"></i> Tablo Kolon Hesaplama Adımları ve Formülleri</h5>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm bg-white" style="font-size: 0.85rem;">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th style="width: 15%;">Kolon Adı</th>
-                                    <th style="width: 35%;">Hesaplama Mantığı / Formül</th>
-                                    <th style="width: 50%;">Açıklama</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td class="font-weight-bold">Stok</td>
-                                    <td><code>stok_miktari</code> (Veritabanı)</td>
-                                    <td>Depodaki fiziksel, sayılmış ve kullanıma hazır ürün adedi.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Sipariş</td>
-                                    <td><code>siparis_miktari</code> (Veritabanı)</td>
-                                    <td>Müşterilerden gelen ve henüz sevk edilmemiş "Onaylı" statüsündeki siparişlerin toplamı.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Üretimde</td>
-                                    <td><code>uretimde_miktar</code> (İş Emirleri)</td>
-                                    <td>Montaj hattına gönderilmiş ancak henüz bitip stoğa girmemiş (yoldaki) ürünlerin toplamı.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Toplam</td>
-                                    <td><code>Stok + Üretimde</code></td>
-                                    <td>Eldeki mevcut güç. Hem depodakiler hem de yakında gelecekler dahildir.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Kritik</td>
-                                    <td><code>kritik_stok_seviyesi</code> (Veritabanı)</td>
-                                    <td>Ürün kartında belirlenen, emniyet stoğu olarak tutulması hedeflenen minimum miktar.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold text-danger">Açık</td>
-                                    <td><code>(Sipariş + Kritik) - Toplam</code></td>
-                                    <td>Net İhtiyaç. Siparişler ve Kritik hedef toplandıktan sonra elimizdeki güç (Toplam) düşülür. Pozitifse üretim gerekir, negatifse fazlalık vardır.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Fark %</td>
-                                    <td><code>(Açık / Kritik) * 100</code></td>
-                                    <td>Açığın kritik stoğa oranı. Aciliyet derecesini belirler (%50 üzeri ACİL olarak işaretlenir).</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold text-success">Üretilebilir</td>
-                                    <td><code>Min(Bileşen Stok / Gerekli Adet)</code></td>
-                                    <td>Ürün ağacındaki her bir bileşenin (Kutu, Şişe, Esans vb.) stoğu kontrol edilir. Hangisi en az sayıda ürün yapmaya yetiyorsa, o miktar "Üretilebilir Kapasite" olarak belirlenir.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold text-primary">Önerilen</td>
-                                    <td><code>Min(Açık, Üretilebilir)</code></td>
-                                    <td>Sistem ihtiyacınız olanı (Açık) üretmenizi ister. Ancak malzeme sınırını (Üretilebilir) aşamaz. Bu değer, o an için verilebilecek en makul iş emri miktarıdır.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Montaj</td>
-                                    <td><code>Eğer Önerilen > 0:</code> İş Emri Aç<br><code>Eğer Açık > 0 ve Üretilebilir = 0:</code> Bileşen Yetersiz</td>
-                                    <td>Önerilen miktar kadar montaj iş emri açılması gerektiğini söyler. Malzeme yoksa kırmızı uyarı verir.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Malzeme</td>
-                                    <td>Eksik Bileşen Listesi</td>
-                                    <td>Eğer "Açık" ihtiyacı varken "Üretilebilir" miktar yetersizse, üretimi engelleyen (stoğu biten/yetmeyen) malzemeleri listeler.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Esans</td>
-                                    <td><code>(Önerilen * Reçete) - Açık İş Emirleri</code></td>
-                                    <td>İhtiyaç duyulan toplam esans miktarından, halihazırda üretimde veya sırada bekleyen (açık) iş emirleri düşülür. Sadece <strong>NET</strong> ihtiyaç için yeni emir önerilir.</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold">Durum</td>
-                                    <td>Özet Metin</td>
-                                    <td>Stok yeterli mi, sipariş karşılanıyor mu, yoksa malzeme mi bekleniyor? Sonuç durumunu cümleyle özetler.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
