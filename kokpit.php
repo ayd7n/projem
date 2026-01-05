@@ -324,6 +324,7 @@ function getSupplyChainData($connection) {
                     // Bileşen detaylarını kaydet
                     $bilesen_detaylari[] = [
                         'isim' => $bilesen_ismi,
+                        'kodu' => $bom_row['bilesen_kodu'],
                         'tur' => $bilesen_turu_lower,
                         'gerekli_adet' => $gerekli,
                         'mevcut_stok' => $mevcut,
@@ -1229,6 +1230,94 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         </div>
     </div>
 
+    <div class="row mt-5 mb-5 mx-3">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; background-color: #f8f9fa;">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4" style="color: var(--primary);"><i class="fas fa-list-ol"></i> Tablo Kolon Hesaplama Adımları ve Formülleri</h5>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm bg-white" style="font-size: 0.85rem;">
+                            <thead class="thead-light">
+                                <tr>
+                                    <th style="width: 15%;">Kolon Adı</th>
+                                    <th style="width: 35%;">Hesaplama Mantığı / Formül</th>
+                                    <th style="width: 50%;">Açıklama</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td class="font-weight-bold">Stok</td>
+                                    <td><code>stok_miktari</code> (Veritabanı)</td>
+                                    <td>Depodaki fiziksel, sayılmış ve kullanıma hazır ürün adedi.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Sipariş</td>
+                                    <td><code>siparis_miktari</code> (Veritabanı)</td>
+                                    <td>Müşterilerden gelen ve henüz sevk edilmemiş "Onaylı" statüsündeki siparişlerin toplamı.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Üretimde</td>
+                                    <td><code>uretimde_miktar</code> (İş Emirleri)</td>
+                                    <td>Montaj hattına gönderilmiş ancak henüz bitip stoğa girmemiş (yoldaki) ürünlerin toplamı.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Toplam</td>
+                                    <td><code>Stok + Üretimde</code></td>
+                                    <td>Eldeki mevcut güç. Hem depodakiler hem de yakında gelecekler dahildir.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Kritik</td>
+                                    <td><code>kritik_stok_seviyesi</code> (Veritabanı)</td>
+                                    <td>Ürün kartında belirlenen, emniyet stoğu olarak tutulması hedeflenen minimum miktar.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold text-danger">Açık</td>
+                                    <td><code>(Sipariş + Kritik) - Toplam</code></td>
+                                    <td>Net İhtiyaç. Siparişler ve Kritik hedef toplandıktan sonra elimizdeki güç (Toplam) düşülür. Pozitifse üretim gerekir, negatifse fazlalık vardır.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Fark %</td>
+                                    <td><code>(Açık / Kritik) * 100</code></td>
+                                    <td>Açığın kritik stoğa oranı. Aciliyet derecesini belirler (%50 üzeri ACİL olarak işaretlenir).</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold text-success">Üretilebilir</td>
+                                    <td><code>Min(Bileşen Stok / Gerekli Adet)</code></td>
+                                    <td>Ürün ağacındaki her bir bileşenin (Kutu, Şişe, Esans vb.) stoğu kontrol edilir. Hangisi en az sayıda ürün yapmaya yetiyorsa, o miktar "Üretilebilir Kapasite" olarak belirlenir.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold text-primary">Önerilen</td>
+                                    <td><code>Min(Açık, Üretilebilir)</code></td>
+                                    <td>Sistem ihtiyacınız olanı (Açık) üretmenizi ister. Ancak malzeme sınırını (Üretilebilir) aşamaz. Bu değer, o an için verilebilecek en makul iş emri miktarıdır.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Montaj</td>
+                                    <td><code>Eğer Önerilen > 0:</code> İş Emri Aç<br><code>Eğer Açık > 0 ve Üretilebilir = 0:</code> Bileşen Yetersiz</td>
+                                    <td>Önerilen miktar kadar montaj iş emri açılması gerektiğini söyler. Malzeme yoksa kırmızı uyarı verir.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Malzeme</td>
+                                    <td>Eksik Bileşen Listesi</td>
+                                    <td>Eğer "Açık" ihtiyacı varken "Üretilebilir" miktar yetersizse, üretimi engelleyen (stoğu biten/yetmeyen) malzemeleri listeler.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Esans</td>
+                                    <td><code>(Önerilen * Reçete) - Açık İş Emirleri</code></td>
+                                    <td>İhtiyaç duyulan toplam esans miktarından, halihazırda üretimde veya sırada bekleyen (açık) iş emirleri düşülür. Sadece <strong>NET</strong> ihtiyaç için yeni emir önerilir.</td>
+                                </tr>
+                                <tr>
+                                    <td class="font-weight-bold">Durum</td>
+                                    <td>Özet Metin</td>
+                                    <td>Stok yeterli mi, sipariş karşılanıyor mu, yoksa malzeme mi bekleniyor? Sonuç durumunu cümleyle özetler.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
@@ -1426,9 +1515,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     // Montaj
                     if (montajTd) {
                          if (onerilen > 0) {
-                            montajTd.innerHTML = '<span class="badge badge-light border border-info text-info p-2" style="font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><i class="fas fa-cogs mr-1"></i> ' + onerilen.toLocaleString('tr-TR') + ' Adet</span>';
+                            montajTd.innerHTML = '<div class="text-center"><div class="badge badge-info p-2 mb-1" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-industry mr-1"></i> ' + onerilen.toLocaleString('tr-TR') + ' Adet</div><div class="small text-muted" style="font-size: 0.75rem; line-height: 1.2;">' + onerilen.toLocaleString('tr-TR') + ' adet için<br>iş emri açılmalı</div></div>';
                         } else {
-                            montajTd.innerHTML = '<span class="text-muted small">-</span>';
+                            montajTd.innerHTML = '<div class="text-center"><span class="text-success small"><i class="fas fa-check-circle"></i></span><div class="small text-muted" style="font-size: 0.7rem;">İş emri<br>gerekmez</div></div>';
                         }
                     }
 
@@ -1472,34 +1561,62 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     if (esansTd) {
                         var html = '';
                         if (eksikUretimList.length > 0) {
-                             html = '<div class="mb-1"><span class="badge badge-soft-primary text-primary border border-primary-light" style="font-size:11px;">Esans İhtiyacı</span></div>';
-                             html += '<ul class="list-unstyled mb-2 ml-1 border-left pl-2 border-primary-light">';
-                             eksikUretimList.forEach(function(item) {
-                                  html += '<li class="text-muted" style="line-height:1.2; font-size:11px; margin-bottom: 2px;">' + item + '</li>';
-                             });
-                             html += '</ul>';
+                             // Toplam esans miktarını hesapla
+                             var toplamEsansMiktar = 0;
+                             var mevcutIsEmriMiktari = 0;
+                             var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                             var gerekliUretim = Math.max(siparis - stok, kritik);
                              
-                             // Badges
+                             bilesenDetaylari.forEach(function(bilesen) {
+                                 if (bilesen.tur === 'esans') {
+                                     toplamEsansMiktar += Math.ceil(bilesen.gerekli_adet * gerekliUretim);
+                                     
+                                     // Bu esans için açık iş emri var mı?
+                                     if (esansUretimBilgisi && esansUretimBilgisi[bilesen.kodu]) {
+                                         mevcutIsEmriMiktari += parseFloat(esansUretimBilgisi[bilesen.kodu].acik_is_emri_miktar || 0);
+                                     }
+                                 }
+                             });
+                             
+                             var netIhtiyac = toplamEsansMiktar - mevcutIsEmriMiktari;
+                             
+                             html = '<div class="text-center">';
+                             
+                             if (netIhtiyac > 0) {
+                                 // İhtiyaç devam ediyor
+                                 html += '<div class="badge badge-primary p-2 mb-1" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-flask mr-1"></i> ' + netIhtiyac.toLocaleString('tr-TR') + ' Adet</div>';
+                                 html += '<div class="small text-muted" style="font-size: 0.75rem; line-height: 1.2;">' + netIhtiyac.toLocaleString('tr-TR') + ' adet için<br>iş emri açılmalı</div>';
+                                 
+                                 if (mevcutIsEmriMiktari > 0) {
+                                    html += '<div class="mt-1 text-info" style="font-size: 0.7rem;">(+' + mevcutIsEmriMiktari.toLocaleString('tr-TR') + ' üretimde)</div>'; 
+                                 }
+                             } else {
+                                 // İhtiyaç karşılanmış
+                                 html += '<div class="badge badge-success p-2 mb-1" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-check-double mr-1"></i> Yeterli</div>';
+                                 html += '<div class="small text-muted" style="font-size: 0.75rem; line-height: 1.2;">' + mevcutIsEmriMiktari.toLocaleString('tr-TR') + ' adet<br>üretimde/sırada</div>';
+                             }
+                             
+                             // Detay bilgi (Hover veya alt kısım)
                              if (Object.keys(esansUretimBilgisi).length > 0) {
-                                 html += '<div class="mt-1 pt-1 border-top">';
+                                 html += '<div class="mt-2 pt-2 border-top" style="font-size: 10px;">';
                                  for (var k in esansUretimBilgisi) {
                                      var info = esansUretimBilgisi[k];
-                                     if (info.acik_is_emri_miktar > 0) {
-                                         html += '<span class="badge badge-success d-block mb-1 text-left p-1"><i class="fas fa-check-circle mr-1"></i>İş Emri: ' + info.acik_is_emri_miktar + '</span>';
-                                     } else {
-                                         html += '<a href="esans_is_emirleri.php" class="badge badge-warning d-block mb-1 text-left p-1 text-dark" style="text-decoration:none;"><i class="fas fa-exclamation-triangle mr-1"></i>İş Emri Aç</a>';
-                                     }
+                                      // Sadece ilgili esansları göster (basitçe hepsi de olabilir ama filtrelemek daha iyi olurdu, şimdilik hepsi)
+                                     
+                                     // Malzeme durumu
                                      if (!info.malzeme_yeterli && info.eksik_malzemeler.length > 0) {
-                                         html += '<span class="badge badge-danger d-block text-left p-1"><i class="fas fa-times-circle mr-1"></i>Malzeme Eksik</span>';
+                                         html += '<div><span class="badge badge-danger" style="font-size:9px;"><i class="fas fa-times mr-1"></i>Hammade eksik</span></div>';
                                      }
                                  }
                                  html += '</div>';
                              }
+                             html += '</div>';
                         } else {
-                            html = '<span class="text-muted small">-</span>';
+                            html = '<div class="text-center"><span class="text-success"><i class="fas fa-check-circle"></i></span><div class="small text-muted" style="font-size: 0.7rem;">İş emri<br>gerekmez</div></div>';
                         }
                         esansTd.innerHTML = html;
                     }
+
 
                 } else {
                     // --- Bileşen Yetersiz Bloğu ---
@@ -1518,7 +1635,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                      yorum += '</div>';
                      if (durumTd) durumTd.innerHTML = yorum;
                      
-                     if (montajTd) montajTd.innerHTML = '<span class="text-muted small">-</span>';
+                     if (montajTd) montajTd.innerHTML = '<div class="text-center"><span class="text-danger"><i class="fas fa-times-circle"></i></span><div class="small text-danger" style="font-size: 0.7rem;">Bileşen eksik<br>yapılamaz</div></div>';
                      
                      // Hesapla
                      var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
@@ -1555,31 +1672,50 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                      if (esansTd) {
                          var html = '';
                          if (eksikUretimList.length > 0) {
-                             html = '<div class="mb-1"><span class="badge badge-soft-danger text-danger border border-danger-light" style="font-size:11px;">Esans Gerekiyor</span></div>';
-                             html += '<ul class="list-unstyled mb-2 ml-1 border-left pl-2 border-danger-light">';
-                             eksikUretimList.forEach(function(item) {
-                                  html += '<li class="text-danger small" style="line-height:1.2; font-size:11px; margin-bottom: 2px;">' + item + '</li>';
-                             });
-                             html += '</ul>';
+                             // Toplam esans miktarını hesapla
+                             var toplamEsansMiktar = 0;
+                             var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                             var gerekliUretim = Math.max(siparis - stok, kritik);
                              
+                             bilesenDetaylari.forEach(function(bilesen) {
+                                 if (bilesen.tur === 'esans') {
+                                     toplamEsansMiktar += Math.ceil(bilesen.gerekli_adet * gerekliUretim);
+                                 }
+                             });
+                             
+                             html = '<div class="text-center">';
+                             html += '<div class="badge badge-danger p-2 mb-1" style="font-size: 0.85rem; font-weight: 600;"><i class="fas fa-flask mr-1"></i> ' + toplamEsansMiktar.toLocaleString('tr-TR') + ' Adet</div>';
+                             html += '<div class="small text-danger" style="font-size: 0.75rem; line-height: 1.2;">' + toplamEsansMiktar.toLocaleString('tr-TR') + ' adet için<br>iş emri açılmalı</div>';
+                             
+                             // İş emri ve malzeme durumu (detay bilgi)
                              if (Object.keys(esansUretimBilgisi).length > 0) {
-                                 html += '<div class="mt-1 pt-1 border-top">';
+                                 html += '<div class="mt-2 pt-2 border-top" style="font-size: 10px;">';
                                  for (var k in esansUretimBilgisi) {
                                      var info = esansUretimBilgisi[k];
+                                     
+                                     // İş emri durumu
                                      if (info.acik_is_emri_miktar > 0) {
-                                          html += '<span class="badge badge-success d-block mb-1 text-left p-1"><i class="fas fa-check-circle mr-1"></i>İş Emri: ' + info.acik_is_emri_miktar + '</span>';
+                                         html += '<div class="mb-1"><span class="badge badge-success" style="font-size:9px;"><i class="fas fa-check mr-1"></i>Açık: ' + info.acik_is_emri_miktar.toLocaleString('tr-TR') + '</span></div>';
                                      } else {
-                                          html += '<a href="esans_is_emirleri.php" class="badge badge-warning d-block mb-1 text-left p-1 text-dark" style="text-decoration:none;"><i class="fas fa-exclamation-triangle mr-1"></i>İş Emri Aç</a>';
+                                         html += '<div class="mb-1"><span class="badge badge-warning" style="font-size:9px;"><i class="fas fa-exclamation mr-1"></i>Bekliyor</span></div>';
                                      }
+                                     
+                                     // Malzeme durumu
                                      if (!info.malzeme_yeterli && info.eksik_malzemeler.length > 0) {
-                                          html += '<span class="badge badge-danger d-block text-left p-1"><i class="fas fa-times-circle mr-1"></i>Malzeme Eksik</span>';
+                                         html += '<div><span class="badge badge-danger" style="font-size:9px;"><i class="fas fa-times mr-1"></i>Malzeme eksik</span></div>';
+                                     } else if (info.malzeme_yeterli) {
+                                         html += '<div><span class="badge badge-success" style="font-size:9px;"><i class="fas fa-check mr-1"></i>Malzeme hazır</span></div>';
                                      }
                                  }
                                  html += '</div>';
                              }
-                         } else { html = '<span class="text-muted small">-</span>'; }
+                             html += '</div>';
+                         } else { 
+                             html = '<div class="text-center"><span class="text-success"><i class="fas fa-check-circle"></i></span><div class="small text-muted" style="font-size: 0.7rem;">İş emri<br>gerekmez</div></div>'; 
+                         }
                          esansTd.innerHTML = html;
                      }
+
 
                 }
                 
