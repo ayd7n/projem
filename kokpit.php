@@ -985,7 +985,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
                             <th>Sözleşme Durumu</th>
-                            <th style="min-width: 220px;">Karşılanma Durumu</th>
+                            <th>Montaj</th>
+                            <th>Malzeme</th>
+                            <th>Esans</th>
+                            <th style="min-width: 150px;">Durum</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1199,7 +1202,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
                                 <?php endif; ?>
                             </td>
-                            <td class="yorum-cell"
+                            <td class="montaj-cell text-center vertical-align-middle"></td>
+                            <td class="malzeme-cell small"></td>
+                            <td class="esans-cell small"></td>
+                            <td class="durum-cell"
                                 data-stok="<?php echo $stok; ?>"
                                 data-siparis="<?php echo $siparis_miktari; ?>"
                                 data-kritik="<?php echo $kritik; ?>"
@@ -1282,7 +1288,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             
             // Yorum kolonunu güncelle (satırın son td'si)
             var row = hucre.closest('tr');
-            var yorumTd = row.querySelector('.yorum-cell');
+            var yorumTd = row.querySelector('.durum-cell');
             if (yorumTd) {
                 var stok = parseFloat(yorumTd.getAttribute('data-stok') || 0);
                 var siparis = parseFloat(yorumTd.getAttribute('data-siparis') || 0);
@@ -1300,6 +1306,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 var stokYeterli = (stok >= kritik) && (stok >= siparis);
                 
                 // Eksik veri kontrolü (BOM veya Esans Reçetesi)
+                var yorumTd = row.querySelector('.durum-cell');
                 var eksikBilesenler = JSON.parse(yorumTd.getAttribute('data-eksik-bilesenler') || '[]');
                 var esansAgaciEksik = JSON.parse(yorumTd.getAttribute('data-esans-agaci-eksik') || '[]');
                 
@@ -1408,131 +1415,179 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         yorum = '<div>' + detaylar.join('<br>') + '</div>';
                     }
                     
-                    // Montaj iş emri açılması gereken miktar
-                    if (onerilen > 0) {
-                        yorum += '<br><span class="text-info"><i class="fas fa-cogs"></i> Montaj iş emri açılmalı: ' + onerilen.toLocaleString('tr-TR') + ' adet</span>';
+                    // Hücreleri bul
+                    var durumTd = row.querySelector('.durum-cell');
+                    var montajTd = row.querySelector('.montaj-cell');
+                    var malzemeTd = row.querySelector('.malzeme-cell');
+                    var esansTd = row.querySelector('.esans-cell');
+                    
+                    if (durumTd) durumTd.innerHTML = yorum;
+                    
+                    // Montaj
+                    if (montajTd) {
+                         if (onerilen > 0) {
+                            montajTd.innerHTML = '<span class="badge badge-light border border-info text-info p-2" style="font-size: 0.9rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05);"><i class="fas fa-cogs mr-1"></i> ' + onerilen.toLocaleString('tr-TR') + ' Adet</span>';
+                        } else {
+                            montajTd.innerHTML = '<span class="text-muted small">-</span>';
+                        }
                     }
+
+                    // Eksik Hesaplama
+                    var eksikSiparisList = [];
+                    var eksikUretimList = [];
+                    var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
                     
                     if (!siparisKarsilanir || !kritikKarsilanir) {
-                        // Eksik malzeme miktarlarını hesapla
-                        var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
-                        var gerekliUretim = Math.max(siparis - stok, kritik) - uretilebilir;
-                        var eksikSiparisDetay = [];
-                        var eksikUretimDetay = [];
-                        
-                        bilesenDetaylari.forEach(function(bilesen) {
-                            var gerekliMiktar = bilesen.gerekli_adet * gerekliUretim;
-                            var eksikMiktar = Math.max(0, gerekliMiktar);
-                            if (eksikMiktar > 0) {
-                                if (bilesen.tur === 'esans') {
-                                    eksikUretimDetay.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
-                                } else {
-                                    eksikSiparisDetay.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
-                                }
-                            }
-                        });
-                        
-                        yorum += '<div class="mt-2 p-2" style="background:#fff8f0; border-radius:4px; border-left:3px solid #f59e0b;">';
-                        
-                        if (eksikSiparisDetay.length > 0) {
-                            yorum += '<div class="font-weight-bold text-warning mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Malzeme Sipariş:</div>';
-                            yorum += '<div class="ml-1 mt-0">';
-                            eksikSiparisDetay.forEach(function(tekilOge) {
-                                yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
-                            });
-                            yorum += '</div>';
+                         var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                         var gerekliUretim = Math.max(siparis - stok, kritik) - uretilebilir;
+                         
+                         bilesenDetaylari.forEach(function(bilesen) {
+                             var gerekli = bilesen.gerekli_adet * gerekliUretim;
+                             var eksik = Math.max(0, gerekli);
+                             if (eksik > 0) {
+                                 var metin = bilesen.isim + ' (' + Math.ceil(eksik).toLocaleString('tr-TR') + ')';
+                                 if (bilesen.tur === 'esans') eksikUretimList.push(metin);
+                                 else eksikSiparisList.push(metin);
+                             }
+                         });
+                    }
+                    
+                    // Malzeme Render
+                    if (malzemeTd) {
+                        var html = '';
+                        if (eksikSiparisList.length > 0) {
+                             html = '<div class="font-weight-bold text-warning mb-0" style="font-size:11px; line-height:1.2;">Malzeme Sipariş:</div>';
+                             html += '<div class="ml-1 mt-0">';
+                             eksikSiparisList.forEach(function(item) {
+                                  html += '<div class="text-nowrap" style="line-height:1.1; font-size:11px;">' + item + '</div>';
+                             });
+                             html += '</div>';
                         } else {
-                            yorum += '<div class="font-weight-bold text-warning mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Malzeme Sipariş: -</div>';
+                            html = '<span class="text-muted small">-</span>';
                         }
-                        
-                        if (eksikUretimDetay.length > 0) {
-                            yorum += '<div class="font-weight-bold text-info mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-flask"></i> Esans iş emri açılmalı:</div>';
-                            yorum += '<div class="ml-1 mt-0">';
-                            eksikUretimDetay.forEach(function(tekilOge) {
-                                yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
-                            });
-                            yorum += '</div>';
-                            
-                            // Esans üretim bilgilerini göster
-                            var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
-                            for (var esansKodu in esansUretimBilgisi) {
-                                var esansInfo = esansUretimBilgisi[esansKodu];
-                                if (esansInfo.acik_is_emri_miktar > 0) {
-                                    yorum += ' <span class="badge badge-success">İş emri: ' + esansInfo.acik_is_emri_miktar.toLocaleString('tr-TR') + '</span>';
-                                } else {
-                                    yorum += ' <span class="badge badge-warning">İş emri açılmalı</span>';
-                                }
-                                if (!esansInfo.malzeme_yeterli && esansInfo.eksik_malzemeler.length > 0) {
-                                    yorum += ' <span class="badge badge-danger">Malzeme eksik</span>';
-                                }
-                            }
-                        }
-                        yorum += '</div>';
+                        malzemeTd.innerHTML = html;
                     }
+
+                    // Esans Render
+                    if (esansTd) {
+                        var html = '';
+                        if (eksikUretimList.length > 0) {
+                             html = '<div class="mb-1"><span class="badge badge-soft-primary text-primary border border-primary-light" style="font-size:11px;">Esans İhtiyacı</span></div>';
+                             html += '<ul class="list-unstyled mb-2 ml-1 border-left pl-2 border-primary-light">';
+                             eksikUretimList.forEach(function(item) {
+                                  html += '<li class="text-muted" style="line-height:1.2; font-size:11px; margin-bottom: 2px;">' + item + '</li>';
+                             });
+                             html += '</ul>';
+                             
+                             // Badges
+                             if (Object.keys(esansUretimBilgisi).length > 0) {
+                                 html += '<div class="mt-1 pt-1 border-top">';
+                                 for (var k in esansUretimBilgisi) {
+                                     var info = esansUretimBilgisi[k];
+                                     if (info.acik_is_emri_miktar > 0) {
+                                         html += '<span class="badge badge-success d-block mb-1 text-left p-1"><i class="fas fa-check-circle mr-1"></i>İş Emri: ' + info.acik_is_emri_miktar + '</span>';
+                                     } else {
+                                         html += '<a href="esans_is_emirleri.php" class="badge badge-warning d-block mb-1 text-left p-1 text-dark" style="text-decoration:none;"><i class="fas fa-exclamation-triangle mr-1"></i>İş Emri Aç</a>';
+                                     }
+                                     if (!info.malzeme_yeterli && info.eksik_malzemeler.length > 0) {
+                                         html += '<span class="badge badge-danger d-block text-left p-1"><i class="fas fa-times-circle mr-1"></i>Malzeme Eksik</span>';
+                                     }
+                                 }
+                                 html += '</div>';
+                             }
+                        } else {
+                            html = '<span class="text-muted small">-</span>';
+                        }
+                        esansTd.innerHTML = html;
+                    }
+
                 } else {
-                    // Bileşen yetersiz durumunda eksik malzeme miktarlarını hesapla
-                    var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
-                    var gerekliUretim = Math.max(siparis - stok, kritik);
-                    var eksikSiparis = [];
-                    var eksikUretim = [];
+                    // --- Bileşen Yetersiz Bloğu ---
                     
-                    bilesenDetaylari.forEach(function(bilesen) {
-                        var gerekliMiktar = bilesen.gerekli_adet * gerekliUretim;
-                        var eksikMiktar = Math.max(0, gerekliMiktar - bilesen.mevcut_stok);
-                        if (eksikMiktar > 0) {
-                            if (bilesen.tur === 'esans') {
-                                eksikUretim.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
-                            } else {
-                                eksikSiparis.push(bilesen.isim + ' (' + Math.ceil(eksikMiktar).toLocaleString('tr-TR') + ')');
-                            }
-                        }
-                    });
+                    var durumTd = row.querySelector('.durum-cell');
+                    var montajTd = row.querySelector('.montaj-cell');
+                    var malzemeTd = row.querySelector('.malzeme-cell');
+                    var esansTd = row.querySelector('.esans-cell');
                     
-                    yorum = '<div class="p-2" style="background:#fef2f2; border-radius:4px; border-left:3px solid #dc3545;">';
-                    yorum += '<strong class="text-danger"><i class="fas fa-times-circle"></i> Bileşen Yetersiz</strong>';
-                    
-                    if (eksikSiparis.length > 0) {
-                        yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Sipariş:</div>';
-                        yorum += '<div class="ml-1 mt-0">';
-                        eksikSiparis.forEach(function(tekilOge) {
-                            yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
-                        });
-                        yorum += '</div>';
-                    } else {
-                         yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-shopping-cart"></i> Sipariş: -</div>';
-                    }
-                    
-                    if (eksikUretim.length > 0) {
-                        yorum += '<div class="font-weight-bold mt-2 mb-0" style="line-height:1.2;"><i class="fas fa-flask"></i> Esans iş emri açılmalı:</div>';
-                        yorum += '<div class="ml-1 mt-0">';
-                        eksikUretim.forEach(function(tekilOge) {
-                            yorum += '<div style="line-height:1.1; margin-bottom:0;">' + tekilOge + '</div>';
-                        });
-                        yorum += '</div>';
-                        
-                        // Esans üretim bilgilerini göster
-                        var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
-                        for (var esansKodu in esansUretimBilgisi) {
-                            var esansInfo = esansUretimBilgisi[esansKodu];
-                            if (esansInfo.acik_is_emri_miktar > 0) {
-                                yorum += ' <span class="badge badge-success">İş emri: ' + esansInfo.acik_is_emri_miktar.toLocaleString('tr-TR') + '</span>';
-                            } else {
-                                yorum += ' <span class="badge badge-warning">İş emri aç</span>';
-                            }
-                            if (!esansInfo.malzeme_yeterli && esansInfo.eksik_malzemeler.length > 0) {
-                                yorum += ' <span class="badge badge-danger">Malzeme eksik</span>';
-                            }
-                        }
-                    }
-                    yorum += '</div>';
+                    // Durum: Sadece "Bileşen Yetersiz" ve breakdown
+                     var yorum = '<div class="p-2" style="background:#fef2f2; border-radius:4px; border-left:3px solid #dc3545;">';
+                     yorum += '<strong class="text-danger"><i class="fas fa-times-circle"></i> Bileşen Yetersiz</strong>';
+                     // Sipariş/Kritik breakdown ekle
+                     var detaylar = [];
+                     // (Breakdown logic is generic, but simplified here for "Bileşen Yetersiz" case usually implies we can't meet demand)
+                     yorum += '</div>';
+                     if (durumTd) durumTd.innerHTML = yorum;
+                     
+                     if (montajTd) montajTd.innerHTML = '<span class="text-muted small">-</span>';
+                     
+                     // Hesapla
+                     var bilesenDetaylari = JSON.parse(yorumTd.getAttribute('data-bilesen-detaylari') || '[]');
+                     var gerekliUretim = Math.max(siparis - stok, kritik);
+                     var eksikSiparisList = [];
+                     var eksikUretimList = [];
+                     var esansUretimBilgisi = JSON.parse(yorumTd.getAttribute('data-esans-uretim-bilgisi') || '{}');
+
+                     bilesenDetaylari.forEach(function(bilesen) {
+                         var gerekli = bilesen.gerekli_adet * gerekliUretim;
+                         var eksik = Math.max(0, gerekli - bilesen.mevcut_stok);
+                         if (eksik > 0) {
+                             var metin = bilesen.isim + ' (' + Math.ceil(eksik).toLocaleString('tr-TR') + ')';
+                             if (bilesen.tur === 'esans') eksikUretimList.push(metin);
+                             else eksikSiparisList.push(metin);
+                         }
+                     });
+                     
+                     // Malzeme Render
+                     if (malzemeTd) {
+                         var html = '';
+                         if (eksikSiparisList.length > 0) {
+                             html = '<div class="font-weight-bold text-warning mb-0" style="font-size:11px; line-height:1.2;">Malzeme Sipariş:</div>';
+                             html += '<div class="ml-1 mt-0">';
+                             eksikSiparisList.forEach(function(item) {
+                                  html += '<div class="text-nowrap" style="line-height:1.1; font-size:11px;">' + item + '</div>';
+                             });
+                             html += '</div>';
+                         } else { html = '<span class="text-muted small">-</span>'; }
+                         malzemeTd.innerHTML = html;
+                     }
+                     
+                     // Esans Render
+                     if (esansTd) {
+                         var html = '';
+                         if (eksikUretimList.length > 0) {
+                             html = '<div class="mb-1"><span class="badge badge-soft-danger text-danger border border-danger-light" style="font-size:11px;">Esans Gerekiyor</span></div>';
+                             html += '<ul class="list-unstyled mb-2 ml-1 border-left pl-2 border-danger-light">';
+                             eksikUretimList.forEach(function(item) {
+                                  html += '<li class="text-danger small" style="line-height:1.2; font-size:11px; margin-bottom: 2px;">' + item + '</li>';
+                             });
+                             html += '</ul>';
+                             
+                             if (Object.keys(esansUretimBilgisi).length > 0) {
+                                 html += '<div class="mt-1 pt-1 border-top">';
+                                 for (var k in esansUretimBilgisi) {
+                                     var info = esansUretimBilgisi[k];
+                                     if (info.acik_is_emri_miktar > 0) {
+                                          html += '<span class="badge badge-success d-block mb-1 text-left p-1"><i class="fas fa-check-circle mr-1"></i>İş Emri: ' + info.acik_is_emri_miktar + '</span>';
+                                     } else {
+                                          html += '<a href="esans_is_emirleri.php" class="badge badge-warning d-block mb-1 text-left p-1 text-dark" style="text-decoration:none;"><i class="fas fa-exclamation-triangle mr-1"></i>İş Emri Aç</a>';
+                                     }
+                                     if (!info.malzeme_yeterli && info.eksik_malzemeler.length > 0) {
+                                          html += '<span class="badge badge-danger d-block text-left p-1"><i class="fas fa-times-circle mr-1"></i>Malzeme Eksik</span>';
+                                     }
+                                 }
+                                 html += '</div>';
+                             }
+                         } else { html = '<span class="text-muted small">-</span>'; }
+                         esansTd.innerHTML = html;
+                     }
+
                 }
                 
-                // Üretimde varsa ekle
+                // Üretimde varsa ekle (To Durum cell)
                 if (uretimde > 0) {
-                    yorum += ' <small class="text-info d-block mt-1"><i class="fas fa-cog fa-spin"></i> Üretimde: ' + uretimde.toLocaleString('tr-TR') + '</small>';
+                     var durumTd = row.querySelector('.durum-cell');
+                     if (durumTd) durumTd.innerHTML += ' <small class="text-info d-block mt-1"><i class="fas fa-cog fa-spin"></i> Üretimde: ' + uretimde.toLocaleString('tr-TR') + '</small>';
                 }
-                
-                yorumTd.innerHTML = yorum;
             }
         });
     }
