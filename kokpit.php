@@ -1207,7 +1207,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 data-yuzde-fark="<?php echo $p['yuzde_fark']; ?>"
                                 data-uretimde="<?php echo $p['uretimde_miktar']; ?>"
                                 data-bilesen-detaylari='<?php echo json_encode(isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : []); ?>'
-                                data-esans-uretim-bilgisi='<?php echo json_encode(isset($p['esans_uretim_bilgisi']) ? $p['esans_uretim_bilgisi'] : []); ?>'>
+                                data-esans-uretim-bilgisi='<?php echo json_encode(isset($p['esans_uretim_bilgisi']) ? $p['esans_uretim_bilgisi'] : []); ?>'
+                                data-eksik-bilesenler='<?php echo json_encode(isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : []); ?>'
+                                data-esans-agaci-eksik='<?php echo json_encode(isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : []); ?>'>
                                 <?php echo $yorum; ?>
                             </td>
                         </tr>
@@ -1297,7 +1299,56 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 // Stok yeterli kontrolü: kritik ve sipariş mevcut stokla karşılanabiliyorsa
                 var stokYeterli = (stok >= kritik) && (stok >= siparis);
                 
-                if (stokYeterli && siparis <= 0) {
+                // Eksik veri kontrolü (BOM veya Esans Reçetesi)
+                var eksikBilesenler = JSON.parse(yorumTd.getAttribute('data-eksik-bilesenler') || '[]');
+                var esansAgaciEksik = JSON.parse(yorumTd.getAttribute('data-esans-agaci-eksik') || '[]');
+                
+                if (eksikBilesenler.length > 0 || esansAgaciEksik.length > 0) {
+                    var eksikVeriMsj = '';
+                    
+                    // Önce ihtiyaç durumunu yaz (Eğer eksik varsa)
+                    if (acik > 0) {
+                        // İhtiyaç analizi yap
+                        var siparisGereken = Math.max(0, siparis - stok);
+                        var stokSonrasi = Math.max(0, stok - siparis);
+                        var uretimleBirlikte = stokSonrasi + uretimde;
+                        var kritikGereken = (kritik > 0) ? Math.max(0, kritik - uretimleBirlikte) : 0;
+                        
+                        var kaynaklar = [];
+                        if (siparisGereken > 0) kaynaklar.push('<span class="text-nowrap"><b>' + siparisGereken.toLocaleString('tr-TR') + '</b> Sipariş</span>');
+                        if (kritikGereken > 0) kaynaklar.push('<span class="text-nowrap"><b>' + kritikGereken.toLocaleString('tr-TR') + '</b> Kritik Stok</span>');
+                        
+                        eksikVeriMsj += '<div class="mb-2 text-danger" style="line-height:1.2;">';
+                        eksikVeriMsj += '<i class="fas fa-arrow-down"></i> ' + kaynaklar.join(' + ') + ' için<br>';
+                        eksikVeriMsj += '<span class="font-weight-bold" style="font-size:1.1em; margin-left:18px;">Toplam ' + acik.toLocaleString('tr-TR') + ' adet eksik</span>';
+                        eksikVeriMsj += '</div>';
+                    } else {
+                         // Stok yeterli ama veri eksik olduğu için üretim yapılamaz uyarısı
+                        eksikVeriMsj += '<div class="mb-2 font-weight-bold text-success"><i class="fas fa-check-circle"></i> Stok yeterli</div>';
+                    }
+
+                    eksikVeriMsj += '<div class="p-2" style="background:#fff3cd; border-radius:4px; border-left:3px solid #ffc107;">';
+                    eksikVeriMsj += '<strong class="text-warning"><i class="fas fa-exclamation-triangle"></i> Hesaplama Yapılamadı</strong>';
+                    
+                    if (eksikBilesenler.length > 0) {
+                        eksikVeriMsj += '<br><small class="text-muted">Ürün ağacında eksik:</small><br>' + eksikBilesenler.join(', ');
+                    }
+                    
+                    if (esansAgaciEksik.length > 0) {
+                        eksikVeriMsj += '<br><small class="text-danger">Esans reçetesi yok:</small><br>' + esansAgaciEksik.join(', ');
+                    }
+                     
+                    eksikVeriMsj += '</div>';
+                    yorum = eksikVeriMsj;
+                }
+                else if (stokYeterli && siparis <= 0) {
+                    yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
+                    
+                    // Stok yeterli ama bileşen/üretim imkanı kontrolü
+                    if (uretilebilir <= 0) {
+                         yorum += '<div class="mt-1 small text-muted"><i class="fas fa-ban"></i> Ancak bileşen stoğu 0, üretim yapılamaz.</div>';
+                    }
+                } else if (kritik <= 0 && siparis > 0) {
                     yorum = '<span class="text-success"><i class="fas fa-check-circle"></i> Stok yeterli.</span>';
                 } else if (kritik <= 0 && siparis > 0) {
                     if (siparis > stok) {
