@@ -580,6 +580,9 @@ function getSupplyChainData($connection) {
             $row['uretilebilir_miktar'] = $uretilebilir_miktar;
             $row['onerilen_uretim'] = $onerilen_uretim;
 
+            // Aksiyon önerisi hesapla
+            $row['aksiyon_onerisi'] = getAksiyonOnerisi($row);
+
             $uretilebilir_urunler[] = $row;
         }
     }
@@ -799,6 +802,224 @@ function getSupplyChainData($connection) {
     return $data;
 }
 
+// Aksiyon Önerisi Hesaplama Fonksiyonu
+function getAksiyonOnerisi($p) {
+    $acik = floatval($p['acik']);
+    $eksik_bilesenler = isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : [];
+    $esans_agaci_eksik = isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : [];
+    $sozlesme_eksik = isset($p['sozlesme_eksik_malzemeler']) ? $p['sozlesme_eksik_malzemeler'] : [];
+    $uretilebilir = floatval($p['uretilebilir_miktar']);
+    $bilesen_detaylari = isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : [];
+    
+    // 1. VERİ EKSİKLİĞİ VARSA (En Yüksek Öncelik)
+    if (count($eksik_bilesenler) > 0 || count($esans_agaci_eksik) > 0) {
+        $detay = [];
+        if (count($eksik_bilesenler) > 0) {
+            $detay[] = '<strong>Eksik bileşenler:</strong> ' . implode(', ', $eksik_bilesenler);
+        }
+        if (count($esans_agaci_eksik) > 0) {
+            $detay[] = '<strong>Formülü olmayan esanslar:</strong> ' . implode(', ', $esans_agaci_eksik);
+        }
+        return [
+            'class' => 'badge-aksiyon-kritik',
+            'icon' => 'fas fa-exclamation-triangle',
+            'mesaj' => 'Ürün ağacı ve esans formüllerini tamamlayın',
+            'detay' => implode('<br>', $detay),
+            'buton' => [
+                'text' => 'Ürün Ağacı',
+                'url' => 'urun_agaclari.php',
+                'icon' => 'fas fa-sitemap'
+            ]
+        ];
+    }
+    
+    // 2. REÇETE TAMAM AMA AÇIK > 0 VE SÖZLEŞME EKSİKSE
+    if ($acik > 0 && count($sozlesme_eksik) > 0) {
+        $stok_yeterli = ($uretilebilir >= $acik);
+        $detay = '<strong>Sözleşmesi olmayan malzemeler:</strong><br>' . implode(', ', array_slice($sozlesme_eksik, 0, 5));
+        if (count($sozlesme_eksik) > 5) {
+            $detay .= '<br>+' . (count($sozlesme_eksik) - 5) . ' malzeme daha';
+        }
+        
+        if ($stok_yeterli) {
+            return [
+                'class' => 'badge-aksiyon-uyari',
+                'icon' => 'fas fa-file-contract',
+                'mesaj' => 'Gelecek siparişler için sözleşme tamamlayın',
+                'detay' => $detay,
+                'buton' => [
+                    'text' => 'Sözleşmeler',
+                    'url' => 'cerceve_sozlesmeler.php',
+                    'icon' => 'fas fa-file-contract'
+                ]
+            ];
+        } else {
+            return [
+                'class' => 'badge-aksiyon-kritik',
+                'icon' => 'fas fa-ban',
+                'mesaj' => 'Sözleşme eksik - Önce sözleşme tamamlayın',
+                'detay' => $detay,
+                'buton' => [
+                    'text' => 'Sözleşmeler',
+                    'url' => 'cerceve_sozlesmeler.php',
+                    'icon' => 'fas fa-file-contract'
+                ]
+            ];
+        }
+    }
+    
+    // 4. SİPARİŞ VERİLMESİ GEREKEN MALZEME VARSA
+    if ($acik > 0) {
+        $siparis_gereken_var = false;
+        $siparis_listesi = [];
+        
+        foreach ($bilesen_detaylari as $bilesen) {
+            if ($bilesen['tur'] !== 'esans') {
+                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                $toplam_ihtiyac = $acik * $birim_ihtiyac;
+                $mevcut_ve_yoldaki = $bilesen['mevcut_stok'] + $bilesen['yoldaki_stok'];
+                $siparis_gereken = max(0, $toplam_ihtiyac - $mevcut_ve_yoldaki);
+                
+                if ($siparis_gereken > 0 && !empty($bilesen['sozlesme_var'])) {
+                    $siparis_gereken_var = true;
+                    $siparis_listesi[] = $bilesen['isim'] . ': <strong>' . number_format($siparis_gereken, 0, ',', '.') . '</strong>';
+                }
+            }
+        }
+        
+        if ($siparis_gereken_var) {
+            return [
+                'class' => 'badge-aksiyon-bilgi',
+                'icon' => 'fas fa-shopping-cart',
+                'mesaj' => 'Malzeme siparişi verin',
+                'detay' => implode('<br>', $siparis_listesi),
+                'buton' => [
+                    'text' => 'Sipariş Ver',
+                    'url' => 'satinalma_siparisler.php',
+                    'icon' => 'fas fa-cart-plus'
+                ]
+            ];
+        }
+        
+        // 5. ESANS HAMMADDESİ EKSİKSE
+        $esans_hammadde_listesi = [];
+        if (isset($p['esans_uretim_bilgisi']) && is_array($p['esans_uretim_bilgisi'])) {
+            foreach ($p['esans_uretim_bilgisi'] as $esans_info) {
+                if (isset($esans_info['formul_detaylari']) && is_array($esans_info['formul_detaylari'])) {
+                    foreach ($esans_info['formul_detaylari'] as $hammadde) {
+                        $net_siparis = max(0, ($hammadde['recete_miktari'] * $acik) - $hammadde['mevcut_stok'] - $hammadde['bekleyen_siparis']);
+                        if ($net_siparis > 0) {
+                            $esans_hammadde_listesi[] = $hammadde['malzeme_ismi'] . ': <strong>' . number_format($net_siparis, 2, ',', '.') . ' ' . $hammadde['birim'] . '</strong>';
+                        }
+                    }
+                }
+            }
+        }
+        
+        if (count($esans_hammadde_listesi) > 0) {
+            return [
+                'class' => 'badge-aksiyon-uyari',
+                'icon' => 'fas fa-flask',
+                'mesaj' => 'Esans hammaddesi siparişi verin',
+                'detay' => implode('<br>', $esans_hammadde_listesi),
+                'buton' => [
+                    'text' => 'Sipariş Ver',
+                    'url' => 'satinalma_siparisler.php',
+                    'icon' => 'fas fa-cart-plus'
+                ]
+            ];
+        }
+        
+        // 6. ESANS ÜRETİMİ GEREKLİYSE
+        $esans_uretim_listesi = [];
+        if (isset($p['esans_uretim_bilgisi']) && is_array($p['esans_uretim_bilgisi'])) {
+            foreach ($bilesen_detaylari as $bilesen) {
+                if ($bilesen['tur'] === 'esans' && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                    $esans_info = $p['esans_uretim_bilgisi'][$bilesen['kodu']];
+                    $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                    $brut_ihtiyac = $acik * $birim_ihtiyac;
+                    $stok = floatval($bilesen['mevcut_stok']);
+                    $uretimde = floatval($esans_info['acik_is_emri_miktar']);
+                    $net_ihtiyac = max(0, $brut_ihtiyac - ($stok + $uretimde));
+                    $uretilebilir_esans = floatval($esans_info['uretilebilir_miktar']);
+                    
+                    if ($net_ihtiyac > 0 && $uretilebilir_esans > 0) {
+                        $esans_uretim_listesi[] = $esans_info['esans_ismi'] . ': <strong>' . number_format($net_ihtiyac, 2, ',', '.') . ' ml</strong>';
+                    }
+                }
+            }
+        }
+        
+        if (count($esans_uretim_listesi) > 0) {
+            return [
+                'class' => 'badge-aksiyon-bilgi',
+                'icon' => 'fas fa-flask',
+                'mesaj' => 'Esans iş emri oluşturun',
+                'detay' => implode('<br>', $esans_uretim_listesi),
+                'buton' => [
+                    'text' => 'İş Emri Aç',
+                    'url' => 'esans_is_emirleri.php',
+                    'icon' => 'fas fa-plus-circle'
+                ]
+            ];
+        }
+        
+        // 7. TÜM MALZEMELER HAZIR, MONTAJ ÜRETİMİ BAŞLATIN
+        if ($uretilebilir >= $acik) {
+            return [
+                'class' => 'badge-aksiyon-bilgi',
+                'icon' => 'fas fa-industry',
+                'mesaj' => 'Montaj iş emri oluşturun',
+                'detay' => '<strong>Üretilecek miktar:</strong> ' . number_format($p['onerilen_uretim'], 0, ',', '.') . ' adet',
+                'buton' => [
+                    'text' => 'İş Emri Aç',
+                    'url' => 'montaj_is_emirleri.php',
+                    'icon' => 'fas fa-plus-circle'
+                ]
+            ];
+        }
+    }
+    
+    // 8. AÇIK YOKSA VE HER ŞEY TAMAM
+    if ($acik == 0 && count($sozlesme_eksik) == 0) {
+        return [
+            'class' => 'badge-aksiyon-basarili',
+            'icon' => 'fas fa-check-circle',
+            'mesaj' => 'Her şey yolunda',
+            'detay' => 'Stok: <strong>' . number_format($p['stok_miktari'], 0, ',', '.') . '</strong> | Kritik: <strong>' . number_format($p['kritik_stok_seviyesi'], 0, ',', '.') . '</strong>',
+            'buton' => null
+        ];
+    }
+    
+    // 9. AÇIK YOKSA AMA SÖZLEŞME EKSİK
+    if ($acik == 0 && count($sozlesme_eksik) > 0) {
+        $detay = '<strong>Sözleşmesi olmayan:</strong><br>' . implode(', ', array_slice($sozlesme_eksik, 0, 5));
+        if (count($sozlesme_eksik) > 5) {
+            $detay .= '<br>+' . (count($sozlesme_eksik) - 5) . ' malzeme daha';
+        }
+        return [
+            'class' => 'badge-aksiyon-uyari',
+            'icon' => 'fas fa-file-contract',
+            'mesaj' => 'Gelecek üretimler için sözleşme tamamlayın',
+            'detay' => $detay,
+            'buton' => [
+                'text' => 'Sözleşmeler',
+                'url' => 'cerceve_sozlesmeler.php',
+                'icon' => 'fas fa-file-contract'
+            ]
+        ];
+    }
+    
+    // Varsayılan (hiçbir koşul sağlanmazsa)
+    return [
+        'class' => 'badge-aksiyon-bilgi',
+        'icon' => 'fas fa-info-circle',
+        'mesaj' => 'Durum değerlendiriliyor...',
+        'detay' => '-',
+        'buton' => null
+    ];
+}
+
 $supply_chain_data = getSupplyChainData($connection);
 
 // Calculate statistics for the compact view
@@ -950,6 +1171,35 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             color: white !important;
             font-weight: bold;
         }
+
+        /* Aksiyon Önerisi Badge Stilleri */
+        .badge-aksiyon-kritik {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+            font-weight: 600;
+        }
+
+        .badge-aksiyon-uyari {
+            background: #fffbeb;
+            color: #d97706;
+            border: 1px solid #fde68a;
+            font-weight: 600;
+        }
+
+        .badge-aksiyon-bilgi {
+            background: #eff6ff;
+            color: #2563eb;
+            border: 1px solid #bfdbfe;
+            font-weight: 600;
+        }
+
+        .badge-aksiyon-basarili {
+            background: #f0fdf4;
+            color: #16a34a;
+            border: 1px solid #bbf7d0;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -1011,6 +1261,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         <tr>
                             <th class="text-center">#</th>
                             <th>Ürün</th>
+                            <th style="min-width: 200px;">Aksiyon Önerisi</th>
+                            <th style="min-width: 250px;">Aksiyon Detayı</th>
+                            <th class="text-center" style="min-width: 120px;">Aksiyon</th>
                             <th class="text-right">Stok</th>
                             <th class="text-right">Sipariş</th>
                             <th class="text-right">Üretimde</th>
@@ -1145,6 +1398,50 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <td>
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
+                            </td>
+                            <td>
+                                <?php if (isset($p['aksiyon_onerisi'])): ?>
+                                    <div class="badge badge-pill <?php echo $p['aksiyon_onerisi']['class']; ?> p-2" 
+                                         style="font-size: 11px; line-height: 1.4; white-space: normal; text-align: left; display: block;">
+                                        <i class="<?php echo $p['aksiyon_onerisi']['icon']; ?> mr-1"></i>
+                                        <?php echo $p['aksiyon_onerisi']['mesaj']; ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td style="font-size: 11px; line-height: 1.5;">
+                                <?php if (isset($p['aksiyon_onerisi']['detay'])): ?>
+                                    <?php echo $p['aksiyon_onerisi']['detay']; ?>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-center">
+                                <?php if (isset($p['aksiyon_onerisi']['buton']) && $p['aksiyon_onerisi']['buton'] !== null): ?>
+                                    <a href="<?php echo $p['aksiyon_onerisi']['buton']['url']; ?>" 
+                                       class="btn btn-sm btn-primary" 
+                                       style="font-size: 11px; padding: 6px 12px;">
+                                        <i class="<?php echo $p['aksiyon_onerisi']['buton']['icon']; ?> mr-1"></i>
+                                        <?php echo $p['aksiyon_onerisi']['buton']['text']; ?>
+                                    </a>
+                                    <div class="text-muted mt-1" style="font-size: 9px; line-height: 1.2;">
+                                        <?php 
+                                        // Buton açıklamaları
+                                        $aciklamalar = [
+                                            'Ürün Ağacı' => 'Eksik bileşenleri<br>tanımlayın',
+                                            'Sözleşmeler' => 'Çerçeve sözleşme<br>oluşturun',
+                                            'Sipariş Ver' => 'Satınalma siparişi<br>oluşturun',
+                                            'İş Emri Aç' => 'Yeni iş emri<br>oluşturun'
+                                        ];
+                                        echo isset($aciklamalar[$p['aksiyon_onerisi']['buton']['text']]) 
+                                            ? $aciklamalar[$p['aksiyon_onerisi']['buton']['text']] 
+                                            : '';
+                                        ?>
+                                    </div>
+                                <?php else: ?>
+                                    <span class="text-muted">-</span>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right"><?php echo number_format($p['stok_miktari'], 0, ',', '.'); ?></td>
                             <td class="text-right">
