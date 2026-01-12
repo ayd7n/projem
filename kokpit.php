@@ -206,6 +206,16 @@ function getSupplyChainData($connection) {
     }
     $data['bilesen_sozlesme_eksik'] = $bilesen_sozlesme_eksik;
 
+    // 4.5 Gecerli Sozlesmeleri Onbellege Al
+    $valid_contracts = [];
+    $vc_query = "SELECT DISTINCT malzeme_kodu FROM cerceve_sozlesmeler_gecerlilik WHERE gecerli_mi = 1";
+    $vc_result = $connection->query($vc_query);
+    if ($vc_result) {
+        while ($vc = $vc_result->fetch_assoc()) {
+            $valid_contracts[$vc['malzeme_kodu']] = true;
+        }
+    }
+
     // 5. Üretim Kapasitesi Hesabı (from ne_uretsem.php logic)
     $uretilebilir_urunler = [];
     $uretilebilir_esanslar = [];
@@ -348,7 +358,10 @@ function getSupplyChainData($connection) {
                         'tur' => $bilesen_turu_lower,
                         'gerekli_adet' => $gerekli,
                         'mevcut_stok' => $mevcut,
-                        'uretilebilir' => $bu_bilesenden
+                        'uretilebilir' => $bu_bilesenden,
+                        'yoldaki_stok' => $pending_purchase_orders[$bom_row['bilesen_kodu']]['miktar'] ?? 0,
+                        'po_list' => $pending_purchase_orders[$bom_row['bilesen_kodu']]['po_list'] ?? '',
+                        'sozlesme_var' => isset($valid_contracts[$bom_row['bilesen_kodu']])
                     ];
                     
                     // Her bileşen türü için ayrı üretilebilir hesapla
@@ -1038,6 +1051,9 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
                             <th>Sözleşme Durumu</th>
+                            <th class="text-right">Malzeme Stok (Mevcut)</th>
+                            <th class="text-right">Yoldaki Malzemeler</th>
+                            <th class="text-right">Sipariş Verilmesi Gereken</th>
                             <th class="text-right th-purple">Toplam Esans İhtiyacı</th>
                             <th class="text-right th-purple">Esans Stok</th>
                             <th class="text-right th-purple">Esans Üretimde</th>
@@ -1195,6 +1211,63 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <?php else: ?>
                                     <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
                                 <?php endif; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $malzeme_gosterildi = false;
+                                if (!empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
+                                            $malzeme_gosterildi = true;
+                                            echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                 htmlspecialchars($bilesen['isim']) . ': <span class="font-weight-bold">' . 
+                                                 number_format($bilesen['mevcut_stok'], 0, ',', '.') . '</span></div>';
+                                        }
+                                    }
+                                }
+                                if (!$malzeme_gosterildi) echo '<span class="text-muted">-</span>';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $malzeme_gosterildi = false;
+                                if (!empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var']) && $bilesen['yoldaki_stok'] > 0) {
+                                            $malzeme_gosterildi = true;
+                                            echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                 htmlspecialchars($bilesen['isim']) . ': <span class="text-info font-weight-bold">' . 
+                                                 number_format($bilesen['yoldaki_stok'], 0, ',', '.') . '</span>' .
+                                                 ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($bilesen['po_list']) . ')</span></div>';
+                                        }
+                                    }
+                                }
+                                if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
+                                ?>
+                            </td>
+                            <td class="text-right">
+                                <?php
+                                $malzeme_gosterildi = false;
+                                // Ürün açığı (Gap) varsa hesapla
+                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
+                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                            $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                            $mevcut_ve_yoldaki = $bilesen['mevcut_stok'] + $bilesen['yoldaki_stok'];
+                                            $siparis_gereken = max(0, $toplam_ihtiyac - $mevcut_ve_yoldaki);
+                                            
+                                            if ($siparis_gereken > 0) {
+                                                $malzeme_gosterildi = true;
+                                                echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                     htmlspecialchars($bilesen['isim']) . ': <span class="text-danger font-weight-bold">' . 
+                                                     number_format($siparis_gereken, 0, ',', '.') . '</span></div>';
+                                            }
+                                        }
+                                    }
+                                }
+                                if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
+                                ?>
                             </td>
                             <td class="text-right">
                                 <?php
