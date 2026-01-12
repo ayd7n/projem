@@ -1010,7 +1010,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
-                            <th class="text-center" style="width: 50px;">Detay</th>
                             <th>Ürün</th>
                             <th class="text-right">Stok</th>
                             <th class="text-right">Sipariş</th>
@@ -1143,7 +1142,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         ?>
                         <tr class="<?php echo $row_class; ?>">
                             <td class="text-center text-muted"><?php echo $sira++; ?></td>
-                            <td class="text-center text-muted">-</td>
                             <td>
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
