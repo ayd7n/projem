@@ -923,6 +923,13 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         }
         .btn-dark { background: var(--primary); border-color: var(--primary); }
         .btn-dark:hover { background: var(--secondary); border-color: var(--secondary); }
+
+        /* Mor renk için */
+        .th-purple {
+            background-color: #9932CC !important; /* Mor renk */
+            color: white !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1031,15 +1038,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <th class="text-center">Durum</th>
                             <th>Veri Bilgisi</th>
                             <th>Sözleşme Durumu</th>
-                            <th class="text-right">Toplam Esans İhtiyacı</th>
-                            <th class="text-right">Esans Stok</th>
-                            <th class="text-right">Esans Üretimde</th>
-                            <th class="text-right">Net Esans İhtiyacı</th>
-                            <th class="text-right">Esans İş Emri Açılması Gereken Miktar</th>
-                            <th class="text-right">Malzeme Siparişi Gereken Esans Miktarı</th>
-                            <th class="text-right">Sipariş Gereken Esans Hammaddeleri</th>
-                            <th class="text-right">Yoldaki Esans Hammaddeleri</th>
-                            <th class="text-right">Net Sipariş Verilecek Esans Hammaddeleri</th>
+                            <th class="text-right th-purple">Toplam Esans İhtiyacı</th>
+                            <th class="text-right th-purple">Esans Stok</th>
+                            <th class="text-right th-purple">Esans Üretimde</th>
+                            <th class="text-right th-purple">Net Esans İhtiyacı</th>
+                            <th class="text-right th-purple">Esans İş Emri Açılması Gereken Miktar</th>
+                            <th class="text-right th-purple">Malzeme Siparişi Gereken Esans Miktarı</th>
+                            <th class="text-right th-purple">Sipariş Gereken Esans Hammaddeleri</th>
+                            <th class="text-right th-purple">Yoldaki Esans Hammaddeleri</th>
+                            <th class="text-right th-purple">Net Sipariş Verilecek Esans Hammaddeleri</th>
                         </tr>
                     </thead>
                     <tbody>
