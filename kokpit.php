@@ -943,6 +943,13 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             color: white !important;
             font-weight: bold;
         }
+
+        /* Yeşil renk için */
+        .th-green {
+            background-color: #28a745 !important; /* Yeşil renk */
+            color: white !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -1049,11 +1056,11 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </th>
                             <th class="text-right">Önerilen</th>
                             <th class="text-center">Durum</th>
-                            <th>Veri Bilgisi</th>
-                            <th>Sözleşme Durumu</th>
-                            <th class="text-right">Malzeme Stok (Mevcut)</th>
-                            <th class="text-right">Yoldaki Malzemeler</th>
-                            <th class="text-right">Sipariş Verilmesi Gereken</th>
+                            <th class="th-green">Veri Bilgisi</th>
+                            <th class="th-green">Sözleşme Durumu</th>
+                            <th class="text-right th-green">Malzeme Stok (Mevcut)</th>
+                            <th class="text-right th-green">Yoldaki Malzemeler</th>
+                            <th class="text-right th-green">Sipariş Verilmesi Gereken</th>
                             <th class="text-right th-purple">Toplam Esans İhtiyacı</th>
                             <th class="text-right th-purple">Esans Stok</th>
                             <th class="text-right th-purple">Esans Üretimde</th>
@@ -1551,163 +1558,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     </tbody>
                 </table>
             </div>
-        </div>
-    </div>
-
-    <div class="row mt-5 mb-5 mx-3">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm" style="border-radius: 12px; background-color: #f8f9fa;">
-                <div class="card-body p-4">
-                    <h5 class="font-weight-bold mb-4" style="color: var(--primary);"><i class="fas fa-list-ol"></i> Tablo Kolon Hesaplama Adımları ve Formülleri</h5>
-                    
-                    <div class="table-responsive">
-                        <table class="table table-bordered table-sm bg-white" style="font-size: 0.82rem;">
-                            <thead class="thead-light">
-                                <tr>
-                                    <th style="width: 5%;">#</th>
-                                    <th style="width: 20%;">Kolon Adı</th>
-                                    <th style="width: 25%;">Hesaplama / Veri Kaynağı</th>
-                                    <th style="width: 50%;">Detaylı Mantık Açıklaması</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="table-secondary"><td colspan="4" class="font-weight-bold"><i class="fas fa-box"></i> 1. ÜRÜN TEMEL BİLGİLERİ VE ANALİZİ</td></tr>
-                                <tr>
-                                    <td>1</td>
-                                    <td class="font-weight-bold">Ürün</td>
-                                    <td><code>urunler</code> tablosu</td>
-                                    <td>Analiz edilen ürünün adı ve sistemdeki benzersiz kodu.</td>
-                                </tr>
-                                <tr>
-                                    <td>2</td>
-                                    <td class="font-weight-bold">Stok</td>
-                                    <td><code>stok_miktari</code></td>
-                                    <td>Depoda fiziksel olarak bulunan, hemen sevk edilebilir bitmiş ürün adedi.</td>
-                                </tr>
-                                <tr>
-                                    <td>3</td>
-                                    <td class="font-weight-bold">Sipariş</td>
-                                    <td><code>siparis_kalemleri</code></td>
-                                    <td>Müşteriler tarafından satın alınmış, ödemesi/onayı alınmış ancak henüz depodan çıkışı yapılmamış ürünlerin toplamı.</td>
-                                </tr>
-                                <tr>
-                                    <td>4</td>
-                                    <td class="font-weight-bold">Üretimde</td>
-                                    <td><code>montaj_is_emirleri</code></td>
-                                    <td>İş emri açılmış, montajına başlanmış ancak henüz bitip depoya (stok) girmemiş yoldaki ürünler.</td>
-                                </tr>
-                                <tr>
-                                    <td>5</td>
-                                    <td class="font-weight-bold">Toplam</td>
-                                    <td><code>Stok + Üretimde</code></td>
-                                    <td>İşletmenin sahip olduğu toplam ürün potansiyeli (Eldeki + Çok yakında gelecek olan).</td>
-                                </tr>
-                                <tr>
-                                    <td>6</td>
-                                    <td class="font-weight-bold">Kritik</td>
-                                    <td><code>kritik_stok_seviyesi</code></td>
-                                    <td>Depoda emniyet amaçlı sürekli bulunması istenen minimum alt limit miktarı.</td>
-                                </tr>
-                                <tr>
-                                    <td>7</td>
-                                    <td class="font-weight-bold text-danger">Açık</td>
-                                    <td><code>(Sipariş + Kritik) - Toplam</code></td>
-                                    <td><strong>Net İhtiyaç:</strong> Hem gelen siparişleri karşılamak hem de kritik stok seviyesini korumak için üretilmesi gereken net miktar. Pozitif değer üretim gerekliliğini gösterir.</td>
-                                </tr>
-                                <tr>
-                                    <td>8</td>
-                                    <td class="font-weight-bold">Fark %</td>
-                                    <td><code>(Açık / Kritik) * 100</code></td>
-                                    <td>Kritik stoğa göre ne kadar geride olunduğunu gösteren aciliyet göstergesi.</td>
-                                </tr>
-                                <tr>
-                                    <td>9</td>
-                                    <td class="font-weight-bold text-success">Üretilebilir</td>
-                                    <td><code>Min(Bileşen Stok / Reçete)</code></td>
-                                    <td>Ürün ağacındaki kutu, kapak, şişe vb. malzemelerin stoklarına bakarak, hammadde almadan <strong>maksimum kaç adet ürün toplanabileceği</strong>.</td>
-                                </tr>
-                                <tr>
-                                    <td>10</td>
-                                    <td class="font-weight-bold text-primary">Önerilen</td>
-                                    <td><code>Min(Açık, Üretilebilir)</code></td>
-                                    <td>Sistemin önerdiği ideal iş emri miktarı. İhtiyacınız olan (Açık) miktar ile eldeki malzemeyle yapabileceğiniz (Üretilebilir) miktarın kesişimidir.</td>
-                                </tr>
-                                <tr>
-                                    <td>11</td>
-                                    <td class="font-weight-bold">Durum</td>
-                                    <td><code>Açık > 0 ? KÖTÜ : İYİ</code></td>
-                                    <td>Ürünün genel sağlık durumu. Eğer Açık varsa (pozitif değer) KÖTÜ, yoksa İYİ olarak işaretlenir.</td>
-                                </tr>
-                                <tr>
-                                    <td>12</td>
-                                    <td class="font-weight-bold">Veri Bilgisi</td>
-                                    <td><code>Sistem Kontrolü</code></td>
-                                    <td>Ürünün reçetesinde (BOM) veya esans formülünde eksik veri olup olmadığını denetler. Eksik veri varsa hesaplamalar durdurulur.</td>
-                                </tr>
-                                <tr>
-                                    <td>13</td>
-                                    <td class="font-weight-bold">Sözleşme Durumu</td>
-                                    <td><code>Sözleşme Takibi</code></td>
-                                    <td>Üretimde kullanılacak malzemeler için geçerli bir fiyat/çerçeve sözleşmesi olup olmadığını kontrol eder.</td>
-                                </tr>
-
-                                <tr class="table-secondary"><td colspan="4" class="font-weight-bold"><i class="fas fa-flask"></i> 2. ESANS VE HAMMADDE ANALİZİ</td></tr>
-                                <tr>
-                                    <td>14</td>
-                                    <td class="font-weight-bold">Toplam Esans İhtiyacı</td>
-                                    <td><code>Açık * Birim Reçete</code></td>
-                                    <td>Üründeki toplam <strong>Açık</strong> adedi karşılamak için gereken saf esansın brüt toplam miktarı (ml/gr).</td>
-                                </tr>
-                                <tr>
-                                    <td>15</td>
-                                    <td class="font-weight-bold">Esans Stok</td>
-                                    <td><code>esanslar.stok_miktari</code></td>
-                                    <td>İlgili esansın depodaki hazır saf karışım miktarı.</td>
-                                </tr>
-                                <tr>
-                                    <td>16</td>
-                                    <td class="font-weight-bold">Esans Üretimde</td>
-                                    <td><code>esans_is_emirleri</code></td>
-                                    <td>Tanklarda demlenmekte olan veya üretimde olan toplam esans miktarı.</td>
-                                </tr>
-                                <tr>
-                                    <td>17</td>
-                                    <td class="font-weight-bold text-danger">Net Esans İhtiyacı</td>
-                                    <td><code>Top.İhtiyaç - (Stok + Üretimde)</code></td>
-                                    <td>Eldeki ve yoldaki esansın yetmediği, <strong>mutlaka üretilmesi gereken</strong> net ek esans miktarı.</td>
-                                </tr>
-                                <tr>
-                                    <td>18</td>
-                                    <td class="font-weight-bold">Sipariş Gereken Esans Hammaddeleri</td>
-                                    <td><code>(Net Esans İht. * Reçete) - Stok</code></td>
-                                    <td>Net esans açığını üretmek için hammadde deposundan alınması gereken ama stokta bulunmayan eksik içerikler (Yağ, Alkol vb.).</td>
-                                </tr>
-                                <tr>
-                                    <td>19</td>
-                                    <td class="font-weight-bold text-info">Yoldaki Esans Hammaddeleri</td>
-                                    <td><code>Bekleyen PO Takibi</code></td>
-                                    <td>Eksik hammaddeler için daha önce tedarikçiye verilmiş, henüz teslim alınmamış siparişlerin miktarları ve PO numaraları.</td>
-                                </tr>
-                                <tr>
-                                    <td>20</td>
-                                    <td class="font-weight-bold text-danger">Net Sipariş Verilecek Esans Hammaddeleri</td>
-                                    <td><code>Sip.Ger. - Yoldaki</code></td>
-                                    <td><strong>Gerçek Satınalma İhtiyacı:</strong> Hem depoda olmayan hem de henüz siparişi dahi verilmemiş olan, acilen satın alınması gereken hammadde listesi.</td>
-                                </tr>
-                                <tr>
-                                    <td>21</td>
-                                    <td class="font-weight-bold text-success">Esans İş Emri Açılması Gereken Miktar</td>
-                                    <td><code>Min(H.Madde Stok / Reçete)</code></td>
-                                    <td>Hammadde deposundaki mevcut içeriklerle (yeni alım yapmadan) hemen üretilebilecek maksimum saf esans miktarı.</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
-        </div>
-    </div>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+        
+            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     <script> src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
