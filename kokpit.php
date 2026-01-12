@@ -814,17 +814,43 @@ function getAksiyonOnerisi($p) {
     // 1. VERİ EKSİKLİĞİ VARSA (En Yüksek Öncelik)
     if (count($eksik_bilesenler) > 0 || count($esans_agaci_eksik) > 0) {
         $detay = [];
+        $adim_listesi = [];
+        
         if (count($eksik_bilesenler) > 0) {
-            $detay[] = '<strong>Eksik bileşenler:</strong> ' . implode(', ', $eksik_bilesenler);
+            $detay[] = '<strong class="text-danger"><i class="fas fa-exclamation-circle"></i> Eksik Bileşenler:</strong><br>' . implode(', ', $eksik_bilesenler);
+            $adim_listesi[] = '<div style="margin-bottom: 8px;">
+                <strong style="color: #ffc107;"><i class="fas fa-box"></i> Malzemeler İçin:</strong><br>
+                <small style="margin-left: 20px;">
+                • Eğer malzemeyi <strong>tanımlamadıysanız</strong> → <a href="malzemeler.php" class="text-primary">Buradan tanımlayın</a><br>
+                • Malzemeyi tanımladıysanız → <a href="urun_agaclari.php" class="text-primary">Ürün ağacına bağlayın</a>
+                </small>
+            </div>';
         }
+        
         if (count($esans_agaci_eksik) > 0) {
-            $detay[] = '<strong>Formülü olmayan esanslar:</strong> ' . implode(', ', $esans_agaci_eksik);
+            $detay[] = '<strong class="text-danger"><i class="fas fa-flask"></i> Formülü Olmayan Esanslar:</strong><br>' . implode(', ', $esans_agaci_eksik);
+            $adim_listesi[] = '<div style="margin-bottom: 8px;">
+                <strong style="color: #0078d4;"><i class="fas fa-flask"></i> Esanslar İçin:</strong><br>
+                <small style="margin-left: 20px;">
+                • Eğer esansı <strong>tanımlamadıysanız</strong> → <a href="esanslar.php" class="text-primary">Esanslar sayfasından tanımlayın</a><br>
+                • Esansı tanımladıysanız → <a href="urun_agaclari.php" class="text-primary">Ürün Ağaçları sayfasına gidin</a><br>
+                • <strong>Esans Ağacı</strong> sekmesinden formül oluşturun<br>
+                • Formül oluşturduktan sonra ürün ağacına bağlayın
+                </small>
+            </div>';
         }
+        
+        // Tek bir "Yapılması Gerekenler" kutusu
+        $adimlar = '<div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 8px; border-left: 3px solid #0078d4;">
+            <strong><i class="fas fa-info-circle text-primary"></i> Yapılması Gerekenler:</strong><br>
+            <div style="margin-top: 6px;">' . implode('', $adim_listesi) . '</div>
+        </div>';
+        
         return [
             'class' => 'badge-aksiyon-kritik',
             'icon' => 'fas fa-exclamation-triangle',
-            'mesaj' => 'Ürün ağacı ve esans formüllerini tamamlayın',
-            'detay' => implode('<br>', $detay),
+            'mesaj' => 'Ürün Ağacı ve Esans Formüllerini Tamamlayın',
+            'detay' => implode('<br>', $detay) . $adimlar,
             'buton' => [
                 'text' => 'Ürün Ağacı',
                 'url' => 'urun_agaclari.php',
@@ -836,17 +862,26 @@ function getAksiyonOnerisi($p) {
     // 2. REÇETE TAMAM AMA AÇIK > 0 VE SÖZLEŞME EKSİKSE
     if ($acik > 0 && count($sozlesme_eksik) > 0) {
         $stok_yeterli = ($uretilebilir >= $acik);
-        $detay = '<strong>Sözleşmesi olmayan malzemeler:</strong><br>' . implode(', ', array_slice($sozlesme_eksik, 0, 5));
+        $detay = '<strong class="text-warning"><i class="fas fa-file-contract"></i> Sözleşmesi Olmayan Malzemeler:</strong><br>' . implode(', ', array_slice($sozlesme_eksik, 0, 5));
         if (count($sozlesme_eksik) > 5) {
-            $detay .= '<br>+' . (count($sozlesme_eksik) - 5) . ' malzeme daha';
+            $detay .= '<br><small class="text-muted">+' . (count($sozlesme_eksik) - 5) . ' malzeme daha</small>';
         }
+        
+        $adimlar = '<div style="background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #ffc107;">
+            <strong><i class="fas fa-info-circle text-warning"></i> Yapılması Gerekenler:</strong><br>
+            <small>
+            1️⃣ <a href="cerceve_sozlesmeler.php" class="text-primary">Çerçeve sözleşme sayfasına gidin</a><br>
+            2️⃣ Yukarıdaki malzemeler için sözleşme oluşturun<br>
+            3️⃣ Sözleşme onaylandıktan sonra sipariş verebilirsiniz
+            </small>
+        </div>';
         
         if ($stok_yeterli) {
             return [
                 'class' => 'badge-aksiyon-uyari',
                 'icon' => 'fas fa-file-contract',
-                'mesaj' => 'Gelecek siparişler için sözleşme tamamlayın',
-                'detay' => $detay,
+                'mesaj' => 'Gelecek Siparişler İçin Sözleşme Tamamlayın',
+                'detay' => $detay . $adimlar,
                 'buton' => [
                     'text' => 'Sözleşmeler',
                     'url' => 'cerceve_sozlesmeler.php',
@@ -857,8 +892,8 @@ function getAksiyonOnerisi($p) {
             return [
                 'class' => 'badge-aksiyon-kritik',
                 'icon' => 'fas fa-ban',
-                'mesaj' => 'Sözleşme eksik - Önce sözleşme tamamlayın',
-                'detay' => $detay,
+                'mesaj' => 'Sözleşme Eksik - Önce Sözleşme Tamamlayın',
+                'detay' => $detay . $adimlar,
                 'buton' => [
                     'text' => 'Sözleşmeler',
                     'url' => 'cerceve_sozlesmeler.php',
@@ -882,17 +917,26 @@ function getAksiyonOnerisi($p) {
                 
                 if ($siparis_gereken > 0 && !empty($bilesen['sozlesme_var'])) {
                     $siparis_gereken_var = true;
-                    $siparis_listesi[] = $bilesen['isim'] . ': <strong>' . number_format($siparis_gereken, 0, ',', '.') . '</strong>';
+                    $siparis_listesi[] = '<i class="fas fa-box text-primary"></i> ' . $bilesen['isim'] . ': <strong>' . number_format($siparis_gereken, 0, ',', '.') . '</strong> adet';
                 }
             }
         }
         
         if ($siparis_gereken_var) {
+            $adimlar = '<div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #0078d4;">
+                <strong><i class="fas fa-info-circle text-info"></i> Yapılması Gerekenler:</strong><br>
+                <small>
+                1️⃣ <a href="satinalma_siparisler.php" class="text-primary">Satınalma sipariş sayfasına gidin</a><br>
+                2️⃣ Yukarıdaki malzemeler için sipariş oluşturun<br>
+                3️⃣ Tedarikçiye sipariş gönderin
+                </small>
+            </div>';
+            
             return [
                 'class' => 'badge-aksiyon-bilgi',
                 'icon' => 'fas fa-shopping-cart',
-                'mesaj' => 'Malzeme siparişi verin',
-                'detay' => implode('<br>', $siparis_listesi),
+                'mesaj' => 'Malzeme Siparişi Verin',
+                'detay' => implode('<br>', $siparis_listesi) . $adimlar,
                 'buton' => [
                     'text' => 'Sipariş Ver',
                     'url' => 'satinalma_siparisler.php',
@@ -909,7 +953,7 @@ function getAksiyonOnerisi($p) {
                     foreach ($esans_info['formul_detaylari'] as $hammadde) {
                         $net_siparis = max(0, ($hammadde['recete_miktari'] * $acik) - $hammadde['mevcut_stok'] - $hammadde['bekleyen_siparis']);
                         if ($net_siparis > 0) {
-                            $esans_hammadde_listesi[] = $hammadde['malzeme_ismi'] . ': <strong>' . number_format($net_siparis, 2, ',', '.') . ' ' . $hammadde['birim'] . '</strong>';
+                            $esans_hammadde_listesi[] = '<i class="fas fa-vial text-purple"></i> ' . $hammadde['malzeme_adi'] . ': <strong>' . number_format($net_siparis, 2, ',', '.') . '</strong> ' . $hammadde['birim'];
                         }
                     }
                 }
@@ -1039,166 +1083,413 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <title>Tedarik Zinciri Kontrol Paneli - Parfüm ERP</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext" rel="stylesheet">
     <style>
+        /* PROFESYONEL ERP SİSTEMİ - ULTRA TEMİZ TASARIM */
+        
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
         :root {
-            --primary: #4a0e63;
-            --secondary: #7c2a99;
-            --accent: #d4af37;
-            --success: #28a745;
-            --danger: #dc3545;
-            --warning: #ffc107;
-            --info: #17a2b8;
-            --bg-color: #f8f9fa;
-            --card-bg: #ffffff;
-            --border-color: #e9ecef;
-            --text-primary: #111827;
-            --text-secondary: #6b7280;
+            --primary: #0078d4;
+            --success: #107c10;
+            --danger: #d13438;
+            --warning: #ff8c00;
+            --gray-50: #fafafa;
+            --gray-100: #f3f3f3;
+            --gray-200: #e1e1e1;
+            --gray-300: #c8c8c8;
+            --gray-400: #a19f9d;
+            --gray-500: #605e5c;
+            --gray-600: #484644;
+            --gray-700: #323130;
+            --gray-800: #201f1e;
+            --white: #ffffff;
+            --border: #edebe9;
         }
+        
         body {
-            font-family: 'Ubuntu', sans-serif;
-            background: var(--bg-color);
-            font-size: 14px;
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, 'Roboto', 'Helvetica Neue', sans-serif;
+            font-size: 13px;
+            background: var(--gray-50);
+            color: var(--gray-800);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
-        .main-content { padding: 15px 20px; }
-
-        /* Compact Stats */
+        
+        .main-content { 
+            padding: 20px 24px;
+            background: var(--white);
+            min-height: 100vh;
+        }
+        
+        /* Stats */
         .stats-inline {
             display: flex;
-            gap: 10px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
         }
+        
         .stat-chip {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            background: #fff;
-            border: 1px solid #e5e7eb;
-        }
-        .stat-chip .num { font-size: 16px; font-weight: 700; }
-        .stat-chip.danger { border-color: #fecaca; background: #fef2f2; }
-        .stat-chip.danger .num { color: #dc2626; }
-        .stat-chip.warning { border-color: #fde68a; background: #fffbeb; }
-        .stat-chip.warning .num { color: #d97706; }
-        .stat-chip.success { border-color: #bbf7d0; background: #f0fdf4; }
-        .stat-chip.success .num { color: #16a34a; }
-        .stat-chip.muted { border-color: #e5e7eb; background: #f9fafb; }
-        .stat-chip.muted .num { color: #6b7280; }
-
-        /* Compact Info */
-        .info-compact {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
-            border-radius: 6px;
-            padding: 8px 12px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            color: #0369a1;
             display: flex;
             align-items: center;
-            gap: 8px;
-            flex-wrap: wrap;
+            gap: 10px;
+            padding: 10px 16px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            font-weight: 400;
         }
-
-        /* Card Styles */
-        .card { border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-header {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: #fff;
-            padding: 10px 15px;
-            font-size: 14px;
+        
+        .stat-chip i {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        .stat-chip .num {
+            font-size: 20px;
             font-weight: 600;
+            color: var(--gray-800);
         }
-        .table { margin: 0; font-size: 13px; }
+        
+        .stat-chip.danger { 
+            border-left: 3px solid var(--danger);
+            background: #fef6f6;
+        }
+        .stat-chip.danger .num { color: var(--danger); }
+        .stat-chip.danger i { color: var(--danger); }
+        
+        .stat-chip.success { 
+            border-left: 3px solid var(--success);
+            background: #f3faf3;
+        }
+        .stat-chip.success .num { color: var(--success); }
+        .stat-chip.success i { color: var(--success); }
+        
+        .stat-chip.muted { 
+            border-left: 3px solid var(--gray-300);
+            background: var(--gray-50);
+        }
+        .stat-chip.muted .num { color: var(--gray-500); }
+        .stat-chip.muted i { color: var(--gray-500); }
+        
+        /* Card */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        
+        .card-header {
+            background: var(--white);
+            color: var(--gray-800);
+            padding: 14px 20px;
+            font-size: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-header i { 
+            margin-right: 8px;
+            color: var(--primary);
+            font-size: 16px;
+        }
+        
+        .card-header span:last-child {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--gray-500);
+        }
+        
+        /* Table */
+        .table-responsive { 
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        
+        .table {
+            width: 100%;
+            font-size: 12px;
+            border-collapse: collapse;
+        }
+        
         .table th {
-            background: #f9fafb;
+            background: var(--gray-50);
+            color: var(--gray-600);
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            color: #6b7280;
-            padding: 10px 8px;
-            border-bottom: 2px solid #e5e7eb;
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--border);
             white-space: nowrap;
+            text-align: left;
         }
-        .table td { padding: 8px; vertical-align: middle; border-color: #f3f4f6; }
-        .table tbody tr:hover { background: #f9fafb; }
-        .table tbody tr.row-acil { background: rgba(239,68,68,0.04); }
-        .table tbody tr.row-acil:hover { background: rgba(239,68,68,0.08); }
-
+        
+        .table th.text-center { text-align: center; }
+        .table th.text-right { text-align: right; }
+        
+        .table td {
+            padding: 12px 12px;
+            border-bottom: 1px solid var(--gray-100);
+            vertical-align: middle;
+            color: var(--gray-700);
+        }
+        
+        .table tbody tr {
+            transition: background-color 0.15s ease;
+        }
+        
+        .table tbody tr:hover {
+            background: var(--gray-50);
+        }
+        
+        .table tbody tr.row-acil {
+            background: #fef6f6;
+            border-left: 3px solid var(--danger);
+        }
+        
+        .table tbody tr.row-acil:hover {
+            background: #fef0f0;
+        }
+        
         /* Badges */
         .badge-sm {
-            padding: 2px 6px;
+            display: inline-block;
+            padding: 4px 10px;
             border-radius: 3px;
-            font-size: 9px;
+            font-size: 11px;
             font-weight: 600;
             text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
-        .badge-acil, .badge-kotu { background: #fef2f2; color: #dc2626; }
-        .badge-uyari { background: #fffbeb; color: #d97706; }
-        .badge-iyi { background: #f0fdf4; color: #16a34a; }
-        .badge-belirsiz { background: #f3f4f6; color: #6b7280; }
-
-        .text-danger { color: #dc2626 !important; }
-        .text-warning { color: #d97706 !important; }
-        .text-success { color: #16a34a !important; }
-        .text-muted { color: #9ca3af !important; }
-        .font-semibold { font-weight: 600; }
-
-        .btn-xs {
-            padding: 3px 8px;
-            font-size: 10px;
-            border-radius: 4px;
+        
+        .badge-kotu { 
+            background: var(--white);
+            color: var(--danger);
+            border: 1px solid #f1aeb5;
         }
-        .btn-dark { background: var(--primary); border-color: var(--primary); }
-        .btn-dark:hover { background: var(--secondary); border-color: var(--secondary); }
-
-        /* Mor renk için */
-        .th-purple {
-            background-color: #9932CC !important; /* Mor renk */
-            color: white !important;
-            font-weight: bold;
+        .badge-iyi { 
+            background: var(--white);
+            color: var(--success);
+            border: 1px solid #badbcc;
         }
-
-        /* Yeşil renk için */
-        .th-green {
-            background-color: #28a745 !important; /* Yeşil renk */
-            color: white !important;
-            font-weight: bold;
+        .badge-belirsiz { 
+            background: var(--white);
+            color: var(--gray-500);
+            border: 1px solid var(--border);
         }
-
-        /* Aksiyon Önerisi Badge Stilleri */
+        
         .badge-aksiyon-kritik {
-            background: #fef2f2;
-            color: #dc2626;
-            border: 1px solid #fecaca;
+            background: var(--white);
+            color: var(--danger);
+            border: 1px solid #f1aeb5;
+            padding: 5px 12px;
+            border-radius: 3px;
             font-weight: 600;
+            font-size: 11px;
         }
-
+        
         .badge-aksiyon-uyari {
-            background: #fffbeb;
-            color: #d97706;
-            border: 1px solid #fde68a;
+            background: var(--white);
+            color: var(--warning);
+            border: 1px solid #ffe5b4;
+            padding: 5px 12px;
+            border-radius: 3px;
             font-weight: 600;
+            font-size: 11px;
         }
-
+        
         .badge-aksiyon-bilgi {
-            background: #eff6ff;
-            color: #2563eb;
-            border: 1px solid #bfdbfe;
+            background: var(--white);
+            color: var(--primary);
+            border: 1px solid #b3d7ff;
+            padding: 5px 12px;
+            border-radius: 3px;
             font-weight: 600;
+            font-size: 11px;
         }
-
+        
         .badge-aksiyon-basarili {
-            background: #f0fdf4;
-            color: #16a34a;
-            border: 1px solid #bbf7d0;
+            background: var(--white);
+            color: var(--success);
+            border: 1px solid #badbcc;
+            padding: 5px 12px;
+            border-radius: 3px;
             font-weight: 600;
+            font-size: 11px;
+        }
+        
+        /* Buttons */
+        .btn-xs {
+            padding: 5px 12px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+        }
+        
+        .btn-dark {
+            background: var(--gray-800);
+            border: 1px solid var(--gray-700);
+            color: var(--white);
+        }
+        
+        .btn-dark:hover {
+            background: var(--gray-700);
+            border-color: var(--gray-600);
+        }
+        
+        /* Special Columns */
+        .th-green {
+            background: var(--white) !important;
+            color: var(--success) !important;
+            font-weight: 700 !important;
+            border-left: 3px solid var(--success) !important;
+            min-width: 420px !important;
+        }
+        
+        .th-purple {
+            background: var(--white) !important;
+            color: #8764b8 !important;
+            font-weight: 700 !important;
+            border-left: 3px solid #8764b8 !important;
+        }
+        
+        /* Utilities */
+        .text-danger { color: var(--danger) !important; }
+        .text-warning { color: var(--warning) !important; }
+        .text-success { color: var(--success) !important; }
+        .text-muted { color: var(--gray-500) !important; }
+        .text-info { color: var(--primary) !important; }
+        .font-semibold { font-weight: 600; }
+        
+        /* Icons */
+        .fa, .fas, .far, .fal, .fab {
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        
+        /* ============================================
+           AKSİYON KOLONLARI - DETAYLI TASARIM
+        ============================================ */
+        
+        /* Aksiyon Önerisi Kolonu */
+        .aksiyon-onerisi-cell {
+            min-width: 280px !important;
+            max-width: 320px;
+        }
+        
+        .aksiyon-badge-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        
+        .aksiyon-priority-indicator {
+            width: 4px;
+            height: 100%;
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+        
+        .aksiyon-priority-indicator.kritik {
+            background: var(--danger);
+        }
+        
+        .aksiyon-priority-indicator.uyari {
+            background: var(--warning);
+        }
+        
+        .aksiyon-priority-indicator.bilgi {
+            background: var(--primary);
+        }
+        
+        .aksiyon-priority-indicator.basarili {
+            background: var(--success);
+        }
+        
+        .aksiyon-content {
+            flex: 1;
+        }
+        
+        .aksiyon-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+        
+        .aksiyon-title i {
+            font-size: 14px;
+        }
+        
+        /* Aksiyon Detay Kolonu */
+        .aksiyon-detay-cell {
+            min-width: 350px !important;
+            max-width: 400px;
+        }
+        
+        /* Aksiyon İstatistikleri */
+        .aksiyon-stats {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        
+        .aksiyon-stat-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 8px;
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 500;
+        }
+        
+        .aksiyon-stat-item i {
+            font-size: 9px;
+            opacity: 0.7;
+        }
+        
+        .aksiyon-stat-item .stat-value {
+            font-weight: 600;
+            color: var(--gray-800);
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { 
+            width: 12px; 
+            height: 12px; 
+        }
+        
+        ::-webkit-scrollbar-track { 
+            background: var(--gray-100);
+            border-radius: 0;
+        }
+        
+        ::-webkit-scrollbar-thumb { 
+            background: var(--gray-300);
+            border-radius: 0;
+            border: 2px solid var(--gray-100);
+        }
+        
+        ::-webkit-scrollbar-thumb:hover { 
+            background: var(--gray-400);
         }
     </style>
 </head>
@@ -1222,57 +1513,55 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     </nav>
 
     <div class="main-content">
-        <!-- Header Compact -->
-        <div class="d-flex justify-content-between align-items-center mb-2">
-            <div>
-                <h5 class="mb-0" style="color: var(--primary); font-weight: 700;">
-                    <i class="fas fa-truck-loading text-info"></i> Tedarik Zinciri Kontrol Paneli
-                </h5>
-                <small class="text-muted">Tüm tedarik zinciri verileri</small>
-            </div>
-        </div>
-
-        <!-- Stats Inline -->
-        <div class="stats-inline">
-            <div class="stat-chip danger">
-                <i class="fas fa-times-circle"></i>
-                <span class="num"><?php echo $kotu_count; ?></span> Kötü
-            </div>
-            <div class="stat-chip success">
-                <i class="fas fa-check-circle"></i>
-                <span class="num"><?php echo $iyi_count; ?></span> İyi
-            </div>
-            <div class="stat-chip muted">
-                <i class="fas fa-question-circle"></i>
-                <span class="num"><?php echo $belirsiz_count; ?></span> Belirsiz
-            </div>
-        </div>
-
-
         <!-- Production Planning Section - TEK TABLO -->
         <div class="card mb-3">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span><i class="fas fa-industry"></i> Üretim Planlama</span>
-                <span style="font-size: 11px; opacity: 0.8;"><?php echo count($supply_chain_data['uretilebilir_urunler']); ?> ürün</span>
-            </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
                             <th class="text-center">#</th>
-                            <th>Ürün</th>
-                            <th style="min-width: 200px;">Aksiyon Önerisi</th>
-                            <th style="min-width: 250px;">Aksiyon Detayı</th>
-                            <th class="text-center" style="min-width: 120px;">Aksiyon</th>
-                            <th class="text-right">Stok</th>
-                            <th class="text-right">Sipariş</th>
-                            <th class="text-right">Üretimde</th>
-                            <th class="text-right">Toplam</th>
-                            <th class="text-right">Kritik</th>
-                            <th class="text-right">Açık</th>
-                            <th class="text-right">Fark%</th>
+                            <th>
+                                <i class="fas fa-box"></i> Ürün
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Ürün adı ve kodu</div>
+                            </th>
+                            <th class="aksiyon-onerisi-cell">
+                                <i class="fas fa-lightbulb"></i> Aksiyon Önerisi
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Öncelikli yapılması gereken</div>
+                            </th>
+                            <th class="aksiyon-detay-cell">
+                                <i class="fas fa-info-circle"></i> Aksiyon Detayı
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Detaylı açıklama ve bilgiler</div>
+                            </th>
                             <th class="text-right">
-                                Üretilebilir 
+                                <i class="fas fa-warehouse"></i> Stok
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Mevcut stok miktarı</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-shopping-cart"></i> Sipariş
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Müşteri siparişleri</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-cogs"></i> Üretimde
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Üretim aşamasında</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-calculator"></i> Toplam
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Stok + Üretim</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-exclamation-triangle"></i> Kritik
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Kritik seviye</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-folder-open"></i> Açık
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Açık sipariş miktarı</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-percent"></i> Fark%
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Karşılama oranı</div>
+                            </th>
+                            <th class="text-right">
+                                <i class="fas fa-industry"></i> Üretilebilir 
                                 <div class="dropdown d-inline-block">
                                     <button class="btn btn-xs btn-light" type="button" id="uretilebilirAyar" data-toggle="dropdown" title="Hesaplama ayarları">
                                         <i class="fas fa-cog" style="font-size: 9px;"></i>
@@ -1305,23 +1594,72 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                         </div>
                                     </div>
                                 </div>
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Üretilebilir miktar</div>
                             </th>
-                            <th class="text-right">Önerilen</th>
-                            <th class="text-center">Durum</th>
-                            <th class="th-green">Veri Bilgisi</th>
-                            <th class="th-green">Sözleşme Durumu</th>
-                            <th class="text-right th-green">Malzeme Stok (Mevcut)</th>
-                            <th class="text-right th-green">Yoldaki Malzemeler</th>
-                            <th class="text-right th-green">Sipariş Verilmesi Gereken</th>
-                            <th class="text-right th-purple">Toplam Esans İhtiyacı</th>
-                            <th class="text-right th-purple">Esans Stok</th>
-                            <th class="text-right th-purple">Esans Üretimde</th>
-                            <th class="text-right th-purple">Net Esans İhtiyacı</th>
-                            <th class="text-right th-purple">Esans İş Emri Açılması Gereken Miktar</th>
-                            <th class="text-right th-purple">Malzeme Siparişi Gereken Esans Miktarı</th>
-                            <th class="text-right th-purple">Sipariş Gereken Esans Hammaddeleri</th>
-                            <th class="text-right th-purple">Yoldaki Esans Hammaddeleri</th>
-                            <th class="text-right th-purple">Net Sipariş Verilecek Esans Hammaddeleri</th>
+                            <th class="text-right">
+                                <i class="fas fa-clipboard-check"></i> Önerilen
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Önerilen üretim</div>
+                            </th>
+                            <th class="text-center">
+                                <i class="fas fa-traffic-light"></i> Durum
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Genel durum</div>
+                            </th>
+                            <th class="th-green">
+                                <i class="fas fa-database"></i> Veri Bilgisi
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Eksik veri kontrolü</div>
+                            </th>
+                            <th class="th-green">
+                                <i class="fas fa-file-contract"></i> Sözleşme Durumu
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Çerçeve sözleşmeler</div>
+                            </th>
+                            <th class="text-right th-green">
+                                <i class="fas fa-boxes"></i> Malzeme Stok
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Mevcut malzeme</div>
+                            </th>
+                            <th class="text-right th-green">
+                                <i class="fas fa-truck"></i> Yoldaki Malzemeler
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Sipariş edilen</div>
+                            </th>
+                            <th class="text-right th-green">
+                                <i class="fas fa-cart-plus"></i> Sipariş Verilmesi Gereken
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Eksik malzeme</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-flask"></i> Toplam Esans İhtiyacı
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Gerekli esans</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-vial"></i> Esans Stok
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Mevcut esans</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-blender"></i> Esans Üretimde
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Üretilen esans</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-tint"></i> Net Esans İhtiyacı
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Eksik esans</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-tasks"></i> Esans İş Emri
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Açılacak iş emri</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-shopping-bag"></i> Malzeme Siparişi
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Sipariş gereken</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-dolly"></i> Sipariş Gereken Hammaddeler
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Eksik hammadde</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-shipping-fast"></i> Yoldaki Hammaddeler
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Sipariş edilmiş</div>
+                            </th>
+                            <th class="text-right th-purple">
+                                <i class="fas fa-clipboard-list"></i> Net Verilecek Esans Siparişi
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Verilecek esans hammadde siparişi</div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -1413,32 +1751,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <td style="font-size: 11px; line-height: 1.5;">
                                 <?php if (isset($p['aksiyon_onerisi']['detay'])): ?>
                                     <?php echo $p['aksiyon_onerisi']['detay']; ?>
-                                <?php else: ?>
-                                    <span class="text-muted">-</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="text-center">
-                                <?php if (isset($p['aksiyon_onerisi']['buton']) && $p['aksiyon_onerisi']['buton'] !== null): ?>
-                                    <a href="<?php echo $p['aksiyon_onerisi']['buton']['url']; ?>" 
-                                       class="btn btn-sm btn-primary" 
-                                       style="font-size: 11px; padding: 6px 12px;">
-                                        <i class="<?php echo $p['aksiyon_onerisi']['buton']['icon']; ?> mr-1"></i>
-                                        <?php echo $p['aksiyon_onerisi']['buton']['text']; ?>
-                                    </a>
-                                    <div class="text-muted mt-1" style="font-size: 9px; line-height: 1.2;">
-                                        <?php 
-                                        // Buton açıklamaları
-                                        $aciklamalar = [
-                                            'Ürün Ağacı' => 'Eksik bileşenleri<br>tanımlayın',
-                                            'Sözleşmeler' => 'Çerçeve sözleşme<br>oluşturun',
-                                            'Sipariş Ver' => 'Satınalma siparişi<br>oluşturun',
-                                            'İş Emri Aç' => 'Yeni iş emri<br>oluşturun'
-                                        ];
-                                        echo isset($aciklamalar[$p['aksiyon_onerisi']['buton']['text']]) 
-                                            ? $aciklamalar[$p['aksiyon_onerisi']['buton']['text']] 
-                                            : '';
-                                        ?>
-                                    </div>
                                 <?php else: ?>
                                     <span class="text-muted">-</span>
                                 <?php endif; ?>
