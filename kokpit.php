@@ -1518,6 +1518,30 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         ::-webkit-scrollbar-thumb:hover { 
             background: var(--gray-400);
         }
+        
+        /* Dropdown checkbox düzeni */
+        .dropdown-menu .form-check {
+            padding-left: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        .dropdown-menu .form-check-input {
+            margin-left: -1.25rem;
+            margin-top: 0.2rem;
+        }
+        .dropdown-menu .form-check-label {
+            font-size: 12px;
+            cursor: pointer;
+        }
+        
+        /* Üretilebilir header'daki çark butonu */
+        .table th .dropdown {
+            position: relative;
+        }
+        .table th .dropdown .btn {
+            padding: 2px 4px;
+            line-height: 1;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
@@ -2197,8 +2221,6 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         
             <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-    <script> src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
     
     <script>
