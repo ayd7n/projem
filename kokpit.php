@@ -861,6 +861,7 @@ function getAksiyonOnerisi($p) {
             'icon' => 'fas fa-exclamation-triangle',
             'mesaj' => 'Ürün Ağacı ve Esans Formüllerini Tamamlayın',
             'detay' => implode('<br>', $detay) . $adimlar,
+            'category' => 'critical',
             'buton' => [
                 'text' => 'Ürün Ağacı',
                 'url' => 'urun_agaclari.php',
@@ -892,6 +893,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-file-contract',
                 'mesaj' => 'Gelecek Siparişler İçin Sözleşme Tamamlayın',
                 'detay' => $detay . $adimlar,
+                'category' => 'warning',
                 'buton' => [
                     'text' => 'Sözleşmeler',
                     'url' => 'cerceve_sozlesmeler.php',
@@ -904,6 +906,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-ban',
                 'mesaj' => 'Sözleşme Eksik - Önce Sözleşme Tamamlayın',
                 'detay' => $detay . $adimlar,
+                'category' => 'critical',
                 'buton' => [
                     'text' => 'Sözleşmeler',
                     'url' => 'cerceve_sozlesmeler.php',
@@ -947,6 +950,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-shopping-cart',
                 'mesaj' => 'Malzeme Siparişi Verin',
                 'detay' => implode('<br>', $siparis_listesi) . $adimlar,
+                'category' => 'order',
                 'buton' => [
                     'text' => 'Sipariş Ver',
                     'url' => 'satinalma_siparisler.php',
@@ -976,6 +980,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-flask',
                 'mesaj' => 'Esans hammaddesi siparişi verin',
                 'detay' => implode('<br>', $esans_hammadde_listesi),
+                'category' => 'order',
                 'buton' => [
                     'text' => 'Sipariş Ver',
                     'url' => 'satinalma_siparisler.php',
@@ -1010,6 +1015,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-flask',
                 'mesaj' => 'Esans iş emri oluşturun',
                 'detay' => implode('<br>', $esans_uretim_listesi),
+                'category' => 'production', 
                 'buton' => [
                     'text' => 'İş Emri Aç',
                     'url' => 'esans_is_emirleri.php',
@@ -1025,6 +1031,7 @@ function getAksiyonOnerisi($p) {
                 'icon' => 'fas fa-industry',
                 'mesaj' => 'Montaj iş emri oluşturun',
                 'detay' => '<strong>Üretilecek miktar:</strong> ' . number_format($p['onerilen_uretim'], 0, ',', '.') . ' adet',
+                'category' => 'production',
                 'buton' => [
                     'text' => 'İş Emri Aç',
                     'url' => 'montaj_is_emirleri.php',
@@ -1041,6 +1048,7 @@ function getAksiyonOnerisi($p) {
             'icon' => 'fas fa-check-circle',
             'mesaj' => 'Her şey yolunda',
             'detay' => 'Stok: <strong>' . number_format($p['stok_miktari'], 0, ',', '.') . '</strong> | Kritik: <strong>' . number_format($p['kritik_stok_seviyesi'], 0, ',', '.') . '</strong>',
+            'category' => 'ok',
             'buton' => null
         ];
     }
@@ -1056,6 +1064,7 @@ function getAksiyonOnerisi($p) {
             'icon' => 'fas fa-file-contract',
             'mesaj' => 'Gelecek üretimler için sözleşme tamamlayın',
             'detay' => $detay,
+            'category' => 'warning',
             'buton' => [
                 'text' => 'Sözleşmeler',
                 'url' => 'cerceve_sozlesmeler.php',
@@ -1070,6 +1079,7 @@ function getAksiyonOnerisi($p) {
         'icon' => 'fas fa-info-circle',
         'mesaj' => 'Durum değerlendiriliyor...',
         'detay' => '-',
+        'category' => 'ok',
         'buton' => null
     ];
 }
@@ -1602,6 +1612,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 </div>
                 <!-- Arama ve Filtre -->
                 <div class="ml-auto d-flex align-items-center">
+                    <!-- Aksiyon Filtresi -->
+                    <div class="dropdown mr-2">
+                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; height: 31px;">
+                            <i class="fas fa-tasks mr-1"></i> Tümü
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownActionFilter">
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('all', this)"><i class="fas fa-list mr-2 text-muted"></i>Tümü</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('critical', this)"><i class="fas fa-exclamation-triangle text-danger mr-2"></i>Kritik Sorunlar</a>
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('warning', this)"><i class="fas fa-file-contract text-warning mr-2"></i>Sözleşme Uyarısı</a>
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('order', this)"><i class="fas fa-shopping-cart text-info mr-2"></i>Sipariş Gerekiyor</a>
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('production', this)"><i class="fas fa-tools text-primary mr-2"></i>Üretim/Montaj</a>
+                            <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="#" onclick="setActionFilter('ok', this)"><i class="fas fa-check-circle text-success mr-2"></i>Sorun Yok</a>
+                        </div>
+                    </div>
                     <button id="btnFarkFiltre" class="btn btn-sm btn-outline-secondary mr-2" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 12px; height: 31px;">
                         <i class="fas fa-filter mr-1"></i> Fark > 0
                     </button>
@@ -1804,6 +1830,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
                             </td>
                             <td class="aksiyon-onerisi-hucre"
+                                data-action-category="<?php echo isset($p['aksiyon_onerisi']['category']) ? $p['aksiyon_onerisi']['category'] : 'ok'; ?>"
                                 data-acik="<?php echo $p['acik']; ?>"
                                 data-eksik-bilesenler='<?php echo json_encode($p['eksik_bilesenler'] ?? []); ?>'
                                 data-esans-agaci-eksik='<?php echo json_encode($p['esans_agaci_eksik'] ?? []); ?>'
@@ -1812,7 +1839,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <div class="badge badge-pill <?php echo $p['aksiyon_onerisi']['class']; ?> p-2 aksiyon-badge" 
                                          style="font-size: 11px; line-height: 1.4; white-space: normal; text-align: left; display: block;"
                                          data-original-class="<?php echo $p['aksiyon_onerisi']['class']; ?>"
-                                         data-original-mesaj="<?php echo htmlspecialchars($p['aksiyon_onerisi']['mesaj']); ?>">
+                                         data-original-mesaj="<?php echo htmlspecialchars($p['aksiyon_onerisi']['mesaj']); ?>"
+                                         data-action-category="<?php echo isset($p['aksiyon_onerisi']['category']) ? $p['aksiyon_onerisi']['category'] : 'ok'; ?>">
                                         <i class="<?php echo $p['aksiyon_onerisi']['icon']; ?> mr-1 aksiyon-icon"></i>
                                         <span class="aksiyon-mesaj"><?php echo $p['aksiyon_onerisi']['mesaj']; ?></span>
                                     </div>
@@ -2489,52 +2517,70 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     var newMesaj = '';
                     var newIcon = '';
                     
+                    // Aksiyon durumunu hesapla
+                    var newClass = '';
+                    var newMesaj = '';
+                    var newIcon = '';
+                    var category = 'ok';
+                    
                     if (eksikBilesenler.length > 0 || esansAgaciEksik.length > 0) {
                         // Veri eksikliği - en yüksek öncelik
                         newClass = 'badge-aksiyon-kritik';
                         newMesaj = 'Ürün Ağacı ve Esans Formüllerini Tamamlayın';
                         newIcon = 'fas fa-exclamation-triangle';
+                        category = 'critical';
                     } else if (acik > 0 && sozlesmeEksik.length > 0 && uretilebilir < acik) {
                         // Sözleşme eksik ve üretim yetersiz
                         newClass = 'badge-aksiyon-kritik';
                         newMesaj = 'Sözleşme Eksik - Önce Sözleşme Tamamlayın';
                         newIcon = 'fas fa-ban';
+                        category = 'critical';
                     } else if (acik > 0 && sozlesmeEksik.length > 0) {
                         // Sözleşme eksik ama üretim yeterli
                         newClass = 'badge-aksiyon-uyari';
                         newMesaj = 'Gelecek Siparişler İçin Sözleşme Tamamlayın';
                         newIcon = 'fas fa-file-contract';
+                        category = 'warning';
                     } else if (acik > 0 && uretilebilir >= acik) {
                         // Üretim yapılabilir
                         newClass = 'badge-aksiyon-bilgi';
                         newMesaj = 'Montaj İş Emri Oluşturun (' + onerilen.toLocaleString('tr-TR') + ' adet)';
                         newIcon = 'fas fa-tools';
+                        category = 'production';
                     } else if (acik > 0 && uretilebilir < acik && uretilebilir > 0) {
-                        // Kısmi üretim yapılabilir
+                        // Kısmi üretim yapılabilir -> Sipariş de gerekli
                         newClass = 'badge-aksiyon-uyari';
                         newMesaj = 'Malzeme Yetersiz (' + uretilebilir.toLocaleString('tr-TR') + '/' + acik.toLocaleString('tr-TR') + ')';
                         newIcon = 'fas fa-exclamation-circle';
+                        category = 'order';
                     } else if (acik > 0 && uretilebilir <= 0) {
                         // Üretim yapılamaz
                         newClass = 'badge-aksiyon-kritik';
                         newMesaj = 'Bileşen Yetersiz - Malzeme Siparişi Verin';
                         newIcon = 'fas fa-times-circle';
+                        category = 'order';
                     } else if (acik <= 0 && sozlesmeEksik.length > 0) {
                         // Stok yeterli ama sözleşme eksik
                         newClass = 'badge-aksiyon-uyari';
                         newMesaj = 'Gelecek Üretimler İçin Sözleşme Tamamlayın';
                         newIcon = 'fas fa-file-contract';
+                        category = 'warning';
                     } else {
                         // Her şey yolunda
                         newClass = 'badge-aksiyon-basarili';
                         newMesaj = 'Her Şey Yolunda';
                         newIcon = 'fas fa-check-circle';
+                        category = 'ok';
                     }
                     
                     // Badge'i güncelle
                     badge.className = 'badge badge-pill ' + newClass + ' p-2 aksiyon-badge';
                     if (mesajSpan) mesajSpan.textContent = newMesaj;
                     if (iconEl) iconEl.className = newIcon + ' mr-1 aksiyon-icon';
+                    
+                    // Category attribute güncelle (Filtreleme için)
+                    badge.setAttribute('data-action-category', category);
+                    aksiyonHucre.setAttribute('data-action-category', category);
                 }
             }
             
@@ -2899,7 +2945,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     // Global Filtre State
     var filterState = {
         search: '',
-        onlyPositiveDiff: false
+        onlyPositiveDiff: false,
+        actionCategory: 'all'
     };
 
     // Filtre Uygulama Fonksiyonu (Merkezi)
@@ -2930,6 +2977,16 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     show = false;
                 }
             }
+
+            // 3. Aksiyon Filtresi
+            if (show && filterState.actionCategory && filterState.actionCategory !== 'all') {
+                var aksiyonHucre = row.querySelector('.aksiyon-onerisi-hucre');
+                var cat = aksiyonHucre ? aksiyonHucre.getAttribute('data-action-category') : 'ok';
+                
+                if (cat !== filterState.actionCategory) {
+                    show = false;
+                }
+            }
             
             row.style.display = show ? '' : 'none';
         });
@@ -2943,6 +3000,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             applyTableFilters();
         });
     }
+    
+    // Aksiyon Filtre Set Fonksiyonu
+    window.setActionFilter = function(category, item) {
+        filterState.actionCategory = category;
+        
+        // Dropdown buton metnini güncelle
+        var btn = document.getElementById('dropdownActionFilter');
+        // Seçilen öğenin ikonunu al (i tagı)
+        var iconHtml = item.querySelector('i') ? item.querySelector('i').outerHTML : '';
+        // İkon ve metni butona koy (ikon + metin)
+        btn.innerHTML = iconHtml + ' ' + item.textContent.trim();
+        
+        applyTableFilters();
+    };
+
+    // Fark Filtre Toggle Fonksiyonu
     
     // Fark Filtre Toggle Fonksiyonu
     window.toggleFarkFiltre = function(btn) {
