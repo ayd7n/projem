@@ -2332,6 +2332,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 } else {
                     onerilenTd.innerHTML = '-';
                 }
+                
+                // Durum kolonunu güncelle (İYİ/KÖTÜ) - Bir sonraki kolon
+                var durumTd = onerilenTd.nextElementSibling;
+                if (durumTd) {
+                    var badge = durumTd.querySelector('.badge-sm');
+                    if (badge) {
+                        // Eğer açık sıfırsa veya üretim açığı kapatabiliyorsa -> İYİ
+                        if (acik <= 0 || uretilebilir >= acik) {
+                            badge.className = 'badge-sm badge-iyi';
+                            badge.textContent = 'İYİ';
+                        } else {
+                            badge.className = 'badge-sm badge-kotu';
+                            badge.textContent = 'KÖTÜ';
+                        }
+                    }
+                }
             }
             
             // Aksiyon Önerisi kolonunu güncelle
