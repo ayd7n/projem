@@ -1566,6 +1566,30 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <div class="main-content">
         <!-- Production Planning Section - TEK TABLO -->
         <div class="card mb-3">
+            <!-- Bileşen Türleri Filtre Barı -->
+            <div class="card-header d-flex align-items-center py-2 px-3" style="background: var(--gray-50); border-bottom: 1px solid var(--border);">
+                <span class="small font-weight-bold mr-3"><i class="fas fa-filter"></i> Üretilebilir Hesabına Katılacak Türler:</span>
+                <div class="d-flex flex-wrap" style="gap: 12px;">
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="kutu" checked> Kutu
+                    </label>
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="takm" checked> Takım
+                    </label>
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="esans" checked> Esans
+                    </label>
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="etiket"> Etiket
+                    </label>
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="paket"> Paket
+                    </label>
+                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
+                        <input class="bilesen-checkbox mr-1" type="checkbox" value="jelatin"> Jelatin
+                    </label>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
                     <thead>
@@ -1612,39 +1636,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Karşılama oranı</div>
                             </th>
                             <th class="text-right">
-                                <i class="fas fa-industry"></i> Üretilebilir 
-                                <div class="dropdown d-inline-block">
-                                    <button class="btn btn-xs btn-light" type="button" id="uretilebilirAyar" data-toggle="dropdown" title="Hesaplama ayarları">
-                                        <i class="fas fa-cog" style="font-size: 9px;"></i>
-                                    </button>
-                                    <div class="dropdown-menu dropdown-menu-right p-2" style="min-width: 180px;" onclick="event.stopPropagation();">
-                                        <div class="small font-weight-bold mb-2"><i class="fas fa-filter"></i> Hesaba Katılacak Türler:</div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="kutu" id="chk_kutu" checked>
-                                            <label class="form-check-label" for="chk_kutu">Kutu</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="etiket" id="chk_etiket">
-                                            <label class="form-check-label" for="chk_etiket">Etiket</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="takm" id="chk_takm" checked>
-                                            <label class="form-check-label" for="chk_takm">Takım</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="esans" id="chk_esans" checked>
-                                            <label class="form-check-label" for="chk_esans">Esans</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="paket" id="chk_paket">
-                                            <label class="form-check-label" for="chk_paket">Paket</label>
-                                        </div>
-                                        <div class="form-check">
-                                            <input class="form-check-input bilesen-checkbox" type="checkbox" value="jelatin" id="chk_jelatin">
-                                            <label class="form-check-label" for="chk_jelatin">Jelatin</label>
-                                        </div>
-                                    </div>
-                                </div>
+                                <i class="fas fa-industry"></i> Üretilebilir
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Üretilebilir miktar</div>
                             </th>
                             <th class="text-right">
@@ -1844,6 +1836,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <?php else: ?>
                                     <span class="text-muted uretilebilir-deger">0</span>
                                 <?php endif; ?>
+                                <button class="btn btn-link btn-sm p-0 ml-1 uretilebilir-detay-btn" 
+                                    style="font-size: 11px; color: var(--gray-500);"
+                                    data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
+                                    data-urun-kodu="<?php echo $p['urun_kodu']; ?>"
+                                    data-uretilebilir="<?php echo $p['uretilebilir_miktar']; ?>"
+                                    data-bilesen='<?php echo json_encode($p['bilesen_detaylari'] ?? []); ?>'
+                                    title="Detay göster">
+                                    <i class="fas fa-question-circle"></i>
+                                </button>
                             </td>
                             <td class="text-right">
                                 <?php if ($p['onerilen_uretim'] > 0): ?>
@@ -2222,6 +2223,57 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    <!-- Üretilebilir Detay Modalı -->
+    <div class="modal fade" id="uretilebilirDetayModal" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header" style="background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white; padding: 10px 15px;">
+                    <h6 class="modal-title"><i class="fas fa-industry"></i> Üretilebilir Miktar Detayı</h6>
+                    <button type="button" class="close text-white" data-dismiss="modal"><span>&times;</span></button>
+                </div>
+                <div class="modal-body" style="padding: 15px;">
+                    <div class="mb-3">
+                        <strong id="modalUrunIsmi" class="text-primary"></strong>
+                        <small class="text-muted ml-2" id="modalUrunKodu"></small>
+                    </div>
+                    <div class="alert alert-info py-2 mb-3" style="font-size: 12px;">
+                        <i class="fas fa-info-circle"></i>
+                        Üretilebilir miktar, seçili bileşen türlerinin stoklarına göre <strong>en düşük</strong> değere sahip olanla sınırlıdır.
+                    </div>
+                    <div class="mb-3 p-2 rounded" style="background: var(--gray-50);">
+                        <span class="font-weight-bold">Toplam Üretilebilir: </span>
+                        <span id="modalUretilebilir" class="text-success font-weight-bold" style="font-size: 18px;"></span>
+                        <span class="text-muted">adet</span>
+                    </div>
+                    <h6 class="mb-2"><i class="fas fa-cubes"></i> Bileşen Bazlı Analiz</h6>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered mb-0" style="font-size: 12px;">
+                            <thead style="background: var(--gray-100);">
+                                <tr>
+                                    <th>Bileşen Türü</th>
+                                    <th>Bileşen Adı</th>
+                                    <th class="text-right">Mevcut Stok</th>
+                                    <th class="text-right">1 Ürün İçin Gerekli</th>
+                                    <th class="text-right">Üretilebilir</th>
+                                    <th class="text-center">Durum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="modalBilesenTablosu">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="mt-3 p-2 rounded" style="background: #fff3cd; font-size: 11px;">
+                        <i class="fas fa-lightbulb text-warning"></i>
+                        <strong>Not:</strong> En düşük üretilebilir değere sahip bileşen, üretimi sınırlayan "darboğaz" bileşendir.
+                    </div>
+                </div>
+                <div class="modal-footer py-2">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <script>
     // Üretilebilir hesaplama fonksiyonu
@@ -2636,6 +2688,68 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     
     // Sayfa yüklendiğinde de hesapla
     document.addEventListener('DOMContentLoaded', hesaplaUretilebilir);
+    
+    // Üretilebilir detay modalı event handler
+    document.querySelectorAll('.uretilebilir-detay-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var urunIsmi = this.getAttribute('data-urun-ismi');
+            var urunKodu = this.getAttribute('data-urun-kodu');
+            var uretilebilir = parseFloat(this.getAttribute('data-uretilebilir')) || 0;
+            var bilesenlerData = JSON.parse(this.getAttribute('data-bilesen') || '[]');
+            // Object ise array'e çevir
+            var bilesenler = Array.isArray(bilesenlerData) ? bilesenlerData : Object.values(bilesenlerData);
+            
+            // Modal içeriğini doldur
+            document.getElementById('modalUrunIsmi').textContent = urunIsmi;
+            document.getElementById('modalUrunKodu').textContent = '#' + urunKodu;
+            document.getElementById('modalUretilebilir').textContent = uretilebilir.toLocaleString('tr-TR');
+            
+            // Bileşen tablosunu doldur
+            var tbody = document.getElementById('modalBilesenTablosu');
+            tbody.innerHTML = '';
+            
+            // En düşük üretilebilir değeri bul (darboğaz)
+            var minUretilebilir = Infinity;
+            bilesenler.forEach(function(b) {
+                if (b.uretilebilir < minUretilebilir) {
+                    minUretilebilir = b.uretilebilir;
+                }
+            });
+            
+            bilesenler.forEach(function(b) {
+                var isDarbogaz = b.uretilebilir === minUretilebilir;
+                var stok = b.mevcut_stok || 0;
+                var durumBadge = '';
+                if (stok <= 0) {
+                    durumBadge = '<span class="badge badge-danger">Stok Yok</span>';
+                } else if (isDarbogaz) {
+                    durumBadge = '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Darboğaz</span>';
+                } else {
+                    durumBadge = '<span class="badge badge-success">Yeterli</span>';
+                }
+                
+                var row = '<tr' + (isDarbogaz ? ' style="background: #fff3cd;"' : '') + '>' +
+                    '<td><strong>' + (b.tur || '-').toUpperCase() + '</strong></td>' +
+                    '<td>' + (b.isim || '-') + '</td>' +
+                    '<td class="text-right">' + stok.toLocaleString('tr-TR') + '</td>' +
+                    '<td class="text-right">' + (b.gerekli_adet || 0).toLocaleString('tr-TR') + '</td>' +
+                    '<td class="text-right font-weight-bold">' + (b.uretilebilir || 0).toLocaleString('tr-TR') + '</td>' +
+                    '<td class="text-center">' + durumBadge + '</td>' +
+                    '</tr>';
+                tbody.innerHTML += row;
+            });
+            
+            if (bilesenler.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">Bileşen bilgisi bulunamadı</td></tr>';
+            }
+            
+            // Modalı aç - aria-hidden uyarısını önlemek için
+            var modal = document.getElementById('uretilebilirDetayModal');
+            modal.removeAttribute('aria-hidden');
+            $(modal).modal('show');
+        });
+    });
     </script>
 </body>
 </html>
