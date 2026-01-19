@@ -1413,15 +1413,49 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         
         .th-purple {
             background: var(--white) !important;
-            color: #8764b8 !important;
-            font-weight: 700 !important;
-            border-left: 3px solid #8764b8 !important;
+            overflow: hidden !important; 
+            text-overflow: ellipsis !important; 
+            white-space: nowrap !important; 
+            max-width: 0;
         }
+
+        /* Filter Chips */
+        .filter-chip {
+            font-size: 10px;
+            padding: 3px 10px;
+            border-radius: 15px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #666;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            user-select: none;
+        }
+        .filter-chip:hover {
+            background-color: #f8f9fa;
+            border-color: #d0d0d0;
+        }
+        .filter-chip.active {
+            background: #eef2ff;
+            border-color: #7c2a99;
+            color: #4a0e63;
+            font-weight: 600;
+            box-shadow: 0 1px 3px rgba(74, 14, 99, 0.1);
+        }
+        .filter-chip input { display: none; }
         
-        /* Utilities */
+        /* Input Focus Clean */
+        .form-control:focus {
+            box-shadow: none !important;
+            background-color: #fff !important;
+            border-color: #7c2a99 !important;
+        }/* Utilities */
         .text-danger { color: var(--danger) !important; }
         .text-warning { color: var(--warning) !important; }
-        .text-success { color: var(--success) !important; }
+        .text-success { color(--success) !important; }
         .text-muted { color: var(--gray-500) !important; }
         .text-info { color: var(--primary) !important; }
         .font-semibold { font-weight: 600; }
@@ -1592,63 +1626,82 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <div class="main-content">
         <!-- Production Planning Section - TEK TABLO -->
         <div class="card mb-3">
-            <!-- Bileşen Türleri Filtre Barı -->
-            <div class="card-header d-flex align-items-center py-2 px-3" style="background: var(--gray-50); border-bottom: 1px solid var(--border);">
-                <span class="small font-weight-bold mr-3"><i class="fas fa-filter"></i> Üretilebilir Hesabına Katılacak Türler:</span>
-                <div class="d-flex flex-wrap" style="gap: 12px;">
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="kutu" checked> Kutu
-                    </label>
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="takm" checked> Takım
-                    </label>
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="esans" checked> Esans
-                    </label>
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="etiket"> Etiket
-                    </label>
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="paket"> Paket
-                    </label>
-                    <label class="form-check-inline mb-0" style="font-size: 12px; cursor: pointer;">
-                        <input class="bilesen-checkbox mr-1" type="checkbox" value="jelatin"> Jelatin
-                    </label>
-                </div>
-                <!-- Arama ve Filtre -->
-                <div class="ml-auto d-flex align-items-center">
-                    <!-- Sipariş Listesi Butonu -->
-                    <button class="btn btn-sm btn-outline-primary mr-2" type="button" onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" style="font-size: 12px; height: 31px;">
-                        <i class="fas fa-clipboard-list mr-1"></i> Sipariş Listesi
-                    </button>
-                    <!-- Ana Tablo Excel Export -->
-                    <button class="btn btn-sm btn-outline-success mr-2" type="button" onclick="exportMainTable()" style="font-size: 12px; height: 31px;">
-                        <i class="fas fa-file-excel mr-1"></i> Excel
-                    </button>
-                    <!-- Aksiyon Filtresi -->
-                    <div class="dropdown mr-2">
-                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; height: 31px;">
-                            <i class="fas fa-tasks mr-1"></i> Tümü
-                        </button>
-                        <div class="dropdown-menu dropdown-menu-right" aria-labelledby="dropdownActionFilter">
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('all', this)"><i class="fas fa-list mr-2 text-muted"></i>Tümü</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('critical', this)"><i class="fas fa-exclamation-triangle text-danger mr-2"></i>Kritik Sorunlar</a>
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('warning', this)"><i class="fas fa-file-contract text-warning mr-2"></i>Sözleşme Uyarısı</a>
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('order', this)"><i class="fas fa-shopping-cart text-info mr-2"></i>Sipariş Gerekiyor</a>
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('production', this)"><i class="fas fa-tools text-primary mr-2"></i>Üretim/Montaj</a>
-                            <div class="dropdown-divider"></div>
-                            <a class="dropdown-item" href="#" onclick="setActionFilter('ok', this)"><i class="fas fa-check-circle text-success mr-2"></i>Sorun Yok</a>
-                        </div>
+            <!-- KOMPAKT TOOLBAR -->
+            <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap" style="min-height: 50px;">
+                
+                <!-- SOL: Bileşen Filtreleri (Chips) -->
+                <div class="d-flex align-items-center">
+                    <span class="text-uppercase text-muted font-weight-bold mr-3" style="font-size: 10px; letter-spacing: 0.5px;"><i class="fas fa-layer-group mr-1"></i> Kapsam:</span>
+                    <div class="d-flex flex-wrap" id="bilesenFilters" style="gap: 5px;">
+                        <label class="filter-chip active mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="kutu" checked> Kutu
+                        </label>
+                        <label class="filter-chip active mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="takm" checked> Takım
+                        </label>
+                        <label class="filter-chip active mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="esans" checked> Esans
+                        </label>
+                        <label class="filter-chip mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="etiket"> Etiket
+                        </label>
+                        <label class="filter-chip mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="paket"> Paket
+                        </label>
+                        <label class="filter-chip mb-0" onclick="toggleChip(this)">
+                            <input class="bilesen-checkbox" type="checkbox" value="jelatin"> Jelatin
+                        </label>
                     </div>
-                    <button id="btnFarkFiltre" class="btn btn-sm btn-outline-secondary mr-2" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 12px; height: 31px;">
-                        <i class="fas fa-filter mr-1"></i> Fark > 0
-                    </button>
-                    <div class="input-group input-group-sm" style="width: 250px;">
-                        <input type="text" class="form-control" id="urunAramaInput" placeholder="Ürün Ara..." style="font-size: 13px;">
-                        <div class="input-group-append">
-                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                </div>
+
+                <!-- SAĞ: Toolbar -->
+                <div class="d-flex align-items-center" style="gap: 8px;">
+                    
+                    <!-- ARAMA -->
+                    <div class="position-relative mr-2">
+                        <i class="fas fa-search text-muted position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px;"></i>
+                        <input type="text" class="form-control form-control-sm pl-4 bg-light border-0" id="urunAramaInput" placeholder="Hızlı Ara..." style="font-size: 12px; width: 180px; height: 30px; border-radius: 15px; transition: all 0.2s;">
+                    </div>
+
+                    <div class="vr mx-1 bg-light d-none d-md-block" style="width: 1px; height: 20px; border-left: 1px solid #eee;"></div>
+
+                    <!-- AKSİYON & DURUM FİLTRELERİ -->
+                    <div class="btn-group">
+                        <div class="dropdown">
+                            <button class="btn btn-sm btn-white border-0 text-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; font-weight: 500;" title="Aksiyon Durumuna Göre Filtrele">
+                                <i class="fas fa-tasks mr-1"></i> Durum
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right shadow-sm border-0" aria-labelledby="dropdownActionFilter">
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('all', this)"><i class="fas fa-list mr-2 text-muted"></i>Tümü</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('critical', this)"><i class="fas fa-exclamation-triangle text-danger mr-2"></i>Kritik Sorunlar</a>
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('warning', this)"><i class="fas fa-file-contract text-warning mr-2"></i>Sözleşme Uyarısı</a>
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('order', this)"><i class="fas fa-shopping-cart text-info mr-2"></i>Sipariş Gerekiyor</a>
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('production', this)"><i class="fas fa-tools text-primary mr-2"></i>Üretim/Montaj</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#" onclick="setActionFilter('ok', this)"><i class="fas fa-check-circle text-success mr-2"></i>Sorun Yok</a>
+                            </div>
                         </div>
+                        <button id="btnFarkFiltre" class="btn btn-sm btn-white border-0 text-secondary ml-1" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 12px; font-weight: 500;" title="Sadece Fark > 0 Olanları Göster">
+                            <i class="fas fa-filter mr-1"></i> Farklı Olanlar
+                        </button>
+                    </div>
+
+                    <div class="vr mx-1 bg-light d-none d-md-block" style="width: 1px; height: 20px; border-left: 1px solid #eee;"></div>
+
+                    <!-- SİPARİŞ & EXPORT GRUBU -->
+                    <div class="btn-group btn-group-sm shadow-sm" style="border-radius: 20px; overflow: hidden;">
+                         <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary px-3 border-0" style="font-size: 12px; font-weight: 600; background: linear-gradient(135deg, #4a0e63, #7c2a99);">
+                            <i class="fas fa-clipboard-list mr-1"></i> Sipariş Listesi
+                         </button>
+                         <button class="btn btn-success dropdown-toggle px-2 border-0" data-toggle="dropdown" style="background: #28a745;">
+                            <i class="fas fa-download"></i>
+                         </button>
+                         <div class="dropdown-menu dropdown-menu-right shadow border-0" style="font-size: 12px;">
+                             <h6 class="dropdown-header text-uppercase" style="font-size: 10px; font-weight: 700;">Excel İndir</h6>
+                             <a class="dropdown-item py-2" href="#" onclick="exportSiparisListesi()"><i class="fas fa-file-excel text-success mr-2" style="width:16px;"></i> Sipariş Listesi</a>
+                             <a class="dropdown-item py-2" href="#" onclick="exportMainTable()"><i class="fas fa-table text-primary mr-2" style="width:16px;"></i> Mevcut Tablo Görünümü</a>
+                         </div>
                     </div>
                 </div>
             </div>
@@ -3460,6 +3513,21 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             alert('Excel oluşturulurken hata: ' + e.message);
         }
     };
+    
+    // Chip Toggle Fonksiyonu
+    function toggleChip(label) {
+        // Tıklama event'i input change'i tetikler, biz sadece görsel class'ı yönetelim
+        // Ancak label'a tıklandığında input zaten değişir. 
+        // checkbox checked durumuna göre class ata
+        var checkbox = label.querySelector('input[type="checkbox"]');
+        setTimeout(function(){
+            if(checkbox.checked) {
+                label.classList.add('active');
+            } else {
+                label.classList.remove('active');
+            }
+        }, 10);
+    }
     
     // Ana Tablo Export Fonksiyonu
     window.exportMainTable = function() {
