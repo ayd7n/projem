@@ -1780,12 +1780,18 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
                             </td>
-                            <td>
+                            <td class="aksiyon-onerisi-hucre"
+                                data-acik="<?php echo $p['acik']; ?>"
+                                data-eksik-bilesenler='<?php echo json_encode($p['eksik_bilesenler'] ?? []); ?>'
+                                data-esans-agaci-eksik='<?php echo json_encode($p['esans_agaci_eksik'] ?? []); ?>'
+                                data-sozlesme-eksik='<?php echo json_encode($p['sozlesme_eksik_malzemeler'] ?? []); ?>'>
                                 <?php if (isset($p['aksiyon_onerisi'])): ?>
-                                    <div class="badge badge-pill <?php echo $p['aksiyon_onerisi']['class']; ?> p-2" 
-                                         style="font-size: 11px; line-height: 1.4; white-space: normal; text-align: left; display: block;">
-                                        <i class="<?php echo $p['aksiyon_onerisi']['icon']; ?> mr-1"></i>
-                                        <?php echo $p['aksiyon_onerisi']['mesaj']; ?>
+                                    <div class="badge badge-pill <?php echo $p['aksiyon_onerisi']['class']; ?> p-2 aksiyon-badge" 
+                                         style="font-size: 11px; line-height: 1.4; white-space: normal; text-align: left; display: block;"
+                                         data-original-class="<?php echo $p['aksiyon_onerisi']['class']; ?>"
+                                         data-original-mesaj="<?php echo htmlspecialchars($p['aksiyon_onerisi']['mesaj']); ?>">
+                                        <i class="<?php echo $p['aksiyon_onerisi']['icon']; ?> mr-1 aksiyon-icon"></i>
+                                        <span class="aksiyon-mesaj"><?php echo $p['aksiyon_onerisi']['mesaj']; ?></span>
                                     </div>
                                 <?php else: ?>
                                     <span class="text-muted">-</span>
@@ -2325,6 +2331,75 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     onerilenTd.innerHTML = '<span class="font-semibold" style="color: var(--primary);">' + onerilen.toLocaleString('tr-TR') + '</span>';
                 } else {
                     onerilenTd.innerHTML = '-';
+                }
+            }
+            
+            // Aksiyon Önerisi kolonunu güncelle
+            var row = hucre.closest('tr');
+            var aksiyonHucre = row.querySelector('.aksiyon-onerisi-hucre');
+            if (aksiyonHucre) {
+                var badge = aksiyonHucre.querySelector('.aksiyon-badge');
+                if (badge) {
+                    var eksikBilesenler = JSON.parse(aksiyonHucre.getAttribute('data-eksik-bilesenler') || '[]');
+                    var esansAgaciEksik = JSON.parse(aksiyonHucre.getAttribute('data-esans-agaci-eksik') || '[]');
+                    var sozlesmeEksik = JSON.parse(aksiyonHucre.getAttribute('data-sozlesme-eksik') || '[]');
+                    var originalClass = badge.getAttribute('data-original-class');
+                    var originalMesaj = badge.getAttribute('data-original-mesaj');
+                    
+                    var mesajSpan = badge.querySelector('.aksiyon-mesaj');
+                    var iconEl = badge.querySelector('.aksiyon-icon');
+                    
+                    // Aksiyon durumunu hesapla
+                    var newClass = '';
+                    var newMesaj = '';
+                    var newIcon = '';
+                    
+                    if (eksikBilesenler.length > 0 || esansAgaciEksik.length > 0) {
+                        // Veri eksikliği - en yüksek öncelik
+                        newClass = 'badge-aksiyon-kritik';
+                        newMesaj = 'Ürün Ağacı ve Esans Formüllerini Tamamlayın';
+                        newIcon = 'fas fa-exclamation-triangle';
+                    } else if (acik > 0 && sozlesmeEksik.length > 0 && uretilebilir < acik) {
+                        // Sözleşme eksik ve üretim yetersiz
+                        newClass = 'badge-aksiyon-kritik';
+                        newMesaj = 'Sözleşme Eksik - Önce Sözleşme Tamamlayın';
+                        newIcon = 'fas fa-ban';
+                    } else if (acik > 0 && sozlesmeEksik.length > 0) {
+                        // Sözleşme eksik ama üretim yeterli
+                        newClass = 'badge-aksiyon-uyari';
+                        newMesaj = 'Gelecek Siparişler İçin Sözleşme Tamamlayın';
+                        newIcon = 'fas fa-file-contract';
+                    } else if (acik > 0 && uretilebilir >= acik) {
+                        // Üretim yapılabilir
+                        newClass = 'badge-aksiyon-bilgi';
+                        newMesaj = 'Montaj İş Emri Oluşturun (' + onerilen.toLocaleString('tr-TR') + ' adet)';
+                        newIcon = 'fas fa-tools';
+                    } else if (acik > 0 && uretilebilir < acik && uretilebilir > 0) {
+                        // Kısmi üretim yapılabilir
+                        newClass = 'badge-aksiyon-uyari';
+                        newMesaj = 'Malzeme Yetersiz (' + uretilebilir.toLocaleString('tr-TR') + '/' + acik.toLocaleString('tr-TR') + ')';
+                        newIcon = 'fas fa-exclamation-circle';
+                    } else if (acik > 0 && uretilebilir <= 0) {
+                        // Üretim yapılamaz
+                        newClass = 'badge-aksiyon-kritik';
+                        newMesaj = 'Bileşen Yetersiz - Malzeme Siparişi Verin';
+                        newIcon = 'fas fa-times-circle';
+                    } else if (acik <= 0 && sozlesmeEksik.length > 0) {
+                        // Stok yeterli ama sözleşme eksik
+                        newClass = 'badge-aksiyon-uyari';
+                        newMesaj = 'Gelecek Üretimler İçin Sözleşme Tamamlayın';
+                        newIcon = 'fas fa-file-contract';
+                    } else {
+                        // Her şey yolunda
+                        newClass = 'badge-aksiyon-basarili';
+                        newMesaj = 'Her Şey Yolunda';
+                        newIcon = 'fas fa-check-circle';
+                    }
+                    
+                    // Badge'i güncelle
+                    badge.className = 'badge badge-pill ' + newClass + ' p-2 aksiyon-badge';
+                    if (mesajSpan) mesajSpan.textContent = newMesaj;
+                    if (iconEl) iconEl.className = newIcon + ' mr-1 aksiyon-icon';
                 }
             }
             
