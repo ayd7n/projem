@@ -832,8 +832,7 @@ function getAksiyonOnerisi($p) {
             $adim_listesi[] = '<div style="margin-bottom: 8px;">
                 <strong style="color: #0078d4;"><i class="fas fa-flask"></i> Esanslar İçin:</strong><br>
                 <small style="margin-left: 20px;">
-                • Eğer esansı <strong>tanımlamadıysanız</strong> → <a href="esanslar.php" class="text-primary">Esanslar sayfasından tanımlayın</a><br>
-                • Esansı tanımladıysanız → <a href="urun_agaclari.php" class="text-primary">Ürün Ağaçları sayfasına gidin</a><br>
+                • <a href="urun_agaclari.php" class="text-primary">Ürün Ağaçları sayfasına gidin</a><br>
                 • <strong>Esans Ağacı</strong> sekmesinden formül oluşturun<br>
                 • Formül oluşturduktan sonra ürün ağacına bağlayın
                 </small>
