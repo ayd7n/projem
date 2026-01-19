@@ -263,12 +263,23 @@ function getSupplyChainData($connection) {
             $row['siparis_miktari'] = $siparis_miktari;
 
             // Kritik seviye hesabı
-            if ($kritik > 0) {
-                $acik_kritik = $kritik - $toplam_mevcut;
-                $yuzde_fark = (($kritik - $toplam_mevcut) / $kritik) * 100;
+            // Kritik seviye hesabı (Eski) yerine Toplam Hedef Bazlı Fark Hesabı
+            $toplam_hedef = $siparis_miktari + $kritik;
+            
+            if ($toplam_hedef > 0) {
+                // Hedefin ne kadar altındayız (Pozitif) veya üstündeyiz (Negatif)
+                // Örn: Hedef 100, Mevcut 80 -> (100-80)/100 = %20 (Eksik)
+                // Örn: Hedef 100, Mevcut 120 -> (100-120)/100 = -%20 (Fazla)
+                $yuzde_fark = (($toplam_hedef - $toplam_mevcut) / $toplam_hedef) * 100;
+                $acik_kritik = max(0, $kritik - $toplam_mevcut);
             } else {
+                // Hedef yoksa
                 $acik_kritik = 0;
-                $yuzde_fark = -100;
+                if ($toplam_mevcut > 0) {
+                    $yuzde_fark = -100; // Hedef yok ama stok var -> %100 Fazla (gibi)
+                } else {
+                    $yuzde_fark = 0; // Hepsi 0
+                }
             }
             
             // Toplam açık = Kritik açık + Sipariş miktarı (stoktan karşılanamayan kısım)
@@ -1589,6 +1600,18 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         <input class="bilesen-checkbox mr-1" type="checkbox" value="jelatin"> Jelatin
                     </label>
                 </div>
+                <!-- Arama ve Filtre -->
+                <div class="ml-auto d-flex align-items-center">
+                    <button id="btnFarkFiltre" class="btn btn-sm btn-outline-secondary mr-2" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 12px; height: 31px;">
+                        <i class="fas fa-filter mr-1"></i> Fark > 0
+                    </button>
+                    <div class="input-group input-group-sm" style="width: 250px;">
+                        <input type="text" class="form-control" id="urunAramaInput" placeholder="Ürün Ara..." style="font-size: 13px;">
+                        <div class="input-group-append">
+                            <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover mb-0">
@@ -1629,10 +1652,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </th>
                             <th class="text-right px-2">
                                 <i class="fas fa-folder-open"></i> Açık
-                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Açık sipariş miktarı</div>
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Net üretim ihtiyacı</div>
                             </th>
-                            <th class="text-right px-2">
-                                <i class="fas fa-percent"></i> Fark%
+                            <th class="text-right px-2" style="cursor: pointer;" onclick="sortTable('fark')">
+                                <i class="fas fa-percent"></i> Fark% <i class="fas fa-sort ml-1"></i>
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Karşılama oranı</div>
                             </th>
                             <th class="text-right">
@@ -1819,14 +1842,27 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <td class="text-right px-2"><?php echo number_format($p['kritik_stok_seviyesi'], 0, ',', '.'); ?></td>
                             <td class="text-right px-2">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0 || $siparis_miktari > 0): ?>
-                                    <?php if ($p['acik'] > 0): ?>
-                                        <span class="text-danger font-semibold"><?php echo number_format($p['acik'], 0, ',', '.'); ?></span>
-                                    <?php else: ?>
-                                        <span class="text-success">+<?php echo number_format(abs($p['acik']), 0, ',', '.'); ?></span>
-                                    <?php endif; ?>
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <?php if ($p['acik'] > 0): ?>
+                                            <span class="text-danger font-semibold mr-1"><?php echo number_format($p['acik'], 0, ',', '.'); ?></span>
+                                        <?php else: ?>
+                                            <span class="text-success font-semibold mr-1">+<?php echo number_format(abs($p['acik']), 0, ',', '.'); ?></span>
+                                        <?php endif; ?>
+                                        <button type="button" class="btn btn-link btn-sm p-0 ml-1 acik-detay-btn" 
+                                                style="font-size: 10px; color: #aaa;"
+                                                data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
+                                                data-urun-kodu="<?php echo $p['urun_kodu']; ?>"
+                                                data-siparis="<?php echo $siparis_miktari; ?>"
+                                                data-kritik="<?php echo $p['kritik_stok_seviyesi']; ?>"
+                                                data-stok="<?php echo $p['stok_miktari']; ?>"
+                                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>"
+                                                data-acik="<?php echo $p['acik']; ?>">
+                                            <i class="fas fa-question-circle"></i>
+                                        </button>
+                                    </div>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="text-right px-2">
+                            <td class="text-right px-2" data-sort-fark="<?php echo $p['yuzde_fark']; ?>">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0): ?>
                                     <?php $gosterilecek_fark = max(0, $p['yuzde_fark']); ?>
                                     <span class="font-semibold <?php echo $gosterilecek_fark > 50 ? 'text-danger' : ($gosterilecek_fark > 0 ? 'text-warning' : 'text-success'); ?>">
@@ -2276,6 +2312,80 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 </div>
                 <div class="modal-footer py-2">
                     <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Kapat</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- AÇIK MİKTAR DETAY MODALI -->
+    <div class="modal fade" id="acikDetayModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-bottom-0 pb-0">
+                    <h6 class="modal-title font-weight-bold text-dark">
+                        <i class="fas fa-calculator text-primary mr-1"></i>
+                        Net İhtiyaç Hesabı
+                    </h6>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body pt-2 pb-2">
+                    <div class="mb-2">
+                        <small class="text-muted d-block" id="modalAcikUrunIsmi" style="font-weight: 600;"></small>
+                    </div>
+                    
+                    <div class="card bg-light border-0 p-2 mb-2">
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 11px;">
+                            <span>Sipariş Miktarı:</span>
+                            <span class="font-weight-bold" id="modalAcikSiparis"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1 text-warning" style="font-size: 11px;">
+                            <span>+ Kritik Stok Hedefi:</span>
+                            <span class="font-weight-bold" id="modalAcikKritik"></span>
+                        </div>
+                        <div class="border-top my-1"></div>
+                        <div class="d-flex justify-content-between font-weight-bold" style="font-size: 12px;">
+                            <span>TOPLAM İHTİYAÇ:</span>
+                            <span id="modalAcikToplamIhtiyac"></span>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-muted mb-2" style="font-size: 10px;">
+                        <div class="d-flex align-items-center justify-content-center">
+                            <span style="height: 1px; background: #ddd; width: 30px;"></span>
+                            <span class="mx-2"><i class="fas fa-minus"></i></span>
+                            <span style="height: 1px; background: #ddd; width: 30px;"></span>
+                        </div>
+                    </div>
+
+                    <div class="card bg-light border-0 p-2 mb-2">
+                        <div class="d-flex justify-content-between mb-1" style="font-size: 11px;">
+                            <span>Mevcut Stok:</span>
+                            <span class="font-weight-bold" id="modalAcikStok"></span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1 text-info" style="font-size: 11px;">
+                            <span>+ Üretimdeki:</span>
+                            <span class="font-weight-bold" id="modalAcikUretimde"></span>
+                        </div>
+                        <div class="border-top my-1"></div>
+                        <div class="d-flex justify-content-between font-weight-bold" style="font-size: 12px;">
+                            <span>TOPLAM KAYNAK:</span>
+                            <span id="modalAcikToplamKaynak"></span>
+                        </div>
+                    </div>
+
+                    <div class="text-center text-muted mb-2" style="font-size: 10px;">
+                        <i class="fas fa-equals"></i>
+                    </div>
+
+                    <div class="alert text-center p-2 mb-0" id="modalAcikAlert" style="font-size: 14px; font-weight: bold;">
+                        <span id="modalAcikSonuc"></span>
+                        <div style="font-size: 10px; font-weight: normal; margin-top: 2px;" id="modalAcikSonucEtiket"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 pb-2">
+                    <button type="button" class="btn btn-secondary btn-sm btn-block" data-dismiss="modal">Kapat</button>
                 </div>
             </div>
         </div>
@@ -2784,6 +2894,167 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     // Checkbox değişikliklerini dinle
     document.querySelectorAll('.bilesen-checkbox').forEach(function(chk) {
         chk.addEventListener('change', hesaplaUretilebilir);
+    });
+    
+    // Global Filtre State
+    var filterState = {
+        search: '',
+        onlyPositiveDiff: false
+    };
+
+    // Filtre Uygulama Fonksiyonu (Merkezi)
+    function applyTableFilters() {
+        var rows = document.querySelectorAll('.table tbody tr');
+        
+        rows.forEach(function(row) {
+            var show = true;
+            
+            // 1. Arama Filtresi
+            if (filterState.search !== '') {
+                // Sadece 2. sütundaki ÜRÜN İSMİNDE arama yap (kodu hariç)
+                var urunSutunu = row.querySelector('td:nth-child(2)');
+                var urunIsmiSpan = urunSutunu ? urunSutunu.querySelector('span.font-semibold') : null;
+                var text = urunIsmiSpan ? urunIsmiSpan.textContent.toLowerCase() : '';
+                
+                if (text.indexOf(filterState.search) === -1) {
+                    show = false;
+                }
+            }
+            
+            // 2. Fark Filtresi
+            if (show && filterState.onlyPositiveDiff) {
+                var diffCell = row.querySelector('td[data-sort-fark]');
+                var diff = diffCell ? parseFloat(diffCell.getAttribute('data-sort-fark')) : 0;
+                
+                if (diff <= 0) {
+                    show = false;
+                }
+            }
+            
+            row.style.display = show ? '' : 'none';
+        });
+    }
+
+    // Arama Event Listener
+    var searchInput = document.getElementById('urunAramaInput');
+    if (searchInput) {
+        searchInput.addEventListener('keyup', function() {
+            filterState.search = this.value.toLowerCase().trim();
+            applyTableFilters();
+        });
+    }
+    
+    // Fark Filtre Toggle Fonksiyonu
+    window.toggleFarkFiltre = function(btn) {
+        filterState.onlyPositiveDiff = !filterState.onlyPositiveDiff;
+        
+        if (filterState.onlyPositiveDiff) {
+            btn.classList.remove('btn-outline-secondary');
+            btn.classList.add('btn-secondary');
+            btn.classList.add('active'); // Bootstrap active class
+            
+            // Filtre açıldığında otomatik olarak BÜYÜKTEN KÜÇÜĞE sırala
+            var th = document.querySelector('th[onclick="sortTable(\'fark\')"]');
+            if (th) {
+                // Descending (Büyükten küçüğe) sıralamak için,
+                // sortTable fonksiyonu 'isAscending'i th attribute'undan okur.
+                // Eğer attribute 'desc' ise isAscending=false olur ve Descending sıralar.
+                th.setAttribute('data-order', 'desc');
+                sortTable('fark');
+            }
+        } else {
+            btn.classList.remove('btn-secondary');
+            btn.classList.remove('active');
+            btn.classList.add('btn-outline-secondary');
+        }
+        
+        applyTableFilters();
+    };
+    
+    // Tablo Sıralama Fonksiyonu
+    window.sortTable = function(key) {
+        var table = document.querySelector('.table');
+        var tbody = table.querySelector('tbody');
+        var rows = Array.from(tbody.querySelectorAll('tr'));
+        var th = table.querySelector('th[onclick="sortTable(\'' + key + '\')"]');
+        var icon = th.querySelector('.fa-sort, .fa-sort-up, .fa-sort-down');
+        
+        // Sıralama yönünü belirle
+        var isAscending = th.getAttribute('data-order') === 'asc';
+        var newOrder = isAscending ? 'desc' : 'asc';
+        th.setAttribute('data-order', newOrder);
+        
+        // İkonu güncelle
+        if (icon) {
+            icon.className = isAscending ? 'fas fa-sort-down ml-1' : 'fas fa-sort-up ml-1';
+        }
+        
+        // Sıralama yap
+        rows.sort(function(a, b) {
+            var cellA = a.querySelector('td[data-sort-' + key + ']');
+            var cellB = b.querySelector('td[data-sort-' + key + ']');
+            
+            var valA = cellA ? (parseFloat(cellA.getAttribute('data-sort-' + key)) || 0) : 0;
+            var valB = cellB ? (parseFloat(cellB.getAttribute('data-sort-' + key)) || 0) : 0;
+            
+            if (valA === valB) return 0;
+            
+            if (isAscending) {
+                return valA - valB; // Küçükten büyüğe
+            } else {
+                return valB - valA; // Büyükten küçüğe
+            }
+        });
+        
+        // Satırları yeniden ekle
+        rows.forEach(function(row) {
+            tbody.appendChild(row);
+        });
+    };
+    
+    // Açık Detay Modalı Handler
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.acik-detay-btn')) {
+            e.preventDefault();
+            var btn = e.target.closest('.acik-detay-btn');
+            
+            var isim = btn.getAttribute('data-urun-ismi');
+            var siparis = parseFloat(btn.getAttribute('data-siparis')) || 0;
+            var kritik = parseFloat(btn.getAttribute('data-kritik')) || 0;
+            var stok = parseFloat(btn.getAttribute('data-stok')) || 0;
+            var uretimde = parseFloat(btn.getAttribute('data-uretimde')) || 0;
+            var acik = parseFloat(btn.getAttribute('data-acik')) || 0;
+
+            var toplamIhtiyac = siparis + kritik;
+            var toplamKaynak = stok + uretimde;
+
+            document.getElementById('modalAcikUrunIsmi').textContent = isim;
+            document.getElementById('modalAcikSiparis').textContent = siparis.toLocaleString('tr-TR');
+            document.getElementById('modalAcikKritik').textContent = kritik.toLocaleString('tr-TR');
+            document.getElementById('modalAcikToplamIhtiyac').textContent = toplamIhtiyac.toLocaleString('tr-TR');
+            
+            document.getElementById('modalAcikStok').textContent = stok.toLocaleString('tr-TR');
+            document.getElementById('modalAcikUretimde').textContent = uretimde.toLocaleString('tr-TR');
+            document.getElementById('modalAcikToplamKaynak').textContent = toplamKaynak.toLocaleString('tr-TR');
+
+            var sonucSpan = document.getElementById('modalAcikSonuc');
+            var alertDiv = document.getElementById('modalAcikAlert');
+            var etiketDiv = document.getElementById('modalAcikSonucEtiket');
+
+            if (acik > 0) {
+                alertDiv.className = 'alert alert-danger text-center p-2 mb-0';
+                sonucSpan.textContent = acik.toLocaleString('tr-TR') + ' EKSİK';
+                etiketDiv.textContent = 'Üretilmesi Gerekiyor';
+            } else {
+                alertDiv.className = 'alert alert-success text-center p-2 mb-0';
+                sonucSpan.textContent = '+' + Math.abs(acik).toLocaleString('tr-TR') + ' FAZLA';
+                etiketDiv.textContent = 'İhtiyaç Karşılandı';
+            }
+            
+            var modal = document.getElementById('acikDetayModal');
+            modal.removeAttribute('aria-hidden');
+            $(modal).modal('show');
+        }
     });
     
     // Sayfa yüklendiğinde de hesapla
