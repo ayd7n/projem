@@ -1607,31 +1607,31 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <i class="fas fa-info-circle"></i> Aksiyon Detayı
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Detaylı açıklama ve bilgiler</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-warehouse"></i> Stok
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Mevcut stok miktarı</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-shopping-cart"></i> Sipariş
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Müşteri siparişleri</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-cogs"></i> Üretimde
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Üretim aşamasında</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-calculator"></i> Toplam
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Stok + Üretim</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-exclamation-triangle"></i> Kritik
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Kritik seviye</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-folder-open"></i> Açık
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Açık sipariş miktarı</div>
                             </th>
-                            <th class="text-right">
+                            <th class="text-right px-2">
                                 <i class="fas fa-percent"></i> Fark%
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Karşılama oranı</div>
                             </th>
@@ -1804,20 +1804,20 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <span class="text-muted">-</span>
                                 <?php endif; ?>
                             </td>
-                            <td class="text-right"><?php echo number_format($p['stok_miktari'], 0, ',', '.'); ?></td>
-                            <td class="text-right">
+                            <td class="text-right px-2"><?php echo number_format($p['stok_miktari'], 0, ',', '.'); ?></td>
+                            <td class="text-right px-2">
                                 <?php if ($siparis_miktari > 0): ?>
                                     <span class="font-semibold" style="color: #8b5cf6;"><i class="fas fa-shopping-cart" style="font-size: 9px;"></i> <?php echo number_format($siparis_miktari, 0, ',', '.'); ?></span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="text-right">
+                            <td class="text-right px-2">
                                 <?php if ($p['uretimde_miktar'] > 0): ?>
                                     <span class="text-info font-semibold"><?php echo number_format($p['uretimde_miktar'], 0, ',', '.'); ?></span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="text-right font-semibold"><?php echo number_format($p['toplam_mevcut'], 0, ',', '.'); ?></td>
-                            <td class="text-right"><?php echo number_format($p['kritik_stok_seviyesi'], 0, ',', '.'); ?></td>
-                            <td class="text-right">
+                            <td class="text-right font-semibold px-2"><?php echo number_format($p['toplam_mevcut'], 0, ',', '.'); ?></td>
+                            <td class="text-right px-2"><?php echo number_format($p['kritik_stok_seviyesi'], 0, ',', '.'); ?></td>
+                            <td class="text-right px-2">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0 || $siparis_miktari > 0): ?>
                                     <?php if ($p['acik'] > 0): ?>
                                         <span class="text-danger font-semibold"><?php echo number_format($p['acik'], 0, ',', '.'); ?></span>
@@ -1826,7 +1826,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <?php endif; ?>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
-                            <td class="text-right">
+                            <td class="text-right px-2">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0): ?>
                                     <?php $gosterilecek_fark = max(0, $p['yuzde_fark']); ?>
                                     <span class="font-semibold <?php echo $gosterilecek_fark > 50 ? 'text-danger' : ($gosterilecek_fark > 0 ? 'text-warning' : 'text-success'); ?>">
