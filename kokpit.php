@@ -1212,6 +1212,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         /* Table */
         .table-responsive { 
             overflow-x: auto;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
             -webkit-overflow-scrolling: touch;
         }
         
@@ -1228,14 +1230,40 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 12px 12px;
+            padding: 1px 1px;
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
             text-align: left;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
         
         .table th.text-center { text-align: center; }
         .table th.text-right { text-align: right; }
+        
+        /* Sticky columns */
+        .sticky-col {
+            position: sticky;
+            background: var(--gray-50);
+            z-index: 11;
+        }
+        .sticky-col-1 {
+            left: 0;
+        }
+        .sticky-col-2 {
+            left: 40px;
+        }
+        /* Header'daki sticky kolonlar hem yukarı hem sola sabit */
+        .table thead th.sticky-col {
+            z-index: 12;
+        }
+        .table tbody .sticky-col {
+            background: #fff;
+        }
+        .table tbody tr:hover .sticky-col {
+            background: var(--gray-50);
+        }
         
         .table td {
             padding: 12px 12px;
@@ -1518,8 +1546,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 <table class="table table-hover mb-0">
                     <thead>
                         <tr>
-                            <th class="text-center">#</th>
-                            <th>
+                            <th class="text-center sticky-col sticky-col-1">#</th>
+                            <th class="sticky-col sticky-col-2">
                                 <i class="fas fa-box"></i> Ürün
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Ürün adı ve kodu</div>
                             </th>
@@ -1731,8 +1759,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             $toplam_mevcut = $stok + floatval($p['uretimde_miktar']);
                         ?>
                         <tr class="<?php echo $row_class; ?>">
-                            <td class="text-center text-muted"><?php echo $sira++; ?></td>
-                            <td>
+                            <td class="text-center text-muted sticky-col sticky-col-1"><?php echo $sira++; ?></td>
+                            <td class="sticky-col sticky-col-2">
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
                                 <small class="text-muted ml-1">#<?php echo $p['urun_kodu']; ?></small>
                             </td>
