@@ -1419,11 +1419,11 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             max-width: 0;
         }
 
-        /* Filter Chips */
+        /* Filter Chips - Larger */
         .filter-chip {
-            font-size: 10px;
-            padding: 3px 10px;
-            border-radius: 15px;
+            font-size: 11px;
+            padding: 4px 12px;
+            border-radius: 20px;
             border: 1px solid #e0e0e0;
             background: #fff;
             cursor: pointer;
@@ -1433,6 +1433,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             display: inline-flex;
             align-items: center;
             user-select: none;
+            height: 28px;
         }
         .filter-chip:hover {
             background-color: #f8f9fa;
@@ -1626,12 +1627,11 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <div class="main-content">
         <!-- Production Planning Section - TEK TABLO -->
         <div class="card mb-3">
-            <!-- KOMPAKT TOOLBAR -->
-            <div class="card-header bg-white border-bottom py-2 px-3 d-flex justify-content-between align-items-center flex-wrap" style="min-height: 50px;">
+            <!-- GELİŞMİŞ TOOLBAR -->
+            <div class="card-header bg-white border-bottom py-3 px-4 d-flex align-items-center flex-wrap" style="min-height: 80px; gap: 20px;">
                 
-                <!-- SOL: Bileşen Filtreleri (Chips) -->
-                <div class="d-flex align-items-center">
-                    <span class="text-uppercase text-muted font-weight-bold mr-3" style="font-size: 10px; letter-spacing: 0.5px;"><i class="fas fa-layer-group mr-1"></i> Kapsam:</span>
+                <!-- GRUP 1: Bileşen Filtreleri (Chips) -->
+                <div class="d-flex flex-column">
                     <div class="d-flex flex-wrap" id="bilesenFilters" style="gap: 5px;">
                         <label class="filter-chip active mb-0" onclick="toggleChip(this)">
                             <input class="bilesen-checkbox" type="checkbox" value="kutu" checked> Kutu
@@ -1652,26 +1652,29 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <input class="bilesen-checkbox" type="checkbox" value="jelatin"> Jelatin
                         </label>
                     </div>
+                    <div class="text-muted mt-1 text-uppercase font-weight-bold" style="font-size: 9px; letter-spacing: 0.5px; opacity: 0.7;">Analiz Kapsamı</div>
                 </div>
 
-                <!-- SAĞ: Toolbar -->
-                <div class="d-flex align-items-center" style="gap: 8px;">
-                    
-                    <!-- ARAMA -->
-                    <div class="position-relative mr-2">
-                        <i class="fas fa-search text-muted position-absolute" style="left: 10px; top: 50%; transform: translateY(-50%); font-size: 11px;"></i>
-                        <input type="text" class="form-control form-control-sm pl-4 bg-light border-0" id="urunAramaInput" placeholder="Hızlı Ara..." style="font-size: 12px; width: 180px; height: 30px; border-radius: 15px; transition: all 0.2s;">
+                <div class="vr mx-2 bg-light d-none d-lg-block" style="width: 1px; height: 35px; border-left: 1px solid #eee;"></div>
+
+                <!-- GRUP 2: Arama -->
+                <div class="d-flex flex-column">
+                    <div class="position-relative">
+                        <i class="fas fa-search text-muted position-absolute" style="left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px;"></i>
+                        <input type="text" class="form-control pl-5 bg-light border-0" id="urunAramaInput" placeholder="Ürün Ara..." style="font-size: 13px; width: 200px; height: 36px; border-radius: 8px; transition: all 0.2s;">
                     </div>
+                    <div class="text-muted mt-1 ml-1" style="font-size: 9px; opacity: 0.7;">Ürün Adı veya Kodu</div>
+                </div>
 
-                    <div class="vr mx-1 bg-light d-none d-md-block" style="width: 1px; height: 20px; border-left: 1px solid #eee;"></div>
-
-                    <!-- AKSİYON & DURUM FİLTRELERİ -->
+                <!-- GRUP 3: Filtreler -->
+                <div class="d-flex flex-column">
                     <div class="btn-group">
+                        <!-- Durum Filtresi -->
                         <div class="dropdown">
-                            <button class="btn btn-sm btn-white border-0 text-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; font-weight: 500;" title="Aksiyon Durumuna Göre Filtrele">
-                                <i class="fas fa-tasks mr-1"></i> Durum
+                            <button class="btn btn-white border text-secondary dropdown-toggle px-3" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 13px; height: 36px; border-radius: 8px 0 0 8px; font-weight: 500;">
+                                <i class="fas fa-tasks mr-2 text-primary"></i> Durum
                             </button>
-                            <div class="dropdown-menu dropdown-menu-right shadow-sm border-0" aria-labelledby="dropdownActionFilter">
+                            <div class="dropdown-menu dropdown-menu-right shadow-sm border-0 mt-1" aria-labelledby="dropdownActionFilter">
                                 <a class="dropdown-item" href="#" onclick="setActionFilter('all', this)"><i class="fas fa-list mr-2 text-muted"></i>Tümü</a>
                                 <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="#" onclick="setActionFilter('critical', this)"><i class="fas fa-exclamation-triangle text-danger mr-2"></i>Kritik Sorunlar</a>
@@ -1682,27 +1685,50 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <a class="dropdown-item" href="#" onclick="setActionFilter('ok', this)"><i class="fas fa-check-circle text-success mr-2"></i>Sorun Yok</a>
                             </div>
                         </div>
-                        <button id="btnFarkFiltre" class="btn btn-sm btn-white border-0 text-secondary ml-1" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 12px; font-weight: 500;" title="Sadece Fark > 0 Olanları Göster">
-                            <i class="fas fa-filter mr-1"></i> Farklı Olanlar
+                        <!-- Fark Filtresi -->
+                        <button id="btnFarkFiltre" class="btn btn-white border text-secondary px-3" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 13px; height: 36px; border-radius: 0 8px 8px 0; font-weight: 500; border-left: 0;">
+                            <i class="fas fa-filter mr-2 text-warning"></i> Farklı Olanlar
                         </button>
                     </div>
+                    <div class="text-muted mt-1 ml-1" style="font-size: 9px; opacity: 0.7;">Görüntüleme Seçenekleri</div>
+                </div>
 
-                    <div class="vr mx-1 bg-light d-none d-md-block" style="width: 1px; height: 20px; border-left: 1px solid #eee;"></div>
-
-                    <!-- SİPARİŞ & EXPORT GRUBU -->
-                    <div class="btn-group btn-group-sm shadow-sm" style="border-radius: 20px; overflow: hidden;">
-                         <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary px-3 border-0" style="font-size: 12px; font-weight: 600; background: linear-gradient(135deg, #4a0e63, #7c2a99);">
-                            <i class="fas fa-clipboard-list mr-1"></i> Sipariş Listesi
+                <!-- SİPARİŞ & EXPORT GRUBU (Sağa Dayalı) -->
+                <div class="d-flex flex-column ml-auto">
+                    <div class="d-flex" style="gap: 10px;">
+                         <!-- SİPARİŞ BUTONU -->
+                         <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm text-white" style="height: 38px; padding: 0 16px; border-radius: 8px; background: linear-gradient(135deg, #4a0e63, #7c2a99); border: none;">
+                            <i class="fas fa-clipboard-list fa-lg mr-2 text-white" style="color: #fff !important;"></i> 
+                            <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Sipariş Listesi</span>
                          </button>
-                         <button class="btn btn-success dropdown-toggle px-2 border-0" data-toggle="dropdown" style="background: #28a745;">
-                            <i class="fas fa-download"></i>
-                         </button>
-                         <div class="dropdown-menu dropdown-menu-right shadow border-0" style="font-size: 12px;">
-                             <h6 class="dropdown-header text-uppercase" style="font-size: 10px; font-weight: 700;">Excel İndir</h6>
-                             <a class="dropdown-item py-2" href="#" onclick="exportSiparisListesi()"><i class="fas fa-file-excel text-success mr-2" style="width:16px;"></i> Sipariş Listesi</a>
-                             <a class="dropdown-item py-2" href="#" onclick="exportMainTable()"><i class="fas fa-table text-primary mr-2" style="width:16px;"></i> Mevcut Tablo Görünümü</a>
+                         
+                         <!-- EXCEL DROPDOWN -->
+                         <div class="dropdown">
+                            <button class="btn btn-success d-flex align-items-center justify-content-center shadow-sm dropdown-toggle text-white" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 38px; padding: 0 16px; border-radius: 8px; background: linear-gradient(135deg, #28a745, #218838); border: none;">
+                                <i class="fas fa-file-excel fa-lg mr-2 text-white" style="color: #fff !important;"></i> 
+                                <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Excel'e Aktar</span>
+                            </button>
+                            <div class="dropdown-menu dropdown-menu-right shadow border-0 mt-2" style="min-width: 200px;">
+                                <h6 class="dropdown-header text-uppercase text-muted font-weight-bold" style="font-size: 10px; letter-spacing: 0.5px;">Dışa Aktarma Seçenekleri</h6>
+                                <a class="dropdown-item py-2 d-flex align-items-center" href="#" onclick="exportSiparisListesi()">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 32px; height: 32px;"><i class="fas fa-clipboard-list text-success"></i></div>
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 600;">Sipariş Listesi</div>
+                                        <div class="text-muted" style="font-size: 10px;">Birim fiyatlar ve tedarikçiler dahildir</div>
+                                    </div>
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item py-2 d-flex align-items-center" href="#" onclick="exportMainTable()">
+                                    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mr-3" style="width: 32px; height: 32px;"><i class="fas fa-table text-primary"></i></div>
+                                    <div>
+                                        <div style="font-size: 13px; font-weight: 600;">Ana Tablo (Tümü)</div>
+                                        <div class="text-muted" style="font-size: 10px;">Ekranda görünen mevcut liste</div>
+                                    </div>
+                                </a>
+                            </div>
                          </div>
                     </div>
+                    <div class="text-muted mt-1 text-right" style="font-size: 9px; opacity: 0.7; padding-right: 5px;">Raporlama ve Çıktı İşlemleri</div>
                 </div>
             </div>
             <div class="table-responsive">
