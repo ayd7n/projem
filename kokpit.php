@@ -1106,7 +1106,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- SheetJS (Excel Export) - More stable CDN -->
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         /* PROFESYONEL ERP SİSTEMİ - ULTRA TEMİZ TASARIM */
         
@@ -1620,6 +1621,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <button class="btn btn-sm btn-outline-primary mr-2" type="button" onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" style="font-size: 12px; height: 31px;">
                         <i class="fas fa-clipboard-list mr-1"></i> Sipariş Listesi
                     </button>
+                    <!-- Ana Tablo Excel Export -->
+                    <button class="btn btn-sm btn-outline-success mr-2" type="button" onclick="exportMainTable()" style="font-size: 12px; height: 31px;">
+                        <i class="fas fa-file-excel mr-1"></i> Excel
+                    </button>
                     <!-- Aksiyon Filtresi -->
                     <div class="dropdown mr-2">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; height: 31px;">
@@ -1648,7 +1653,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 </div>
             </div>
             <div class="table-responsive">
-                <table class="table table-hover mb-0">
+                <table class="table table-hover mb-0" id="urunTable">
                     <thead>
                         <tr>
                             <th class="text-center sticky-col sticky-col-1">#</th>
@@ -3394,58 +3399,130 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     
     // Excel Export Fonksiyonu
     window.exportSiparisListesi = function() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel oluşturucu yüklenemedi. Lütfen sayfayı yenileyin veya internet bağlantınızı kontrol edin.');
+            return;
+        }
+
         var data = window.globalSiparisData || [];
         if(data.length === 0) { 
             alert('İndirilecek veri yok.'); 
             return; 
         }
         
-        // Veriyi düzgün formatta hazırla
-        var exportData = data.map(function(item) {
-            return {
-                'Ürün Adı': item.urun_ismi,
-                'Ürün Kodu': item.urun_kodu,
-                'İhtiyaç Türü': item.tip,
-                'Malzeme/Hammadde': item.malzeme_adi,
-                'Birim İhtiyaç': parseFloat(item.birim_ihtiyac),
-                'Toplam İhtiyaç': parseFloat(item.toplam_ihtiyac),
-                'Stok': parseFloat(item.stok),
-                'Yoldaki': parseFloat(item.yoldaki),
-                'Birim': item.birim,
-                'Net Sipariş Miktarı': parseFloat(item.net_siparis),
-                'En Uygun Tedarikçi': (item.tedarikci && item.tedarikci.adi !== '-' ? item.tedarikci.adi : ''),
-                'Tedarikçi Fiyatı': (item.tedarikci && item.tedarikci.fiyat > 0 ? parseFloat(item.tedarikci.fiyat) : ''),
-                'Tedarikçi Para Birimi': (item.tedarikci ? item.tedarikci.para_birimi : '')
-            };
-        });
-        
-        var ws = XLSX.utils.json_to_sheet(exportData);
-        
-        // Sütun genişliklerini ayarla
-        var wscols = [
-            {wch: 30}, // Ürün Adı
-            {wch: 15}, // Kodu
-            {wch: 15}, // Tip
-            {wch: 30}, // Malzeme
-            {wch: 10}, // Birim İht
-            {wch: 12}, // Toplam
-            {wch: 10}, // Stok
-            {wch: 10}, // Yoldaki
-            {wch: 8},  // Birim
-            {wch: 15}, // Net Sipariş
-            {wch: 25}, // Tedarikçi
-            {wch: 10}, // Fiyat
-            {wch: 5}   // PB
-        ];
-        ws['!cols'] = wscols;
+        try {
+            // Veriyi düzgün formatta hazırla
+            var exportData = data.map(function(item) {
+                return {
+                    'Ürün Adı': item.urun_ismi,
+                    'Ürün Kodu': item.urun_kodu,
+                    'İhtiyaç Türü': item.tip,
+                    'Malzeme/Hammadde': item.malzeme_adi,
+                    'Birim İhtiyaç': parseFloat(item.birim_ihtiyac),
+                    'Toplam İhtiyaç': parseFloat(item.toplam_ihtiyac),
+                    'Stok': parseFloat(item.stok),
+                    'Yoldaki': parseFloat(item.yoldaki),
+                    'Birim': item.birim,
+                    'Net Sipariş Miktarı': parseFloat(item.net_siparis),
+                    'En Uygun Tedarikçi': (item.tedarikci && item.tedarikci.adi !== '-' ? item.tedarikci.adi : ''),
+                    'Tedarikçi Fiyatı': (item.tedarikci && item.tedarikci.fiyat > 0 ? parseFloat(item.tedarikci.fiyat) : ''),
+                    'Tedarikçi Para Birimi': (item.tedarikci ? item.tedarikci.para_birimi : '')
+                };
+            });
+            
+            var ws = XLSX.utils.json_to_sheet(exportData);
+            
+            // Sütun genişliklerini ayarla
+            var wscols = [
+                {wch: 30}, // Ürün Adı
+                {wch: 15}, // Kodu
+                {wch: 15}, // Tip
+                {wch: 30}, // Malzeme
+                {wch: 10}, // Birim İht
+                {wch: 12}, // Toplam
+                {wch: 10}, // Stok
+                {wch: 10}, // Yoldaki
+                {wch: 8},  // Birim
+                {wch: 15}, // Net Sipariş
+                {wch: 25}, // Tedarikçi
+                {wch: 10}, // Fiyat
+                {wch: 5}   // PB
+            ];
+            ws['!cols'] = wscols;
 
-        var wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Siparis Listesi");
-        
-        var date = new Date().toISOString().slice(0,10);
-        XLSX.writeFile(wb, "Siparis_Ihtiyac_Listesi_" + date + ".xlsx");
+            var wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Siparis Listesi");
+            
+            var date = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(wb, "Siparis_Ihtiyac_Listesi_" + date + ".xlsx");
+        } catch (e) {
+            console.error('Export Error:', e);
+            alert('Excel oluşturulurken hata: ' + e.message);
+        }
     };
     
+    // Ana Tablo Export Fonksiyonu
+    window.exportMainTable = function() {
+        if (typeof XLSX === 'undefined') {
+            alert('Excel oluşturucu yüklenemedi. Lütfen sayfayı yenileyin veya internet bağlantınızı kontrol edin.');
+            return;
+        }
+
+        var table = document.getElementById('urunTable');
+        if (!table) { alert('Tablo bulunamadı'); return; }
+
+        try {
+            // Tabloyu kopyala (Görünümü bozmadan manipüle etmek için)
+            var clonedTable = table.cloneNode(true);
+            
+            // Gizli satırları temizle (Filtreleme varsa excelde görünmesin)
+            var origRows = table.querySelectorAll('tbody tr');
+            var clonedRows = clonedTable.querySelectorAll('tbody tr');
+            
+            for (var i = origRows.length - 1; i >= 0; i--) {
+                if (origRows[i].style.display === 'none') {
+                    if(clonedRows[i]) clonedRows[i].remove();
+                }
+            }
+            
+            // "Aksiyon Detayı" sütununu bul ve sil (Excel'de istenmiyor)
+            var headers = clonedTable.querySelectorAll('thead th');
+            var indicesToRemove = [];
+            
+            headers.forEach(function(th, index) {
+                // Class veya başlık metni ile kontrol
+                if (th.classList.contains('aksiyon-detay-cell') || th.innerText.indexOf('Aksiyon Detayı') > -1) {
+                    indicesToRemove.push(index);
+                }
+            });
+            
+            // Büyükten küçüğe sırala ki silerken index kaymasın
+            indicesToRemove.sort(function(a, b) { return b - a; });
+            
+            indicesToRemove.forEach(function(colIndex) {
+                 // Header sil (Varsa)
+                 if(clonedTable.tHead && clonedTable.tHead.rows.length > 0) {
+                     clonedTable.tHead.rows[0].deleteCell(colIndex);
+                 }
+                 // Tüm satırlardan ilgili hücreyi sil
+                 var rows = clonedTable.querySelectorAll('tbody tr');
+                 rows.forEach(function(row) {
+                     if(row.cells.length > colIndex) row.deleteCell(colIndex);
+                 });
+            });
+
+            var wb = XLSX.utils.book_new();
+            var ws = XLSX.utils.table_to_sheet(clonedTable);
+            XLSX.utils.book_append_sheet(wb, ws, "Uretim Tablosu");
+            
+            var date = new Date().toISOString().slice(0,10);
+            XLSX.writeFile(wb, "Uretim_Kokpit_Tumu_" + date + ".xlsx");
+        } catch (e) {
+            console.error('Export Error:', e);
+            alert('Excel oluşturulurken hata: ' + e.message);
+        }
+    };
+
     // Sayfa yüklendiğinde de hesapla
     document.addEventListener('DOMContentLoaded', hesaplaUretilebilir);
     
