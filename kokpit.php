@@ -1102,7 +1102,11 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tedarik Zinciri Kontrol Paneli - Parfüm ERP</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+        rel="stylesheet">
+    <link rel="stylesheet" href="assets/css/stil.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         /* PROFESYONEL ERP SİSTEMİ - ULTRA TEMİZ TASARIM */
         
@@ -1612,6 +1616,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 </div>
                 <!-- Arama ve Filtre -->
                 <div class="ml-auto d-flex align-items-center">
+                    <!-- Sipariş Listesi Butonu -->
+                    <button class="btn btn-sm btn-outline-primary mr-2" type="button" onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" style="font-size: 12px; height: 31px;">
+                        <i class="fas fa-clipboard-list mr-1"></i> Sipariş Listesi
+                    </button>
                     <!-- Aksiyon Filtresi -->
                     <div class="dropdown mr-2">
                         <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 12px; height: 31px;">
@@ -1755,7 +1763,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                         </tr>
                     </thead>
                     <tbody>
-                        <?php $sira = 1; foreach ($supply_chain_data['uretilebilir_urunler'] as $p):
+                        <?php 
+                        // SİPARİŞ LİSTESİ VERİ TOPLAMA (GLOBAL)
+                        $global_siparis_listesi = [];
+                        $sira = 1; foreach ($supply_chain_data['uretilebilir_urunler'] as $p):
                             $row_class = '';
                             $badge = ['class' => 'badge-belirsiz', 'text' => '-'];
                             $yorum = '';
@@ -1765,6 +1776,142 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             $onerilen = floatval($p['onerilen_uretim']);
                             $uretilebilir = floatval($p['uretilebilir_miktar']);
                             $acik = floatval($p['acik']);
+                            
+                            // SİPARİŞ LİSTESİ VERİ TOPLAMA
+                            if ($acik > 0) {
+                                $bilesen_detaylari = isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : [];
+                                foreach ($bilesen_detaylari as $bilesen) {
+                                    // 1. NORMAL MALZEME HESABI
+                                    if ($bilesen['tur'] !== 'esans') {
+                                        $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                        $toplam_ihtiyac = $acik * $birim_ihtiyac;
+                                        $mevcut_ve_yoldaki = $bilesen['mevcut_stok'] + $bilesen['yoldaki_stok'];
+                                        $net_siparis = max(0, $toplam_ihtiyac - $mevcut_ve_yoldaki);
+                                        
+                                        if ($net_siparis > 0) {
+                                            // En ucuz tedarikçiyi bul
+                                            $tedarikci_bilgi = ['adi' => '-', 'fiyat' => 0, 'para_birimi' => ''];
+                                            
+                                            $malzeme_kodu = '';
+                                            if (!empty($bilesen['kodu'])) {
+                                                $malzeme_kodu = $bilesen['kodu'];
+                                            }
+                                            
+                                            // Malzeme kodu varsa sorgula
+                                            if (!empty($malzeme_kodu)) {
+                                                $kodu_safe = $connection->real_escape_string($malzeme_kodu);
+                                                $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi 
+                                                                FROM cerceve_sozlesmeler cs 
+                                                                JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id 
+                                                                WHERE cs.malzeme_kodu = '$kodu_safe' 
+                                                                AND cs.bitis_tarihi >= CURDATE()
+                                                                ORDER BY cs.birim_fiyat ASC LIMIT 1";
+                                                $t_res = $connection->query($sql_tedarik);
+                                                if ($t_res && $t_row = $t_res->fetch_assoc()) {
+                                                    $tedarikci_bilgi = [
+                                                        'adi' => $t_row['tedarikci_adi'],
+                                                        'fiyat' => $t_row['birim_fiyat'],
+                                                        'para_birimi' => $t_row['para_birimi']
+                                                    ];
+                                                }
+                                            }
+
+                                            $global_siparis_listesi[] = [
+                                                'urun_ismi' => $p['urun_ismi'],
+                                                'urun_kodu' => $p['urun_kodu'],
+                                                'tip' => ucfirst($bilesen['tur']),
+                                                'malzeme_adi' => $bilesen['isim'],
+                                                'birim_ihtiyac' => $birim_ihtiyac,
+                                                'toplam_ihtiyac' => $toplam_ihtiyac,
+                                                'stok' => $bilesen['mevcut_stok'],
+                                                'yoldaki' => $bilesen['yoldaki_stok'],
+                                                'net_siparis' => $net_siparis,
+                                                'birim' => 'Adet',
+                                                'acik_miktar' => $acik,
+                                                'tedarikci' => $tedarikci_bilgi
+                                            ];
+                                        }
+                                    } 
+                                    // 2. ESANS HAMMADDE HESABI
+                                    else {
+                                        // Esans bulundu
+                                        $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                        $brut_ihtiyac = $acik * $birim_ihtiyac;
+                                        $stok_esans = floatval($bilesen['mevcut_stok']);
+                                        
+                                        // Üretimdeki esans miktarı
+                                        $uretimde_esans = 0;
+                                        if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                            $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                        }
+                                        
+                                        // Net Esans İhtiyacı = Brüt - (Stok + Üretimde)
+                                        $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
+                                        
+                                        // Eğer net esans ihtiyacı varsa, hammaddeleri hesapla
+                                        if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                            foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
+                                                $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
+                                                
+                                                // Net Sipariş = (Gereken - Mevcut Stok) - Yoldaki Sipariş
+                                                // Yoldaki sipariş (bekleyen_siparis) hammaddeye ait
+                                                $net_h_siparis = max(0, $eksik_h - $h['bekleyen_siparis']);
+                                                
+                                                if ($net_h_siparis > 0) {
+                                                    // En ucuz tedarikçiyi bul (HAMMADDE İÇİN)
+                                                    $tedarikci_bilgi = ['adi' => '-', 'fiyat' => 0, 'para_birimi' => ''];
+                                                    
+                                                    $malzeme_kodu_h = isset($h['malzeme_kodu']) ? $h['malzeme_kodu'] : '';
+                                                    $malzeme_adi_h = isset($h['malzeme_ismi']) ? $h['malzeme_ismi'] : (isset($h['isim']) ? $h['isim'] : 'Hammadde');
+                                                    
+                                                    if (empty($malzeme_kodu_h) && !empty($malzeme_adi_h) && $malzeme_adi_h !== 'Hammadde') {
+                                                        // İsimden kod bul
+                                                        $isim_safe = $connection->real_escape_string($malzeme_adi_h);
+                                                        $m_res = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$isim_safe' LIMIT 1");
+                                                        if ($m_res && $m_row = $m_res->fetch_assoc()) {
+                                                            $malzeme_kodu_h = $m_row['malzeme_kodu'];
+                                                        }
+                                                    }
+
+                                                    if (!empty($malzeme_kodu_h)) {
+                                                        $kodu_safe_h = $connection->real_escape_string($malzeme_kodu_h);
+                                                        $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi 
+                                                                        FROM cerceve_sozlesmeler cs 
+                                                                        JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id 
+                                                                        WHERE cs.malzeme_kodu = '$kodu_safe_h' 
+                                                                        AND cs.bitis_tarihi >= CURDATE()
+                                                                        ORDER BY cs.birim_fiyat ASC LIMIT 1";
+                                                        $t_res = $connection->query($sql_tedarik);
+                                                        if ($t_res && $t_row = $t_res->fetch_assoc()) {
+                                                            $tedarikci_bilgi = [
+                                                                'adi' => $t_row['tedarikci_adi'],
+                                                                'fiyat' => $t_row['birim_fiyat'],
+                                                                'para_birimi' => $t_row['para_birimi']
+                                                            ];
+                                                        }
+                                                    }
+
+                                                    $global_siparis_listesi[] = [
+                                                        'urun_ismi' => $p['urun_ismi'],
+                                                        'urun_kodu' => $p['urun_kodu'],
+                                                        'tip' => 'Esans Hammaddesi',
+                                                        'malzeme_adi' => $malzeme_adi_h,
+                                                        'birim_ihtiyac' => $h['recete_miktari'],
+                                                        'toplam_ihtiyac' => $toplam_gereken_h,
+                                                        'stok' => $h['mevcut_stok'],
+                                                        'yoldaki' => $h['bekleyen_siparis'],
+                                                        'net_siparis' => $net_h_siparis,
+                                                        'birim' => $h['birim'],
+                                                        'acik_miktar' => $acik,
+                                                        'tedarikci' => $tedarikci_bilgi
+                                                    ];
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             
                             // Üretim sonrası hesaplamalar
                             $uretim_sonrasi_stok = $stok + $onerilen;
@@ -2418,6 +2565,48 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             </div>
         </div>
     </div>
+    
+    <!-- Sipariş Listesi Modalı -->
+    <div class="modal fade" id="siparisListesiModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content border-0 shadow-sm" style="border-radius: 8px;">
+                <div class="modal-header py-2 px-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                    <div class="d-flex align-items-center">
+                        <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 14px;"><i class="fas fa-list-alt mr-2 text-muted"></i>Sipariş Listesi</h6>
+                        <button onclick="exportSiparisListesi()" class="btn btn-sm btn-success ml-3 py-0 px-2" style="font-size: 11px; border-radius: 4px;">
+                            <i class="fas fa-file-excel mr-1"></i> Excel
+                        </button>
+                    </div>
+                    <button type="button" class="close text-muted m-0 p-0" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true" style="font-size: 20px;">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-0" style="max-height: 75vh; overflow-y: auto;">
+                    <div class="table-responsive">
+                        <table class="table table-sm table-hover mb-0" id="siparisListesiTable">
+                            <thead class="bg-light sticky-top" style="z-index: 10;">
+                                <tr class="text-muted" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+                                    <th class="py-2 pl-3 border-bottom font-weight-bold border-top-0">Ürün</th>
+                                    <th class="py-2 border-bottom font-weight-bold border-top-0">Tip</th>
+                                    <th class="py-2 border-bottom font-weight-bold border-top-0">Malzeme</th>
+                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0">Stok</th>
+                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0">Yoldaki</th>
+                                    <th class="py-2 border-bottom font-weight-bold border-top-0 pl-3">Tedarikçi (En Uygun)</th>
+                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0 text-danger">Net Sipariş</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global JSON Data -->
+    <script>
+        window.globalSiparisData = <?php echo json_encode(isset($global_siparis_listesi) ? $global_siparis_listesi : []); ?>;
+    </script>
     
     <script>
     // Üretilebilir hesaplama fonksiyonu
@@ -3129,6 +3318,133 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             $(modal).modal('show');
         }
     });
+    
+    // Sipariş Listesi Render (Minimal)
+    window.renderSiparisListesi = function() {
+        var tbody = document.querySelector('#siparisListesiTable tbody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        var data = window.globalSiparisData || [];
+        
+        if (data.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted small">Sipariş ihtiyacı bulunamadı.</td></tr>';
+            return;
+        }
+        
+        // Ürün adına göre sırala
+        data.sort((a, b) => a.urun_ismi.localeCompare(b.urun_ismi));
+        
+        data.forEach(function(item) {
+            var tr = document.createElement('tr');
+            
+            // Renk kodlaması (Sadece sol kenar çizgisi için veya minimal nokta)
+            var tipColor = '#6c757d';
+            if (item.tip.includes('Esans') && !item.tip.includes('Hammadde')) tipColor = '#6f42c1';
+            else if (item.tip.includes('Kutu')) tipColor = '#17a2b8';
+            else if (item.tip.includes('Takım')) tipColor = '#28a745';
+            else if (item.tip.includes('Hammadde')) tipColor = '#fd7e14';
+            
+            var rowHtml = `
+                <td class="pl-3 py-1 border-bottom" style="vertical-align: middle;">
+                    <div style="font-size: 11px; font-weight: 600; color: #333;">${item.urun_ismi}
+                        <span class="text-muted font-weight-normal ml-1" style="font-size: 10px;">#${item.urun_kodu}</span>
+                    </div>
+                </td>
+                <td class="py-1 border-bottom" style="vertical-align: middle;">
+                     <span style="font-size: 10px; color: ${tipColor}; font-weight: 500;">${item.tip || '-'}</span>
+                </td>
+                <td class="py-1 border-bottom" style="vertical-align: middle;">
+                    <div style="font-size: 11px; color: #555;">${item.malzeme_adi}</div>
+                </td>
+                <td class="text-right py-1 border-bottom" style="vertical-align: middle; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #777;">
+                    ${parseFloat(item.stok).toLocaleString('tr-TR', {maximumFractionDigits: 0})}
+                </td>
+                <td class="text-right py-1 border-bottom" style="vertical-align: middle; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #17a2b8;">
+                    ${parseFloat(item.yoldaki) > 0 ? parseFloat(item.yoldaki).toLocaleString('tr-TR', {maximumFractionDigits: 0}) : '-'}
+                </td>
+                <td class="py-1 border-bottom pl-3" style="vertical-align: middle;">
+                    ${item.tedarikci && item.tedarikci.adi !== '-' ? 
+                        `<div style="font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">${item.tedarikci.adi}</div>
+                         <div style="font-size: 10px; color: #28a745; font-family: 'Roboto Mono', monospace;">${parseFloat(item.tedarikci.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${item.tedarikci.para_birimi}</div>` 
+                        : '<span class="text-muted" style="font-size: 10px;">-</span>'}
+                </td>
+                <td class="text-right py-1 border-bottom bg-white" style="vertical-align: middle;">
+                    <span style="font-size: 12px; font-weight: 700; color: #e3342f; font-family: 'Roboto Mono', monospace;">
+                        ${parseFloat(item.net_siparis).toLocaleString('tr-TR', {maximumFractionDigits: 2})}
+                    </span>
+                    <span class="text-muted ml-1" style="font-size: 9px;">${item.birim}</span>
+                </td>
+            `;
+            
+            tr.innerHTML = rowHtml;
+            tbody.appendChild(tr);
+        });
+    };
+    
+    // Filtreleme fonksiyonu
+    window.filterSiparisListesi = function(val) {
+        val = val.toLowerCase().trim();
+        var rows = document.querySelectorAll('#siparisListesiTable tbody tr');
+        rows.forEach(function(row) {
+            var text = row.textContent.toLowerCase();
+            row.style.display = text.indexOf(val) > -1 ? '' : 'none';
+        });
+    };
+    
+    // Excel Export Fonksiyonu
+    window.exportSiparisListesi = function() {
+        var data = window.globalSiparisData || [];
+        if(data.length === 0) { 
+            alert('İndirilecek veri yok.'); 
+            return; 
+        }
+        
+        // Veriyi düzgün formatta hazırla
+        var exportData = data.map(function(item) {
+            return {
+                'Ürün Adı': item.urun_ismi,
+                'Ürün Kodu': item.urun_kodu,
+                'İhtiyaç Türü': item.tip,
+                'Malzeme/Hammadde': item.malzeme_adi,
+                'Birim İhtiyaç': parseFloat(item.birim_ihtiyac),
+                'Toplam İhtiyaç': parseFloat(item.toplam_ihtiyac),
+                'Stok': parseFloat(item.stok),
+                'Yoldaki': parseFloat(item.yoldaki),
+                'Birim': item.birim,
+                'Net Sipariş Miktarı': parseFloat(item.net_siparis),
+                'En Uygun Tedarikçi': (item.tedarikci && item.tedarikci.adi !== '-' ? item.tedarikci.adi : ''),
+                'Tedarikçi Fiyatı': (item.tedarikci && item.tedarikci.fiyat > 0 ? parseFloat(item.tedarikci.fiyat) : ''),
+                'Tedarikçi Para Birimi': (item.tedarikci ? item.tedarikci.para_birimi : '')
+            };
+        });
+        
+        var ws = XLSX.utils.json_to_sheet(exportData);
+        
+        // Sütun genişliklerini ayarla
+        var wscols = [
+            {wch: 30}, // Ürün Adı
+            {wch: 15}, // Kodu
+            {wch: 15}, // Tip
+            {wch: 30}, // Malzeme
+            {wch: 10}, // Birim İht
+            {wch: 12}, // Toplam
+            {wch: 10}, // Stok
+            {wch: 10}, // Yoldaki
+            {wch: 8},  // Birim
+            {wch: 15}, // Net Sipariş
+            {wch: 25}, // Tedarikçi
+            {wch: 10}, // Fiyat
+            {wch: 5}   // PB
+        ];
+        ws['!cols'] = wscols;
+
+        var wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Siparis Listesi");
+        
+        var date = new Date().toISOString().slice(0,10);
+        XLSX.writeFile(wb, "Siparis_Ihtiyac_Listesi_" + date + ".xlsx");
+    };
     
     // Sayfa yüklendiğinde de hesapla
     document.addEventListener('DOMContentLoaded', hesaplaUretilebilir);
