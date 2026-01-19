@@ -2321,6 +2321,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             if (span) {
                 span.textContent = uretilebilir.toLocaleString('tr-TR');
                 span.className = uretilebilir > 0 ? 'text-success font-semibold uretilebilir-deger' : 'text-muted uretilebilir-deger';
+                
+                // Data attribute güncelle (sıralama vb. için)
+                hucre.setAttribute('data-uretilebilir', uretilebilir);
+                
+                // Butondaki data attribute'u da güncelle (modal için referans)
+                var btn = hucre.querySelector('.uretilebilir-detay-btn');
+                if (btn) {
+                    btn.setAttribute('data-uretilebilir', uretilebilir);
+                }
             }
             
             // Önerilen üretimi de güncelle (bir sonraki td)
@@ -2780,47 +2789,75 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     // Sayfa yüklendiğinde de hesapla
     document.addEventListener('DOMContentLoaded', hesaplaUretilebilir);
     
+    // Checkbox değişikliklerini dinle
+    document.querySelectorAll('.bilesen-checkbox').forEach(function(chk) {
+        chk.addEventListener('change', hesaplaUretilebilir);
+    });
+    
+    // Üretilebilir detay modalı event handler
     // Üretilebilir detay modalı event handler
     document.querySelectorAll('.uretilebilir-detay-btn').forEach(function(btn) {
         btn.addEventListener('click', function(e) {
             e.preventDefault();
             var urunIsmi = this.getAttribute('data-urun-ismi');
             var urunKodu = this.getAttribute('data-urun-kodu');
-            var uretilebilir = parseFloat(this.getAttribute('data-uretilebilir')) || 0;
             var bilesenlerData = JSON.parse(this.getAttribute('data-bilesen') || '[]');
             // Object ise array'e çevir
             var bilesenler = Array.isArray(bilesenlerData) ? bilesenlerData : Object.values(bilesenlerData);
             
+            // Seçili türleri al
+            var seciliTurler = [];
+            document.querySelectorAll('.bilesen-checkbox:checked').forEach(function(chk) {
+                seciliTurler.push(chk.value.toLowerCase());
+            });
+            
             // Modal içeriğini doldur
             document.getElementById('modalUrunIsmi').textContent = urunIsmi;
             document.getElementById('modalUrunKodu').textContent = '#' + urunKodu;
-            document.getElementById('modalUretilebilir').textContent = uretilebilir.toLocaleString('tr-TR');
             
-            // Bileşen tablosunu doldur
+            // Bileşen tablosunu temizle
             var tbody = document.getElementById('modalBilesenTablosu');
             tbody.innerHTML = '';
             
-            // En düşük üretilebilir değeri bul (darboğaz)
+            // En düşük üretilebilir değeri bul (SADECE SEÇİLİ TÜRLER İÇİN)
             var minUretilebilir = Infinity;
+            var hesaplananBilesenVar = false;
+            
             bilesenler.forEach(function(b) {
-                if (b.uretilebilir < minUretilebilir) {
-                    minUretilebilir = b.uretilebilir;
+                var tur = (b.tur || '').toLowerCase();
+                if (seciliTurler.includes(tur)) {
+                    hesaplananBilesenVar = true;
+                    if (b.uretilebilir < minUretilebilir) {
+                        minUretilebilir = b.uretilebilir;
+                    }
                 }
             });
             
+            var dinamikUretilebilir = (hesaplananBilesenVar && minUretilebilir !== Infinity) ? minUretilebilir : 0;
+            document.getElementById('modalUretilebilir').textContent = dinamikUretilebilir.toLocaleString('tr-TR');
+            
+            // Tabloyu doldur
             bilesenler.forEach(function(b) {
-                var isDarbogaz = b.uretilebilir === minUretilebilir;
+                var tur = (b.tur || '').toLowerCase();
+                var isSecili = seciliTurler.includes(tur);
+                var isDarbogaz = isSecili && (b.uretilebilir === dinamikUretilebilir);
                 var stok = b.mevcut_stok || 0;
                 var durumBadge = '';
-                if (stok <= 0) {
+                var rowStyle = '';
+                
+                if (!isSecili) {
+                    durumBadge = '<span class="badge badge-secondary" style="opacity:0.7;">Hesaba Katılmadı</span>';
+                    rowStyle = 'style="opacity: 0.6; background: var(--gray-50); color: #999;"';
+                } else if (stok <= 0) {
                     durumBadge = '<span class="badge badge-danger">Stok Yok</span>';
                 } else if (isDarbogaz) {
                     durumBadge = '<span class="badge badge-warning"><i class="fas fa-exclamation-triangle"></i> Darboğaz</span>';
+                    rowStyle = 'style="background: #fff3cd;"';
                 } else {
                     durumBadge = '<span class="badge badge-success">Yeterli</span>';
                 }
                 
-                var row = '<tr' + (isDarbogaz ? ' style="background: #fff3cd;"' : '') + '>' +
+                var row = '<tr ' + rowStyle + '>' +
                     '<td><strong>' + (b.tur || '-').toUpperCase() + '</strong></td>' +
                     '<td>' + (b.isim || '-') + '</td>' +
                     '<td class="text-right">' + stok.toLocaleString('tr-TR') + '</td>' +
