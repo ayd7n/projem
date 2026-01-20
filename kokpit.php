@@ -1652,7 +1652,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <input class="bilesen-checkbox" type="checkbox" value="jelatin"> Jelatin
                         </label>
                     </div>
-                    <div class="text-muted mt-1 text-uppercase font-weight-bold" style="font-size: 9px; letter-spacing: 0.5px; opacity: 0.7;">Analiz Kapsamı</div>
+                    <div class="d-flex flex-column mt-1">
+                        <div class="text-upper font-weight-bold text-dark" style="font-size: 10px; letter-spacing: 0.5px;">Analiz Kapsamı</div>
+                        <div class="text-muted" style="font-size: 9px; opacity: 0.8;">Üretilebilir miktar hesabına dahil edilecek bileşenleri seçiniz</div>
+                    </div>
                 </div>
 
                 <div class="vr mx-2 bg-light d-none d-lg-block" style="width: 1px; height: 35px; border-left: 1px solid #eee;"></div>
@@ -1686,11 +1689,14 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </div>
                         </div>
                         <!-- Fark Filtresi -->
-                        <button id="btnFarkFiltre" class="btn btn-white border text-secondary px-3" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 13px; height: 36px; border-radius: 0 8px 8px 0; font-weight: 500; border-left: 0;">
-                            <i class="fas fa-filter mr-2 text-warning"></i> Farklı Olanlar
+                        <button id="btnFarkFiltre" class="btn btn-white border text-secondary px-3" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 13px; height: 36px; border-radius: 0 8px 8px 0; font-weight: 500; border-left: 0;" title="Sadece Yetersiz Stoklu Olanları Göster">
+                            <i class="fas fa-filter mr-2 text-warning"></i> Yetersiz Stoklu Ürünler
                         </button>
                     </div>
-                    <div class="text-muted mt-1 ml-1" style="font-size: 9px; opacity: 0.7;">Görüntüleme Seçenekleri</div>
+                    <div class="d-flex flex-column mt-1">
+                        <div class="text-upper font-weight-bold text-dark" style="font-size: 10px; letter-spacing: 0.5px;">Fark ve Durum Filtreleri</div>
+                        <div class="text-muted" style="font-size: 9px; opacity: 0.8;">Stok açığı olan ürünleri veya durumları listeleyin</div>
+                    </div>
                 </div>
 
                 <!-- SİPARİŞ & EXPORT GRUBU (Sağa Dayalı) -->
@@ -1699,7 +1705,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                          <!-- SİPARİŞ BUTONU -->
                          <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm text-white" style="height: 38px; padding: 0 16px; border-radius: 8px; background: linear-gradient(135deg, #4a0e63, #7c2a99); border: none;">
                             <i class="fas fa-clipboard-list fa-lg mr-2 text-white" style="color: #fff !important;"></i> 
-                            <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Sipariş Listesi</span>
+                            <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Sipariş Verilmesi Gerekenler</span>
                          </button>
                          
                          <!-- EXCEL DROPDOWN -->
@@ -1731,7 +1737,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <div class="text-muted mt-1 text-right" style="font-size: 9px; opacity: 0.7; padding-right: 5px;">Raporlama ve Çıktı İşlemleri</div>
                 </div>
             </div>
-            <div class="table-responsive">
+            <style>
+                #urunTable thead th { position: sticky; top: 0; z-index: 50; background-color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+            </style>
+            <div class="table-responsive" style="height: calc(100vh - 180px); overflow-y: auto;">
                 <table class="table table-hover mb-0" id="urunTable">
                     <thead>
                         <tr>
@@ -2652,31 +2661,47 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     
     <!-- Sipariş Listesi Modalı -->
     <div class="modal fade" id="siparisListesiModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-dialog modal-xl" role="document">
             <div class="modal-content border-0 shadow-sm" style="border-radius: 8px;">
-                <div class="modal-header py-2 px-3 border-bottom bg-white d-flex justify-content-between align-items-center">
+                <div class="modal-header py-3 px-4 border-bottom bg-white d-flex justify-content-between align-items-center shadow-sm">
                     <div class="d-flex align-items-center">
-                        <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 14px;"><i class="fas fa-list-alt mr-2 text-muted"></i>Sipariş Listesi</h6>
-                        <button onclick="exportSiparisListesi()" class="btn btn-sm btn-success ml-3 py-0 px-2" style="font-size: 11px; border-radius: 4px;">
-                            <i class="fas fa-file-excel mr-1"></i> Excel
+                        <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white mr-3" style="width: 32px; height: 32px; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+                            <i class="fas fa-clipboard-list" style="font-size: 14px;"></i>
+                        </div>
+                        <div>
+                            <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 15px; letter-spacing: -0.3px;">Sipariş Verilmesi Gerekenler</h6>
+                            <div class="text-muted" style="font-size: 11px;">Tedarik ve üretim ihtiyaçları özeti</div>
+                        </div>
+                        <button onclick="exportSiparisListesi()" class="btn btn-success ml-4 py-1 px-3 d-flex align-items-center shadow-sm" style="font-size: 11px; border-radius: 20px; font-weight: 600; height: 28px;">
+                            <i class="fas fa-file-excel mr-2"></i> Excel'e Aktar
                         </button>
                     </div>
-                    <button type="button" class="close text-muted m-0 p-0" data-dismiss="modal" aria-label="Close">
-                        <span aria-hidden="true" style="font-size: 20px;">&times;</span>
+                    <button type="button" class="close text-secondary m-0 p-0" data-dismiss="modal" aria-label="Close" style="outline: none;">
+                        <span aria-hidden="true" style="font-size: 24px;">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body p-0" style="max-height: 75vh; overflow-y: auto;">
+                <div class="modal-body p-0" style="max-height: 75vh; overflow-y: auto; background-color: #fff;">
                     <div class="table-responsive">
-                        <table class="table table-sm table-hover mb-0" id="siparisListesiTable">
-                            <thead class="bg-light sticky-top" style="z-index: 10;">
-                                <tr class="text-muted" style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                                    <th class="py-2 pl-3 border-bottom font-weight-bold border-top-0">Ürün</th>
-                                    <th class="py-2 border-bottom font-weight-bold border-top-0">Tip</th>
-                                    <th class="py-2 border-bottom font-weight-bold border-top-0">Malzeme</th>
-                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0">Stok</th>
-                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0">Yoldaki</th>
-                                    <th class="py-2 border-bottom font-weight-bold border-top-0 pl-3">Tedarikçi (En Uygun)</th>
-                                    <th class="py-2 text-right border-bottom font-weight-bold border-top-0 text-danger">Net Sipariş</th>
+                        <style>
+                            /* Sticky Header Fix */
+                            #siparisListesiTable thead th {
+                                position: sticky;
+                                top: 0;
+                                z-index: 100;
+                                background-color: #f8f9fa;
+                                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                                color: #555;
+                            }
+                        </style>
+                        <table class="table table-hover mb-0" id="siparisListesiTable">
+                            <thead>
+                                <tr style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; font-family: 'Inter', sans-serif;">
+                                    <th class="py-3 pl-4 border-bottom border-light font-weight-bold border-top-0">Ürün & Kod</th>
+                                    <th class="py-3 border-bottom border-light font-weight-bold border-top-0">Kategori</th>
+                                    <th class="py-3 border-bottom border-light font-weight-bold border-top-0">İhtiyaç Duyulan Malzeme</th>
+                                    <th class="py-3 text-right border-bottom border-light font-weight-bold border-top-0">Stok / Yoldaki</th>
+                                    <th class="py-3 pl-3 border-bottom border-light font-weight-bold border-top-0">Tedarikçi (En Uygun)</th>
+                                    <th class="py-3 text-right pr-4 border-bottom border-light font-weight-bold border-top-0 text-danger">Net Sipariş</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -3430,34 +3455,35 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             else if (item.tip.includes('Hammadde')) tipColor = '#fd7e14';
             
             var rowHtml = `
-                <td class="pl-3 py-1 border-bottom" style="vertical-align: middle;">
-                    <div style="font-size: 11px; font-weight: 600; color: #333;">${item.urun_ismi}
-                        <span class="text-muted font-weight-normal ml-1" style="font-size: 10px;">#${item.urun_kodu}</span>
+                <td class="pl-4 py-2 border-bottom border-light" style="vertical-align: middle;">
+                    <div class="d-flex align-items-center">
+                        <span style="font-size: 12px; font-weight: 700; color: #333;">${item.urun_ismi}</span>
+                        <span class="text-muted ml-2" style="font-size: 11px;">#${item.urun_kodu}</span>
                     </div>
                 </td>
-                <td class="py-1 border-bottom" style="vertical-align: middle;">
-                     <span style="font-size: 10px; color: ${tipColor}; font-weight: 500;">${item.tip || '-'}</span>
+                <td class="py-2 border-bottom border-light" style="vertical-align: middle;">
+                     <span class="badge badge-pill px-2 py-1" style="font-size: 10px; color: ${tipColor}; background: ${tipColor}15; border: 1px solid ${tipColor}30;">${item.tip || '-'}</span>
                 </td>
-                <td class="py-1 border-bottom" style="vertical-align: middle;">
-                    <div style="font-size: 11px; color: #555;">${item.malzeme_adi}</div>
+                <td class="py-2 border-bottom border-light" style="vertical-align: middle;">
+                    <div class="text-truncate" style="max-width: 250px; font-size: 11px; color: #495057;" title="${item.malzeme_adi}">${item.malzeme_adi}</div>
                 </td>
-                <td class="text-right py-1 border-bottom" style="vertical-align: middle; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #777;">
-                    ${parseFloat(item.stok).toLocaleString('tr-TR', {maximumFractionDigits: 0})}
+                <td class="text-right py-2 border-bottom border-light" style="vertical-align: middle;">
+                    <span style="font-size: 11px; color: #444; font-weight: 600; font-family: 'Roboto Mono', monospace;">${parseFloat(item.stok).toLocaleString('tr-TR', {maximumFractionDigits: 0})}</span>
+                    ${parseFloat(item.yoldaki) > 0 ? `<span class="ml-2 badge badge-info font-weight-normal" style="font-size: 9px;">+${parseFloat(item.yoldaki).toLocaleString('tr-TR', {maximumFractionDigits: 0})} Yolda</span>` : ''}
                 </td>
-                <td class="text-right py-1 border-bottom" style="vertical-align: middle; font-family: 'Roboto Mono', monospace; font-size: 11px; color: #17a2b8;">
-                    ${parseFloat(item.yoldaki) > 0 ? parseFloat(item.yoldaki).toLocaleString('tr-TR', {maximumFractionDigits: 0}) : '-'}
-                </td>
-                <td class="py-1 border-bottom pl-3" style="vertical-align: middle;">
+                <td class="py-2 border-bottom border-light pl-3" style="vertical-align: middle;">
                     ${item.tedarikci && item.tedarikci.adi !== '-' ? 
-                        `<div style="font-size: 11px; font-weight: 600; color: #555; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">${item.tedarikci.adi}</div>
-                         <div style="font-size: 10px; color: #28a745; font-family: 'Roboto Mono', monospace;">${parseFloat(item.tedarikci.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${item.tedarikci.para_birimi}</div>` 
-                        : '<span class="text-muted" style="font-size: 10px;">-</span>'}
+                        `<div class="d-flex align-items-center" style="font-size: 11px;">
+                             <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 180px;" title="${item.tedarikci.adi}">${item.tedarikci.adi}</span>
+                             <span class="text-success font-weight-bold" style="font-family: 'Roboto Mono', monospace;">${parseFloat(item.tedarikci.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${item.tedarikci.para_birimi}</span>
+                        </div>` 
+                        : '<span class="text-muted small">-</span>'}
                 </td>
-                <td class="text-right py-1 border-bottom bg-white" style="vertical-align: middle;">
-                    <span style="font-size: 12px; font-weight: 700; color: #e3342f; font-family: 'Roboto Mono', monospace;">
+                <td class="text-right py-2 pr-4 border-bottom border-light" style="vertical-align: middle; background-color: #fff5f5;">
+                    <span style="font-size: 13px; font-weight: 700; color: #c53030; font-family: 'Roboto Mono', monospace;">
                         ${parseFloat(item.net_siparis).toLocaleString('tr-TR', {maximumFractionDigits: 2})}
                     </span>
-                    <span class="text-muted ml-1" style="font-size: 9px;">${item.birim}</span>
+                    <span class="text-muted ml-1" style="font-size: 10px; text-transform: uppercase;">${item.birim}</span>
                 </td>
             `;
             
