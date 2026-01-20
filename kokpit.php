@@ -1683,7 +1683,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <div class="btn-group">
                         <!-- Durum Filtresi -->
                         <div class="dropdown">
-                            <button class="btn btn-white border text-secondary dropdown-toggle px-3" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 13px; height: 36px; border-radius: 8px 0 0 8px; font-weight: 500;">
+                            <button class="btn btn-white border text-secondary dropdown-toggle px-3" type="button" id="dropdownActionFilter" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="font-size: 11px; height: 32px; border-radius: 6px 0 0 6px; font-weight: 500;">
                                 <i class="fas fa-tasks mr-2 text-primary"></i> Durum
                             </button>
                             <div class="dropdown-menu dropdown-menu-right shadow-sm border-0 mt-1" aria-labelledby="dropdownActionFilter">
@@ -1698,7 +1698,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </div>
                         </div>
                         <!-- Fark Filtresi -->
-                        <button id="btnFarkFiltre" class="btn btn-white border text-secondary px-3" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 13px; height: 36px; border-radius: 0 8px 8px 0; font-weight: 500; border-left: 0;" title="Sadece Yetersiz Stoklu Olanları Göster">
+                        <button id="btnFarkFiltre" class="btn btn-white border text-secondary px-3" type="button" onclick="toggleFarkFiltre(this)" style="font-size: 11px; height: 32px; border-radius: 0 6px 6px 0; font-weight: 500; border-left: 0;" title="Sadece Yetersiz Stoklu Olanları Göster">
                             <i class="fas fa-filter mr-2 text-warning"></i> Yetersiz Stoklu Ürünler
                         </button>
                     </div>
@@ -1711,17 +1711,17 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 <!-- SİPARİŞ & EXPORT GRUBU (Sağa Dayalı) -->
                 <div class="d-flex flex-column ml-auto">
                     <div class="d-flex" style="gap: 10px;">
-                         <!-- SİPARİŞ BUTONU -->
-                         <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm text-white" style="height: 38px; padding: 0 16px; border-radius: 8px; background: linear-gradient(135deg, #4a0e63, #7c2a99); border: none;">
-                            <i class="fas fa-clipboard-list fa-lg mr-2 text-white" style="color: #fff !important;"></i> 
-                            <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Sipariş Verilmesi Gerekenler</span>
+                 <!-- SİPARİŞ BUTONU -->
+                         <button onclick="renderSiparisListesi(); $('#siparisListesiModal').modal('show');" class="btn btn-primary d-flex align-items-center justify-content-center shadow-sm text-white" style="height: 32px; padding: 0 14px; border-radius: 6px; background: linear-gradient(135deg, #4a0e63, #7c2a99); border: none;">
+                            <i class="fas fa-clipboard-list mr-2 text-white" style="color: #fff !important;"></i> 
+                            <span class="text-white" style="font-size: 11px; font-weight: 600; letter-spacing: 0.3px; color: #fff !important;">Sipariş Gerekenler</span>
                          </button>
                          
                          <!-- EXCEL DROPDOWN -->
                          <div class="dropdown">
-                            <button class="btn btn-success d-flex align-items-center justify-content-center shadow-sm dropdown-toggle text-white" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 38px; padding: 0 16px; border-radius: 8px; background: linear-gradient(135deg, #28a745, #218838); border: none;">
-                                <i class="fas fa-file-excel fa-lg mr-2 text-white" style="color: #fff !important;"></i> 
-                                <span class="text-white" style="font-size: 13px; font-weight: 700; letter-spacing: 0.3px; color: #fff !important;">Excel'e Aktar</span>
+                            <button class="btn btn-success d-flex align-items-center justify-content-center shadow-sm dropdown-toggle text-white" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="height: 32px; padding: 0 14px; border-radius: 6px; background: linear-gradient(135deg, #28a745, #218838); border: none;">
+                                <i class="fas fa-file-excel mr-2 text-white" style="color: #fff !important;"></i> 
+                                <span class="text-white" style="font-size: 11px; font-weight: 600; letter-spacing: 0.3px; color: #fff !important;">Excel Export</span>
                             </button>
                             <div class="dropdown-menu dropdown-menu-right shadow border-0 mt-2" style="min-width: 200px;">
                                 <h6 class="dropdown-header text-uppercase text-muted font-weight-bold" style="font-size: 10px; letter-spacing: 0.5px;">Dışa Aktarma Seçenekleri</h6>
