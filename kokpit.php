@@ -1594,16 +1594,14 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             cursor: pointer;
         }
         
-        /* Üretilebilir header'daki çark butonu */
-        /* Font Definitions */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
-
-        /* Typography Upgrade */
-        body { font-family: 'Inter', sans-serif !important; }
-        h1, h2, h3, h4, h5, h6, .navbar-brand, .modal-title, .card-title, .nav-link { font-family: 'Outfit', sans-serif !important; letter-spacing: -0.01em; }
-        .font-mono { font-family: 'Roboto Mono', monospace !important; }
+        /* Font Definitions via JS Injection below to ensure loading */
+        
+        /* Typography Upgrade - Poppins & Open Sans */
+        body { font-family: 'Open Sans', sans-serif !important; color: #334155; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .modal-title, .card-title, .nav-link { font-family: 'Poppins', sans-serif !important; letter-spacing: 0; }
+        .font-mono { font-family: 'Open Sans', sans-serif !important; letter-spacing: -0.5px; font-feature-settings: "tnum"; font-variant-numeric: tabular-nums; }
         .table { font-size: 13px !important; }
-        .btn { font-family: 'Inter', sans-serif !important; font-weight: 500; }
+        .btn { font-family: 'Poppins', sans-serif !important; font-weight: 500; }
         .modal-content { border-radius: 12px !important; }
 
         .table th .dropdown {
@@ -2741,6 +2739,14 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
 
     <!-- Global JSON Data -->
     <script>
+        // Inject Google Fonts
+        (function() {
+            var link = document.createElement('link');
+            link.href = 'https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap';
+            link.rel = 'stylesheet';
+            document.head.appendChild(link);
+        })();
+
         window.globalSiparisData = <?php echo json_encode(isset($global_siparis_listesi) ? $global_siparis_listesi : []); ?>;
     </script>
     
@@ -3578,15 +3584,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             
             html += `
                 <div class="col-md-6 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; font-family: 'Inter', sans-serif; transition: transform 0.2s;">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; font-family: 'Open Sans', sans-serif; transition: transform 0.2s;">
                         <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center" style="border-left: 5px solid ${isUnknown ? '#b0b3b8' : '#10b981'}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
                             <div>
-                                <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 15px; font-family: 'Outfit', sans-serif;">${tedarikciName}</h6>
+                                <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 15px; font-family: 'Poppins', sans-serif;">${tedarikciName}</h6>
                                 <div class="text-muted mt-1" style="font-size: 11px;">${group.items.length} Kalem Sipariş</div>
                             </div>
                             ${!isUnknown ? `
                             <div class="text-right">
-                                <div class="font-weight-bold text-success" style="font-size: 14px; font-family: 'Roboto Mono';">${totalStr}</div>
+                                <div class="font-weight-bold text-success" style="font-size: 14px; font-family: 'Open Sans', sans-serif; letter-spacing: -0.5px;">${totalStr}</div>
                                 <div class="text-muted" style="font-size: 10px; font-weight: 500;">Tahmini Tutar</div>
                             </div>` : ''}
                         </div>
@@ -3608,16 +3614,16 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 
                 html += `
                     <tr>
-                        <td class="pl-4 py-3" style="vertical-align: middle;">
+                        <td class="pl-4 py-1" style="vertical-align: middle;">
                             <div class="font-weight-600 text-dark" style="font-size: 12px;">${item.urun_ismi}</div>
-                            <div class="text-muted" style="font-size: 11px; margin-top: 1px;">${item.malzeme_adi}</div>
+                            <div class="text-muted" style="font-size: 11px;">${item.malzeme_adi}</div>
                         </td>
-                        <td class="text-right py-3" style="vertical-align: middle;">
-                            <span class="font-weight-bold text-danger" style="font-size: 13px; font-family: 'Roboto Mono';">${parseFloat(item.net_siparis).toLocaleString('tr-TR')}</span> 
+                        <td class="text-right py-1" style="vertical-align: middle;">
+                            <span class="font-weight-bold text-danger" style="font-size: 13px; font-family: 'Open Sans', sans-serif;">${parseFloat(item.net_siparis).toLocaleString('tr-TR')}</span> 
                             <span class="small text-muted ml-1" style="font-size: 10px;">${item.birim}</span>
                         </td>
-                        <td class="text-right py-3 pr-4" style="vertical-align: middle;">
-                            <div style="font-size: 12px; font-family: 'Roboto Mono'; color: #444; font-weight: 500;">${itemTotalStr}</div>
+                        <td class="text-right py-1 pr-4" style="vertical-align: middle;">
+                            <div style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #444; font-weight: 600;">${itemTotalStr}</div>
                         </td>
                     </tr>
                 `;
