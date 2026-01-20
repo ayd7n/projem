@@ -1595,6 +1595,17 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         }
         
         /* Üretilebilir header'daki çark butonu */
+        /* Font Definitions */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Roboto+Mono:wght@400;500;700&display=swap');
+
+        /* Typography Upgrade */
+        body { font-family: 'Inter', sans-serif !important; }
+        h1, h2, h3, h4, h5, h6, .navbar-brand, .modal-title, .card-title, .nav-link { font-family: 'Outfit', sans-serif !important; letter-spacing: -0.01em; }
+        .font-mono { font-family: 'Roboto Mono', monospace !important; }
+        .table { font-size: 13px !important; }
+        .btn { font-family: 'Inter', sans-serif !important; font-weight: 500; }
+        .modal-content { border-radius: 12px !important; }
+
         .table th .dropdown {
             position: relative;
         }
@@ -2672,6 +2683,17 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <h6 class="modal-title font-weight-bold text-dark mb-0" style="font-size: 15px; letter-spacing: -0.3px;">Sipariş Verilmesi Gerekenler</h6>
                             <div class="text-muted" style="font-size: 11px;">Tedarik ve üretim ihtiyaçları özeti</div>
                         </div>
+                        
+                        <!-- Görünüm Switcher -->
+                        <div class="btn-group btn-group-sm ml-5 border p-1 rounded bg-light" role="group">
+                            <button type="button" class="btn btn-white shadow-sm font-weight-bold px-3 border-0" id="btnViewList" onclick="switchSiparisView('list')" style="font-size: 11px; border-radius: 4px; transition: all 0.2s;">
+                                <i class="fas fa-list mr-1"></i> Liste
+                            </button>
+                            <button type="button" class="btn btn-light text-muted px-3 border-0" id="btnViewSupplier" onclick="switchSiparisView('supplier')" style="font-size: 11px; border-radius: 4px; transition: all 0.2s;">
+                                <i class="fas fa-truck mr-1"></i> Tedarikçi Gruplu
+                            </button>
+                        </div>
+
                         <button onclick="exportSiparisListesi()" class="btn btn-success ml-4 py-1 px-3 d-flex align-items-center shadow-sm" style="font-size: 11px; border-radius: 20px; font-weight: 600; height: 28px;">
                             <i class="fas fa-file-excel mr-2"></i> Excel'e Aktar
                         </button>
@@ -2681,32 +2703,37 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     </button>
                 </div>
                 <div class="modal-body p-0" style="max-height: 75vh; overflow-y: auto; background-color: #fff;">
-                    <div class="table-responsive">
-                        <style>
-                            /* Sticky Header Fix */
-                            #siparisListesiTable thead th {
-                                position: sticky;
-                                top: 0;
-                                z-index: 100;
-                                background-color: #f8f9fa;
-                                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-                                color: #555;
-                            }
-                        </style>
-                        <table class="table table-hover mb-0" id="siparisListesiTable">
-                            <thead>
-                                <tr style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; font-family: 'Inter', sans-serif;">
-                                    <th class="py-3 pl-4 border-bottom border-light font-weight-bold border-top-0">Ürün & Kod</th>
-                                    <th class="py-3 border-bottom border-light font-weight-bold border-top-0">Kategori</th>
-                                    <th class="py-3 border-bottom border-light font-weight-bold border-top-0">İhtiyaç Duyulan Malzeme</th>
-                                    <th class="py-3 text-right border-bottom border-light font-weight-bold border-top-0">Stok / Yoldaki</th>
-                                    <th class="py-3 pl-3 border-bottom border-light font-weight-bold border-top-0">Tedarikçi (En Uygun)</th>
-                                    <th class="py-3 text-right pr-4 border-bottom border-light font-weight-bold border-top-0 text-danger">Net Sipariş</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                    <!-- LISTE GÖRÜNÜMÜ -->
+                    <div id="viewListContainer">
+                        <div class="table-responsive">
+                            <style>
+                                /* Sticky Header Fix */
+                                #siparisListesiTable thead th {
+                                    position: sticky;
+                                    top: 0;
+                                    z-index: 100;
+                                    background-color: #f8f9fa;
+                                    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+                                    color: #555;
+                                }
+                            </style>
+                            <table class="table table-hover mb-0" id="siparisListesiTable">
+                                <thead>
+                                    <tr style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; font-family: 'Inter', sans-serif;">
+                                        <th class="py-3 pl-4 border-bottom border-light font-weight-bold border-top-0">Ürün & Kod</th>
+                                        <th class="py-3 border-bottom border-light font-weight-bold border-top-0">Kategori</th>
+                                        <th class="py-3 border-bottom border-light font-weight-bold border-top-0">İhtiyaç Duyulan Malzeme</th>
+                                        <th class="py-3 text-right border-bottom border-light font-weight-bold border-top-0">Stok / Yoldaki</th>
+                                        <th class="py-3 pl-3 border-bottom border-light font-weight-bold border-top-0">Tedarikçi (En Uygun)</th>
+                                        <th class="py-3 text-right pr-4 border-bottom border-light font-weight-bold border-top-0 text-danger">Net Sipariş</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
                     </div>
+                    <!-- TEDARİKÇİ GÖRÜNÜMÜ -->
+                    <div id="viewSupplierContainer" style="display:none;" class="p-4 bg-light"></div>
                 </div>
             </div>
         </div>
@@ -3490,6 +3517,123 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             tr.innerHTML = rowHtml;
             tbody.appendChild(tr);
         });
+    };
+
+    // Görünüm Değiştirme
+    window.currentSiparisView = 'list';
+    window.switchSiparisView = function(mode) {
+        window.currentSiparisView = mode;
+        
+        if (mode === 'list') {
+            document.getElementById('viewListContainer').style.display = 'block';
+            document.getElementById('viewSupplierContainer').style.display = 'none';
+            
+            $('#btnViewList').removeClass('btn-light text-muted').addClass('btn-white shadow-sm font-weight-bold');
+            $('#btnViewSupplier').removeClass('btn-white shadow-sm font-weight-bold').addClass('btn-light text-muted');
+            
+            renderSiparisListesi();
+        } else {
+            document.getElementById('viewListContainer').style.display = 'none';
+            document.getElementById('viewSupplierContainer').style.display = 'block';
+            
+            $('#btnViewSupplier').removeClass('btn-light text-muted').addClass('btn-white shadow-sm font-weight-bold');
+            $('#btnViewList').removeClass('btn-white shadow-sm font-weight-bold').addClass('btn-light text-muted');
+            
+            renderTedarikciListesi();
+        }
+    };
+
+    // Tedarikçi Listesi Render
+    window.renderTedarikciListesi = function() {
+        var container = document.getElementById('viewSupplierContainer');
+        var data = window.globalSiparisData || [];
+        if (data.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted p-4">Veri bulunamadı.</div>';
+            return;
+        }
+
+        // Gruplama
+        var groups = {};
+        data.forEach(function(item) {
+            var tedarikciAdi = (item.tedarikci && item.tedarikci.adi !== '-') ? item.tedarikci.adi : 'Tedarikçisi Belirsiz';
+            if (!groups[tedarikciAdi]) {
+                groups[tedarikciAdi] = { 
+                    items: [], 
+                    totalCost: 0, 
+                    currency: (item.tedarikci ? item.tedarikci.para_birimi : '') 
+                };
+            }
+            groups[tedarikciAdi].items.push(item);
+            if (item.tedarikci && item.tedarikci.fiyat > 0) {
+                groups[tedarikciAdi].totalCost += (parseFloat(item.net_siparis) * parseFloat(item.tedarikci.fiyat));
+            }
+        });
+
+        var html = '<div class="row">';
+        
+        Object.keys(groups).sort().forEach(function(tedarikciName) {
+            var group = groups[tedarikciName];
+            var isUnknown = tedarikciName === 'Tedarikçisi Belirsiz';
+            var totalStr = group.totalCost > 0 ? group.totalCost.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + group.currency : '-';
+            
+            html += `
+                <div class="col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; font-family: 'Inter', sans-serif; transition: transform 0.2s;">
+                        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center" style="border-left: 5px solid ${isUnknown ? '#b0b3b8' : '#10b981'}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+                            <div>
+                                <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 15px; font-family: 'Outfit', sans-serif;">${tedarikciName}</h6>
+                                <div class="text-muted mt-1" style="font-size: 11px;">${group.items.length} Kalem Sipariş</div>
+                            </div>
+                            ${!isUnknown ? `
+                            <div class="text-right">
+                                <div class="font-weight-bold text-success" style="font-size: 14px; font-family: 'Roboto Mono';">${totalStr}</div>
+                                <div class="text-muted" style="font-size: 10px; font-weight: 500;">Tahmini Tutar</div>
+                            </div>` : ''}
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-striped mb-0">
+                                <thead class="bg-light">
+                                    <tr style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
+                                        <th class="pl-4 py-2 border-0 font-weight-bold">Ürün Detayı</th>
+                                        <th class="py-2 border-0 text-right font-weight-bold">Miktar</th>
+                                        <th class="py-2 border-0 text-right pr-4 font-weight-bold">Tutar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            group.items.forEach(function(item) {
+                var itemTotal = (item.tedarikci && item.tedarikci.fiyat > 0) ? (parseFloat(item.net_siparis) * parseFloat(item.tedarikci.fiyat)) : 0;
+                var itemTotalStr = itemTotal > 0 ? itemTotal.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + ' ' + group.currency : '-';
+                
+                html += `
+                    <tr>
+                        <td class="pl-4 py-3" style="vertical-align: middle;">
+                            <div class="font-weight-600 text-dark" style="font-size: 12px;">${item.urun_ismi}</div>
+                            <div class="text-muted" style="font-size: 11px; margin-top: 1px;">${item.malzeme_adi}</div>
+                        </td>
+                        <td class="text-right py-3" style="vertical-align: middle;">
+                            <span class="font-weight-bold text-danger" style="font-size: 13px; font-family: 'Roboto Mono';">${parseFloat(item.net_siparis).toLocaleString('tr-TR')}</span> 
+                            <span class="small text-muted ml-1" style="font-size: 10px;">${item.birim}</span>
+                        </td>
+                        <td class="text-right py-3 pr-4" style="vertical-align: middle;">
+                            <div style="font-size: 12px; font-family: 'Roboto Mono'; color: #444; font-weight: 500;">${itemTotalStr}</div>
+                        </td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        container.innerHTML = html;
     };
     
     // Filtreleme fonksiyonu
