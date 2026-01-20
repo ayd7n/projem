@@ -832,8 +832,8 @@ function getAksiyonOnerisi($p) {
             $adim_listesi[] = '<div style="margin-bottom: 8px;">
                 <strong style="color: #ffc107;"><i class="fas fa-box"></i> Malzemeler İçin:</strong><br>
                 <small style="margin-left: 20px;">
-                • Eğer malzemeyi <strong>tanımlamadıysanız</strong> → <a href="malzemeler.php" class="text-primary">Buradan tanımlayın</a><br>
-                • Malzemeyi tanımladıysanız → <a href="urun_agaclari.php" class="text-primary">Ürün ağacına bağlayın</a>
+                • Eğer malzemeyi <strong>tanımlamadıysanız</strong> → <a href="malzemeler.php" target="_blank" class="text-primary">Buradan tanımlayın <i class="fas fa-external-link-alt fa-xs"></i></a><br>
+                • Malzemeyi tanımladıysanız → <a href="urun_agaclari.php" target="_blank" class="text-primary">Ürün ağacına bağlayın <i class="fas fa-external-link-alt fa-xs"></i></a>
                 </small>
             </div>';
         }
@@ -843,7 +843,7 @@ function getAksiyonOnerisi($p) {
             $adim_listesi[] = '<div style="margin-bottom: 8px;">
                 <strong style="color: #0078d4;"><i class="fas fa-flask"></i> Esanslar İçin:</strong><br>
                 <small style="margin-left: 20px;">
-                • <a href="urun_agaclari.php" class="text-primary">Ürün Ağaçları sayfasına gidin</a><br>
+                • <a href="urun_agaclari.php" target="_blank" class="text-primary">Ürün Ağaçları sayfasına gidin <i class="fas fa-external-link-alt fa-xs"></i></a><br>
                 • <strong>Esans Ağacı</strong> sekmesinden formül oluşturun<br>
                 • Formül oluşturduktan sonra ürün ağacına bağlayın
                 </small>
@@ -881,7 +881,7 @@ function getAksiyonOnerisi($p) {
         $adimlar = '<div style="background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #ffc107;">
             <strong><i class="fas fa-info-circle text-warning"></i> Yapılması Gerekenler:</strong><br>
             <small>
-            1️⃣ <a href="cerceve_sozlesmeler.php" class="text-primary">Çerçeve sözleşme sayfasına gidin</a><br>
+            1️⃣ <a href="cerceve_sozlesmeler.php" target="_blank" class="text-primary">Çerçeve sözleşme sayfasına gidin <i class="fas fa-external-link-alt fa-xs"></i></a><br>
             2️⃣ Yukarıdaki malzemeler için sözleşme oluşturun<br>
             3️⃣ Sözleşme onaylandıktan sonra sipariş verebilirsiniz
             </small>
@@ -939,7 +939,7 @@ function getAksiyonOnerisi($p) {
             $adimlar = '<div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #0078d4;">
                 <strong><i class="fas fa-info-circle text-info"></i> Yapılması Gerekenler:</strong><br>
                 <small>
-                1️⃣ <a href="satinalma_siparisler.php" class="text-primary">Satınalma sipariş sayfasına gidin</a><br>
+                1️⃣ <a href="satinalma_siparisler.php" target="_blank" class="text-primary">Satınalma sipariş sayfasına gidin <i class="fas fa-external-link-alt fa-xs"></i></a><br>
                 2️⃣ Yukarıdaki malzemeler için sipariş oluşturun<br>
                 3️⃣ Tedarikçiye sipariş gönderin
                 </small>
