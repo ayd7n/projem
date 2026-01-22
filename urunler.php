@@ -716,7 +716,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             </div>
                                         </div>
                                     </div>
-                                    <div class="form-group mb-2" v-if="!modal.data.urun_kodu">
+                                    <div class="form-group mb-2" v-if="!modal.data.urun_kodu && modal.data.urun_tipi === 'uretilen'">
                                         <label><strong>Otomatik Malzeme Oluştur</strong> (Seçilen türlerde malzemeler de eklenecek)</label>
                                         <div class="d-flex flex-wrap" style="gap: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
                                             <div v-for="tur in malzemeTurleri" :key="tur.id" class="custom-control custom-checkbox">

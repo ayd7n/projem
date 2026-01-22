@@ -371,8 +371,8 @@ if (isset($_GET['action'])) {
                 $depo = $depo ?: NULL;
                 $raf = $raf ?: NULL;
 
-                // Eğer ürün tipi hazir_alinan ise alış fiyatını 0 yap
-                if ($urun_tipi === 'hazir_alinan') {
+                // Eğer ürün tipi üretilen ise alış fiyatını 0 yap (sadece hazır alınan ürünlerde alış fiyatı olur)
+                if ($urun_tipi === 'uretilen') {
                     $alis_fiyati = 0.0;
                     $alis_fiyati_para_birimi = 'TRY';
                 }
@@ -516,8 +516,8 @@ if (isset($_GET['action'])) {
                 $depo = $depo ?: NULL;
                 $raf = $raf ?: NULL;
 
-                // Eğer ürün tipi hazir_alinan ise alış fiyatını 0 yap
-                if ($urun_tipi === 'hazir_alinan') {
+                // Eğer ürün tipi üretilen ise alış fiyatını 0 yap (sadece hazır alınan ürünlerde alış fiyatı olur)
+                if ($urun_tipi === 'uretilen') {
                     $alis_fiyati = 0.0;
                     $alis_fiyati_para_birimi = 'TRY';
                 }
