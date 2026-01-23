@@ -385,6 +385,7 @@ if (isset($_GET['action'])) {
                     log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürünü sisteme eklendi", 'CREATE');
                     
                     // Otomatik Malzeme Ekleme
+                    $created_ham_esans = null;
                     if (!empty($selected_material_types)) {
                         foreach ($selected_material_types as $type) {
                             $malzeme_turu_value = $type['value'];
@@ -414,6 +415,12 @@ if (isset($_GET['action'])) {
                                         $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $malzeme_turu_value, $new_material_id, $malzeme_ismi);
                                         $ua_stmt->execute();
                                         $ua_stmt->close();
+                                    } else {
+                                        $created_ham_esans = [
+                                            'id' => $new_material_id,
+                                            'name' => $malzeme_ismi,
+                                            'type' => $malzeme_turu_value
+                                        ];
                                     }
                                 }
                             }
@@ -470,6 +477,18 @@ if (isset($_GET['action'])) {
                             $ua_stmt->bind_param('issss', $new_product_id, $urun_ismi, $esans_type, $esans_kodu, $esans_ismi);
                             $ua_stmt->execute();
                             $ua_stmt->close();
+
+                            // Eğer Ham Esans oluşturulduysa, onu da Esans Ağacına bağla
+                            if ($created_ham_esans) {
+                                $et_query = "INSERT INTO urun_agaci (urun_kodu, urun_ismi, bilesenin_malzeme_turu, bilesen_kodu, bilesen_ismi, bilesen_miktari, agac_turu)
+                                            VALUES (?, ?, ?, ?, ?, 1.00, 'esans')";
+                                $et_stmt = $connection->prepare($et_query);
+                                $et_stmt->bind_param('sssss', $esans_kodu, $esans_ismi, $created_ham_esans['type'], $created_ham_esans['id'], $created_ham_esans['name']);
+                                $et_stmt->execute();
+                                $et_stmt->close();
+                                
+                                log_islem($connection, $_SESSION['kullanici_adi'], "Otomatik ham esans esans ağacına eklendi: " . $created_ham_esans['name'], 'CREATE');
+                            }
                         }
                     }
                     

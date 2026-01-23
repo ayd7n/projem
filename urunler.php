@@ -249,63 +249,106 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         }
 
         /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        #productModal .modal-dialog {
+            max-width: 100%;
+            margin: 0;
+            height: 100vh;
+        }
         #productModal .modal-content {
             border: none;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            border-radius: 0;
+            height: 100vh;
+            box-shadow: none;
+            font-family: 'Ubuntu', sans-serif;
+            display: flex;
+            flex-direction: column;
         }
         #productModal .modal-header {
             background: linear-gradient(135deg, #4a0e63, #7c2a99);
             color: white;
-            padding: 8px 15px;
-            border: none;
+            padding: 10px 20px;
+            flex-shrink: 0;
         }
         #productModal .modal-title {
-            font-size: 0.85rem;
+            font-size: 0.95rem;
             font-weight: 600;
         }
         #productModal .modal-body {
-            padding: 10px 12px;
-            background: #fafafa;
+            padding: 20px;
+            background: #fcfcfc;
+            flex-grow: 1;
+            overflow-y: auto;
         }
         #productModal .form-group {
-            margin-bottom: 0.4rem !important;
+            margin-bottom: 0.8rem !important;
         }
         #productModal label {
-            font-size: 0.65rem;
-            margin-bottom: 2px;
-            font-weight: 500;
+            font-size: 0.75rem;
+            margin-bottom: 3px;
+            font-weight: 600;
             color: #555;
             display: block;
         }
         #productModal .form-control {
-            font-size: 0.75rem;
-            padding: 4px 8px;
-            height: 28px;
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            height: 32px;
             border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        #productModal .form-control:focus {
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 0.15rem rgba(124, 42, 153, 0.1);
         }
         #productModal textarea.form-control {
+            min-height: 60px;
             height: auto;
         }
+        
+        .process-steps {
+            background: #fff;
+            border-radius: 6px;
+            padding: 2px;
+            height: calc(100vh - 200px); /* Ekran boyuna göre dinamik yükseklik */
+            overflow-y: auto;
+        }
+        
+        .step-item {
+            background: #f9f9f9;
+            border: 1px solid #eee;
+            border-radius: 4px;
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            font-size: 0.78rem;
+            color: #444;
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .step-item i {
+            margin-top: 2px;
+            font-size: 0.85rem;
+        }
+        
+        .custom-control-label {
+            font-size: 0.78rem !important;
+            padding-top: 1px;
+        }
+
         #productModal .nav-tabs .nav-link {
-            padding: 4px 10px;
-            font-size: 0.75rem;
+            padding: 6px 15px;
+            font-size: 0.8rem;
         }
         #productModal .btn {
-            padding: 4px 10px;
-            font-size: 0.75rem;
-            border-radius: 4px;
+            padding: 6px 15px;
+            font-size: 0.8rem;
         }
         #productModal .modal-footer {
-            background: #f5f5f5;
-            border-top: 1px solid #e5e7eb;
-            padding: 6px 12px;
+            padding: 10px 15px;
         }
         #productModal .close {
-            opacity: 1;
-            text-shadow: none;
-            color: white;
+            font-size: 1.2rem;
+            padding: 0.8rem;
         }
     </style>
 </head>
@@ -571,7 +614,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
         <!-- Product Modal -->
         <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
-            <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
                     <div class="modal-header"
                         style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
@@ -601,146 +644,196 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             <!-- Ürün Bilgileri Tab -->
                             <div class="tab-pane fade show active" id="info" role="tabpanel">
                                 <form @submit.prevent="saveProduct">
-                                    <input type="hidden" v-model="modal.data.urun_kodu">
                                     <div class="row">
-                                        <div class="col-md-6">
+                                        <!-- Sol Kolon: Form (%40 civarı) -->
+                                        <div class="col-md-5 border-right">
+                                            <input type="hidden" v-model="modal.data.urun_kodu">
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Urun Ismi *</label>
+                                                        <input type="text" class="form-control" v-model="modal.data.urun_ismi" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Stok Miktari</label>
+                                                        <input type="number" class="form-control" v-model="modal.data.stok_miktari" min="0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Birim</label>
+                                                        <select class="form-control" v-model="modal.data.birim">
+                                                            <option value="adet">Adet</option>
+                                                            <option value="kg">Kg</option>
+                                                            <option value="gr">Gr</option>
+                                                            <option value="lt">Lt</option>
+                                                            <option value="ml">Ml</option>
+                                                            <option value="mt">Mt</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Satis Fiyati *</label>
+                                                        <input type="number" step="0.01" class="form-control" v-model="modal.data.satis_fiyati" min="0" required>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Para Birimi *</label>
+                                                        <select class="form-control" v-model="modal.data.satis_fiyati_para_birimi">
+                                                            <option value="TRY">₺ Türk Lirası</option>
+                                                            <option value="USD">$ Amerikan Doları</option>
+                                                            <option value="EUR">€ Euro</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Kritik Stok Seviyesi</label>
+                                                        <input type="number" class="form-control" v-model="modal.data.kritik_stok_seviyesi" min="0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Depo *</label>
+                                                        <select class="form-control" v-model="modal.data.depo" @change="loadRafList(modal.data.depo)" required>
+                                                            <option value="">Depo Secin</option>
+                                                            <option v-for="depo in depoList" :value="depo.depo_ismi">{{ depo.depo_ismi }}</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Raf *</label>
+                                                        <select class="form-control" v-model="modal.data.raf" required>
+                                                            <option value="">Once Depo Secin</option>
+                                                            <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Ürün Tipi *</label>
+                                                        <select class="form-control" v-model="modal.data.urun_tipi" @change="onUrunTipiChange" required>
+                                                            <option value="uretilen">Üretilen Ürün</option>
+                                                            <option value="hazir_alinan">Hazır Alınan Ürün</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" v-if="modal.data.urun_tipi === 'hazir_alinan'">
+                                                    <div class="form-group mb-2">
+                                                        <label>Alış Fiyatı</label>
+                                                        <input type="number" step="0.01" class="form-control" v-model="modal.data.alis_fiyati" min="0">
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6" v-if="modal.data.urun_tipi === 'hazir_alinan'">
+                                                    <div class="form-group mb-2">
+                                                        <label>Alış Para Birimi</label>
+                                                        <select class="form-control" v-model="modal.data.alis_fiyati_para_birimi">
+                                                            <option value="TRY">₺ Türk Lirası</option>
+                                                            <option value="USD">$ Amerikan Doları</option>
+                                                            <option value="EUR">€ Euro</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group mb-2" v-if="!modal.data.urun_kodu && modal.data.urun_tipi === 'uretilen'">
+                                                <label><strong>Otomatik Malzeme Oluştur</strong></label>
+                                                <div class="d-flex flex-wrap" style="gap: 10px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
+                                                    <div v-for="tur in malzemeTurleri" :key="tur.id" class="custom-control custom-checkbox" style="min-width: 120px;">
+                                                        <input type="checkbox" class="custom-control-input" :id="'tur_' + tur.id" :value="tur" v-model="selectedMaterialTypes">
+                                                        <label class="custom-control-label" :for="'tur_' + tur.id" style="font-size: 0.75rem !important; cursor: pointer;">{{ tur.label }}</label>
+                                                    </div>
+                                                    <div class="custom-control custom-checkbox" style="min-width: 120px;">
+                                                        <input type="checkbox" class="custom-control-input" id="check_create_essence" v-model="createEssence">
+                                                        <label class="custom-control-label" for="check_create_essence" style="font-size: 0.75rem !important; cursor: pointer; color: var(--primary); font-weight: 600;">Esans (Oto. Tank)</label>
+                                                    </div>
+                                                </div>
+                                            </div>
                                             <div class="form-group mb-2">
-                                                <label>Urun Ismi *</label>
-                                                <input type="text" class="form-control" v-model="modal.data.urun_ismi"
-                                                    required>
+                                                <label>Not Bilgisi</label>
+                                                <textarea class="form-control" v-model="modal.data.not_bilgisi" rows="2"></textarea>
                                             </div>
                                         </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Stok Miktari</label>
-                                                <input type="number" class="form-control"
-                                                    v-model="modal.data.stok_miktari" min="0">
+
+                                        <!-- Sağ Kolon: Bilgi Paneli (Kalan Alan) -->
+                                        <div class="col-md-7">
+                                            <div class="card bg-light h-100 border-0">
+                                                <div class="card-body p-3">
+                                                    <h6 class="card-title text-primary border-bottom pb-2 mb-3"><i class="fas fa-list-ul"></i> Yapılacak İşlemler Rehberi</h6>
+                                                    
+                                                    <div v-if="!modal.data.urun_kodu" class="process-steps" style="height: calc(100vh - 220px); overflow-y: auto; padding-right: 5px; background: transparent;">
+                                                        <!-- Ürün Oluşturma -->
+                                                        <div class="step-item mb-2">
+                                                            <i class="fas fa-check-circle text-success mr-2"></i>
+                                                            <div>
+                                                                <span class="font-weight-bold">{{ modal.data.urun_ismi || 'Yeni Ürün' }}</span> kartı sisteme kaydedilecek.
+                                                                <div class="small text-muted">Birim: {{ modal.data.birim }}, Fiyat: {{ modal.data.satis_fiyati }} {{ modal.data.satis_fiyati_para_birimi }}</div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Seçilen Malzemeler -->
+                                                        <div v-if="selectedMaterialTypes.length > 0">
+                                                            <div v-for="tur in selectedMaterialTypes" :key="tur.value" class="step-item mb-2 pl-3">
+                                                                <i class="fas fa-plus-circle text-primary mr-2"></i>
+                                                                <div>
+                                                                    <span><strong>{{ tur.label }}</strong> malzemesi oluşturulacak.</span>
+                                                                    <div v-if="tur.value !== 'ham_esans'" class="text-success small">
+                                                                        <i class="fas fa-link"></i> Bu malzeme doğrudan <strong>Ürün Ağacı</strong>'na bağlanacak.
+                                                                    </div>
+                                                                    <div v-else-if="createEssence" class="text-info small">
+                                                                        <i class="fas fa-link"></i> Bu malzeme yeni <strong>Esans Reçetesi</strong>'ne bağlanacak.
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                        <!-- Esans Oluşturma -->
+                                                        <div v-if="createEssence" class="step-item mb-2 mt-3 pt-2 border-top">
+                                                            <i class="fas fa-flask text-warning mr-2"></i>
+                                                            <div>
+                                                                <span class="font-weight-bold text-warning">Otomatik Esans Üretimi</span>
+                                                                <ul class="list-unstyled mt-1 small text-muted">
+                                                                    <li><i class="fas fa-caret-right"></i> İsim: {{ modal.data.urun_ismi }}, Esans</li>
+                                                                    <li><i class="fas fa-caret-right"></i> Tank: Sistemdeki ilk uygun/boş tank seçilecek.</li>
+                                                                    <li><i class="fas fa-caret-right"></i> Bağlantı: Esans, ana ürünün reçetesine eklenecek.</li>
+                                                                </ul>
+                                                                
+                                                                <!-- Ham Esans Uyarısı -->
+                                                                <div v-if="selectedMaterialTypes.some(t => t.value === 'ham_esans')" class="alert alert-warning mt-2 p-2 mb-0" style="font-size: 0.75rem; border-left: 3px solid #ffc107;">
+                                                                    <i class="fas fa-magic"></i> <strong>Otomatik Hiyerarşi:</strong> Ham Esans seçimi yaptığınız için, sistem bu ham maddeyi doğrudan esansın reçetesine (Esans Ağacı) işleyecek.
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        <div v-if="selectedMaterialTypes.length === 0 && !createEssence" class="alert alert-light border text-center mt-5">
+                                                            <i class="fas fa-mouse-pointer d-block mb-2 fa-2x opacity-50"></i>
+                                                            Soldaki seçeneklerden malzeme türü seçerek otomatik işlemler listesini görebilirsiniz.
+                                                        </div>
+                                                    </div>
+                                                    <div v-else class="text-center text-muted mt-5">
+                                                        <i class="fas fa-info-circle fa-3x mb-3 opacity-50"></i>
+                                                        <p>Düzenleme modunda otomatik malzeme ekleme yapılamaz. Mevcut malzeme bağlarını "Ürün Ağaçları" sayfasından yönetebilirsiniz.</p>
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Birim</label>
-                                                <select class="form-control" v-model="modal.data.birim">
-                                                    <option value="adet">Adet</option>
-                                                    <option value="kg">Kg</option>
-                                                    <option value="gr">Gr</option>
-                                                    <option value="lt">Lt</option>
-                                                    <option value="ml">Ml</option>
-                                                    <option value="mt">Mt</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Satis Fiyati *</label>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    v-model="modal.data.satis_fiyati" min="0" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Para Birimi *</label>
-                                                <select class="form-control"
-                                                    v-model="modal.data.satis_fiyati_para_birimi">
-                                                    <option value="TRY">₺ Türk Lirası</option>
-                                                    <option value="USD">$ Amerikan Doları</option>
-                                                    <option value="EUR">€ Euro</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Kritik Stok Seviyesi</label>
-                                                <input type="number" class="form-control"
-                                                    v-model="modal.data.kritik_stok_seviyesi" min="0">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Depo *</label>
-                                                <select class="form-control" v-model="modal.data.depo"
-                                                    @change="loadRafList(modal.data.depo)" required>
-                                                    <option value="">Depo Secin</option>
-                                                    <option v-for="depo in depoList" :value="depo.depo_ismi">{{
-                                                        depo.depo_ismi
-                                                        }}</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Raf *</label>
-                                                <select class="form-control" v-model="modal.data.raf" required>
-                                                    <option value="">Once Depo Secin</option>
-                                                    <option v-for="raf in rafList" :value="raf.raf">{{ raf.raf }}
-                                                    </option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Ürün Tipi *</label>
-                                                <select class="form-control" v-model="modal.data.urun_tipi"
-                                                    @change="onUrunTipiChange" required>
-                                                    <option value="uretilen">Üretilen Ürün</option>
-                                                    <option value="hazir_alinan">Hazır Alınan Ürün</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="row" v-if="modal.data.urun_tipi === 'hazir_alinan'">
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Alış Fiyatı</label>
-                                                <input type="number" step="0.01" class="form-control"
-                                                    v-model="modal.data.alis_fiyati" min="0">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group mb-2">
-                                                <label>Alış Para Birimi</label>
-                                                <select class="form-control"
-                                                    v-model="modal.data.alis_fiyati_para_birimi">
-                                                    <option value="TRY">₺ Türk Lirası</option>
-                                                    <option value="USD">$ Amerikan Doları</option>
-                                                    <option value="EUR">€ Euro</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group mb-2" v-if="!modal.data.urun_kodu && modal.data.urun_tipi === 'uretilen'">
-                                        <label><strong>Otomatik Malzeme Oluştur</strong> (Seçilen türlerde malzemeler de eklenecek)</label>
-                                        <div class="d-flex flex-wrap" style="gap: 15px; border: 1px solid #ddd; padding: 10px; border-radius: 5px; background: #f9f9f9;">
-                                            <div v-for="tur in malzemeTurleri" :key="tur.id" class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input" :id="'tur_' + tur.id" :value="tur" v-model="selectedMaterialTypes">
-                                                <label class="custom-control-label" :for="'tur_' + tur.id" style="font-size: 0.8rem; cursor: pointer;">{{ tur.label }}</label>
-                                            </div>
-                                            <!-- Manuel Eklenen Esans Seçeneği -->
-                                            <div class="custom-control custom-checkbox">
-                                                <input type="checkbox" class="custom-control-input" id="check_create_essence" v-model="createEssence">
-                                                <label class="custom-control-label" for="check_create_essence" style="font-size: 0.8rem; cursor: pointer; color: var(--primary); font-weight: 600;">Esans (Oto. Tank)</label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="form-group mb-2">
-                                        <label>Not Bilgisi</label>
-                                        <textarea class="form-control" v-model="modal.data.not_bilgisi"
-                                            rows="2"></textarea>
                                     </div>
                                     <div class="text-right mt-2">
                                         <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i
-                                                    class="fas fa-times"></i> Iptal</button>
-                                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i>
-                                                Kaydet</button>
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal"><i class="fas fa-times"></i> Iptal</button>
+                                            <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Ürünü Kaydet</button>
                                         </div>
                                     </div>
                                 </form>
