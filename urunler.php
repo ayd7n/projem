@@ -620,6 +620,47 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             </div>
         </div>
 
+        <!-- Tablo Kılavuzu -->
+        <div class="card mt-4 border-0 shadow-sm" style="background: #fdfdfd;">
+            <div class="card-header bg-white border-bottom">
+                <h5 class="mb-0 text-primary" style="font-size: 1rem; font-weight: 700;"><i class="fas fa-question-circle mr-2"></i> Tablo Alanları ve Kılavuz</h5>
+            </div>
+            <div class="card-body">
+                <div class="row" style="font-size: 0.85rem;">
+                    <div class="col-md-4 mb-3">
+                        <h6 class="font-weight-bold text-dark border-bottom pb-1 mb-2"><i class="fas fa-cogs text-secondary mr-1"></i> Temel Bilgiler</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><strong>İşlemler:</strong> Ürün üzerinde düzenleme, silme ve ürün ağacı görüntüleme aksiyonlarını barındırır.</li>
+                            <li class="mb-2"><strong>Ürün Kodu:</strong> Sistemin ürüne atadığı benzersiz kimlik numarasıdır. Barkodlama ve takip için kullanılır.</li>
+                            <li class="mb-2"><strong>Ürün İsmi:</strong> Ürünün sistemdeki resmi adıdır. Faturalarda ve raporlarda bu isim görünür.</li>
+                            <li class="mb-2"><strong>Fotoğraf:</strong> Ürüne ait görselin varlığını gösterir. <i class="fas fa-check-circle text-success"></i> var, <i class="fas fa-times-circle text-danger"></i> yok demektir.</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6 class="font-weight-bold text-dark border-bottom pb-1 mb-2"><i class="fas fa-warehouse text-info mr-1"></i> Stok ve Depo</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><strong>Stok:</strong> Depodaki mevcut fiziksel adettir. <span class="text-danger">Kırmızı</span> stok bittiğini, <span class="text-warning">Turuncu</span> kritik seviyeyi gösterir.</li>
+                            <li class="mb-2"><strong>Kritik Stok:</strong> Bu seviyenin altına inildiğinde sistem uyarı verir ve sipariş oluşturmanızı önerir.</li>
+                            <li class="mb-2"><strong>Depo & Raf:</strong> Ürünün fiziksel olarak hangi depo ve rafta bulunduğunu belirtir.</li>
+                            <li class="mb-2"><strong>Birim:</strong> Stok takibinin hangi cinsle yapıldığını gösterir (Adet, Kg, Lt vb.).</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <h6 class="font-weight-bold text-dark border-bottom pb-1 mb-2"><i class="fas fa-money-bill-wave text-success mr-1"></i> Finansal Veriler</h6>
+                        <ul class="list-unstyled">
+                            <li class="mb-2"><strong>Satış Fiyatı:</strong> Ürünün müşteriye satıldığı etiket fiyatıdır.</li>
+                            <li class="mb-2"><strong>Alış Fiyatı:</strong> Sadece <em>Hazır Alınan</em> ürünlerde görünür. Tedarikçiden alınan son fiyatın veya ortalamanın değeridir.</li>
+                            <li class="mb-2"><strong>Maliyet:</strong> Ürünün size toplam geliş bedelidir. Bu değer, ürünün kendi tanımlı para birimi (USD, EUR, TL) üzerinden gösterilir. Üretilen ürünlerde reçetedeki tüm bileşenlerin güncel kurla harmanlanmış toplamıdır.</li>
+                            <li class="mb-2"><strong>Ürün Tipi:</strong> <span class="badge badge-primary" style="font-size: 0.7em;">Üretilen</span> (kendi imalatınız) veya <span class="badge badge-success" style="font-size: 0.7em;">Hazır Alınan</span> (al-sat) olduğunu gösterir.</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="alert alert-light border mt-2 mb-0 py-2 small text-muted">
+                    <i class="fas fa-info-circle mr-1"></i> <strong>İpucu:</strong> Üst kısımdaki arama çubuğunu, depo ve raf filtrelerini kullanarak ürünlerinizi kolayca bulabilir ve yönetebilirsiniz.
+                </div>
+            </div>
+        </div>
+
         <!-- Product Modal -->
         <div class="modal fade" id="productModal" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-xl" role="document">
