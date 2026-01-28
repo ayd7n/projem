@@ -47,7 +47,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap&subset=latin-ext"
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;700&display=swap&subset=latin-ext"
         rel="stylesheet">
     <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
     <style>
@@ -85,7 +85,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         }
 
         body {
-            font-family: 'Ubuntu', sans-serif;
+            font-family: 'Fira Sans', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
         }
@@ -259,7 +259,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             height: auto;
             max-height: 90vh;
             box-shadow: var(--shadow);
-            font-family: 'Ubuntu', sans-serif;
+            font-family: 'Fira Sans', sans-serif;
             display: flex;
             flex-direction: column;
         }
@@ -367,7 +367,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         .pagination-container .pagination-info,
         .pagination-container .page-link {
             font-size: 0.75rem !important;
-            font-family: 'Ubuntu', sans-serif !important;
+            font-family: 'Fira Sans', sans-serif !important;
         }
         .pagination-container select.form-control {
             height: 28px !important;
