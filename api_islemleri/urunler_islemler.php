@@ -541,6 +541,12 @@ if (isset($_GET['action'])) {
                     $alis_fiyati_para_birimi = 'TRY';
                 }
 
+                // Hazır alınan ürünler için alış fiyatı kontrolü
+                if ($urun_tipi === 'hazir_alinan' && $alis_fiyati <= 0) {
+                    echo json_encode(['status' => 'error', 'message' => 'Hazır alınan ürünler için alış fiyatı 0\'dan büyük olmalıdır.']);
+                    exit;
+                }
+
                 $query = "UPDATE urunler SET urun_ismi = '" . $connection->real_escape_string($urun_ismi) . "', not_bilgisi = '" . $connection->real_escape_string($not_bilgisi) . "', stok_miktari = " . (int)$stok_miktari . ", birim = '" . $connection->real_escape_string($birim) . "', satis_fiyati = " . (float)$satis_fiyati . ", satis_fiyati_para_birimi = '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', alis_fiyati = " . (float)$alis_fiyati . ", alis_fiyati_para_birimi = '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', kritik_stok_seviyesi = " . (int)$kritik_stok_seviyesi . ", depo = " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", raf = " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", urun_tipi = '" . $connection->real_escape_string($urun_tipi) . "' WHERE urun_kodu = " . (int)$urun_kodu;
 
                 if ($connection->query($query)) {

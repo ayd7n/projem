@@ -250,15 +250,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
         /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
         #productModal .modal-dialog {
-            max-width: 100%;
-            margin: 0;
-            height: 100vh;
+            max-width: 90%;
+            margin: 1.75rem auto;
         }
         #productModal .modal-content {
             border: none;
-            border-radius: 0;
-            height: 100vh;
-            box-shadow: none;
+            border-radius: 12px;
+            height: auto;
+            max-height: 90vh;
+            box-shadow: var(--shadow);
             font-family: 'Ubuntu', sans-serif;
             display: flex;
             flex-direction: column;
@@ -309,7 +309,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             background: #fff;
             border-radius: 6px;
             padding: 2px;
-            height: calc(100vh - 200px); /* Ekran boyuna göre dinamik yükseklik */
+            max-height: 400px;
             overflow-y: auto;
         }
         
@@ -350,6 +350,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             font-size: 1.2rem;
             padding: 0.8rem;
         }
+
+        /* Modal backdrop color adjustment */
+        .modal-backdrop.show {
+            background-color: var(--primary);
+            opacity: 1;
+        }
     </style>
 </head>
 
@@ -389,13 +395,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
 
     <!-- Main Content -->
     <div id="app" class="main-content">
-        <div class="page-header">
-            <div>
-                <h1>Urun Yonetimi</h1>
-                <p>Urunleri ekleyin, duzenleyin ve yonetin</p>
-            </div>
-        </div>
-
         <div v-if="alert.message" :class="'alert alert-' + alert.type" role="alert">
             {{ alert.message }}
         </div>
@@ -459,6 +458,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         <span style="font-weight: 600;">{{ criticalProducts }}</span>
                         <span class="ml-1" style="opacity: 0.9;">Kritik</span>
                     </div>
+
+                    <!-- Fiyat/Maliyet Bilgisi Butonu -->
+                    <button class="btn btn-sm" data-toggle="modal" data-target="#infoModal" 
+                        style="font-size: 0.75rem; padding: 4px 12px; border: 1px solid #4a0e63; color: #4a0e63; background: white; font-weight: 600; box-shadow: 0 2px 4px rgba(74, 14, 99, 0.1); transition: all 0.3s;"
+                        onmouseover="this.style.background='#4a0e63'; this.style.color='white'; this.style.boxShadow='0 4px 8px rgba(74, 14, 99, 0.2)';"
+                        onmouseout="this.style.background='white'; this.style.color='#4a0e63'; this.style.boxShadow='0 2px 4px rgba(74, 14, 99, 0.1)';">
+                        <i class="fas fa-book-reader mr-1"></i> Fiyat & Maliyet Rehberi
+                    </button>
                 </div>
             </div>
             <div class="card-body">
@@ -471,8 +478,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-tag"></i> Urun Ismi</th>
                                 <th><i class="fas fa-image"></i> Fotograf</th>
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
-                                <th><i class="fas fa-calculator"></i> Üretilebilir</th>
-                                <th><i class="fas fa-check-double"></i> Gerçek Ürt.</th>
                                 <th><i class="fas fa-exclamation-triangle"></i> Kritik Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
@@ -496,14 +501,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu">
                                 <td class="actions">
-                                    <a :href="'urun_karti.php?urun_kodu=' + product.urun_kodu"
-                                        class="btn btn-info btn-sm" title="Ürün Kartı">
-                                        <i class="fas fa-id-card"></i>
-                                    </a>
-                                    <button @click="openTreeModal(product)" class="btn btn-success btn-sm"
-                                        title="Ürün Ağacı">
-                                        <i class="fas fa-sitemap"></i>
-                                    </button>
                                     <?php if (yetkisi_var('action:urunler:edit')): ?>
                                         <button @click="openModal(product)" class="btn btn-primary btn-sm"><i
                                                 class="fas fa-edit"></i></button>
@@ -527,18 +524,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <td>
                                     <span :class="stockClass(product)">
                                         {{ product.stok_miktari }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span
-                                        :class="product.uretilebilir_miktar > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
-                                        {{ product.uretilebilir_miktar || 0 }}
-                                    </span>
-                                </td>
-                                <td>
-                                    <span
-                                        :class="product.gercek_uretilebilir > 0 ? 'text-success font-weight-bold' : 'text-danger font-weight-bold'">
-                                        {{ product.gercek_uretilebilir || 0 }}
                                     </span>
                                 </td>
                                 <td>{{ product.kritik_stok_seviyesi }}</td>
@@ -624,6 +609,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </button>
                     </div>
                     <div class="modal-body">
+                        <!-- Modal İçi Alert -->
+                        <div v-if="modalAlert.message" :class="'alert alert-' + modalAlert.type" role="alert">
+                            {{ modalAlert.message }}
+                        </div>
+
                         <!-- Tabs -->
                         <ul class="nav nav-tabs mb-2" id="productTabs" role="tablist">
                             <li class="nav-item">
@@ -773,7 +763,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                 <div class="card-body p-3">
                                                     <h6 class="card-title text-primary border-bottom pb-2 mb-3"><i class="fas fa-list-ul"></i> Yapılacak İşlemler Rehberi</h6>
                                                     
-                                                    <div v-if="!modal.data.urun_kodu" class="process-steps" style="height: calc(100vh - 220px); overflow-y: auto; padding-right: 5px; background: transparent;">
+                                                    <div v-if="!modal.data.urun_kodu" class="process-steps" style="max-height: 450px; overflow-y: auto; padding-right: 5px; background: transparent;">
                                                         <!-- Ürün Oluşturma -->
                                                         <div class="step-item mb-2">
                                                             <i class="fas fa-check-circle text-success mr-2"></i>
@@ -961,71 +951,70 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             </button>
         </div>
 
-        <!-- Product Tree Modal -->
-        <div class="modal fade" id="treeModal" tabindex="-1" role="dialog">
-
-            <div class="modal-dialog modal-xl" role="document" style="max-width: 95%; width: 1200px;">
-                <div class="modal-content">
-                    <div class="modal-header"
-                        style="background: linear-gradient(135deg, #2e7d32, #4caf50); color: white;">
-                        <h5 class="modal-title"><i class="fas fa-sitemap mr-2"></i>{{ treeModal.title }}</h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+        <!-- Info Modal -->
+        <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content" style="border: none; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);">
+                    <div class="modal-header border-bottom-0 pb-1 pt-3 px-3">
+                        <h6 class="modal-title font-weight-bold text-primary"><i class="fas fa-calculator mr-2"></i> Fiyat ve Maliyet Hesaplama Rehberi</h6>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body" style="padding: 20px; min-height: 500px;">
-                        <!-- Legend -->
-                        <div class="tree-legend mb-3"
-                            style="display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.8rem;">
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #4a0e63; border-radius: 50%; margin-right: 5px;"></span>Ürün
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #9c27b0; border-radius: 50%; margin-right: 5px;"></span>Esans
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #2196f3; border-radius: 50%; margin-right: 5px;"></span>Malzeme
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #ff9800; border-radius: 50%; margin-right: 5px;"></span>Kutu
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #4caf50; border-radius: 50%; margin-right: 5px;"></span>Takım
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #f44336; border-radius: 50%; margin-right: 5px;"></span>Etiket
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #00bcd4; border-radius: 50%; margin-right: 5px;"></span>Jelatin
-                            </div>
-                            <div><span
-                                    style="display: inline-block; width: 16px; height: 16px; background: #795548; border-radius: 50%; margin-right: 5px;"></span>Dış
-                                Kutu</div>
+                    <div class="modal-body p-3">
+                        <!-- Satış Fiyatı -->
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #d4af37;">
+                            <h6 class="text-dark font-weight-bold mb-2"><i class="fas fa-money-bill-wave text-warning mr-2"></i> 1. Satış Fiyatı (Müşteriye Sattığınız Fiyat)</h6>
+                            <p class="mb-0 text-secondary" style="font-size: 0.85rem; line-height: 1.5;">
+                                Bu, ürünün üzerindeki etikette yazan fiyattır. Müşteriden talep edeceğiniz parayı buraya yazarsınız. <br>
+                                <strong>Önemli:</strong> Bu rakamı tamamen siz belirlersiniz. Maliyetiniz artsa bile siz burayı değiştirmediğiniz sürece satış fiyatı aynı kalır. Sistem buraya karışmaz.
+                            </p>
                         </div>
 
-                        <div v-if="treeModal.loading" class="text-center p-5">
-                            <i class="fas fa-spinner fa-spin fa-3x" style="color: var(--primary);"></i>
-                            <p class="mt-3">Ürün ağacı yükleniyor...</p>
+                        <!-- Alış Fiyatı -->
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; margin-bottom: 15px; border-left: 5px solid #28a745;">
+                            <h6 class="text-dark font-weight-bold mb-2"><i class="fas fa-shopping-cart text-success mr-2"></i> 2. Alış Fiyatı (Sadece Hazır Ürünler İçin)</h6>
+                            <p class="mb-0 text-secondary" style="font-size: 0.85rem; line-height: 1.5;">
+                                Bu alanı <strong>sadece</strong> dışarıdan hazır paketli alıp sattığınız ürünler için kullanın. <br>
+                                Örneğin: Bir tedarikçiden hazır kolonya alıp satıyorsanız, tedarikçiye ödediğiniz parayı buraya yazın.<br>
+                                <strong>Dikkat:</strong> Eğer ürünü fabrikanızda siz üretiyorsanız (şişe, kapak birleştiriyorsanız), bu kutucuğu <u>0 (sıfır)</u> bırakın. Çünkü sizin maliyetiniz aşağıda anlatılan yöntemle hesaplanacak.
+                            </p>
                         </div>
-                        <div v-else-if="treeModal.error" class="alert alert-warning text-center">
-                            <i class="fas fa-exclamation-triangle fa-2x mb-2"></i>
-                            <p>{{ treeModal.error }}</p>
+
+                        <!-- Teorik Maliyet -->
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 15px; border-left: 5px solid #17a2b8;">
+                            <h6 class="text-dark font-weight-bold mb-2"><i class="fas fa-industry text-info mr-2"></i> 3. Teorik Maliyet (Sistemin Hesapladığı Gerçek Maliyet)</h6>
+                            <p class="text-secondary mb-3" style="font-size: 0.85rem; line-height: 1.5;">
+                                Burası, bir ürünü üretmenin size kaça mal olduğunu gösteren kısımdır. Bu rakamı elle yazamazsınız, sistem arka planda otomatik hesaplar. Hesaplama şöyle yapılır:
+                            </p>
+                            
+                            <ul class="list-unstyled mb-0 pl-2" style="font-size: 0.85rem;">
+                                <li class="mb-3">
+                                    <strong class="text-dark d-block mb-1"><i class="fas fa-calculator text-secondary mr-1"></i> Malzeme Maliyeti (Ağırlıklı Ortalama):</strong>
+                                    Sistem, maliyetleri hesaplarken <strong>Çerçeve Sözleşmeler</strong> üzerinden yapılan <strong>Mal Kabulleri</strong> baz alır. Sadece son alış fiyatına değil, depodaki <strong>mevcut stoğun</strong> giriş fiyatlarına göre ağırlıklı ortalamasını hesaplar.
+                                    <div class="mt-1 p-2 bg-white border rounded small text-muted">
+                                        <i class="fas fa-info-circle mr-1"></i> <em>Örnek: Tedarikçinizle anlaşmanız gereği 10 TL'den aldığınız kapaklar ile yeni anlaşmayla 20 TL'den aldıklarınız depoda karışıktır. Sistem bu stoğun ortalamasını (Örn: 15 TL) gerçek maliyet olarak kabul eder.</em>
+                                    </div>
+                                </li>
+                                <li class="mb-3">
+                                    <strong class="text-dark d-block mb-1"><i class="fas fa-list-ul text-secondary mr-1"></i> Reçete Toplamı:</strong>
+                                    Sistem ürünün reçetesindeki tüm bileşenleri (Esans, Alkol, Şişe vb.) tek tek gezer. Çerçeve sözleşmelerden gelen fiyatlarla hesaplanan malzeme maliyetlerini, reçetedeki kullanım miktarlarıyla çarparak ürünün ana maliyetini oluşturur.
+                                </li>
+                                <li class="mb-0">
+                                    <strong class="text-dark d-block mb-1"><i class="fas fa-dollar-sign text-secondary mr-1"></i> Otomatik Kur Çevrimi:</strong>
+                                    Sözleşmeniz Dolar/Euro üzerinden olsa bile, sistem hesaplama anındaki güncel kuru kullanır. "Sözleşme fiyatı 1 Dolar, kur 30 TL ise maliyet 30 TL'dir" der. Kur değiştikçe maliyetiniz de otomatik güncellenir.
+                                </li>
+                            </ul>
                         </div>
-                        <div v-else-if="!treeModal.data || (treeModal.data.children && treeModal.data.children.length === 0)"
-                            class="alert alert-info text-center">
-                            <i class="fas fa-info-circle fa-2x mb-2"></i>
-                            <p>Bu ürün için henüz ürün ağacı tanımlanmamış.</p>
-                            <a href="urun_agaclari.php" class="btn btn-primary btn-sm mt-2">
-                                <i class="fas fa-plus mr-1"></i> Ürün Ağacı Tanımla
-                            </a>
-                        </div>
-                        <div v-else id="tree-container"
-                            style="width: 100%; height: 450px; overflow: auto; border: 1px solid var(--border-color); border-radius: 8px; background: #fafafa;">
-                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 pb-3">
+                        <button type="button" class="btn btn-primary btn-sm px-4" data-dismiss="modal">Tamam, Anladım</button>
                     </div>
                 </div>
             </div>
         </div>
+
+
 
         </div>
 
@@ -1035,7 +1024,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
-        <script src="https://d3js.org/d3.v7.min.js"></script>
+
 
         <script>
             const app = Vue.createApp({
@@ -1052,6 +1041,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         limit: 10,
                         productTypeFilter: '',
                         modal: { title: '', data: {} },
+                        modalAlert: { message: '', type: '' },
                         depoList: [],
                         rafList: [],
                         criticalStockFilterEnabled: false,
@@ -1073,13 +1063,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         kurlar: { dolar: 1, euro: 1 },
                         malzemeTurleri: [],
                         selectedMaterialTypes: [],
-                        createEssence: false,
-                        treeModal: {
-                            title: '',
-                            loading: false,
-                            error: null,
-                            data: null
-                        }
+                        createEssence: false
                     }
                 },
                 computed: {
@@ -1107,6 +1091,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.alert.message = message;
                         this.alert.type = type;
                         setTimeout(() => { this.alert.message = ''; }, 3000);
+                    },
+                    showModalAlert(message, type) {
+                        this.modalAlert.message = message;
+                        this.modalAlert.type = type;
+                        setTimeout(() => { this.modalAlert.message = ''; }, 3000);
                     },
                     loadMalzemeTurleri() {
                         fetch('api_islemleri/urunler_islemler.php?action=get_malzeme_turleri')
@@ -1196,6 +1185,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.uploadProgress = 0; // Reset progress
                         this.selectedMaterialTypes = []; // Reset selected types
                         this.createEssence = false; // Reset essence creation
+                        this.modalAlert = { message: '', type: '' }; // Clear modal alert
 
                         if (product) {
                             this.modal.title = 'Urunu Duzenle';
@@ -1222,6 +1212,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         }
                     },
                     saveProduct() {
+                        // Hazır alınan ürünler için alış fiyatı kontrolü
+                        if (this.modal.data.urun_tipi === 'hazir_alinan') {
+                            const alisFiyati = parseFloat(this.modal.data.alis_fiyati) || 0;
+                            if (alisFiyati <= 0) {
+                                this.showModalAlert('Hazır alınan ürünler için alış fiyatı 0\'dan büyük olmalıdır.', 'danger');
+                                return;
+                            }
+                        }
+
                         let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
                         let formData = new FormData();
                         for (let key in this.modal.data) {
@@ -1676,131 +1675,6 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             this.modal.data.alis_fiyati = 0.0;
                             this.modal.data.alis_fiyati_para_birimi = 'TRY';
                         }
-                    }
-                    ,
-                    openTreeModal(product) {
-                        this.treeModal.title = product.urun_ismi + ' - Ürün Ağacı';
-                        this.treeModal.loading = true;
-                        this.treeModal.error = null;
-                        this.treeModal.data = null;
-
-                        $('#treeModal').modal('show');
-
-                        fetch(`api_islemleri/urun_agaclari_islemler.php?action=get_product_tree_hierarchy&urun_kodu=${product.urun_kodu}`)
-                            .then(response => response.json())
-                            .then(response => {
-                                this.treeModal.loading = false;
-                                if (response.status === 'success') {
-                                    this.treeModal.data = response.data;
-                                    // Render tree after DOM update
-                                    this.$nextTick(() => {
-                                        if (this.treeModal.data && this.treeModal.data.children && this.treeModal.data.children.length > 0) {
-                                            this.renderTree(this.treeModal.data);
-                                        }
-                                    });
-                                } else {
-                                    this.treeModal.error = response.message || 'Ürün ağacı yüklenemedi.';
-                                }
-                            })
-                            .catch(error => {
-                                this.treeModal.loading = false;
-                                this.treeModal.error = 'Bir hata oluştu: ' + error.message;
-                            });
-                    },
-                    renderTree(data) {
-                        const container = document.getElementById('tree-container');
-                        if (!container) return;
-
-                        // Clear previous content
-                        container.innerHTML = '';
-
-                        const margin = { top: 30, right: 120, bottom: 30, left: 120 };
-                        const width = 1100;
-                        const height = 450;
-
-                        // Color mapping for different types
-                        const getColor = (type) => {
-                            const colors = {
-                                'urun': '#4a0e63',
-                                'esans': '#9c27b0',
-                                'malzeme': '#2196f3',
-                                'kutu': '#ff9800',
-                                'takim': '#4caf50',
-                                'etiket': '#f44336',
-                                'jelatin': '#00bcd4',
-                                'dis_kutu': '#795548',
-                                'kapak': '#607d8b'
-                            };
-                            return colors[type?.toLowerCase()] || '#9e9e9e';
-                        };
-
-                        // Create SVG
-                        const svg = d3.select(container)
-                            .append('svg')
-                            .attr('width', width)
-                            .attr('height', height)
-                            .append('g')
-                            .attr('transform', `translate(${margin.left},${margin.top})`);
-
-                        // Create tree layout
-                        const treeLayout = d3.tree()
-                            .size([height - margin.top - margin.bottom, width - margin.left - margin.right - 200]);
-
-                        // Create hierarchy
-                        const root = d3.hierarchy(data);
-                        treeLayout(root);
-
-                        // Create links
-                        svg.selectAll('.link')
-                            .data(root.links())
-                            .enter()
-                            .append('path')
-                            .attr('class', 'link')
-                            .attr('fill', 'none')
-                            .attr('stroke', '#ccc')
-                            .attr('stroke-width', 2)
-                            .attr('d', d3.linkHorizontal()
-                                .x(d => d.y)
-                                .y(d => d.x));
-
-                        // Create nodes
-                        const nodes = svg.selectAll('.node')
-                            .data(root.descendants())
-                            .enter()
-                            .append('g')
-                            .attr('class', 'node')
-                            .attr('transform', d => `translate(${d.y},${d.x})`);
-
-                        // Add circles
-                        nodes.append('circle')
-                            .attr('r', 12)
-                            .attr('fill', d => getColor(d.data.type))
-                            .attr('stroke', '#fff')
-                            .attr('stroke-width', 2)
-                            .style('cursor', 'pointer');
-
-                        // Add labels
-                        nodes.append('text')
-                            .attr('dy', 4)
-                            .attr('x', d => d.children ? -18 : 18)
-                            .attr('text-anchor', d => d.children ? 'end' : 'start')
-                            .style('font-size', '11px')
-                            .style('font-weight', d => d.depth === 0 ? 'bold' : 'normal')
-                            .text(d => {
-                                const name = d.data.name;
-                                const qty = d.data.quantity;
-                                if (d.depth === 0) return name;
-                                return `${name} (${qty})`;
-                            });
-
-                        // Add type labels below circles
-                        nodes.append('text')
-                            .attr('dy', 25)
-                            .attr('text-anchor', 'middle')
-                            .style('font-size', '9px')
-                            .style('fill', d => getColor(d.data.type))
-                            .style('font-weight', 'bold')
-                            .text(d => d.data.type?.toUpperCase() || '');
                     }
                 },
 

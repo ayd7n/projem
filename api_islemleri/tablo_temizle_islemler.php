@@ -11,10 +11,17 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
 
 if (isset($_GET['action']) && $_GET['action'] == 'list_tables') {
     $tables = [];
+    $excludedTables = ['ayarlar', 'sistem_kullanicilari', 'malzeme_turleri'];
     $result = $connection->query("SHOW FULL TABLES WHERE Table_type = 'BASE TABLE'");
     if ($result) {
         while ($row = $result->fetch_array()) {
             $tableName = $row[0];
+            
+            // Skip excluded tables
+            if (in_array($tableName, $excludedTables)) {
+                continue;
+            }
+
             // Get row count - exclude admin users for personeller table
             if ($tableName === 'personeller') {
                 $countResult = $connection->query("SELECT COUNT(*) as count FROM `$tableName` WHERE e_posta NOT IN ('admin@parfum.com', 'admin2@parfum.com')");
