@@ -19,26 +19,36 @@ function getSupplyChainData($connection) {
 
     // 0. Bekleyen Satınalma Siparişlerini Malzeme Bazında Al
     $pending_purchase_orders = [];
-    $p_orders_query = "SELECT ssk.malzeme_kodu, 
+    $pending_purchase_orders_by_name = [];
+    
+    $p_orders_query = "SELECT ssk.malzeme_kodu, ssk.malzeme_adi,
                               SUM(ssk.miktar - ssk.teslim_edilen_miktar) as bekleyen,
                               GROUP_CONCAT(DISTINCT ss.siparis_no SEPARATOR ', ') as po_list
                        FROM satinalma_siparisler ss
                        JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
                        WHERE ss.durum IN ('taslak', 'onaylandi', 'olusturuldu', 'gonderildi', 'kismen_teslim', 'yollandi')
-                       GROUP BY ssk.malzeme_kodu
+                       GROUP BY ssk.malzeme_kodu, ssk.malzeme_adi
                        HAVING bekleyen > 0";
     $p_orders_result = $connection->query($p_orders_query);
     if ($p_orders_result) {
         while ($po = $p_orders_result->fetch_assoc()) {
-            $pending_purchase_orders[$po['malzeme_kodu']] = [
-                'miktar' => floatval($po['bekleyen']),
-                'po_list' => $po['po_list']
-            ];
+            if (!empty($po['malzeme_kodu'])) {
+                $pending_purchase_orders[$po['malzeme_kodu']] = [
+                    'miktar' => floatval($po['bekleyen']),
+                    'po_list' => $po['po_list']
+                ];
+            }
+            if (!empty($po['malzeme_adi'])) {
+                $pending_purchase_orders_by_name[$po['malzeme_adi']] = [
+                    'miktar' => floatval($po['bekleyen']),
+                    'po_list' => $po['po_list']
+                ];
+            }
         }
     }
 
     // 1. Bileşen Eksiklik Kontrolü
-    $products_query = "SELECT urun_kodu, urun_ismi FROM urunler ORDER BY urun_ismi";
+    $products_query = "SELECT urun_kodu, urun_ismi FROM urunler WHERE urun_tipi = 'uretilen' ORDER BY urun_ismi";
     $products_result = $connection->query($products_query);
 
     $bileşen_eksik_urunler = [];
@@ -261,6 +271,54 @@ function getSupplyChainData($connection) {
             // Onaylanmış sipariş miktarını al
             $siparis_miktari = isset($siparis_miktarlari[$row['urun_kodu']]) ? $siparis_miktarlari[$row['urun_kodu']] : 0;
             $row['siparis_miktari'] = $siparis_miktari;
+
+            // HAZIR ALINAN ÜRÜNLER İÇİN ÖZEL MANTIK
+            if ($row['urun_tipi'] === 'hazir_alinan') {
+                $yoldaki_miktar = 0;
+                $po_list = '';
+                
+                if (isset($pending_purchase_orders_by_name[$row['urun_ismi']])) {
+                    $yoldaki_miktar = $pending_purchase_orders_by_name[$row['urun_ismi']]['miktar'];
+                    $po_list = $pending_purchase_orders_by_name[$row['urun_ismi']]['po_list'];
+                } elseif (isset($pending_purchase_orders[$row['urun_kodu']])) {
+                     $yoldaki_miktar = $pending_purchase_orders[$row['urun_kodu']]['miktar'];
+                     $po_list = $pending_purchase_orders[$row['urun_kodu']]['po_list'];
+                }
+
+                $toplam_mevcut = $stok + $yoldaki_miktar;
+                $toplam_hedef = $siparis_miktari + $kritik;
+                
+                if ($toplam_hedef > 0) {
+                    $yuzde_fark = (($toplam_hedef - $toplam_mevcut) / $toplam_hedef) * 100;
+                } else {
+                    $yuzde_fark = ($toplam_mevcut > 0) ? -100 : 0;
+                }
+                
+                $acik = max(0, $toplam_hedef - $toplam_mevcut);
+                $acik_kritik = max(0, $kritik - $toplam_mevcut);
+                
+                $row['bilesen_detaylari'] = [];
+                $row['bilesen_uretilebilir'] = [];
+                $row['eksik_bilesenler'] = [];
+                $row['esans_agaci_eksik'] = [];
+                $row['sozlesme_eksik_malzemeler'] = [];
+                $row['esans_uretim_bilgisi'] = [];
+                
+                $row['toplam_mevcut'] = $toplam_mevcut;
+                $row['acik_kritik'] = $acik_kritik;
+                $row['acik'] = $acik;
+                $row['yuzde_fark'] = $yuzde_fark;
+                $row['uretilebilir_miktar'] = PHP_INT_MAX; 
+                $row['onerilen_uretim'] = 0;
+                $row['onerilen_satinalma'] = $acik;
+                $row['yoldaki_miktar'] = $yoldaki_miktar;
+                $row['po_list'] = $po_list;
+                
+                $row['aksiyon_onerisi'] = getAksiyonOnerisi($row);
+                
+                $uretilebilir_urunler[] = $row;
+                continue;
+            }
 
             // Kritik seviye hesabı
             // Kritik seviye hesabı (Eski) yerine Toplam Hedef Bazlı Fark Hesabı
@@ -815,6 +873,49 @@ function getSupplyChainData($connection) {
 
 // Aksiyon Önerisi Hesaplama Fonksiyonu
 function getAksiyonOnerisi($p) {
+    // ÖZEL: Hazır alınan ürünler için kontrol
+    if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan') {
+        $acik = floatval($p['acik']);
+        $yoldaki = isset($p['yoldaki_miktar']) ? floatval($p['yoldaki_miktar']) : 0;
+        
+        if ($acik > 0) {
+            // Açık zaten yoldaki miktar düşülerek hesaplanmış olabilir, ama burada netleştiriyoruz.
+            // Yukarıdaki mantıkta acik = hedef - (stok + yoldaki) idi. Yani açık zaten net ihtiyaçtır.
+            // Ancak yoldaki miktar 0 ise ve açık varsa kesin sipariş gerekir.
+            
+            return [
+                'class' => 'badge-aksiyon-uyari',
+                'icon' => 'fas fa-cart-plus',
+                'mesaj' => 'Ürün Satın Alınmalı',
+                'detay' => 'Stok yetersiz. <strong>' . number_format($acik, 0, ',', '.') . ' ' . $p['birim'] . '</strong> sipariş verilmeli.',
+                'category' => 'order',
+                'buton' => [
+                    'text' => 'Satın Al',
+                    'url' => 'satinalma_siparisler.php',
+                    'icon' => 'fas fa-shopping-cart'
+                ]
+            ];
+        } elseif ($yoldaki > 0) {
+             return [
+                'class' => 'badge-aksiyon-bilgi',
+                'icon' => 'fas fa-truck',
+                'mesaj' => 'Sipariş Yolda',
+                'detay' => 'Bekleyen siparişler var (' . number_format($yoldaki, 0, ',', '.') . ').',
+                'category' => 'info',
+                'buton' => null
+            ];
+        }
+        
+        return [
+            'class' => 'badge-aksiyon-basarili',
+            'icon' => 'fas fa-check-circle',
+            'mesaj' => 'Stok Yeterli',
+            'detay' => 'Hazır ürün stoğu yeterli seviyede.',
+            'category' => 'ok',
+            'buton' => null
+        ];
+    }
+
     $acik = floatval($p['acik']);
     $eksik_bilesenler = isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : [];
     $esans_agaci_eksik = isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : [];
@@ -1256,13 +1357,24 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            padding: 1px 1px;
+            padding: 10px 12px;
             border-bottom: 1px solid var(--border);
             white-space: nowrap;
             text-align: left;
             position: sticky;
             top: 0;
             z-index: 10;
+            vertical-align: top;
+        }
+        
+        .table th .header-desc {
+            font-size: 9px; 
+            font-weight: 400; 
+            opacity: 0.7; 
+            margin-top: 4px;
+            white-space: normal;
+            line-height: 1.2;
+            text-transform: none;
         }
         
         .table th.text-center { text-align: center; }
@@ -1408,15 +1520,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             color: var(--success) !important;
             font-weight: 700 !important;
             border-left: 3px solid var(--success) !important;
-            min-width: 420px !important;
+            min-width: 140px !important;
         }
         
         .th-purple {
             background: var(--white) !important;
-            overflow: hidden !important; 
-            text-overflow: ellipsis !important; 
-            white-space: nowrap !important; 
-            max-width: 0;
+            color: #6f42c1 !important;
+            font-weight: 700 !important;
+            border-left: 3px solid #6f42c1 !important;
+            min-width: 140px !important;
         }
 
         /* Filter Chips - Larger */
@@ -2072,7 +2184,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             // Toplam Mevcut Hesabı (Eksik olduğu için NaN hatası veriyordu)
                             $toplam_mevcut = $stok + floatval($p['uretimde_miktar']);
                         ?>
-                        <tr class="<?php echo $row_class; ?>">
+                        <tr class="<?php echo $row_class; ?>" data-urun-tipi="<?php echo $p['urun_tipi']; ?>">
                             <td class="text-center text-muted sticky-col sticky-col-1"><?php echo $sira++; ?></td>
                             <td class="sticky-col sticky-col-2">
                                 <span class="font-semibold"><?php echo htmlspecialchars($p['urun_ismi']); ?></span>
@@ -2111,9 +2223,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <?php else: ?>-<?php endif; ?>
                             </td>
                             <td class="text-right px-2">
-                                <?php if ($p['uretimde_miktar'] > 0): ?>
-                                    <span class="text-info font-semibold"><?php echo number_format($p['uretimde_miktar'], 0, ',', '.'); ?></span>
-                                <?php else: ?>-<?php endif; ?>
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                     <?php if (isset($p['yoldaki_miktar']) && $p['yoldaki_miktar'] > 0): ?>
+                                        <span class="text-info font-semibold" title="Yoldaki Sipariş"><i class="fas fa-truck text-xs mr-1"></i><?php echo number_format($p['yoldaki_miktar'], 0, ',', '.'); ?></span>
+                                     <?php else: ?>-<?php endif; ?>
+                                <?php else: ?>
+                                     <?php if ($p['uretimde_miktar'] > 0): ?>
+                                        <span class="text-info font-semibold"><?php echo number_format($p['uretimde_miktar'], 0, ',', '.'); ?></span>
+                                     <?php else: ?>-<?php endif; ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right font-semibold px-2"><?php echo number_format($p['toplam_mevcut'], 0, ',', '.'); ?></td>
                             <td class="text-right px-2"><?php echo number_format($p['kritik_stok_seviyesi'], 0, ',', '.'); ?></td>
@@ -2132,7 +2250,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 data-siparis="<?php echo $siparis_miktari; ?>"
                                                 data-kritik="<?php echo $p['kritik_stok_seviyesi']; ?>"
                                                 data-stok="<?php echo $p['stok_miktari']; ?>"
-                                                data-uretimde="<?php echo $p['uretimde_miktar']; ?>"
+                                                data-uretimde="<?php echo (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan') ? ($p['yoldaki_miktar'] ?? 0) : $p['uretimde_miktar']; ?>"
                                                 data-acik="<?php echo $p['acik']; ?>">
                                             <i class="fas fa-question-circle"></i>
                                         </button>
@@ -2150,23 +2268,38 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <td class="text-right uretilebilir-hucre" 
                                 data-bilesen-uretilebilir='<?php echo json_encode($p['bilesen_uretilebilir']); ?>'
                                 data-acik="<?php echo $p['acik']; ?>">
-                                <?php if ($p['uretilebilir_miktar'] > 0): ?>
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php elseif ($p['uretilebilir_miktar'] > 0): ?>
                                     <span class="text-success font-semibold uretilebilir-deger"><?php echo number_format($p['uretilebilir_miktar'], 0, ',', '.'); ?></span>
+                                    <button class="btn btn-link btn-sm p-0 ml-1 uretilebilir-detay-btn" 
+                                        style="font-size: 11px; color: var(--gray-500);"
+                                        data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
+                                        data-urun-kodu="<?php echo $p['urun_kodu']; ?>"
+                                        data-uretilebilir="<?php echo $p['uretilebilir_miktar']; ?>"
+                                        data-bilesen='<?php echo json_encode($p['bilesen_detaylari'] ?? []); ?>'
+                                        title="Detay göster">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
                                 <?php else: ?>
                                     <span class="text-muted uretilebilir-deger">0</span>
+                                    <button class="btn btn-link btn-sm p-0 ml-1 uretilebilir-detay-btn" 
+                                        style="font-size: 11px; color: var(--gray-500);"
+                                        data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
+                                        data-urun-kodu="<?php echo $p['urun_kodu']; ?>"
+                                        data-uretilebilir="<?php echo $p['uretilebilir_miktar']; ?>"
+                                        data-bilesen='<?php echo json_encode($p['bilesen_detaylari'] ?? []); ?>'
+                                        title="Detay göster">
+                                        <i class="fas fa-question-circle"></i>
+                                    </button>
                                 <?php endif; ?>
-                                <button class="btn btn-link btn-sm p-0 ml-1 uretilebilir-detay-btn" 
-                                    style="font-size: 11px; color: var(--gray-500);"
-                                    data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
-                                    data-urun-kodu="<?php echo $p['urun_kodu']; ?>"
-                                    data-uretilebilir="<?php echo $p['uretilebilir_miktar']; ?>"
-                                    data-bilesen='<?php echo json_encode($p['bilesen_detaylari'] ?? []); ?>'
-                                    title="Detay göster">
-                                    <i class="fas fa-question-circle"></i>
-                                </button>
                             </td>
                             <td class="text-right">
-                                <?php if ($p['onerilen_uretim'] > 0): ?>
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                     <?php if (isset($p['onerilen_satinalma']) && $p['onerilen_satinalma'] > 0): ?>
+                                        <span class="font-semibold text-warning"><?php echo number_format($p['onerilen_satinalma'], 0, ',', '.'); ?></span>
+                                     <?php else: ?>-<?php endif; ?>
+                                <?php elseif ($p['onerilen_uretim'] > 0): ?>
                                     <span class="font-semibold" style="color: var(--primary);"><?php echo number_format($p['onerilen_uretim'], 0, ',', '.'); ?></span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
@@ -2761,6 +2894,14 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         
         // Her üretilebilir hücresini güncelle
         document.querySelectorAll('.uretilebilir-hucre').forEach(function(hucre) {
+            var row = hucre.closest('tr');
+            var urunTipi = row.getAttribute('data-urun-tipi');
+
+            // EĞER HAZIR ALINAN ÜRÜNSE HESAPLAMAYI ATLA (Sunucu tarafı geçerli kalsın)
+            if (urunTipi === 'hazir_alinan') {
+                return; 
+            }
+
             var bilesenData = JSON.parse(hucre.getAttribute('data-bilesen-uretilebilir') || '{}');
             var acik = parseFloat(hucre.getAttribute('data-acik') || 0);
             
