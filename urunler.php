@@ -356,6 +356,27 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             background-color: var(--primary);
             opacity: 1;
         }
+
+        /* Pagination area styling */
+        .pagination-container {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        .pagination-container label,
+        .pagination-container select,
+        .pagination-container .pagination-info,
+        .pagination-container .page-link {
+            font-size: 0.75rem !important;
+            font-family: 'Ubuntu', sans-serif !important;
+        }
+        .pagination-container select.form-control {
+            height: 28px !important;
+            padding: 2px 5px !important;
+            line-height: 1;
+        }
+        .pagination-container .page-link {
+            padding: 4px 10px;
+        }
     </style>
 </head>
 
@@ -548,7 +569,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </tbody>
                     </table>
                 </div>
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-center mt-3 pagination-container">
                     <div class="records-per-page mb-2 mb-md-0 w-100 w-md-auto">
                         <label for="recordsPerPage"><i class="fas fa-list"></i> Sayfa başına kayıt: </label>
                         <select v-model="limit" @change="loadProducts(1)" class="form-control d-inline-block"
