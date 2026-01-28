@@ -145,30 +145,222 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IDO KOZMETIK - ERP Giriş</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0a0a0f">
+    <title>IDO KOZMETIK - Parfümeri Yönetim Sistemi</title>
+    
+    <!-- Premium Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="assets/css/login.css">
 </head>
 
 <body>
-    <!-- VANTA.js Premium Background -->
-    <div id="vanta-bg"></div>
+    <!-- Animated Particles Background -->
+    <div class="particles-container">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Floating Perfume Bottles Background -->
+    <div class="floating-bottles">
+        <div class="bottle bottle-1">
+            <svg viewBox="0 0 60 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bottle1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#c9a962;stop-opacity:0.3"/>
+                        <stop offset="100%" style="stop-color:#8b7355;stop-opacity:0.15"/>
+                    </linearGradient>
+                </defs>
+                <rect x="23" y="2" width="14" height="8" rx="2" fill="url(#bottle1)"/>
+                <rect x="25" y="10" width="10" height="6" fill="url(#bottle1)"/>
+                <path d="M20 16 L40 16 L44 28 L44 85 Q44 95 30 97 Q16 95 16 85 L16 28 Z" fill="url(#bottle1)" stroke="rgba(201,169,98,0.2)" stroke-width="0.5"/>
+            </svg>
+        </div>
+        <div class="bottle bottle-2">
+            <svg viewBox="0 0 50 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bottle2" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#d4c4c8;stop-opacity:0.25"/>
+                        <stop offset="100%" style="stop-color:#8b7b8b;stop-opacity:0.1"/>
+                    </linearGradient>
+                </defs>
+                <circle cx="25" cy="6" r="5" fill="url(#bottle2)"/>
+                <rect x="22" y="11" width="6" height="8" fill="url(#bottle2)"/>
+                <ellipse cx="25" cy="55" rx="18" ry="30" fill="url(#bottle2)" stroke="rgba(212,196,200,0.15)" stroke-width="0.5"/>
+            </svg>
+        </div>
+        <div class="bottle bottle-3">
+            <svg viewBox="0 0 55 95" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="bottle3" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#c9a962;stop-opacity:0.2"/>
+                        <stop offset="100%" style="stop-color:#5a4a3a;stop-opacity:0.15"/>
+                    </linearGradient>
+                </defs>
+                <rect x="22" y="0" width="11" height="10" rx="2" fill="url(#bottle3)"/>
+                <path d="M20 10 L35 10 L35 20 L42 30 L42 80 L13 80 L13 30 L20 20 Z" fill="url(#bottle3)" stroke="rgba(201,169,98,0.15)" stroke-width="0.5"/>
+            </svg>
+        </div>
+    </div>
 
     <div class="login-wrapper">
-        <div class="login-image-side">
-            <!-- The background image is set in CSS -->
-        </div>
         <div class="login-form-side">
             <div class="login-header">
-                <svg class="perfume-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-                    <path
-                        d="M12 2C8.13 2 5 5.13 5 9c0 1.65.59 3.19 1.58 4.42L5 22h14l-1.58-8.58C18.41 12.19 19 10.65 19 9c0-3.87-3.13-7-7-7zm0 2c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5zM9 9c0 1.66 1.34 3 3 3s3-1.34 3-3-1.34-3-3-3-3 1.34-3 3z" />
-                </svg>
-                <h2>IDO KOZMETIK</h2>
-                <p>ERP Sistemine Giriş</p>
+                <!-- Ultra Premium Perfume Bottle Icon -->
+                <div class="logo-container">
+                    <svg class="perfume-icon" viewBox="0 0 80 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <defs>
+                            <!-- Diamond Gold Gradient -->
+                            <linearGradient id="luxeGold" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#fff8e7"/>
+                                <stop offset="30%" style="stop-color:#f0d890"/>
+                                <stop offset="50%" style="stop-color:#d4af37"/>
+                                <stop offset="70%" style="stop-color:#b8962b"/>
+                                <stop offset="100%" style="stop-color:#8b7355"/>
+                            </linearGradient>
+                            
+                            <!-- Crystal Facet Gradient -->
+                            <linearGradient id="crystalFacet" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#4a3a55;stop-opacity:0.95"/>
+                                <stop offset="40%" style="stop-color:#5d4a65;stop-opacity:0.8"/>
+                                <stop offset="100%" style="stop-color:#2a2035;stop-opacity:0.98"/>
+                            </linearGradient>
+                            
+                            <!-- Diamond Shine -->
+                            <linearGradient id="diamondShine" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#ffffff;stop-opacity:0"/>
+                                <stop offset="50%" style="stop-color:#ffffff;stop-opacity:0.4"/>
+                                <stop offset="100%" style="stop-color:#ffffff;stop-opacity:0"/>
+                            </linearGradient>
+                            
+                            <!-- Liquid Gradient -->
+                            <linearGradient id="perfumeLiquid" x1="0%" y1="0%" x2="0%" y2="100%">
+                                <stop offset="0%" style="stop-color:#f5e6d3;stop-opacity:0.35"/>
+                                <stop offset="100%" style="stop-color:#c9a962;stop-opacity:0.5"/>
+                            </linearGradient>
+                            
+                            <!-- Glow Filter -->
+                            <filter id="goldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="1.5" result="glow"/>
+                                <feMerge>
+                                    <feMergeNode in="glow"/>
+                                    <feMergeNode in="SourceGraphic"/>
+                                </feMerge>
+                            </filter>
+                        </defs>
+                        
+                        <!-- ===== ORNATE CAP ===== -->
+                        <!-- Cap Crown -->
+                        <polygon points="40,0 44,6 36,6" fill="url(#luxeGold)" filter="url(#goldGlow)"/>
+                        <rect x="34" y="6" width="12" height="5" rx="1" fill="url(#luxeGold)"/>
+                        
+                        <!-- Cap Body -->
+                        <rect x="32" y="11" width="16" height="7" rx="1.5" fill="url(#luxeGold)"/>
+                        <line x1="34" y1="14.5" x2="46" y2="14.5" stroke="#fff8e7" stroke-width="0.4" opacity="0.6"/>
+                        
+                        <!-- ===== SPRAY MECHANISM ===== -->
+                        <rect x="36" y="18" width="8" height="5" fill="url(#luxeGold)"/>
+                        
+                        <!-- ===== DECORATIVE COLLAR ===== -->
+                        <path d="M28 23 L52 23 L55 28 L25 28 Z" fill="url(#luxeGold)" filter="url(#goldGlow)"/>
+                        <line x1="30" y1="25.5" x2="50" y2="25.5" stroke="#fff8e7" stroke-width="0.3" opacity="0.5"/>
+                        
+                        <!-- ===== DIAMOND CUT NECK ===== -->
+                        <path d="M30 28 L30 38 L27 42 L53 42 L50 38 L50 28" fill="url(#crystalFacet)" stroke="url(#luxeGold)" stroke-width="0.6"/>
+                        <!-- Neck Facet Lines -->
+                        <line x1="35" y1="28" x2="33" y2="42" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+                        <line x1="45" y1="28" x2="47" y2="42" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+                        
+                        <!-- ===== MAIN DIAMOND BODY ===== -->
+                        <!-- Faceted Diamond Shape -->
+                        <path d="M25 42 
+                                 L15 55 
+                                 L12 80 
+                                 L15 105 
+                                 L25 118 
+                                 L40 122 
+                                 L55 118 
+                                 L65 105 
+                                 L68 80 
+                                 L65 55 
+                                 L55 42 Z" 
+                              fill="url(#crystalFacet)" 
+                              stroke="url(#luxeGold)" 
+                              stroke-width="0.8"/>
+                        
+                        <!-- Diamond Facet Lines - Left -->
+                        <path d="M25 42 L20 65 L15 55" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/>
+                        <path d="M20 65 L15 90 L12 80" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" fill="none"/>
+                        <path d="M15 90 L18 110 L15 105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
+                        <path d="M18 110 L28 120 L25 118" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
+                        
+                        <!-- Diamond Facet Lines - Right -->
+                        <path d="M55 42 L60 65 L65 55" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/>
+                        <path d="M60 65 L65 90 L68 80" stroke="rgba(255,255,255,0.08)" stroke-width="0.5" fill="none"/>
+                        <path d="M65 90 L62 110 L65 105" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
+                        <path d="M62 110 L52 120 L55 118" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
+                        
+                        <!-- Center Facet Lines -->
+                        <path d="M40 42 L40 122" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+                        <path d="M25 42 L40 80 L55 42" stroke="rgba(255,255,255,0.06)" stroke-width="0.5" fill="none"/>
+                        <path d="M25 118 L40 80 L55 118" stroke="rgba(255,255,255,0.04)" stroke-width="0.5" fill="none"/>
+                        
+                        <!-- Horizontal Facet Bands -->
+                        <path d="M15 55 L65 55" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+                        <path d="M12 80 L68 80" stroke="rgba(255,255,255,0.05)" stroke-width="0.5"/>
+                        <path d="M15 105 L65 105" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+                        
+                        <!-- ===== PERFUME LIQUID ===== -->
+                        <path d="M18 70 
+                                 L15 90 
+                                 L18 108 
+                                 L28 117 
+                                 L40 120 
+                                 L52 117 
+                                 L62 108 
+                                 L65 90 
+                                 L62 70 Z" 
+                              fill="url(#perfumeLiquid)"/>
+                        
+                        <!-- ===== CRYSTAL REFLECTIONS ===== -->
+                        <!-- Main Left Shine -->
+                        <ellipse cx="22" cy="75" rx="3" ry="18" fill="rgba(255,255,255,0.15)"/>
+                        <ellipse cx="24" cy="58" rx="2" ry="8" fill="rgba(255,255,255,0.12)"/>
+                        
+                        <!-- Right Edge Shine -->
+                        <path d="M60 55 Q62 80 58 105" stroke="rgba(255,255,255,0.1)" stroke-width="1.5" fill="none"/>
+                        
+                        <!-- Diamond Sparkles -->
+                        <circle cx="20" cy="50" r="1.2" fill="#fff8e7" opacity="0.8"/>
+                        <circle cx="60" cy="65" r="0.8" fill="#fff8e7" opacity="0.5"/>
+                        <circle cx="40" cy="95" r="0.6" fill="#fff8e7" opacity="0.4"/>
+                        <circle cx="25" cy="110" r="0.5" fill="#fff8e7" opacity="0.3"/>
+                        <circle cx="55" cy="50" r="0.7" fill="#fff8e7" opacity="0.6"/>
+                        
+                        <!-- Top Shine Bar -->
+                        <rect x="30" y="45" width="20" height="2" rx="1" fill="url(#diamondShine)"/>
+                        
+                        <!-- ===== GOLD RING ===== -->
+                        <ellipse cx="40" cy="42" rx="16" ry="2.5" fill="none" stroke="url(#luxeGold)" stroke-width="1.2"/>
+                        
+                        <!-- ===== BOTTOM ACCENT ===== -->
+                        <ellipse cx="40" cy="121" rx="10" ry="1.5" fill="url(#luxeGold)" opacity="0.4"/>
+                    </svg>
+                    <div class="logo-glow"></div>
+                </div>
+                
+                <h1>IDO</h1>
+                <h2>KOZMETIK</h2>
+                <p class="tagline">Parfümeri Yönetim Sistemi</p>
             </div>
 
             <?php if ($success_message): ?>
@@ -183,38 +375,46 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="form-group">
                     <label for="username">E-posta veya Telefon</label>
                     <input type="text" id="username" name="username" required autocomplete="username"
-                        placeholder="ornek@mail.com">
+                        placeholder="ornek@parfum.com">
                 </div>
 
                 <div class="form-group">
                     <label for="password">Şifre</label>
                     <input type="password" id="password" name="password" required autocomplete="current-password"
-                        placeholder="********">
+                        placeholder="••••••••">
                 </div>
 
-                <button type="submit" class="btn">Giriş Yap</button>
+                <button type="submit" class="btn">
+                    <span>Giriş Yap</span>
+                </button>
             </form>
+            
+            <div class="footer-accent">
+                <div class="accent-line"></div>
+            </div>
         </div>
     </div>
 
-    <!-- VANTA.js - Premium Network Background -->
+    <!-- VANTA.js Animated Background -->
+    <div id="vanta-bg"></div>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.fog.min.js"></script>
     <script>
-        VANTA.NET({
+        VANTA.FOG({
             el: "#vanta-bg",
             mouseControls: true,
             touchControls: true,
             gyroControls: false,
             minHeight: 200.00,
             minWidth: 200.00,
-            scale: 1.00,
-            scaleMobile: 1.00,
-            color: 0x3b82f6,
-            backgroundColor: 0x0f172a,
-            points: 10.00,
-            maxDistance: 20.00,
-            spacing: 15.00
+            highlightColor: 0xc9a962,
+            midtoneColor: 0x2d1d35,
+            lowlightColor: 0x14111c,
+            baseColor: 0x0a0a0f,
+            blurFactor: 0.5,
+            speed: 1.2,
+            zoom: 0.6
         });
     </script>
 </body>
