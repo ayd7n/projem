@@ -932,6 +932,35 @@ function getAksiyonOnerisi($p) {
     $uretilebilir = floatval($p['uretilebilir_miktar']);
     $bilesen_detaylari = isset($p['bilesen_detaylari']) ? $p['bilesen_detaylari'] : [];
     
+    // Esans İhtiyaçlarını Belirle (Doğru Hammadde Hesabı İçin)
+    $net_esans_ihtiyaclari = []; // [esans_kodu => miktar]
+    
+    if ($acik > 0) {
+        foreach ($bilesen_detaylari as $bilesen) {
+            if ($bilesen['tur'] === 'esans') {
+                $esans_kodu = $bilesen['kodu'];
+                $birim_ihtiyac = floatval($bilesen['gerekli_adet']); // 1 Ürün için gereken esans
+                $brut_ihtiyac = $acik * $birim_ihtiyac; // Toplam gereken esans
+                
+                // Mevcut Esans Stoğunu ve Üretimdekini bul
+                $stok = floatval($bilesen['mevcut_stok']);
+                $uretimde = 0;
+                if (isset($p['esans_uretim_bilgisi'][$esans_kodu])) {
+                    $uretimde = floatval($p['esans_uretim_bilgisi'][$esans_kodu]['acik_is_emri_miktar']);
+                }
+                
+                $net_ihtiyac = max(0, $brut_ihtiyac - ($stok + $uretimde));
+                
+                if ($net_ihtiyac > 0) {
+                    if (!isset($net_esans_ihtiyaclari[$esans_kodu])) {
+                        $net_esans_ihtiyaclari[$esans_kodu] = 0;
+                    }
+                    $net_esans_ihtiyaclari[$esans_kodu] += $net_ihtiyac;
+                }
+            }
+        }
+    }
+    
     // 1. VERİ EKSİKLİĞİ VARSA (En Yüksek Öncelik)
     if (count($eksik_bilesenler) > 0 || count($esans_agaci_eksik) > 0) {
         $detay = [];
@@ -1072,12 +1101,21 @@ function getAksiyonOnerisi($p) {
         // 5. ESANS HAMMADDESİ EKSİKSE
         $esans_hammadde_listesi = [];
         if (isset($p['esans_uretim_bilgisi']) && is_array($p['esans_uretim_bilgisi'])) {
-            foreach ($p['esans_uretim_bilgisi'] as $esans_info) {
-                if (isset($esans_info['formul_detaylari']) && is_array($esans_info['formul_detaylari'])) {
-                    foreach ($esans_info['formul_detaylari'] as $hammadde) {
-                        $net_siparis = max(0, ($hammadde['recete_miktari'] * $acik) - $hammadde['mevcut_stok'] - $hammadde['bekleyen_siparis']);
-                        if ($net_siparis > 0) {
-                            $esans_hammadde_listesi[] = '<i class="fas fa-vial text-purple"></i> ' . $hammadde['malzeme_ismi'] . ': <strong>' . number_format($net_siparis, 2, ',', '.') . '</strong> ' . $hammadde['birim'];
+            foreach ($p['esans_uretim_bilgisi'] as $esans_kodu => $esans_info) {
+                // Sadece net ihtiyacı olan esanslar için hammadde hesapla
+                if (isset($net_esans_ihtiyaclari[$esans_kodu])) {
+                    $ihtiyac_esans_miktari = $net_esans_ihtiyaclari[$esans_kodu];
+                    
+                    if (isset($esans_info['formul_detaylari']) && is_array($esans_info['formul_detaylari'])) {
+                        foreach ($esans_info['formul_detaylari'] as $hammadde) {
+                            $gerekli_hammadde = $ihtiyac_esans_miktari * $hammadde['recete_miktari'];
+                            // Hammadde stoğunu ve yoldaki siparişi düş
+                            $net_siparis = max(0, $gerekli_hammadde - $hammadde['mevcut_stok'] - $hammadde['bekleyen_siparis']);
+                            
+                            if ($net_siparis > 0) {
+                                $malzeme_adi_goster = isset($hammadde['malzeme_ismi']) ? $hammadde['malzeme_ismi'] : (isset($hammadde['malzeme_adi']) ? $hammadde['malzeme_adi'] : '-');
+                                $esans_hammadde_listesi[] = '<i class="fas fa-vial text-purple"></i> ' . $malzeme_adi_goster . ': <strong>' . number_format($net_siparis, 2, ',', '.') . '</strong> ' . $hammadde['birim'];
+                            }
                         }
                     }
                 }
@@ -1130,6 +1168,40 @@ function getAksiyonOnerisi($p) {
                     'text' => 'İş Emri Aç',
                     'url' => 'esans_is_emirleri.php',
                     'icon' => 'fas fa-plus-circle'
+                ]
+            ];
+        }
+        
+        // 6.5 SİPARİŞLER YOLDAYSA
+        $yolda_detay = [];
+        foreach ($bilesen_detaylari as $b) {
+            if ($b['yoldaki_stok'] > 0) {
+                $yolda_detay[] = '<i class="fas fa-truck text-info"></i> ' . $b['isim'] . ': <strong>' . number_format($b['yoldaki_stok'], 0, ',', '.') . '</strong> adet yolda (' . $b['po_list'] . ')';
+            }
+        }
+        if (isset($p['esans_uretim_bilgisi'])) {
+            foreach ($p['esans_uretim_bilgisi'] as $ei) {
+                if (isset($ei['formul_detaylari'])) {
+                    foreach ($ei['formul_detaylari'] as $h) {
+                        if ($h['bekleyen_siparis'] > 0) {
+                            $yolda_detay[] = '<i class="fas fa-flask text-purple"></i> ' . ($h['malzeme_ismi'] ?? 'Hammadde') . ': <strong>' . number_format($h['bekleyen_siparis'], 2, ',', '.') . ' ' . $h['birim'] . '</strong> yolda (' . $h['po_list'] . ')';
+                        }
+                    }
+                }
+            }
+        }
+
+        if (count($yolda_detay) > 0) {
+            return [
+                'class' => 'badge-aksiyon-bilgi',
+                'icon' => 'fas fa-shipping-fast',
+                'mesaj' => 'Siparişler Yolda - Teslimat Bekleniyor',
+                'detay' => implode('<br>', array_unique($yolda_detay)),
+                'category' => 'info',
+                'buton' => [
+                    'text' => 'Sipariş Takibi',
+                    'url' => 'satinalma_siparisler.php',
+                    'icon' => 'fas fa-truck'
                 ]
             ];
         }
@@ -3097,7 +3169,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             // Aksiyon Önerisi kolonunu güncelle
             var row = hucre.closest('tr');
             var aksiyonHucre = row.querySelector('.aksiyon-onerisi-hucre');
-            if (aksiyonHucre) {
+            if (false) { // JS Guncellemesi Iptal - PHP Hesaplamasi Gecerli
                 var badge = aksiyonHucre.querySelector('.aksiyon-badge');
                 if (badge) {
                     var eksikBilesenler = JSON.parse(aksiyonHucre.getAttribute('data-eksik-bilesenler') || '[]');
