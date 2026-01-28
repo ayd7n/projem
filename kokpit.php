@@ -383,6 +383,12 @@ function getSupplyChainData($connection) {
                             ELSE 0
                          END as bilesen_stok,
                          CASE
+                            WHEN m.malzeme_kodu IS NOT NULL THEN m.birim
+                            WHEN ur.urun_kodu IS NOT NULL THEN ur.birim
+                            WHEN e.esans_kodu IS NOT NULL THEN e.birim
+                            ELSE ''
+                         END as bilesen_birim,
+                         CASE
                             WHEN m.malzeme_kodu IS NOT NULL THEN m.malzeme_ismi
                             WHEN ur.urun_kodu IS NOT NULL THEN ur.urun_ismi
                             WHEN e.esans_kodu IS NOT NULL THEN e.esans_ismi
@@ -425,6 +431,7 @@ function getSupplyChainData($connection) {
                         'isim' => $bilesen_ismi,
                         'kodu' => $bom_row['bilesen_kodu'],
                         'tur' => $bilesen_turu_lower,
+                        'birim' => $bom_row['bilesen_birim'],
                         'gerekli_adet' => $gerekli,
                         'mevcut_stok' => $mevcut,
                         'uretilebilir' => $bu_bilesenden,
@@ -553,12 +560,13 @@ function getSupplyChainData($connection) {
             $esans_uretim_bilgisi = [];
             foreach ($esans_kodu_bilesenler as $esans_kodu) {
                 // Esans ismini al
-                $esans_isim_query = "SELECT esans_ismi FROM esanslar WHERE esans_kodu = ?";
+                $esans_isim_query = "SELECT esans_ismi, birim FROM esanslar WHERE esans_kodu = ?";
                 $esans_isim_stmt = $connection->prepare($esans_isim_query);
                 $esans_isim_stmt->bind_param('s', $esans_kodu);
                 $esans_isim_stmt->execute();
                 $esans_isim_result = $esans_isim_stmt->get_result()->fetch_assoc();
                 $esans_ismi = $esans_isim_result ? $esans_isim_result['esans_ismi'] : $esans_kodu;
+                $esans_birim = ($esans_isim_result && !empty($esans_isim_result['birim'])) ? $esans_isim_result['birim'] : 'ml';
                 $esans_isim_stmt->close();
                 
                 // Açık iş emirlerini kontrol et (olusturuldu veya uretimde durumunda)
@@ -625,6 +633,7 @@ function getSupplyChainData($connection) {
                 $esans_uretim_bilgisi[$esans_kodu] = [
                     'esans_kodu' => $esans_kodu,
                     'esans_ismi' => $esans_ismi,
+                    'birim' => $esans_birim,
                     'acik_is_emri_miktar' => $acik_is_emri_miktar,
                     'malzeme_yeterli' => $esans_malzeme_yeterli,
                     'eksik_malzemeler' => $esans_malzeme_eksik,
@@ -2415,9 +2424,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                         foreach ($p['bilesen_detaylari'] as $bilesen) {
                                             if ($bilesen['tur'] === 'esans') {
                                                 $esans_bulundu = true;
+                                                $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
                                                 $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
                                                 $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                                echo '<div class="text-nowrap">' . number_format($toplam_ihtiyac, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                echo '<div class="text-nowrap">' . number_format($toplam_ihtiyac, 2, ',', '.') . ' <small class="text-muted">' . $birim . '</small></div>';
                                             }
                                         }
                                     }
@@ -2435,7 +2445,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                         foreach ($p['bilesen_detaylari'] as $bilesen) {
                                             if ($bilesen['tur'] === 'esans') {
                                                 $esans_bulundu = true;
-                                                echo '<div class="text-nowrap">' . number_format($bilesen['mevcut_stok'], 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
+                                                echo '<div class="text-nowrap">' . number_format($bilesen['mevcut_stok'], 2, ',', '.') . ' <small class="text-muted">' . $birim . '</small></div>';
                                             }
                                         }
                                     }
@@ -2458,7 +2469,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                     $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
                                                 }
                                                 if ($uretimde > 0) {
-                                                     echo '<div class="text-nowrap text-info">' . number_format($uretimde, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                     $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
+                                                     echo '<div class="text-nowrap text-info">' . number_format($uretimde, 2, ',', '.') . ' <small class="text-muted">' . $birim . '</small></div>';
                                                 } else {
                                                      echo '0';
                                                 }
@@ -2492,7 +2504,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
                                                 
                                                 if ($net_ihtiyac > 0) {
-                                                    echo '<div class="text-nowrap"><span class="font-weight-bold" style="color: var(--danger);">' . number_format($net_ihtiyac, 2, ',', '.') . '</span> <small class="text-muted">ml</small></div>';
+                                                    $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
+                                                    echo '<div class="text-nowrap"><span class="font-weight-bold" style="color: var(--danger);">' . number_format($net_ihtiyac, 2, ',', '.') . '</span> <small class="text-muted">' . $birim . '</small></div>';
                                                     echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
                                                 } else {
                                                      echo '<span class="text-success"><i class="fas fa-check"></i> Yeterli</span>';
@@ -2521,7 +2534,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 }
                                                 
                                                 if ($uretilebilir > 0) {
-                                                    echo '<div class="text-nowrap text-success">' . number_format($uretilebilir, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                    $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
+                                                    echo '<div class="text-nowrap text-success">' . number_format($uretilebilir, 2, ',', '.') . ' <small class="text-muted">' . $birim . '</small></div>';
                                                 } else {
                                                     echo '<div class="text-nowrap text-danger">0</div>';
                                                 }
@@ -2564,7 +2578,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 $siparis_gereken = max(0, $net_ihtiyac - $uretilebilir);
                                                 
                                                 if ($siparis_gereken > 0) {
-                                                    echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>ml</small></div>';
+                                                    $birim = !empty($bilesen['birim']) ? $bilesen['birim'] : 'ml';
+                                                    echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>' . $birim . '</small></div>';
                                                     echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
                                                 } else {
                                                     echo '0';
