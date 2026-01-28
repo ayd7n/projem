@@ -526,28 +526,28 @@ if (!yetkisi_var('page:view:manuel_stok_hareket')) {
              style="z-index: 1050" 
              @click="closeMalKabulModal">
             <div class="modal-dialog modal-lg" @click.stop>
-                <div class="modal-content">
+                <div class="modal-content shadow-lg border-0">
                     <form @submit.prevent="saveMalKabul">
-                        <div class="modal-header">
-                            <h5 class="modal-title">Mal Kabul</h5>
-                            <button type="button" class="close" @click="closeMalKabulModal" aria-label="Close">
+                        <div class="modal-header py-2 bg-info text-white">
+                            <h5 class="modal-title"><i class="fas fa-check-circle mr-2"></i>Mal Kabul</h5>
+                            <button type="button" class="close text-white" @click="closeMalKabulModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
-                        <div class="modal-body">
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> 
+                        <div class="modal-body p-3">
+                            <div class="alert alert-info py-1 px-3 mb-2 small shadow-sm">
+                                <i class="fas fa-info-circle mr-1"></i> 
                                 <strong>Mal Kabul:</strong> Alınan malzemeleri kabul etmek ve stoklara eklemek için kullanılır.
                             </div>
                             <input type="hidden" v-model="malKabulForm.hareket_id">
-                            <!-- Yön ve Hareket Türü alanları kaldırıldı, otomatik olarak ayarlanacak -->
                             <input type="hidden" v-model="malKabulForm.yon" value="giris">
                             <input type="hidden" v-model="malKabulForm.hareket_turu" value="mal_kabul">
+                            
                             <div class="form-row">
                                 <div class="col-md-12">
-                                    <div class="form-group">
-                                        <label for="mal_kabul_kod">Malzeme Seçin *</label>
-                                        <select class="form-control" v-model="malKabulForm.kod" @change="loadMalKabulSuppliersAndCheckContract" required>
+                                    <div class="form-group mb-2">
+                                        <label class="small font-weight-bold mb-1" for="mal_kabul_kod">Malzeme Seçin *</label>
+                                        <select class="form-control form-control-sm" v-model="malKabulForm.kod" @change="loadMalKabulOrdersAndContract" required>
                                             <option value="">Malzeme Seçin</option>
                                             <option v-for="item in malKabulStockItems" :key="item.kod" :value="item.kod">
                                                 {{ item.kod }} - {{ item.isim }}
@@ -559,41 +559,66 @@ if (!yetkisi_var('page:view:manuel_stok_hareket')) {
 
                             <div class="form-row">
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="mal_kabul_miktar">Miktar *</label>
-                                        <input type="number" class="form-control" v-model.number="malKabulForm.miktar" min="0.01"
+                                    <div class="form-group mb-2">
+                                        <label class="small font-weight-bold mb-1" for="mal_kabul_miktar">Miktar *</label>
+                                        <input type="number" class="form-control form-control-sm font-weight-bold" v-model.number="malKabulForm.miktar" min="0.01"
                                             step="0.01" required>
                                     </div>
                                 </div>
                                 <div class="col-md-6">
-                                    <div class="form-group">
-                                        <label for="mal_kabul_ilgili_belge_no">İlgili Belge No</label>
-                                        <input type="text" class="form-control" v-model="malKabulForm.ilgili_belge_no">
+                                    <div class="form-group mb-2">
+                                        <label class="small font-weight-bold mb-1" for="mal_kabul_ilgili_belge_no">İlgili Belge No</label>
+                                        <input type="text" class="form-control form-control-sm" v-model="malKabulForm.ilgili_belge_no">
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="form-group">
-                                <label for="mal_kabul_aciklama">Açıklama *</label>
-                                <textarea class="form-control" v-model="malKabulForm.aciklama" rows="3" required></textarea>
-                            </div>
-
-                            <div class="form-group">
-                                <label for="mal_kabul_tedarikci">Tedarikçi *</label>
-                                <select class="form-control" v-model="malKabulForm.tedarikci" @change="checkFrameworkContract" required>
+                            <div class="form-group mb-2">
+                                <label class="small font-weight-bold mb-1" for="mal_kabul_tedarikci">Tedarikçi *</label>
+                                <select class="form-control form-control-sm" v-model="malKabulForm.tedarikci" @change="loadMalKabulOrdersAndContract" required>
                                     <option value="">Tedarikçi Seçin</option>
                                     <option v-for="supplier in malKabulSuppliers" :key="supplier.tedarikci_id" :value="supplier.tedarikci_id">
                                         {{ supplier.tedarikci_ismi }}
                                     </option>
                                 </select>
                             </div>
+
+                            <div v-if="malKabulOpenOrders.length > 0" class="alert alert-secondary mt-2 mb-2 p-2 border-left-info shadow-sm" style="border-left: 4px solid #17a2b8;">
+                                <div class="form-check mb-1 pl-4">
+                                    <input type="checkbox" class="form-check-input" id="linkToOrder" v-model="malKabulForm.link_order" style="transform: scale(1.1); margin-top: 0.2rem;">
+                                    <label class="form-check-label font-weight-bold text-dark ml-1 small" for="linkToOrder" style="cursor: pointer;">
+                                        <i class="fas fa-link text-info mr-1"></i> Bu siparişe istinaden teslim al
+                                    </label>
+                                </div>
+                                
+                                <transition name="fade">
+                                    <div v-if="malKabulForm.link_order" class="mt-1 pl-1">
+                                        <div class="input-group input-group-sm">
+                                            <div class="input-group-prepend">
+                                                <span class="input-group-text bg-white border-right-0 py-0"><i class="fas fa-file-invoice text-muted small"></i></span>
+                                            </div>
+                                            <select class="form-control form-control-sm border-left-0" id="mal_kabul_siparis" v-model="malKabulForm.siparis_id" @change="onOrderSelect">
+                                                <option value="">-- Sipariş Seçiniz --</option>
+                                                <option v-for="order in malKabulOpenOrders" :key="order.siparis_id" :value="order.siparis_id">
+                                                    {{ order.siparis_no }} - (Kalan: {{ order.kalan_miktar }})
+                                                </option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </transition>
+                            </div>
+
+                            <div class="form-group mb-0">
+                                <label class="small font-weight-bold mb-1" for="mal_kabul_aciklama">Açıklama *</label>
+                                <textarea class="form-control form-control-sm" v-model="malKabulForm.aciklama" rows="2" required></textarea>
+                            </div>
                             
-                            <div id="contractStatusInfo"></div>
+                            <div id="contractStatusInfo" class="mt-2"></div>
                         </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeMalKabulModal"><i
+                        <div class="modal-footer py-2 bg-light">
+                            <button type="button" class="btn btn-sm btn-secondary" @click="closeMalKabulModal"><i
                                     class="fas fa-times"></i> İptal</button>
-                            <button type="submit" class="btn btn-success" :class="{ 'loading': isSubmitting }" :disabled="isSubmitting">
+                            <button type="submit" class="btn btn-sm btn-success px-4" :class="{ 'loading': isSubmitting }" :disabled="isSubmitting">
                                 <span v-if="isSubmitting" class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                                 <i v-else class="fas fa-check-circle"></i>
                                 Mal Kabul Et

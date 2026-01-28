@@ -101,9 +101,12 @@ const app = new Vue({
       raf: "",
       tank_kodu: "",
       tedarikci: "",
+      link_order: true,
+      siparis_id: "",
     },
     malKabulStockItems: [],
     malKabulSuppliers: [],
+    malKabulOpenOrders: [],
   },
   computed: {
     movementFormTitle() {
@@ -1068,9 +1071,12 @@ const app = new Vue({
         raf: "",
         tank_kodu: "",
         tedarikci: "",
+        link_order: true,
+        siparis_id: "",
       };
       this.malKabulStockItems = [];
       this.malKabulSuppliers = [];
+      this.malKabulOpenOrders = [];
     },
 
     loadMalKabulStockItems() {
@@ -1197,8 +1203,54 @@ const app = new Vue({
     },
 
     // Load suppliers and check framework contract
-    loadMalKabulSuppliersAndCheckContract() {
-      this.loadMalKabulSuppliers();
+    loadMalKabulOrdersAndContract() {
+      // If triggered by supplier change
+      if (this.malKabulForm.tedarikci) {
+          this.checkFrameworkContract();
+          this.loadMalKabulOrders();
+      } else {
+          // If triggered by material change, load suppliers (which resets supplier selection)
+          this.loadMalKabulSuppliers();
+      }
+    },
+
+    loadMalKabulOrders() {
+        if (!this.malKabulForm.kod || !this.malKabulForm.tedarikci) {
+            this.malKabulOpenOrders = [];
+            this.malKabulForm.siparis_id = "";
+            return;
+        }
+
+        axios.get(`api_islemleri/stok_hareket_islemler.php?action=get_material_orders&malzeme_kodu=${this.malKabulForm.kod}&tedarikci_id=${this.malKabulForm.tedarikci}`)
+            .then(response => {
+                if (response.data.status === 'success') {
+                    this.malKabulOpenOrders = response.data.data || [];
+                    
+                    // Auto-select if only one order exists
+                    if (this.malKabulOpenOrders.length === 1) {
+                        this.malKabulForm.siparis_id = this.malKabulOpenOrders[0].siparis_id;
+                        this.onOrderSelect();
+                    }
+                } else {
+                    this.malKabulOpenOrders = [];
+                }
+            })
+            .catch(error => {
+                console.error("Siparişler yüklenirken hata:", error);
+                this.malKabulOpenOrders = [];
+            });
+    },
+
+    onOrderSelect() {
+        if (!this.malKabulForm.siparis_id) return;
+        
+        const order = this.malKabulOpenOrders.find(o => o.siparis_id === this.malKabulForm.siparis_id);
+        if (order) {
+            // Optional: Auto-fill quantity if not set or set to 0
+            if (!this.malKabulForm.miktar || this.malKabulForm.miktar <= 0) {
+                this.malKabulForm.miktar = order.kalan_miktar;
+            }
+        }
     },
 
     saveMalKabul() {
@@ -1211,6 +1263,10 @@ const app = new Vue({
           formData.append(key, this.malKabulForm[key]);
         }
       });
+
+      if (this.malKabulForm.link_order && this.malKabulForm.siparis_id) {
+          formData.append('siparis_id', this.malKabulForm.siparis_id);
+      }
 
       formData.append("action", "add_mal_kabul");
 

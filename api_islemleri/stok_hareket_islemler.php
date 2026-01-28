@@ -1101,6 +1101,45 @@ switch ($action) {
         $contract_stmt->close();
         break;
 
+    case 'get_material_orders':
+        $malzeme_kodu = $_GET['malzeme_kodu'] ?? '';
+        $tedarikci_id = $_GET['tedarikci_id'] ?? '';
+
+        if (!$malzeme_kodu || !$tedarikci_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Eksik parametreler.']);
+            break;
+        }
+
+        // Get open orders for this supplier and material
+        $query = "SELECT 
+                    ss.siparis_id, 
+                    ss.siparis_no, 
+                    ss.siparis_tarihi,
+                    ssk.miktar as siparis_miktari, 
+                    ssk.teslim_edilen_miktar,
+                    (ssk.miktar - ssk.teslim_edilen_miktar) as kalan_miktar
+                  FROM satinalma_siparisler ss
+                  JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
+                  WHERE ss.tedarikci_id = ? 
+                  AND ssk.malzeme_kodu = ?
+                  AND ss.durum NOT IN ('iptal', 'kapatildi', 'tamamlandi')
+                  AND (ssk.miktar - ssk.teslim_edilen_miktar) > 0
+                  ORDER BY ss.siparis_tarihi ASC";
+
+        $stmt = $connection->prepare($query);
+        $stmt->bind_param('is', $tedarikci_id, $malzeme_kodu);
+        $stmt->execute();
+        $result = $stmt->get_result();
+
+        $orders = [];
+        while ($row = $result->fetch_assoc()) {
+            $orders[] = $row;
+        }
+
+        echo json_encode(['status' => 'success', 'data' => $orders]);
+        $stmt->close();
+        break;
+
     case 'check_framework_contract':
         $material_kodu = $_POST['material_kodu'] ?? '';
         $tedarikci_id = $_POST['tedarikci_id'] ?? '';
@@ -1169,12 +1208,13 @@ switch ($action) {
     case 'add_mal_kabul':
         $stok_turu = $_POST['stok_turu'] ?? '';
         $kod = $_POST['kod'] ?? '';
-        $miktar = $_POST['miktar'] ?? 0;
+        $miktar = floatval($_POST['miktar'] ?? 0);
         $aciklama = $_POST['aciklama'] ?? '';
         $ilgili_belge_no = $_POST['ilgili_belge_no'] ?? '';
         $tedarikci_id = $_POST['tedarikci'] ?? '';
         $depo = $_POST['depo'] ?? '';
         $raf = $_POST['raf'] ?? '';
+        $siparis_id = !empty($_POST['siparis_id']) ? intval($_POST['siparis_id']) : 0;
 
         // Validation
         if (!$stok_turu || !$kod || !$miktar || !$aciklama || !$tedarikci_id) {
@@ -1288,6 +1328,16 @@ switch ($action) {
             $yeni_gelen_toplam_miktar += $contract_amount;
 
             $contract_specific_aciklama = $aciklama . ' [Sozlesme ID: ' . $contract['sozlesme_id'] . ']';
+            
+            // If linked to an order, append order info to description
+            if ($siparis_id > 0) {
+                // Get order no
+                $s_res = $connection->query("SELECT siparis_no FROM satinalma_siparisler WHERE siparis_id = $siparis_id");
+                if ($s_res && $s_row = $s_res->fetch_assoc()) {
+                    $contract_specific_aciklama .= ' [Sipariş: ' . $s_row['siparis_no'] . ']';
+                }
+            }
+
             $stok_turu_escaped = $connection->real_escape_string($stok_turu);
             $kod_escaped = $connection->real_escape_string($kod);
             $item_name_escaped = $connection->real_escape_string($item_name);
@@ -1334,6 +1384,51 @@ switch ($action) {
         if ($error_occured) {
             $connection->rollback();
         } else {
+            // Update purchase order status if linked
+            if ($siparis_id > 0 && $total_updated_stock > 0) {
+                // 1. Update the delivered amount for the specific item in the order
+                $update_item_sql = "UPDATE satinalma_siparis_kalemleri 
+                                   SET teslim_edilen_miktar = teslim_edilen_miktar + ? 
+                                   WHERE siparis_id = ? AND malzeme_kodu = ?";
+                $stmt_item = $connection->prepare($update_item_sql);
+                $stmt_item->bind_param('dis', $total_updated_stock, $siparis_id, $kod);
+                if (!$stmt_item->execute()) {
+                    // Log error but don't fail transaction as stock is more important
+                    error_log("Mal kabul sipariş kalemi güncellenemedi: " . $stmt_item->error);
+                }
+                $stmt_item->close();
+
+                // 2. Check if the entire order is completed
+                $check_order_sql = "SELECT 
+                                        COUNT(*) as total_items,
+                                        SUM(CASE WHEN teslim_edilen_miktar >= miktar THEN 1 ELSE 0 END) as completed_items,
+                                        SUM(teslim_edilen_miktar) as total_delivered
+                                    FROM satinalma_siparis_kalemleri 
+                                    WHERE siparis_id = ?";
+                $stmt_check = $connection->prepare($check_order_sql);
+                $stmt_check->bind_param('i', $siparis_id);
+                $stmt_check->execute();
+                $order_status_result = $stmt_check->get_result()->fetch_assoc();
+                $stmt_check->close();
+
+                $new_status = '';
+                if ($order_status_result['total_items'] > 0) {
+                    if ($order_status_result['total_items'] == $order_status_result['completed_items']) {
+                        $new_status = 'tamamlandi';
+                    } elseif ($order_status_result['total_delivered'] > 0) {
+                        $new_status = 'kismen_teslim';
+                    }
+                }
+
+                if ($new_status) {
+                    $update_order_sql = "UPDATE satinalma_siparisler SET durum = ? WHERE siparis_id = ?";
+                    $stmt_status = $connection->prepare($update_order_sql);
+                    $stmt_status->bind_param('si', $new_status, $siparis_id);
+                    $stmt_status->execute();
+                    $stmt_status->close();
+                }
+            }
+
             $connection->commit();
         }
         $connection->autocommit(TRUE);
