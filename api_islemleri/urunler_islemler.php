@@ -1,5 +1,5 @@
 <?php
-ini_set('display_errors', 1);
+ini_set('display_errors', 0);
 error_reporting(E_ALL);
 
 include '../config.php';
@@ -614,6 +614,97 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
         }
         $stmt->close();
+    } elseif ($action == 'quick_purchase') {
+        if (!yetkisi_var('action:urunler:edit')) {
+            echo json_encode(['status' => 'error', 'message' => 'Yetkiniz yok.']);
+            exit;
+        }
+
+        $tedarikci_id = (int) $_POST['tedarikci_id'];
+        $urun_kodu = (int) $_POST['urun_kodu'];
+        $miktar = (float) $_POST['miktar'];
+        $birim_fiyat = (float) $_POST['birim_fiyat'];
+        $para_birimi = $connection->real_escape_string($_POST['para_birimi']);
+        $tarih = $connection->real_escape_string($_POST['tarih']);
+        $aciklama = $connection->real_escape_string($_POST['aciklama']);
+
+        if ($miktar <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Miktar 0\'dan büyük olmalıdır.']);
+            exit;
+        }
+
+        $connection->begin_transaction();
+        try {
+            // 1. Ürün Bilgilerini Al (Mevcut stok ve fiyat dahil)
+            $u_query = "SELECT urun_ismi, urun_tipi, stok_miktari, alis_fiyati FROM urunler WHERE urun_kodu = $urun_kodu";
+            $u_res = $connection->query($u_query);
+            $urun = $u_res->fetch_assoc();
+            $urun_ismi = $urun['urun_ismi'];
+            
+            // Ağırlıklı Ortalama Maliyet Hesabı
+            $yeni_alis_fiyati = $urun['alis_fiyati'];
+            $mevcut_stok = (float)$urun['stok_miktari'];
+            $mevcut_fiyat = (float)$urun['alis_fiyati'];
+            
+            if ($urun['urun_tipi'] === 'hazir_alinan') {
+                $toplam_deger = ($mevcut_stok * $mevcut_fiyat) + ($miktar * $birim_fiyat);
+                $toplam_miktar = $mevcut_stok + $miktar;
+                
+                if ($toplam_miktar > 0) {
+                    $yeni_alis_fiyati = $toplam_deger / $toplam_miktar;
+                } else {
+                    $yeni_alis_fiyati = $birim_fiyat;
+                }
+            }
+
+            // 2. Tedarikçi Adını Al
+            $t_query = "SELECT tedarikci_adi FROM tedarikciler WHERE tedarikci_id = $tedarikci_id";
+            $t_res = $connection->query($t_query);
+            $tedarikci_adi = $t_res->fetch_assoc()['tedarikci_adi'];
+
+            // 3. Stok ve Fiyat Güncelle
+            $fiyat_sql = ($urun['urun_tipi'] === 'hazir_alinan') 
+                ? ", alis_fiyati = $yeni_alis_fiyati, alis_fiyati_para_birimi = '$para_birimi'" 
+                : "";
+            
+            $connection->query("UPDATE urunler SET stok_miktari = stok_miktari + $miktar $fiyat_sql WHERE urun_kodu = $urun_kodu");
+
+            // 4. Çerçeve Sözleşme Oluştur (Spot Alım İçin)
+            $sozlesme_aciklama = "Spot Alım - " . $aciklama;
+            $s_stmt = $connection->prepare("INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, olusturan, aciklama, oncelik, odeme_kasasi) VALUES (?, ?, 0, ?, ?, ?, ?, 0, ?, ?, ?, ?, 1, 'TL')");
+            $kullanici = $_SESSION['kullanici_adi'];
+            $s_stmt->bind_param("isdssdssss", $tedarikci_id, $tedarikci_adi, $urun_ismi, $birim_fiyat, $para_birimi, $miktar, $tarih, $tarih, $kullanici, $sozlesme_aciklama);
+            $s_stmt->execute();
+            $sozlesme_id = $connection->insert_id;
+            $s_stmt->close();
+
+            // 5. Genel Stok Hareketi Kaydı (ÖNCE BU YAPILMALI - FK İÇİN)
+            $log_sql = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, miktar, yon, hareket_turu, aciklama, kaydeden_personel_id, tedarikci_id, tedarikci_ismi) VALUES (?, ?, ?, ?, 'giris', 'mal_kabul', ?, ?, ?, ?)";
+            $log_stmt = $connection->prepare($log_sql);
+            $log_aciklama = "Hızlı Satın Alma (Spot) - " . $aciklama;
+            $user_id = $_SESSION['user_id'];
+            $stok_turu = 'urun';
+            // Düzeltildi: sssdsiss (8 parametre)
+            $log_stmt->bind_param("sssdsiss", $stok_turu, $urun_kodu, $urun_ismi, $miktar, $log_aciklama, $user_id, $tedarikci_id, $tedarikci_adi);
+            $log_stmt->execute();
+            $hareket_id = $connection->insert_id; // FK için ID alındı
+            $log_stmt->close();
+
+            // 6. Sözleşme Hareket Kaydı (Kasa Yönetimi ve FK için)
+            $sh_stmt = $connection->prepare("INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, malzeme_kodu, tarih, kullanilan_miktar, birim_fiyat, para_birimi, tedarikci_id, tedarikci_adi) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?)");
+            $sh_stmt->bind_param("iisddsis", $hareket_id, $sozlesme_id, $tarih, $miktar, $birim_fiyat, $para_birimi, $tedarikci_id, $tedarikci_adi);
+            $sh_stmt->execute();
+            $sh_stmt->close();
+
+            $connection->commit();
+            echo json_encode(['status' => 'success', 'message' => 'Satın alma işlemi başarıyla gerçekleşti. Stok güncellendi ve borç kaydı oluşturuldu.']);
+
+        } catch (Exception $e) {
+            $connection->rollback();
+            echo json_encode(['status' => 'error', 'message' => 'Hata: ' . $e->getMessage()]);
+        }
+        exit;
+
     } elseif ($action == 'count_products') {
         if (!yetkisi_var('page:view:urunler')) {
             echo json_encode(['status' => 'error', 'message' => 'Ürünleri görüntüleme yetkiniz yok.']);

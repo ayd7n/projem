@@ -944,6 +944,149 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             </div>
         </div>
 
+        <!-- Purchase Modal -->
+        <div class="modal fade" id="purchaseModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg" role="document">
+                <div class="modal-content" style="border: none; border-radius: 12px; box-shadow: 0 15px 40px rgba(0,0,0,0.2);">
+                    <div class="modal-header" style="background: linear-gradient(135deg, #ffc107, #ff9800); color: var(--primary);">
+                        <h5 class="modal-title"><i class="fas fa-shopping-cart mr-2"></i> Hızlı Satın Alma (Spot)</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <!-- Modal İçi Alert -->
+                        <div v-if="modalAlert.message" :class="'alert alert-' + modalAlert.type" role="alert">
+                            {{ modalAlert.message }}
+                        </div>
+
+                        <form @submit.prevent="submitPurchase">
+                            <div class="row">
+                                <!-- Sol Kolon: Kompakt Form -->
+                                <div class="col-md-5 border-right">
+                                    <h6 class="text-secondary border-bottom pb-2 mb-3"><i class="fas fa-edit mr-1"></i> Satın Alma Bilgileri</h6>
+                                    
+                                    <div class="form-group mb-2">
+                                        <label class="small mb-1 font-weight-bold">Tedarikçi *</label>
+                                        <select class="form-control form-control-sm" v-model="purchase.tedarikci_id" required>
+                                            <option value="">Tedarikçi Seçin</option>
+                                            <option v-for="t in supplierList" :value="t.tedarikci_id">{{ t.tedarikci_adi }}</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group mb-2">
+                                        <label class="small mb-1 font-weight-bold">Ürün *</label>
+                                        <select class="form-control form-control-sm" v-model="purchase.urun_kodu" @change="onPurchaseProductChange" required>
+                                            <option value="">Ürün Seçin</option>
+                                            <option v-for="p in products" :value="p.urun_kodu">{{ p.urun_kodu }} - {{ p.urun_ismi }}</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="form-group mb-2">
+                                                <label class="small mb-1 font-weight-bold">Miktar *</label>
+                                                <div class="input-group input-group-sm">
+                                                    <input type="number" class="form-control" v-model="purchase.miktar" min="1" required>
+                                                    <div class="input-group-append">
+                                                        <span class="input-group-text px-2" style="font-size: 0.7rem;">{{ purchase.birim }}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-group mb-2">
+                                                <label class="small mb-1 font-weight-bold">Birim Fiyat *</label>
+                                                <input type="number" class="form-control form-control-sm" v-model="purchase.birim_fiyat" step="0.01" min="0" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <div class="form-group mb-2">
+                                                <label class="small mb-1 font-weight-bold">Para Birimi</label>
+                                                <select class="form-control form-control-sm" v-model="purchase.para_birimi">
+                                                    <option value="TL">₺ TRY</option>
+                                                    <option value="USD">$ USD</option>
+                                                    <option value="EUR">€ EUR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="form-group mb-2">
+                                                <label class="small mb-1 font-weight-bold">Tarih</label>
+                                                <input type="date" class="form-control form-control-sm" v-model="purchase.tarih" required>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group mb-3">
+                                        <label class="small mb-1 font-weight-bold">Açıklama</label>
+                                        <textarea class="form-control form-control-sm" v-model="purchase.aciklama" rows="2" placeholder="İşlem notu..."></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Sağ Kolon: İşlem Özeti ve Bilgilendirme -->
+                                <div class="col-md-7 bg-light py-3">
+                                    <h6 class="text-primary border-bottom border-primary pb-2 mb-3"><i class="fas fa-file-invoice mr-1"></i> İşlem Özeti ve Finansal Etki</h6>
+                                    
+                                    <div class="card border-warning mb-3 shadow-sm">
+                                        <div class="card-body p-3 bg-white">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="text-muted small">Hesaplanan Toplam Borç:</span>
+                                                <h4 class="mb-0 text-danger font-weight-bold">{{ formatCurrency(purchase.miktar * purchase.birim_fiyat, purchase.para_birimi) }}</h4>
+                                            </div>
+                                            <div class="progress" style="height: 4px;">
+                                                <div class="progress-bar bg-warning" role="progressbar" style="width: 100%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="process-info mt-4">
+                                        <div class="d-flex mb-3">
+                                            <div class="mr-3 text-center" style="width: 30px;"><i class="fas fa-check-circle text-success fa-lg"></i></div>
+                                            <div>
+                                                <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700;">Envanter Güncellemesi</h6>
+                                                <p class="small text-muted mb-0">Onayladığınızda <strong>{{ purchase.miktar }} {{ purchase.birim }}</strong> stok girişi yapılacak. Envanter değeriniz güncel alış fiyatı üzerinden artırılacak.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex mb-3">
+                                            <div class="mr-3 text-center" style="width: 30px;"><i class="fas fa-calculator text-info fa-lg"></i></div>
+                                            <div>
+                                                <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700;">Maliyet Hesaplama (Ortalama)</h6>
+                                                <p class="small text-muted mb-0">Sistem, mevcut stok ile bu yeni alımı harmanlayarak <strong>Ağırlıklı Ortalama Maliyeti</strong> otomatik olarak yeniden hesaplayacaktır.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="d-flex mb-3">
+                                            <div class="mr-3 text-center" style="width: 30px;"><i class="fas fa-university text-danger fa-lg"></i></div>
+                                            <div>
+                                                <h6 class="mb-1" style="font-size: 0.85rem; font-weight: 700;">Borçlandırma Süreci</h6>
+                                                <p class="small text-muted mb-0">Bu tutar kasadan nakit çıkışı <u>yapmaz</u>. Tedarikçi hanesine borç olarak yazılır. Ödeme planı için <strong>Kasa Yönetimi</strong> sayfasını kullanın.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="alert alert-warning border-warning mt-4 p-2 small">
+                                        <i class="fas fa-exclamation-triangle mr-1"></i> <strong>Dikkat:</strong> Bu işlem geri alınamaz. Kaydetmeden önce miktarı ve birim fiyatı lütfen kontrol edin.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-right border-top pt-3 mt-2">
+                                <button type="button" class="btn btn-secondary mr-2" data-dismiss="modal">İptal</button>
+                                <button type="submit" class="btn btn-warning text-dark font-weight-bold px-4">
+                                    <i class="fas fa-check mr-1"></i> Satın Almayı Tamamla ve Borç Kaydı Oluştur
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Lightbox Modal -->
         <div v-if="lightbox.show" class="lightbox-overlay" @click="closeLightbox"
             style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 9999; display: flex; align-items: center; justify-content: center;">
@@ -1065,6 +1208,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         productTypeFilter: '',
                         modal: { title: '', data: {} },
                         modalAlert: { message: '', type: '' },
+                        purchase: { tedarikci_id: '', urun_kodu: '', miktar: 1, birim_fiyat: 0, para_birimi: 'TL', tarih: '', aciklama: '', birim: 'adet' },
+                        supplierList: [],
                         depoList: [],
                         rafList: [],
                         criticalStockFilterEnabled: false,
@@ -1119,6 +1264,72 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.modalAlert.message = message;
                         this.modalAlert.type = type;
                         setTimeout(() => { this.modalAlert.message = ''; }, 3000);
+                    },
+                    loadSupplierList() {
+                        fetch('api_islemleri/tedarikciler_islemler.php?action=get_suppliers')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.supplierList = response.data;
+                                }
+                            });
+                    },
+                    openPurchaseModal() {
+                        this.modalAlert = { message: '', type: '' }; // Clear modal alert
+                        this.purchase = {
+                            tedarikci_id: '',
+                            urun_kodu: '',
+                            miktar: 1,
+                            birim_fiyat: 0,
+                            para_birimi: 'TL',
+                            tarih: new Date().toISOString().split('T')[0],
+                            aciklama: '',
+                            birim: 'adet'
+                        };
+                        this.loadSupplierList();
+                        $('#purchaseModal').modal('show');
+                    },
+                    onPurchaseProductChange() {
+                        const product = this.products.find(p => p.urun_kodu === this.purchase.urun_kodu);
+                        if (product) {
+                            this.purchase.birim_fiyat = parseFloat(product.alis_fiyati) || 0;
+                            this.purchase.para_birimi = product.alis_fiyati_para_birimi || 'TL';
+                            this.purchase.birim = product.birim || 'adet';
+                        }
+                    },
+                    submitPurchase() {
+                        console.log('Satın alma işlemi başlatıldı:', this.purchase);
+                        
+                        if (this.purchase.miktar <= 0) {
+                            this.showModalAlert('Miktar 0\'dan büyük olmalıdır.', 'warning');
+                            return;
+                        }
+                        
+                        let formData = new FormData();
+                        formData.append('action', 'quick_purchase');
+                        for (let key in this.purchase) {
+                            formData.append(key, this.purchase[key]);
+                        }
+
+                        fetch('api_islemleri/urunler_islemler.php', {
+                            method: 'POST',
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(response => {
+                            console.log('API Yanıtı:', response);
+                            if (response.status === 'success') {
+                                this.showAlert(response.message, 'success'); // Ana sayfa alerti (başarılı olunca modal kapanıyor)
+                                $('#purchaseModal').modal('hide');
+                                this.loadProducts(this.currentPage);
+                            } else {
+                                this.showModalAlert(response.message, 'danger'); // Modal içi alert (hata durumunda)
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Hata:', error);
+                            this.showModalAlert('İşlem sırasında bir hata oluştu: ' + error, 'danger');
+                        });
                     },
                     loadMalzemeTurleri() {
                         fetch('api_islemleri/urunler_islemler.php?action=get_malzeme_turleri')
