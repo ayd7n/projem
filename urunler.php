@@ -427,6 +427,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     <?php if (yetkisi_var('action:urunler:create')): ?>
                         <button @click="openModal(null)" class="btn btn-primary btn-sm"
                             style="font-size: 0.75rem; padding: 4px 10px;"><i class="fas fa-plus"></i> Yeni Ürün</button>
+                        <button @click="openPurchaseModal" class="btn btn-warning btn-sm"
+                            style="font-size: 0.75rem; padding: 4px 10px; color: var(--primary); font-weight: 700;"><i class="fas fa-shopping-cart"></i> Hızlı Satın Al</button>
                     <?php endif; ?>
                     <!-- Depo Filtresi -->
                     <div class="input-group input-group-sm" style="width: auto;">
