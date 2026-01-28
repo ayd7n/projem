@@ -887,7 +887,7 @@ function getAksiyonOnerisi($p) {
                 'class' => 'badge-aksiyon-uyari',
                 'icon' => 'fas fa-cart-plus',
                 'mesaj' => 'Ürün Satın Alınmalı',
-                'detay' => 'Stok yetersiz. <strong>' . number_format($acik, 0, ',', '.') . ' ' . $p['birim'] . '</strong> sipariş verilmeli.',
+                'detay' => 'Stok yetersiz. <strong>' . number_format($acik, 0, ',', '.') . ' ' . $p['birim'] . '</strong> alınmalı.',
                 'category' => 'order',
                 'buton' => [
                     'text' => 'Satın Al',
@@ -2296,370 +2296,424 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </td>
                             <td class="text-right">
                                 <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
-                                     <?php if (isset($p['onerilen_satinalma']) && $p['onerilen_satinalma'] > 0): ?>
-                                        <span class="font-semibold text-warning"><?php echo number_format($p['onerilen_satinalma'], 0, ',', '.'); ?></span>
-                                     <?php else: ?>-<?php endif; ?>
+                                    <span class="text-muted small">-</span>
                                 <?php elseif ($p['onerilen_uretim'] > 0): ?>
                                     <span class="font-semibold" style="color: var(--primary);"><?php echo number_format($p['onerilen_uretim'], 0, ',', '.'); ?></span>
                                 <?php else: ?>-<?php endif; ?>
                             </td>
                             <td class="text-center"><span class="badge-sm <?php echo $badge['class']; ?>"><?php echo $badge['text']; ?></span></td>
                             <td>
-                                <?php 
-                                $eksik_bilesenler = isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : [];
-                                $esans_agaci_eksik = isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : [];
-                                
-                                if (empty($eksik_bilesenler) && empty($esans_agaci_eksik)): ?>
-                                    <span class="text-success"><i class="fas fa-check-circle"></i> Ürün ağacı tam</span>
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
                                 <?php else: ?>
-                                    <?php if (!empty($eksik_bilesenler)): ?>
-                                        <span class="text-warning" style="font-size: 10px;"><i class="fas fa-sitemap"></i> <?php echo implode(', ', $eksik_bilesenler); ?> ürün ağacında bağlı değil</span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($esans_agaci_eksik)): ?>
-                                        <br><span class="text-danger" style="font-size: 10px;"><i class="fas fa-flask"></i> Esansın formülü yok</span>
+                                    <?php 
+                                    $eksik_bilesenler = isset($p['eksik_bilesenler']) ? $p['eksik_bilesenler'] : [];
+                                    $esans_agaci_eksik = isset($p['esans_agaci_eksik']) ? $p['esans_agaci_eksik'] : [];
+                                    
+                                    if (empty($eksik_bilesenler) && empty($esans_agaci_eksik)): ?>
+                                        <span class="text-success"><i class="fas fa-check-circle"></i> Ürün ağacı tam</span>
+                                    <?php else: ?>
+                                        <?php if (!empty($eksik_bilesenler)): ?>
+                                            <span class="text-warning" style="font-size: 10px;"><i class="fas fa-sitemap"></i> <?php echo implode(', ', $eksik_bilesenler); ?> ürün ağacında bağlı değil</span>
+                                        <?php endif; ?>
+                                        <?php if (!empty($esans_agaci_eksik)): ?>
+                                            <br><span class="text-danger" style="font-size: 10px;"><i class="fas fa-flask"></i> Esansın formülü yok</span>
+                                        <?php endif; ?>
                                     <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                             <td>
-                                <?php 
-                                $sozlesme_eksik = isset($p['sozlesme_eksik_malzemeler']) ? $p['sozlesme_eksik_malzemeler'] : [];
-                                
-                                if (empty($sozlesme_eksik)): ?>
-                                    <span class="text-success"><i class="fas fa-file-contract"></i> Tanımlı malzemelerin sözleşmesi tam</span>
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
                                 <?php else: ?>
-                                    <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
+                                    <?php 
+                                    $sozlesme_eksik = isset($p['sozlesme_eksik_malzemeler']) ? $p['sozlesme_eksik_malzemeler'] : [];
+                                    
+                                    if (empty($sozlesme_eksik)): ?>
+                                        <span class="text-success"><i class="fas fa-file-contract"></i> Tanımlı malzemelerin sözleşmesi tam</span>
+                                    <?php else: ?>
+                                        <span class="text-warning" style="font-size: 10px;"><i class="fas fa-exclamation-triangle"></i> Sözleşme yok: <?php echo implode(', ', array_slice($sozlesme_eksik, 0, 3)); ?><?php if (count($sozlesme_eksik) > 3) echo ' +' . (count($sozlesme_eksik) - 3) . ' diğer'; ?></span>
+                                    <?php endif; ?>
                                 <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $malzeme_gosterildi = false;
-                                if (!empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
-                                            $malzeme_gosterildi = true;
-                                            echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                 htmlspecialchars($bilesen['isim']) . ': <span class="font-weight-bold">' . 
-                                                 number_format($bilesen['mevcut_stok'], 0, ',', '.') . '</span></div>';
-                                        }
-                                    }
-                                }
-                                if (!$malzeme_gosterildi) echo '<span class="text-muted">-</span>';
-                                ?>
-                            </td>
-                            <td class="text-right">
-                                <?php
-                                $malzeme_gosterildi = false;
-                                if (!empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var']) && $bilesen['yoldaki_stok'] > 0) {
-                                            $malzeme_gosterildi = true;
-                                            echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                 htmlspecialchars($bilesen['isim']) . ': <span class="text-info font-weight-bold">' . 
-                                                 number_format($bilesen['yoldaki_stok'], 0, ',', '.') . '</span>' .
-                                                 ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($bilesen['po_list']) . ')</span></div>';
-                                        }
-                                    }
-                                }
-                                if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
-                                ?>
-                            </td>
-                            <td class="text-right">
-                                <?php
-                                $malzeme_gosterildi = false;
-                                // Ürün açığı (Gap) varsa hesapla
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            $mevcut_ve_yoldaki = $bilesen['mevcut_stok'] + $bilesen['yoldaki_stok'];
-                                            $siparis_gereken = max(0, $toplam_ihtiyac - $mevcut_ve_yoldaki);
-                                            
-                                            if ($siparis_gereken > 0) {
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $malzeme_gosterildi = false;
+                                    if (!empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
                                                 $malzeme_gosterildi = true;
                                                 echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                     htmlspecialchars($bilesen['isim']) . ': <span class="text-danger font-weight-bold">' . 
-                                                     number_format($siparis_gereken, 0, ',', '.') . '</span></div>';
+                                                     htmlspecialchars($bilesen['isim']) . ': <span class="font-weight-bold">' . 
+                                                     number_format($bilesen['mevcut_stok'], 0, ',', '.') . '</span></div>';
                                             }
                                         }
                                     }
-                                }
-                                if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
-                                ?>
+                                    if (!$malzeme_gosterildi) echo '<span class="text-muted">-</span>';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            echo '<div class="text-nowrap">' . number_format($toplam_ihtiyac, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
-                                        }
-                                    }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
-                            </td>
-                            <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if (!empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            echo '<div class="text-nowrap">' . number_format($bilesen['mevcut_stok'], 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
-                                        }
-                                    }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
-                            </td>
-                            <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if (!empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            $uretimde = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
-                                            }
-                                            if ($uretimde > 0) {
-                                                 echo '<div class="text-nowrap text-info">' . number_format($uretimde, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
-                                            } else {
-                                                 echo '0';
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $malzeme_gosterildi = false;
+                                    if (!empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var']) && $bilesen['yoldaki_stok'] > 0) {
+                                                $malzeme_gosterildi = true;
+                                                echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                     htmlspecialchars($bilesen['isim']) . ': <span class="text-info font-weight-bold">' . 
+                                                     number_format($bilesen['yoldaki_stok'], 0, ',', '.') . '</span>' .
+                                                     ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($bilesen['po_list']) . ')</span></div>';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            
-                                            $stok = floatval($bilesen['mevcut_stok']);
-                                            $uretimde = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
-                                            }
-                                            
-                                            $toplam_mevcut_esans = $stok + $uretimde;
-                                            $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
-                                            
-                                            if ($net_ihtiyac > 0) {
-                                                echo '<div class="text-nowrap"><span class="font-weight-bold" style="color: var(--danger);">' . number_format($net_ihtiyac, 2, ',', '.') . '</span> <small class="text-muted">ml</small></div>';
-                                                echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
-                                            } else {
-                                                 echo '<span class="text-success"><i class="fas fa-check"></i> Yeterli</span>';
-                                                 echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $malzeme_gosterildi = false;
+                                    // Ürün açığı (Gap) varsa hesapla
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] !== 'esans' && !empty($bilesen['sozlesme_var'])) {
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                $mevcut_ve_yoldaki = $bilesen['mevcut_stok'] + $bilesen['yoldaki_stok'];
+                                                $siparis_gereken = max(0, $toplam_ihtiyac - $mevcut_ve_yoldaki);
+                                                
+                                                if ($siparis_gereken > 0) {
+                                                    $malzeme_gosterildi = true;
+                                                    echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                         htmlspecialchars($bilesen['isim']) . ': <span class="text-danger font-weight-bold">' . 
+                                                         number_format($siparis_gereken, 0, ',', '.') . '</span></div>';
+                                                }
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$malzeme_gosterildi) echo '<span class="text-muted">0</span>';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if (!empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            $uretilebilir = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
-                                            }
-                                            
-                                            if ($uretilebilir > 0) {
-                                                echo '<div class="text-nowrap text-success">' . number_format($uretilebilir, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
-                                            } else {
-                                                echo '<div class="text-nowrap text-danger">0</div>';
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $toplam_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                echo '<div class="text-nowrap">' . number_format($toplam_ihtiyac, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            
-                                            // 1. Net İhtiyaç Hesapla
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            $stok = floatval($bilesen['mevcut_stok']);
-                                            $uretimde = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
-                                            }
-                                            $toplam_mevcut_esans = $stok + $uretimde;
-                                            $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
-                                            
-                                            // 2. Üretilebilir Hesapla
-                                            $uretilebilir = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
-                                            }
-                                            
-                                            // 3. Sipariş Gereken = Net İhtiyaç - Hammadde ile Üretilebilir
-                                            $siparis_gereken = max(0, $net_ihtiyac - $uretilebilir);
-                                            
-                                            if ($siparis_gereken > 0) {
-                                                echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>ml</small></div>';
-                                            } else {
-                                                echo '0';
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if (!empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                echo '<div class="text-nowrap">' . number_format($bilesen['mevcut_stok'], 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            
-                                            // 1. Net Esans İhtiyacını Al
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            $stok_esans = floatval($bilesen['mevcut_stok']);
-                                            $uretimde_esans = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if (!empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                $uretimde = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                                }
+                                                if ($uretimde > 0) {
+                                                     echo '<div class="text-nowrap text-info">' . number_format($uretimde, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                } else {
+                                                     echo '0';
+                                                }
                                             }
-                                            $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
-                                            
-                                            // 2. Eğer net ihtiyaç varsa hammaddeleri hesapla
-                                            if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
-                                                $eksik_hammaddeler = [];
-                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
-                                                    $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
-                                                    $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
-                                                    
-                                                    if ($eksik_h > 0) {
-                                                        $eksik_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
-                                                            number_format($eksik_h, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
-                                                    }
+                                        }
+                                    }
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                
+                                                $stok = floatval($bilesen['mevcut_stok']);
+                                                $uretimde = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
                                                 }
                                                 
-                                                if (!empty($eksik_hammaddeler)) {
-                                                    echo implode('', $eksik_hammaddeler);
+                                                $toplam_mevcut_esans = $stok + $uretimde;
+                                                $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
+                                                
+                                                if ($net_ihtiyac > 0) {
+                                                    echo '<div class="text-nowrap"><span class="font-weight-bold" style="color: var(--danger);">' . number_format($net_ihtiyac, 2, ',', '.') . '</span> <small class="text-muted">ml</small></div>';
+                                                    echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
+                                                } else {
+                                                     echo '<span class="text-success"><i class="fas fa-check"></i> Yeterli</span>';
+                                                     echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if (!empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                $uretilebilir = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
+                                                }
+                                                
+                                                if ($uretilebilir > 0) {
+                                                    echo '<div class="text-nowrap text-success">' . number_format($uretilebilir, 2, ',', '.') . ' <small class="text-muted">ml</small></div>';
+                                                } else {
+                                                    echo '<div class="text-nowrap text-danger">0</div>';
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                
+                                                // 1. Net İhtiyaç Hesapla
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                $stok = floatval($bilesen['mevcut_stok']);
+                                                $uretimde = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretimde = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                                }
+                                                $toplam_mevcut_esans = $stok + $uretimde;
+                                                $net_ihtiyac = max(0, $brut_ihtiyac - $toplam_mevcut_esans);
+                                                
+                                                // 2. Üretilebilir Hesapla
+                                                $uretilebilir = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretilebilir = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['uretilebilir_miktar']);
+                                                }
+                                                
+                                                // 3. Sipariş Gereken = Net İhtiyaç - Hammadde ile Üretilebilir
+                                                $siparis_gereken = max(0, $net_ihtiyac - $uretilebilir);
+                                                
+                                                if ($siparis_gereken > 0) {
+                                                    echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>ml</small></div>';
                                                 } else {
                                                     echo '0';
                                                 }
-                                            } else {
-                                                echo '0';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
-                                                $mevcut_siparisler = [];
-                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
-                                                    if ($h['bekleyen_siparis'] > 0) {
-                                                        $mevcut_siparisler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-info font-weight-bold">' . 
-                                                            number_format($h['bekleyen_siparis'], 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small>' .
-                                                            ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($h['po_list']) . ')</span></div>';
-                                                    }
-                                                }
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
                                                 
-                                                if (!empty($mevcut_siparisler)) {
-                                                    echo implode('', $mevcut_siparisler);
+                                                // 1. Net Esans İhtiyacını Al
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                $stok_esans = floatval($bilesen['mevcut_stok']);
+                                                $uretimde_esans = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                                }
+                                                $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
+                                                
+                                                // 2. Eğer net ihtiyaç varsa hammaddeleri hesapla
+                                                if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                    $eksik_hammaddeler = [];
+                                                    foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                        $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
+                                                        $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
+                                                        
+                                                        if ($eksik_h > 0) {
+                                                            $eksik_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                                htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
+                                                                number_format($eksik_h, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
+                                                        }
+                                                    }
+                                                    
+                                                    if (!empty($eksik_hammaddeler)) {
+                                                        echo implode('', $eksik_hammaddeler);
+                                                    } else {
+                                                        echo '0';
+                                                    }
                                                 } else {
                                                     echo '0';
                                                 }
-                                            } else {
-                                                echo '0';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                             <td class="text-right">
-                                <?php
-                                $esans_bulundu = false;
-                                if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
-                                    foreach ($p['bilesen_detaylari'] as $bilesen) {
-                                        if ($bilesen['tur'] === 'esans') {
-                                            $esans_bulundu = true;
-                                            
-                                            // 1. Net Esans İhtiyacını Al
-                                            $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
-                                            $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
-                                            $stok_esans = floatval($bilesen['mevcut_stok']);
-                                            $uretimde_esans = 0;
-                                            if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
-                                                $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
-                                            }
-                                            $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
-                                            
-                                            // 2. Net hammadde sipariş ihtiyacı hesapla
-                                            if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
-                                                $net_siparis_hammaddeler = [];
-                                                foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
-                                                    $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
-                                                    $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
-                                                    
-                                                    // Net Sipariş = (Gereken - Mevcut Stok) - Yoldaki Sipariş
-                                                    $net_h_siparis = max(0, $eksik_h - $h['bekleyen_siparis']);
-                                                    
-                                                    if ($net_h_siparis > 0) {
-                                                        $net_siparis_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
-                                                            htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
-                                                            number_format($net_h_siparis, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
-                                                    }
-                                                }
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
                                                 
-                                                if (!empty($net_siparis_hammaddeler)) {
-                                                    echo implode('', $net_siparis_hammaddeler);
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                    $mevcut_siparisler = [];
+                                                    foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                        if ($h['bekleyen_siparis'] > 0) {
+                                                            $mevcut_siparisler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                                htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-info font-weight-bold">' . 
+                                                                number_format($h['bekleyen_siparis'], 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small>' .
+                                                                ' <span class="text-muted" style="font-size: 9px;">(' . htmlspecialchars($h['po_list']) . ')</span></div>';
+                                                        }
+                                                    }
+                                                    
+                                                    if (!empty($mevcut_siparisler)) {
+                                                        echo implode('', $mevcut_siparisler);
+                                                    } else {
+                                                        echo '0';
+                                                    }
                                                 } else {
                                                     echo '0';
                                                 }
-                                            } else {
-                                                echo '0';
                                             }
                                         }
                                     }
-                                }
-                                if (!$esans_bulundu) echo '0';
-                                ?>
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
+                            </td>
+                            <td class="text-right">
+                                <?php if (isset($p['urun_tipi']) && $p['urun_tipi'] === 'hazir_alinan'): ?>
+                                    <span class="text-muted small">-</span>
+                                <?php else: ?>
+                                    <?php
+                                    $esans_bulundu = false;
+                                    if ($p['acik'] > 0 && !empty($p['bilesen_detaylari'])) {
+                                        foreach ($p['bilesen_detaylari'] as $bilesen) {
+                                            if ($bilesen['tur'] === 'esans') {
+                                                $esans_bulundu = true;
+                                                
+                                                // 1. Net Esans İhtiyacını Al
+                                                $birim_ihtiyac = floatval($bilesen['gerekli_adet']);
+                                                $brut_ihtiyac = $p['acik'] * $birim_ihtiyac;
+                                                $stok_esans = floatval($bilesen['mevcut_stok']);
+                                                $uretimde_esans = 0;
+                                                if (isset($p['esans_uretim_bilgisi'][$bilesen['kodu']])) {
+                                                    $uretimde_esans = floatval($p['esans_uretim_bilgisi'][$bilesen['kodu']]['acik_is_emri_miktar']);
+                                                }
+                                                $net_esans_ihtiyac = max(0, $brut_ihtiyac - ($stok_esans + $uretimde_esans));
+                                                
+                                                // 2. Net hammadde sipariş ihtiyacı hesapla
+                                                if ($net_esans_ihtiyac > 0 && isset($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'])) {
+                                                    $net_siparis_hammaddeler = [];
+                                                    foreach ($p['esans_uretim_bilgisi'][$bilesen['kodu']]['formul_detaylari'] as $h) {
+                                                        $toplam_gereken_h = $net_esans_ihtiyac * $h['recete_miktari'];
+                                                        $eksik_h = max(0, $toplam_gereken_h - $h['mevcut_stok']);
+                                                        
+                                                        // Net Sipariş = (Gereken - Mevcut Stok) - Yoldaki Sipariş
+                                                        $net_h_siparis = max(0, $eksik_h - $h['bekleyen_siparis']);
+                                                        
+                                                        if ($net_h_siparis > 0) {
+                                                            $net_siparis_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                                htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
+                                                                number_format($net_h_siparis, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
+                                                        }
+                                                    }
+                                                    
+                                                    if (!empty($net_siparis_hammaddeler)) {
+                                                        echo implode('', $net_siparis_hammaddeler);
+                                                    } else {
+                                                        echo '0';
+                                                    }
+                                                } else {
+                                                    echo '0';
+                                                }
+                                            }
+                                        }
+                                    }
+                                    if (!$esans_bulundu) echo '0';
+                                    ?>
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <?php endforeach; ?>
