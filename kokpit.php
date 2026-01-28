@@ -1955,12 +1955,12 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                 <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Eksik esans</div>
                             </th>
                             <th class="text-right th-purple">
-                                <i class="fas fa-tasks"></i> Esans İş Emri
-                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Açılacak iş emri</div>
+                                <i class="fas fa-flask"></i> Hemen Üretilebilir Esans Miktarı
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Mevcut Hammaddeyle</div>
                             </th>
                             <th class="text-right th-purple">
-                                <i class="fas fa-shopping-bag"></i> Malzeme Siparişi
-                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Sipariş gereken</div>
+                                <i class="fas fa-industry"></i> Üretilmesi Gereken
+                                <div style="font-size: 9px; font-weight: 400; opacity: 0.7; margin-top: 2px;">Hammadde Bekleyen</div>
                             </th>
                             <th class="text-right th-purple">
                                 <i class="fas fa-dolly"></i> Sipariş Gereken Hammaddeler
@@ -2565,6 +2565,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 
                                                 if ($siparis_gereken > 0) {
                                                     echo '<div class="text-nowrap text-danger font-weight-bold">' . number_format($siparis_gereken, 2, ',', '.') . ' <small>ml</small></div>';
+                                                    echo '<div class="small text-muted" style="font-size: 10px;">' . htmlspecialchars($bilesen['isim']) . '</div>';
                                                 } else {
                                                     echo '0';
                                                 }
