@@ -728,15 +728,7 @@ if ($orders_result && $orders_result->num_rows > 0) {
 
         .order-filters {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
             justify-content: center;
-        }
-
-        .order-filters .btn {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 20px;
         }
 
         .table th {
@@ -791,12 +783,13 @@ if ($orders_result && $orders_result->num_rows > 0) {
         .actions button,
         .actions .btn {
             display: inline-flex !important;
-            padding: 6px 10px;
+            padding: 5px 9px;
             border-radius: 18px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             margin: 0 !important;
+            font-size: 0.75rem !important;
         }
 
         .no-orders-container {
@@ -955,21 +948,23 @@ if ($orders_result && $orders_result->num_rows > 0) {
         <div class="card mb-4">
             <div class="card-body">
                 <div class="order-filters mb-3">
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'beklemede']))); ?>" class="btn <?php echo $filter === 'beklemede' ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                        <i class="fas fa-clock"></i> Bekleyenler (<?php echo $beklemede_count; ?>)
-                    </a>
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'onaylandi']))); ?>" class="btn <?php echo $filter === 'onaylandi' ? 'btn-success' : 'btn-outline-success'; ?>">
-                        <i class="fas fa-check"></i> Onaylanmış (<?php echo $onaylandi_count; ?>)
-                    </a>
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'iptal_edildi']))); ?>" class="btn <?php echo $filter === 'iptal_edildi' ? 'btn-danger' : 'btn-outline-danger'; ?>">
-                        <i class="fas fa-times"></i> İptal Edilmiş (<?php echo $iptal_edildi_count; ?>)
-                    </a>
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tamamlandi']))); ?>" class="btn <?php echo $filter === 'tamamlandi' ? 'btn-info' : 'btn-outline-info'; ?>">
-                        <i class="fas fa-check-double"></i> Tamamlanmış (<?php echo $tamamlandi_count; ?>)
-                    </a>
-                    <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tum']))); ?>" class="btn <?php echo !$filter || $filter === 'tum' ? 'btn-primary' : 'btn-outline-primary'; ?>">
-                        <i class="fas fa-list"></i> Tümü (<?php echo $total_count; ?>)
-                    </a>
+                    <div class="btn-group" role="group">
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'beklemede']))); ?>" class="btn <?php echo $filter === 'beklemede' ? 'btn-primary' : 'btn-outline-primary'; ?>">
+                            <i class="fas fa-clock"></i> Bekleyenler (<?php echo $beklemede_count; ?>)
+                        </a>
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'onaylandi']))); ?>" class="btn <?php echo $filter === 'onaylandi' ? 'btn-success' : 'btn-outline-success'; ?>">
+                            <i class="fas fa-check"></i> Onaylanmış (<?php echo $onaylandi_count; ?>)
+                        </a>
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'iptal_edildi']))); ?>" class="btn <?php echo $filter === 'iptal_edildi' ? 'btn-danger' : 'btn-outline-danger'; ?>">
+                            <i class="fas fa-times"></i> İptal Edilmiş (<?php echo $iptal_edildi_count; ?>)
+                        </a>
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tamamlandi']))); ?>" class="btn <?php echo $filter === 'tamamlandi' ? 'btn-info' : 'btn-outline-info'; ?>">
+                            <i class="fas fa-check-double"></i> Tamamlanmış (<?php echo $tamamlandi_count; ?>)
+                        </a>
+                        <a href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['filter' => 'tum']))); ?>" class="btn <?php echo !$filter || $filter === 'tum' ? 'btn-primary' : 'btn-outline-primary'; ?>">
+                            <i class="fas fa-list"></i> Tümü (<?php echo $total_count; ?>)
+                        </a>
+                    </div>
                 </div>
 
                 <!-- Search and Date Filters -->
@@ -1007,7 +1002,6 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                     <th><i class="fas fa-user"></i> Müşteri</th>
                                     <th><i class="fas fa-calendar"></i> Tarih</th>
                                     <th><i class="fas fa-tag"></i> Durum</th>
-                                    <th><i class="fas fa-coins"></i> Ödeme</th>
                                     <th><i class="fas fa-boxes"></i> Ürün Kalemleri</th>
                                     <th><i class="fas fa-sort-numeric-up"></i> Toplam Adet</th>
                                     <th><i class="fas fa-user"></i> Oluşturan</th>
@@ -1083,87 +1077,96 @@ if ($orders_result && $orders_result->num_rows > 0) {
                                         <td><?php echo htmlspecialchars($order['aciklama'] ?: '-'); ?></td>
                                         <td>
                                             <div class="actions">
-                                                <?php if (yetkisi_var('action:musteri_siparisleri:view')): ?>
-                                                    <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm">
-                                                        <i class="fas fa-eye"></i> Görüntüle
-                                                    </a>
-                                                <?php endif; ?>
+                                                <div class="btn-group" role="group">
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:view')): ?>
+                                                        <a href="siparis_detay.php?siparis_id=<?php echo $order['siparis_id']; ?>" class="btn btn-primary btn-sm" title="Görüntüle">
+                                                            <i class="fas fa-eye"></i> Görüntüle
+                                                        </a>
+                                                    <?php endif; ?>
 
-                                                <?php if ($order['durum'] === 'beklemede'): ?>
-
-                                                    <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
-
-                                                        <form method="POST" class="d-inline approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
-
-                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
-
-                                                            <input type="hidden" name="durum" value="onaylandi">
-
-                                                            <input type="hidden" name="update" value="1">
-
-                                                            <button type="button" name="update" class="btn btn-success btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmOnayla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-
+                                                    <?php if ($order['durum'] === 'beklemede'): ?>
+                                                        <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
+                                                            <button type="button" class="btn btn-success btn-sm" onclick="confirmOnayla(<?php echo (int)$order['siparis_id']; ?>)" title="Onayla">
                                                                 <i class="fas fa-check"></i> Onayla
-
                                                             </button>
+                                                        <?php endif; ?>
 
+                                                        <?php if (yetkisi_var('action:musteri_siparisleri:cancel')): ?>
+                                                            <button type="button" class="btn btn-danger btn-sm" onclick="confirmIptal(<?php echo (int)$order['siparis_id']; ?>)" title="İptal">
+                                                                <i class="fas fa-times"></i> İptal Et
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    <?php elseif ($order['durum'] === 'onaylandi'): ?>
+                                                        <?php if (yetkisi_var('action:musteri_siparisleri:complete')): ?>
+                                                            <button type="button" class="btn btn-info btn-sm" onclick="confirmTamamla(<?php echo (int)$order['siparis_id']; ?>)" title="Tamamla">
+                                                                <i class="fas fa-check-double"></i> Tamamla
+                                                            </button>
+                                                        <?php endif; ?>
+                                                        <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_pending')): ?>
+                                                            <button type="button" class="btn btn-warning btn-sm" onclick="confirmBeklemeyeAl(<?php echo (int)$order['siparis_id']; ?>)" title="Beklemeye Al">
+                                                                <i class="fas fa-undo"></i> Beklet
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    <?php elseif ($order['durum'] === 'tamamlandi'): ?>
+                                                        <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_approved')): ?>
+                                                            <button type="button" class="btn btn-warning btn-sm" onclick="confirmGeriAl(<?php echo (int)$order['siparis_id']; ?>)" title="Geri Al">
+                                                                <i class="fas fa-undo"></i> Geri Al
+                                                            </button>
+                                                        <?php endif; ?>
+                                                    <?php elseif ($order['durum'] === 'iptal_edildi'): ?>
+                                                        <button type="button" class="btn btn-danger btn-sm" onclick="confirmSil(<?php echo (int)$order['siparis_id']; ?>)" title="Sil">
+                                                            <i class="fas fa-trash"></i> Sil
+                                                        </button>
+                                                    <?php endif; ?>
+                                                </div>
+
+                                                <!-- Hidden forms for processing -->
+                                                <?php if ($order['durum'] === 'beklemede'): ?>
+                                                    <?php if (yetkisi_var('action:musteri_siparisleri:approve')): ?>
+                                                        <form method="POST" class="approve-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
+                                                            <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
+                                                            <input type="hidden" name="durum" value="onaylandi">
+                                                            <input type="hidden" name="update" value="1">
                                                         </form>
-
                                                     <?php endif; ?>
 
                                                     <?php if (yetkisi_var('action:musteri_siparisleri:cancel')): ?>
-                                                        <form method="POST" class="d-inline cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <form method="POST" class="cancel-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
                                                             <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                             <input type="hidden" name="durum" value="iptal_edildi">
                                                             <input type="hidden" name="update" value="1">
-                                                            <button type="button" name="update" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmIptal(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                                <i class="fas fa-times"></i> İptal
-                                                            </button>
                                                         </form>
                                                     <?php endif; ?>
                                                 <?php elseif ($order['durum'] === 'onaylandi'): ?>
                                                     <?php if (yetkisi_var('action:musteri_siparisleri:complete')): ?>
-                                                        <form method="POST" class="d-inline complete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <form method="POST" class="complete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
                                                             <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                             <input type="hidden" name="durum" value="tamamlandi">
                                                             <input type="hidden" name="update" value="1">
-                                                            <button type="button" name="update" class="btn btn-info btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmTamamla(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                                <i class="fas fa-check-double"></i> Tamamla
-                                                            </button>
                                                         </form>
                                                     <?php endif; ?>
                                                     <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_pending')): ?>
-                                                        <form method="POST" class="d-inline revert-approval-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <form method="POST" class="revert-approval-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
                                                             <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                             <input type="hidden" name="durum" value="beklemede">
                                                             <input type="hidden" name="update" value="1">
-                                                            <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmBeklemeyeAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                                <i class="fas fa-undo"></i> Beklemeye Al
-                                                            </button>
                                                         </form>
                                                     <?php endif; ?>
                                                 <?php elseif ($order['durum'] === 'tamamlandi'): ?>
                                                     <?php if (yetkisi_var('action:musteri_siparisleri:revert_to_approved')): ?>
-                                                        <form method="POST" class="d-inline revert-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                        <form method="POST" class="revert-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
                                                             <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                             <input type="hidden" name="durum" value="onaylandi">
                                                             <input type="hidden" name="update" value="1">
-                                                            <button type="button" name="update" class="btn btn-warning btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmGeriAl(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                                <i class="fas fa-undo"></i> Geri Al
-                                                            </button>
                                                         </form>
                                                     <?php endif; ?>
                                                 <?php elseif ($order['durum'] === 'iptal_edildi'): ?>
-                                                    <form method="POST" class="d-inline delete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>">
+                                                    <form method="POST" class="delete-form" data-siparis-id="<?php echo $order['siparis_id']; ?>" style="display:none;">
                                                         <input type="hidden" name="siparis_id" value="<?php echo $order['siparis_id']; ?>">
                                                         <input type="hidden" name="delete" value="1">
-                                                        <button type="button" name="delete" class="btn btn-danger btn-sm" data-siparis-id="<?php echo $order['siparis_id']; ?>" onclick="confirmSil(<?php echo json_encode((int)$order['siparis_id']); ?>)">
-                                                            <i class="fas fa-trash"></i> Sil
-                                                        </button>
                                                     </form>
                                                 <?php endif; ?>
                                             </div>
-
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>

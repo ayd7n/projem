@@ -340,7 +340,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                     <div v-if="totalBalance > 0" class="stat-card-mini"
                         style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #dc2626, #ef4444); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
                         <i class="fas fa-exclamation-triangle mr-1"></i>
-                        <span style="font-weight: 600;">{{ formatCurrency(totalBalance) }}</span>
+                        <span style="font-weight: 600;">{{ formatCurrency(totalBalance, 'TRY') }}</span>
                         <span class="ml-1" style="opacity: 0.9;">Toplam Bakiye</span>
                     </div>
                     <div v-else class="stat-card-mini"
@@ -421,16 +421,7 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                                     </span>
                                     <span v-else style="color: #059669; font-size: 0.75rem;">-</span>
                                 </td>
-                                <td>
-                                    <span v-if="customer.kalan_bakiye > 0.01" 
-                                          style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;">
-                                        <i class="fas fa-exclamation-circle"></i> {{ formatCurrency(customer.kalan_bakiye) }}
-                                    </span>
-                                    <span v-else 
-                                          style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;">
-                                        <i class="fas fa-check-circle"></i> Temiz
-                                    </span>
-                                </td>
+                                <td v-html="customer.bakiye_gosterim"></td>
                             </tr>
                         </tbody>
                     </table>
@@ -639,8 +630,11 @@ $total_customers = $total_result->fetch_assoc()['total'] ?? 0;
                 }
             },
             methods: {
-                formatCurrency(value) {
-                    return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' ₺';
+                formatCurrency(value, currency = 'TRY') {
+                    let symbol = '₺';
+                    if (currency === 'USD') symbol = '$';
+                    else if (currency === 'EUR') symbol = '€';
+                    return new Intl.NumberFormat('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value) + ' ' + symbol;
                 },
                 showAlert(message, type) {
                     this.alert.message = message;

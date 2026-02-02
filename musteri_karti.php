@@ -214,14 +214,22 @@ while ($order = $orders_result->fetch_assoc()) {
 
     $order['items'] = [];
     $order_item_total = 0;
+    $order_currency = 'TRY'; // Default
+    $first_item = true;
+
     while ($item = $items_result->fetch_assoc()) {
         $order['items'][] = $item;
+        if ($first_item) {
+            $order_currency = $item['para_birimi'] ?? 'TRY';
+            $first_item = false;
+        }
         $total_products += $item['adet'];
         $order_item_total += floatval($item['birim_fiyat']) * floatval($item['adet']);
     }
     $items_stmt->close();
     
     // Sipariş tutarını hesapla
+    $order['para_birimi'] = $order_currency;
     $order['hesaplanan_tutar'] = $order_item_total;
     $odenen = floatval($order['odenen_tutar'] ?? 0);
     $order['kalan_tutar'] = $order_item_total - $odenen;
@@ -274,8 +282,12 @@ function formatDate($dateString) {
 }
 
 // Function to format currency
-function formatCurrency($value) {
-    return number_format(floatval($value), 2, ',', '.') . ' ₺';
+function formatCurrency($value, $currency = 'TRY') {
+    $symbol = '₺';
+    if ($currency === 'USD') $symbol = '$';
+    elseif ($currency === 'EUR') $symbol = '€';
+    
+    return number_format(floatval($value), 2, ',', '.') . ' ' . $symbol;
 }
 ?>
 <!DOCTYPE html>
@@ -678,18 +690,18 @@ function formatCurrency($value) {
                          <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
                             <div class="meta-box">
                                 <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Toplam Tutar</div>
-                                <div style="font-size: 14px; font-weight: 700; color: #111827;"><?php echo formatCurrency($order['hesaplanan_tutar']); ?></div>
+                                <div style="font-size: 14px; font-weight: 700; color: #111827;"><?php echo formatCurrency($order['hesaplanan_tutar'], $order['para_birimi']); ?></div>
                             </div>
                             
                             <?php if(!$order['is_in_plan']): ?>
                                 <div class="meta-box">
                                     <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Ödenen</div>
-                                    <div style="font-size: 14px; font-weight: 600; color: #059669;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0); ?></div>
+                                    <div style="font-size: 14px; font-weight: 600; color: #059669;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0, $order['para_birimi']); ?></div>
                                 </div>
                                 <?php if($order['kalan_tutar'] > 0.01): ?>
                                     <div class="meta-box">
                                         <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Kalan</div>
-                                        <div style="font-size: 14px; font-weight: 700; color: #dc2626;"><?php echo formatCurrency($order['kalan_tutar']); ?></div>
+                                        <div style="font-size: 14px; font-weight: 700; color: #dc2626;"><?php echo formatCurrency($order['kalan_tutar'], $order['para_birimi']); ?></div>
                                     </div>
                                 <?php endif; ?>
                             <?php else: ?>
@@ -730,7 +742,7 @@ function formatCurrency($value) {
                                                 <?php echo $item['adet']; ?> <?php echo htmlspecialchars($item['birim']); ?>
                                             </span>
                                         </td>
-                                        <td style="padding: 8px 12px; text-align: right; font-weight: 500;"><?php echo formatCurrency($item['toplam_tutar']); ?></td>
+                                        <td style="padding: 8px 12px; text-align: right; font-weight: 500;"><?php echo formatCurrency($item['toplam_tutar'], $item['para_birimi']); ?></td>
                                     </tr>
                                     <?php endforeach; ?>
                                 </tbody>
