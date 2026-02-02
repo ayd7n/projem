@@ -907,14 +907,18 @@ $products_result = $connection->query($products_query);
     
     // Function to add new order item to the table
     function addOrderItemToTable(itemData) {
+        let symbol = '₺';
+        if (itemData.para_birimi === 'USD') symbol = '$';
+        else if (itemData.para_birimi === 'EUR') symbol = '€';
+
         const newRow = `
             <tr id="order-item-${itemData.urun_kodu}">
                 <td>${itemData.urun_kodu}</td>
                 <td>${itemData.urun_ismi}</td>
                 <td>${itemData.adet}</td>
                 <td>${itemData.birim}</td>
-                <td>${itemData.birim_fiyat} TL</td>
-                <td>${itemData.toplam_tutar} TL</td>
+                <td>${itemData.birim_fiyat} ${symbol}</td>
+                <td>${itemData.toplam_tutar} ${symbol}</td>
                 <td class="actions">
                     <a href="#update-form-${itemData.urun_kodu}" class="btn btn-primary btn-sm">
                         <i class="fas fa-edit"></i> Düzenle
@@ -963,14 +967,18 @@ $products_result = $connection->query($products_query);
     
     // Function to update an existing order item in the table
     function updateOrderItemInTable(itemData) {
+        let symbol = '₺';
+        if (itemData.para_birimi === 'USD') symbol = '$';
+        else if (itemData.para_birimi === 'EUR') symbol = '€';
+
         // Update the main row
         $(`#order-item-${itemData.old_urun_kodu}`).html(`
             <td>${itemData.urun_kodu}</td>
             <td>${itemData.urun_ismi}</td>
             <td>${itemData.adet}</td>
             <td>${itemData.birim}</td>
-            <td>${itemData.birim_fiyat} TL</td>
-            <td>${itemData.toplam_tutar} TL</td>
+            <td>${itemData.birim_fiyat} ${symbol}</td>
+            <td>${itemData.toplam_tutar} ${symbol}</td>
             <td class="actions">
                 <a href="#update-form-${itemData.urun_kodu}" class="btn btn-primary btn-sm">
                     <i class="fas fa-edit"></i> Düzenle

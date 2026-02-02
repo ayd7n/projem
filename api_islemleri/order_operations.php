@@ -38,7 +38,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         // Insert order items
         foreach ($cart as $urun_kodu => $adet) {
             // Debug: Product query
-            $urun_query = "SELECT urun_ismi, birim, satis_fiyati FROM urunler WHERE urun_kodu = ?";
+            $urun_query = "SELECT urun_ismi, birim, satis_fiyati, satis_fiyati_para_birimi FROM urunler WHERE urun_kodu = ?";
             $urun_stmt = $connection->prepare($urun_query);
             $urun_stmt->bind_param('i', $urun_kodu);
             $urun_stmt->execute();
@@ -53,24 +53,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $urun_ismi = $urun['urun_ismi'] ?: 'Bilinmeyen Ürün';
                 $urun_birimi = $urun['birim'] ?: 'adet';
                 $satis_fiyati = $urun['satis_fiyati'] ?: 0;
+                $para_birimi = isset($urun['satis_fiyati_para_birimi']) ? $urun['satis_fiyati_para_birimi'] : 'TRY';
 
                 $toplam_tutar = $adet * $satis_fiyati;
 
                 // Use direct SQL insert instead of prepared statement to avoid binding issues
                 $urun_ismi_escaped = $connection->real_escape_string($urun_ismi);
                 $urun_birimi_escaped = $connection->real_escape_string($urun_birimi);
+                $para_birimi_escaped = $connection->real_escape_string($para_birimi);
 
                 $order_item_sql = "INSERT INTO siparis_kalemleri
-                                   (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar)
-                                   VALUES ($siparis_id, $urun_kodu, '$urun_ismi_escaped', $adet, '$urun_birimi_escaped', $satis_fiyati, $toplam_tutar)";
+                                   (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar, para_birimi)
+                                   VALUES ($siparis_id, $urun_kodu, '$urun_ismi_escaped', $adet, '$urun_birimi_escaped', $satis_fiyati, $toplam_tutar, '$para_birimi_escaped')";
 
                 $connection->query($order_item_sql);
                 $toplam_adet += $adet;
             } else {
                 // If product not found, create a placeholder
                 $order_item_sql = "INSERT INTO siparis_kalemleri
-                                   (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar)
-                                   VALUES ($siparis_id, $urun_kodu, 'Bilinmeyen Ürün', $adet, 'adet', 0, 0)";
+                                   (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar, para_birimi)
+                                   VALUES ($siparis_id, $urun_kodu, 'Bilinmeyen Ürün', $adet, 'adet', 0, 0, 'TRY')";
                 $connection->query($order_item_sql);
 
                 $toplam_adet += $adet;
