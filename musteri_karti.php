@@ -632,6 +632,15 @@ function formatCurrency($value, $currency = 'TRY') {
         <!-- Orders List -->
         <span class="box-title"><i class="fas fa-history"></i> SİPARİŞ GEÇMİŞİ</span>
 
+        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-left: 4px solid #0ea5e9; border-radius: 4px; padding: 10px 15px; margin-bottom: 20px; color: #0369a1; font-size: 11px; display: flex; align-items: center; gap: 12px;">
+            <i class="fas fa-info-circle" style="font-size: 18px;"></i>
+            <div>
+                <strong>Bakiye Hesaplama Bilgisi:</strong>
+                Müşteri toplam bakiyesi hesaplanırken yalnızca <strong>Onaylandı</strong> ve <strong>Tamamlandı</strong> statüsündeki siparişler dikkate alınmaktadır.
+                Henüz kesinleşmemiş <em>Beklemede</em> statüsündeki siparişler cari bakiyeye yansıtılmamaktadır.
+            </div>
+        </div>
+
         <?php if (count($orders) > 0): ?>
             <?php foreach ($orders as $order): ?>
                 <?php 
