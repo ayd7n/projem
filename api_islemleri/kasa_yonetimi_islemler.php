@@ -901,19 +901,19 @@ function getMusteriAlacaklariData($connection, $rates) {
         SELECT 
             s.siparis_id,
             s.musteri_adi,
-            s.para_birimi,
+            COALESCE(sk.para_birimi, 'TL') as para_birimi,
             s.tarih,
             COALESCE(sk.toplam, 0) as siparis_tutari,
             COALESCE(s.odenen_tutar, 0) as odenen_tutar,
             (COALESCE(sk.toplam, 0) - COALESCE(s.odenen_tutar, 0)) as kalan
         FROM siparisler s
         LEFT JOIN (
-            SELECT siparis_id, SUM(adet * birim_fiyat) as toplam
+            SELECT siparis_id, para_birimi, SUM(adet * birim_fiyat) as toplam
             FROM siparis_kalemleri
             GROUP BY siparis_id
         ) sk ON s.siparis_id = sk.siparis_id
-        WHERE s.durum NOT IN ('iptal', 'kapatildi')
-        AND (COALESCE(sk.toplam, 0) - COALESCE(s.odenen_tutar, 0)) > 0
+        WHERE s.durum IN ('onaylandi', 'tamamlandi')
+        AND (COALESCE(sk.toplam, 0) - COALESCE(s.odenen_tutar, 0)) > 0.01
         ORDER BY s.tarih DESC
     ");
     
