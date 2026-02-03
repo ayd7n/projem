@@ -31,27 +31,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     <title>Yönetim Paneli - IDO KOZMETIK</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #4a0e63;
-            --secondary: #7c2a99;
-            --accent: #d4af37;
-            --bg-color: #f4f6f9;
+            --primary: #1a0525; /* Deep Royal Purple */
+            --secondary: #580f75; /* Rich Plum */
+            --accent: #d4af37; /* Metallic Gold */
+            --bg-color: #f9f7fb; /* Very subtle warm porcelain */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
             --text-primary: #2d3436;
             --text-secondary: #636e72;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
-            --shadow: 0 10px 25px rgba(74, 14, 99, 0.1);
-            --shadow-hover: 0 15px 35px rgba(74, 14, 99, 0.15);
-            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            --shadow-sm: 0 4px 12px rgba(26, 5, 37, 0.05);
+            --shadow: 0 10px 30px rgba(26, 5, 37, 0.08);
+            --shadow-hover: 0 20px 40px rgba(26, 5, 37, 0.12);
+            --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
             --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
         }
 
         body {
-            font-family: 'Ubuntu', sans-serif;
+            font-family: 'Outfit', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
@@ -59,19 +59,19 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
-            background-image: radial-gradient(circle at 10% 20%, rgba(124, 42, 153, 0.03) 0%, rgba(74, 14, 99, 0.03) 90%);
+            background-image: radial-gradient(circle at 10% 20%, rgba(88, 15, 117, 0.03) 0%, rgba(26, 5, 37, 0.03) 90%);
         }
 
         .container {
             width: 100%;
             max-width: 1400px;
             margin: 0 auto;
-            padding: 0 2rem;
+            padding: 0 1rem; /* Reduced from 2rem */
             box-sizing: border-box;
         }
 
         .top-bar-wrapper {
-            padding: 1rem 2rem;
+            padding: 0.25rem 1rem; /* Ultra-thin navbar */
             background: var(--gradient-primary);
             color: white;
             box-shadow: 0 4px 20px rgba(74, 14, 99, 0.2);
@@ -92,9 +92,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .logo h1 {
-            font-family: 'Ubuntu', sans-serif;
-            font-weight: 700;
-            font-size: 1.6rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-weight: 700; /* Increased weight */
+            font-style: italic;
+            font-size: 1.4rem; /* Slightly reduced for ultra-thin bar */
             margin: 0;
             display: flex;
             align-items: center;
@@ -162,25 +163,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         main {
-            padding: 2rem 0;
+            padding: 1rem 0; /* Reduced from 2rem */
             flex-grow: 1;
         }
 
         .page-header {
             text-align: center;
-            margin-bottom: 2rem;
+            margin-bottom: 1rem; /* Reduced from 2rem */
             position: relative;
         }
 
         .page-header h1 {
-            font-size: 2.8rem;
-            font-weight: 800;
-            margin-bottom: 1rem;
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 2.5rem;
+            font-weight: 700; /* Increased weight */
+            font-style: italic;
+            margin-bottom: 0.5rem;
             color: var(--primary);
-            letter-spacing: -1px;
-            background: var(--gradient-primary);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            letter-spacing: 0;
+            background: none; /* Removed gradient text for cleaner sharp look */
+            -webkit-text-fill-color: initial;
+            -webkit-background-clip: border-box;
         }
 
         .page-header p {
@@ -192,7 +195,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-category {
-            margin-bottom: 2rem;
+            margin-bottom: 1rem; /* Reduced from 2rem */
             animation: fadeIn 0.6s ease-out forwards;
             opacity: 0;
         }
@@ -226,41 +229,57 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-category h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 1.2rem;
-            padding-left: 0.8rem;
-            border-left: 4px solid var(--accent);
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.85rem;
+            font-weight: 700; /* Increased weight */
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 1rem;
+            padding-left: 0;
+            border-left: none;
             display: flex;
             align-items: center;
-            gap: 0.8rem;
-            color: var(--primary);
-            background: linear-gradient(to right, rgba(74, 14, 99, 0.05), transparent);
-            padding: 0.7rem 0.8rem;
-            border-radius: 0 8px 8px 0;
+            gap: 1rem;
+            color: var(--text-secondary);
+            background: none;
+            padding: 0.5rem 0;
+            border-radius: 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05); /* Subtle divider */
+        }
+        
+        /* Gold dash/line next to category */
+        .module-category h3::after {
+            content: '';
+            flex-grow: 1;
+            height: 1px;
+            background: linear-gradient(to right, var(--accent), transparent); 
+            opacity: 0.5;
         }
 
         .module-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.2rem;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); /* Slightly narrower for gallery feel */
+            gap: 1rem;
         }
 
         .module-card {
-            background: var(--card-bg);
-            border: none;
-            border-radius: 14px;
-            padding: 1.2rem;
+            background: rgba(255, 255, 255, 0.8); /* Glassmorphism base */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 12px;
+            padding: 1.5rem 1rem; /* More vertical padding for gallery look */
             text-decoration: none;
             color: var(--text-primary);
-            text-align: left;
+            text-align: center; /* Center alignment */
             transition: var(--transition);
             box-shadow: var(--shadow-sm);
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
+            flex-direction: column; /* Stack vertically */
+            align-items: center; /* Center horizontally */
+            justify-content: center;
+            gap: 0.8rem;
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             z-index: 1;
         }
 
@@ -271,15 +290,17 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, rgba(74, 14, 99, 0.03), rgba(124, 42, 153, 0.03));
+            background: linear-gradient(135deg, rgba(88, 15, 117, 0.02), rgba(26, 5, 37, 0.02));
             opacity: 0;
             transition: var(--transition);
             z-index: -1;
         }
 
         .module-card:hover {
-            transform: translateY(-8px);
-            box-shadow: var(--shadow-hover);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15); /* Soft gold glow */
+            border-color: var(--accent); /* Gold border reveal */
+            background: rgba(255, 255, 255, 0.95);
         }
 
         .module-card:hover::before {
@@ -287,35 +308,42 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-card .icon {
-            font-size: 1.3rem;
-            color: white;
-            background: var(--gradient-primary);
-            border-radius: 10px;
-            width: 44px;
-            height: 44px;
+            font-size: 2rem; /* Larger icon for center stage */
+            color: var(--primary); 
+            background: transparent; 
+            width: auto;
+            height: auto;
+            margin-bottom: 0.5rem; /* Spacing below icon */
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
             transition: var(--transition);
-            box-shadow: 0 4px 8px rgba(74, 14, 99, 0.2);
+            box-shadow: none; 
         }
 
         .module-card:hover .icon {
             transform: scale(1.1) rotate(-5deg);
-            box-shadow: 0 12px 20px rgba(74, 14, 99, 0.3);
+            color: var(--accent); /* Change color on hover instead of shadow */
+            box-shadow: none;
         }
 
         .module-card .card-content {
             flex: 1;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .module-card .card-content .title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            margin-bottom: 0.3rem;
+            font-size: 1.2rem; /* Slighly larger */
+            font-weight: 700; /* Increased weight */
+            margin-bottom: 0.2rem;
             color: var(--primary);
             display: block;
+            font-family: 'Cormorant Garamond', serif;
+            letter-spacing: 0.01em;
         }
 
         .module-card .card-content .description {
@@ -413,7 +441,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .top-bar-wrapper {
-                padding: 0.6rem 0.75rem;
+                padding: 0.25rem 0.5rem; /* Ultra thin mobile */
             }
 
             .module-card {
@@ -614,13 +642,14 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .module-card {
-                flex-direction: row;
-                text-align: left;
+                flex-direction: row; /* Keep row on VERY small settings if needed, or column? Let's stick to column for consistency unless typically row is better. User asked for centered icons. */
+                flex-direction: column;
+                text-align: center;
                 align-items: center;
                 gap: 0.8rem;
-                padding: 0.8rem;
+                padding: 1rem;
                 min-height: auto;
-                justify-content: flex-start;
+                justify-content: center;
                 border-radius: 12px;
             }
 
@@ -634,10 +663,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .module-card .card-content {
-                width: auto;
+                width: 100%;
                 display: flex;
                 flex-direction: column;
-                align-items: flex-start;
+                align-items: center;
                 justify-content: center;
             }
 
@@ -691,14 +720,16 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             .module-category h3 {
                 justify-content: flex-start;
-                border-left: 3px solid var(--accent);
-                border-bottom: none;
-                border-radius: 0 8px 8px 0;
-                padding: 0.5rem 0.8rem;
-                font-size: 0.9rem;
-                margin: 0 -0.8rem 0.6rem -0.8rem;
-                gap: 0.6rem;
-                background: linear-gradient(to right, rgba(124, 42, 153, 0.05), transparent);
+                border-left: none;
+                background: none;
+                margin: 0 0 0.8rem 0;
+                padding: 0;
+                font-size: 0.8rem;
+                letter-spacing: 1.5px;
+            }
+            
+            .module-category h3::after {
+                display: none; /* Hide line on mobile for cleaner look */
             }
 
             .page-header {
