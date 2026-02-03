@@ -3899,8 +3899,12 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         // Ürün adına göre sırala
         data.sort((a, b) => a.urun_ismi.localeCompare(b.urun_ismi));
         
-        data.forEach(function(item) {
+        data.forEach(function(item, itemIdx) {
             var tr = document.createElement('tr');
+            tr.setAttribute('data-item-index', itemIdx);
+            
+            // Seçili tedarikçi index (varsayılan 0 - en uygun)
+            var seciliIdx = item.secili_tedarikci_index || 0;
             
             // Renk kodlaması (Sadece sol kenar çizgisi için veya minimal nokta)
             var tipColor = '#6c757d';
@@ -3928,18 +3932,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 </td>
                 <td class="py-2 border-bottom border-light pl-3" style="vertical-align: top;">
                     ${item.tum_tedarikciler && item.tum_tedarikciler.length > 0 ? 
-                        `<div style="font-size: 10px; line-height: 1.5;">
-                            ${item.tum_tedarikciler.map((ted, idx) => {
-                                if (idx === 0) {
-                                    return `<div class="d-flex align-items-center mb-1">
+                        `<div style="font-size: 10px; line-height: 1.6;">
+                            ${item.tum_tedarikciler.map((ted, tedIdx) => {
+                                var isSecili = tedIdx === seciliIdx;
+                                var radioName = 'tedarikci_' + itemIdx;
+                                if (isSecili) {
+                                    return `<div class="d-flex align-items-center mb-1 tedarikci-satir" style="background: #f0fff4; padding: 2px 4px; border-radius: 4px; cursor: pointer;" onclick="seciliTedarikciDegistir(${itemIdx}, ${tedIdx})">
+                                        <input type="radio" name="${radioName}" value="${tedIdx}" ${isSecili ? 'checked' : ''} class="mr-1 tedarikci-radio" style="cursor: pointer;">
                                         <i class="fas fa-star text-warning mr-1" style="font-size: 9px;"></i>
-                                        <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 140px;" title="${ted.adi}">${ted.adi}</span>
+                                        <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 130px;" title="${ted.adi}">${ted.adi}</span>
                                         <span class="text-success font-weight-bold" style="font-family: 'Roboto Mono', monospace;">${parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${ted.para_birimi}</span>
                                     </div>`;
                                 } else {
-                                    return `<div class="d-flex align-items-center text-muted">
+                                    return `<div class="d-flex align-items-center text-muted tedarikci-satir" style="cursor: pointer; padding: 2px 4px;" onclick="seciliTedarikciDegistir(${itemIdx}, ${tedIdx})">
+                                        <input type="radio" name="${radioName}" value="${tedIdx}" class="mr-1 tedarikci-radio" style="cursor: pointer;">
                                         <i class="fas fa-truck mr-1" style="font-size: 8px;"></i>
-                                        <span class="text-truncate mr-2" style="max-width: 140px;" title="${ted.adi}">${ted.adi}</span>
+                                        <span class="text-truncate mr-2" style="max-width: 130px;" title="${ted.adi}">${ted.adi}</span>
                                         <span style="font-family: 'Roboto Mono', monospace;">${parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${ted.para_birimi}</span>
                                     </div>`;
                                 }
@@ -3988,6 +3996,24 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             renderTedarikciListesi();
         }
     };
+    
+    // Seçili Tedarikçi Değiştir
+    window.seciliTedarikciDegistir = function(itemIdx, tedIdx) {
+        var data = window.globalSiparisData || [];
+        if (data[itemIdx] && data[itemIdx].tum_tedarikciler && data[itemIdx].tum_tedarikciler[tedIdx]) {
+            // Seçili tedarikçiyi güncelle
+            data[itemIdx].secili_tedarikci = data[itemIdx].tum_tedarikciler[tedIdx];
+            data[itemIdx].secili_tedarikci_index = tedIdx;
+            
+            // Liste görünümünü yenile
+            renderSiparisListesi();
+            
+            // Eğer tedarikçi görünümü açıksa onu da yenile
+            if (window.currentSiparisView === 'supplier') {
+                renderTedarikciListesi();
+            }
+        }
+    };
 
     // Tedarikçi Listesi Render
     window.renderTedarikciListesi = function() {
@@ -3998,20 +4024,22 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             return;
         }
 
-        // Gruplama
+        // Gruplama (seçili tedarikçiye göre)
         var groups = {};
         data.forEach(function(item) {
-            var tedarikciAdi = (item.tedarikci && item.tedarikci.adi !== '-') ? item.tedarikci.adi : 'Tedarikçisi Belirsiz';
+            // Seçili tedarikçi varsa onu kullan, yoksa varsayılan tedarikçiyi
+            var secili = item.secili_tedarikci || item.tedarikci;
+            var tedarikciAdi = (secili && secili.adi && secili.adi !== '-') ? secili.adi : 'Tedarikçisi Belirsiz';
             if (!groups[tedarikciAdi]) {
                 groups[tedarikciAdi] = { 
                     items: [], 
                     totalCost: 0, 
-                    currency: (item.tedarikci ? item.tedarikci.para_birimi : '') 
+                    currency: (secili ? secili.para_birimi : '') 
                 };
             }
             groups[tedarikciAdi].items.push(item);
-            if (item.tedarikci && item.tedarikci.fiyat > 0) {
-                groups[tedarikciAdi].totalCost += (parseFloat(item.net_siparis) * parseFloat(item.tedarikci.fiyat));
+            if (secili && secili.fiyat > 0) {
+                groups[tedarikciAdi].totalCost += (parseFloat(item.net_siparis) * parseFloat(secili.fiyat));
             }
         });
 
