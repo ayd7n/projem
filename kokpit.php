@@ -218,7 +218,7 @@ function getSupplyChainData($connection) {
 
     // 4.5 Gecerli Sozlesmeleri Onbellege Al (Tüm tedarikçiler fiyat sıralı)
     $valid_contracts = [];
-    $vc_query = "SELECT cs.malzeme_kodu, t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi
+    $vc_query = "SELECT cs.malzeme_kodu, t.tedarikci_adi, t.tedarikci_id, cs.birim_fiyat, cs.para_birimi
                  FROM cerceve_sozlesmeler cs
                  JOIN cerceve_sozlesmeler_gecerlilik csg ON cs.sozlesme_id = csg.sozlesme_id
                  JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id
@@ -232,6 +232,7 @@ function getSupplyChainData($connection) {
                 $valid_contracts[$vc['malzeme_kodu']] = [
                     'en_uygun' => [
                         'tedarikci_adi' => $vc['tedarikci_adi'],
+                        'tedarikci_id' => $vc['tedarikci_id'],
                         'birim_fiyat' => $vc['birim_fiyat'],
                         'para_birimi' => $vc['para_birimi']
                     ],
@@ -241,6 +242,7 @@ function getSupplyChainData($connection) {
             // Tüm tedarikçileri listeye ekle
             $valid_contracts[$vc['malzeme_kodu']]['tum_tedarikciler'][] = [
                 'adi' => $vc['tedarikci_adi'],
+                'tedarikci_id' => $vc['tedarikci_id'],
                 'fiyat' => $vc['birim_fiyat'],
                 'para_birimi' => $vc['para_birimi']
             ];
@@ -454,6 +456,7 @@ function getSupplyChainData($connection) {
                         $contract_data = $valid_contracts[$bom_row['bilesen_kodu']];
                         $tedarikci_info = [
                             'adi' => $contract_data['en_uygun']['tedarikci_adi'],
+                            'tedarikci_id' => $contract_data['en_uygun']['tedarikci_id'],
                             'fiyat' => $contract_data['en_uygun']['birim_fiyat'],
                             'para_birimi' => $contract_data['en_uygun']['para_birimi']
                         ];
@@ -1324,6 +1327,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
         rel="stylesheet">
     <link rel="stylesheet" href="assets/css/stil.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <!-- SheetJS (Excel Export) - More stable CDN -->
     <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
     <style>
@@ -4014,7 +4019,123 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             }
         }
     };
-
+    
+    // Satınalma Siparişi Oluştur
+    window.siparisOlustur = function(tedarikciAdi, tedarikciId) {
+        var data = window.globalSiparisData || [];
+        var kalemler = [];
+        
+        // Seçili tedarikçiye ait malzemeleri topla
+        data.forEach(function(item) {
+            var secili = item.secili_tedarikci || item.tedarikci;
+            if (secili && secili.adi === tedarikciAdi) {
+                kalemler.push({
+                    malzeme_kodu: item.malzeme_kodu || 0,
+                    malzeme_adi: item.malzeme_adi,
+                    miktar: parseFloat(item.net_siparis),
+                    birim: item.birim || 'Adet',
+                    birim_fiyat: parseFloat(secili.fiyat) || 0,
+                    para_birimi: secili.para_birimi || 'TRY',
+                    toplam_fiyat: parseFloat(item.net_siparis) * (parseFloat(secili.fiyat) || 0)
+                });
+            }
+        });
+        
+        if (kalemler.length === 0) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Uyarı',
+                text: 'Bu tedarikçiye ait sipariş kalemi bulunamadı.'
+            });
+            return;
+        }
+        
+        // Onay iste
+        Swal.fire({
+            title: 'Sipariş Oluşturulsun mu?',
+            html: `<b>${tedarikciAdi}</b> için <b>${kalemler.length}</b> kalem sipariş oluşturulacak.<br><br>
+                   <small class="text-muted">Toplam Tutar: ${kalemler.reduce((a,b) => a + b.toplam_fiyat, 0).toLocaleString('tr-TR', {minimumFractionDigits: 2})} ${kalemler[0].para_birimi}</small>`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: '<i class="fas fa-check"></i> Evet, Oluştur',
+            cancelButtonText: 'İptal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Loading göster
+                Swal.fire({
+                    title: 'Sipariş Oluşturuluyor...',
+                    html: '<div class="progress" style="height: 6px; border-radius: 3px;"><div class="progress-bar progress-bar-striped progress-bar-animated bg-primary" style="width: 100%"></div></div><p class="mt-3 mb-0 text-muted" style="font-size: 13px;">Lütfen bekleyiniz...</p>',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    showConfirmButton: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                // Fetch API ile sipariş oluştur
+                var formData = new FormData();
+                formData.append('tedarikci_id', tedarikciId);
+                formData.append('kalemler', JSON.stringify(kalemler));
+                // İlk kalemden para birimini al (Tedarikçi bazlı olduğu için hepsi aynıdır)
+                formData.append('para_birimi', kalemler.length > 0 ? kalemler[0].para_birimi : 'TRY');
+                formData.append('durum', 'taslak');
+                formData.append('aciklama', 'Kokpit ekranından otomatik oluşturuldu');
+                formData.append('siparis_tarihi', new Date().toISOString().split('T')[0]);
+                
+                fetch('api_islemleri/satinalma_siparisler_islemler.php?action=add_order', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(response => {
+                    if (response.status === 'success') {
+                        // Butonu disable et ve güncelle
+                        var btn = document.getElementById('siparis-btn-' + tedarikciId);
+                        if (btn) {
+                            btn.disabled = true;
+                            btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> ' + response.siparis_no;
+                            btn.style.background = '#10b981';
+                            btn.style.border = '1px solid #10b981';
+                            btn.style.color = '#ffffff';
+                            btn.style.cursor = 'default';
+                        }
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: '<span style="color: #10b981;">Sipariş Oluşturuldu!</span>',
+                            html: `
+                                <div class="text-center py-2">
+                                    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 16px; margin-bottom: 16px;">
+                                        <div style="font-size: 24px; font-weight: 700; color: #166534;">${response.siparis_no}</div>
+                                    </div>
+                                    <p style="font-size: 14px; margin: 0;"><strong>${tedarikciAdi}</strong></p>
+                                    <p class="text-muted" style="font-size: 12px; margin: 4px 0 0 0;">${kalemler.length} kalem • Durum: Taslak</p>
+                                </div>
+                            `,
+                            confirmButtonText: 'Tamam',
+                            confirmButtonColor: '#10b981',
+                            footer: '<a href="satinalma_siparisler.php" target="_blank" style="color: #6b7280; font-size: 12px;"><i class="fas fa-external-link-alt mr-1"></i> Siparişleri Görüntüle</a>'
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Hata',
+                            text: response.message || 'Sipariş oluşturulurken bir hata oluştu.'
+                        });
+                    }
+                })
+                .catch(error => {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Bağlantı Hatası',
+                        text: 'Sunucu ile iletişim kurulamadı: ' + error
+                    });
+                });
+            }
+        });
+    };
     // Tedarikçi Listesi Render
     window.renderTedarikciListesi = function() {
         var container = document.getElementById('viewSupplierContainer');
@@ -4034,7 +4155,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 groups[tedarikciAdi] = { 
                     items: [], 
                     totalCost: 0, 
-                    currency: (secili ? secili.para_birimi : '') 
+                    currency: (secili ? secili.para_birimi : ''),
+                    tedarikci_id: (secili ? secili.tedarikci_id : null)
                 };
             }
             groups[tedarikciAdi].items.push(item);
@@ -4053,15 +4175,24 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             html += `
                 <div class="col-md-6 mb-4">
                     <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; font-family: 'Open Sans', sans-serif; transition: transform 0.2s;">
-                        <div class="card-header bg-white border-bottom-0 py-3 px-4 d-flex justify-content-between align-items-center" style="border-left: 5px solid ${isUnknown ? '#b0b3b8' : '#10b981'}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
-                            <div>
-                                <h6 class="mb-0 font-weight-bold text-dark" style="font-size: 15px; font-family: 'Poppins', sans-serif;">${tedarikciName}</h6>
-                                <div class="text-muted mt-1" style="font-size: 11px;">${group.items.length} Kalem Sipariş</div>
+                        <div class="card-header bg-white border-bottom-0 py-3 px-4" style="border-left: 5px solid ${isUnknown ? '#b0b3b8' : '#10b981'}; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <div class="font-weight-bold text-dark" style="font-size: 14px;">${tedarikciName}</div>
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">${group.items.length} kalem</div>
+                                </div>
+                                ${!isUnknown ? `
+                                <div style="text-align: right; min-width: 90px;">
+                                    <div style="font-size: 15px; font-weight: 700; color: #059669;">${totalStr}</div>
+                                    <div style="font-size: 10px; color: #9ca3af;">tahmini</div>
+                                </div>` : ''}
                             </div>
-                            ${!isUnknown ? `
-                            <div class="text-right">
-                                <div class="font-weight-bold text-success" style="font-size: 14px; font-family: 'Open Sans', sans-serif; letter-spacing: -0.5px;">${totalStr}</div>
-                                <div class="text-muted" style="font-size: 10px; font-weight: 500;">Tahmini Tutar</div>
+                            ${!isUnknown && group.tedarikci_id ? `
+                            <div class="mt-2">
+                                <button id="siparis-btn-${group.tedarikci_id}" class="btn btn-outline-secondary btn-sm w-100" onclick="siparisOlustur('${tedarikciName.replace(/'/g, "\\'")}', ${group.tedarikci_id})" 
+                                    style="border: 1px dashed #adb5bd; border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 500; color: #6c757d; background: transparent; transition: all 0.2s;">
+                                    <i class="fas fa-shopping-cart mr-1"></i> Sipariş Oluştur
+                                </button>
                             </div>` : ''}
                         </div>
                         <div class="card-body p-0">
@@ -4070,6 +4201,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     <tr style="font-size: 10px; color: #888; text-transform: uppercase; letter-spacing: 0.5px;">
                                         <th class="pl-4 py-2 border-0 font-weight-bold">Ürün Detayı</th>
                                         <th class="py-2 border-0 text-right font-weight-bold">Miktar</th>
+                                        <th class="py-2 border-0 text-right font-weight-bold">Birim Fiyat</th>
                                         <th class="py-2 border-0 text-right pr-4 font-weight-bold">Tutar</th>
                                     </tr>
                                 </thead>
@@ -4077,7 +4209,10 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             `;
             
             group.items.forEach(function(item) {
-                var itemTotal = (item.tedarikci && item.tedarikci.fiyat > 0) ? (parseFloat(item.net_siparis) * parseFloat(item.tedarikci.fiyat)) : 0;
+                var secili = item.secili_tedarikci || item.tedarikci;
+                var birimFiyat = (secili && secili.fiyat > 0) ? parseFloat(secili.fiyat) : 0;
+                var birimFiyatStr = birimFiyat > 0 ? birimFiyat.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + (secili.para_birimi || '') : '-';
+                var itemTotal = birimFiyat > 0 ? (parseFloat(item.net_siparis) * birimFiyat) : 0;
                 var itemTotalStr = itemTotal > 0 ? itemTotal.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + ' ' + group.currency : '-';
                 
                 html += `
@@ -4087,11 +4222,14 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             <div class="text-muted" style="font-size: 11px;">${item.malzeme_adi}</div>
                         </td>
                         <td class="text-right py-1" style="vertical-align: middle;">
-                            <span class="font-weight-bold text-danger" style="font-size: 13px; font-family: 'Open Sans', sans-serif;">${parseFloat(item.net_siparis).toLocaleString('tr-TR')}</span> 
+                            <span class="font-weight-bold text-danger" style="font-size: 13px;">${parseFloat(item.net_siparis).toLocaleString('tr-TR')}</span> 
                             <span class="small text-muted ml-1" style="font-size: 10px;">${item.birim}</span>
                         </td>
+                        <td class="text-right py-1" style="vertical-align: middle;">
+                            <span style="font-size: 11px; color: #6b7280;">${birimFiyatStr}</span>
+                        </td>
                         <td class="text-right py-1 pr-4" style="vertical-align: middle;">
-                            <div style="font-size: 12px; font-family: 'Open Sans', sans-serif; color: #444; font-weight: 600;">${itemTotalStr}</div>
+                            <div style="font-size: 12px; color: #444; font-weight: 600;">${itemTotalStr}</div>
                         </td>
                     </tr>
                 `;
