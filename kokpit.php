@@ -2316,14 +2316,24 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </td>
                             <td class="text-right font-semibold px-2"><?php echo number_format($p['toplam_mevcut'], 0, ',', '.'); ?></td>
                             <td class="text-right px-2"><?php echo number_format($p['kritik_stok_seviyesi'], 0, ',', '.'); ?></td>
-                            <td class="text-right px-2">
+                            <td class="text-right px-2 acik-kolonu"
+                                data-bilesen-detaylari='<?php echo json_encode($p["bilesen_detaylari"] ?? []); ?>'
+                                data-esans-uretim='<?php echo json_encode($p["esans_uretim_bilgisi"] ?? []); ?>'
+                                data-orijinal-acik="<?php echo $p['acik']; ?>"
+                                data-kritik-stok="<?php echo $p['kritik_stok_seviyesi']; ?>">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0 || $siparis_miktari > 0): ?>
                                     <div class="d-flex align-items-center justify-content-end">
-                                        <?php if ($p['acik'] > 0): ?>
-                                            <span class="text-danger font-semibold mr-1"><?php echo number_format($p['acik'], 0, ',', '.'); ?></span>
-                                        <?php else: ?>
-                                            <span class="text-success font-semibold mr-1">+<?php echo number_format(abs($p['acik']), 0, ',', '.'); ?></span>
-                                        <?php endif; ?>
+                                        <button type="button" class="btn btn-link btn-sm p-0 mr-1 acik-sifirla-btn" 
+                                                style="font-size: 10px; color: #aaa; display: none;"
+                                                title="Orijinal değere sıfırla">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                        <input type="number" 
+                                               class="acik-input form-control form-control-sm text-right <?php echo $p['acik'] > 0 ? 'text-danger' : 'text-success'; ?>" 
+                                               value="<?php echo max(0, $p['acik']); ?>" 
+                                               min="0" 
+                                               style="width: 70px; height: 26px; font-size: 12px; font-weight: 600; padding: 2px 6px; border: 1px solid #ddd; border-radius: 4px;"
+                                               data-orijinal="<?php echo $p['acik']; ?>">
                                         <button type="button" class="btn btn-link btn-sm p-0 ml-1 acik-detay-btn" 
                                                 style="font-size: 10px; color: #aaa;"
                                                 data-urun-ismi="<?php echo htmlspecialchars($p['urun_ismi']); ?>"
@@ -2336,12 +2346,26 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                             <i class="fas fa-question-circle"></i>
                                         </button>
                                     </div>
-                                <?php else: ?>-<?php endif; ?>
+                                <?php else: ?>
+                                    <div class="d-flex align-items-center justify-content-end">
+                                        <button type="button" class="btn btn-link btn-sm p-0 mr-1 acik-sifirla-btn" 
+                                                style="font-size: 10px; color: #aaa; display: none;"
+                                                title="Orijinal değere sıfırla">
+                                            <i class="fas fa-undo"></i>
+                                        </button>
+                                        <input type="number" 
+                                               class="acik-input form-control form-control-sm text-right text-muted" 
+                                               value="0" 
+                                               min="0" 
+                                               style="width: 70px; height: 26px; font-size: 12px; font-weight: 600; padding: 2px 6px; border: 1px solid #ddd; border-radius: 4px;"
+                                               data-orijinal="0">
+                                    </div>
+                                <?php endif; ?>
                             </td>
-                            <td class="text-right px-2" data-sort-fark="<?php echo $p['yuzde_fark']; ?>">
+                            <td class="text-right px-2 fark-kolonu" data-sort-fark="<?php echo $p['yuzde_fark']; ?>" data-kritik-stok="<?php echo $p['kritik_stok_seviyesi']; ?>">
                                 <?php if ($p['kritik_stok_seviyesi'] > 0): ?>
                                     <?php $gosterilecek_fark = max(0, $p['yuzde_fark']); ?>
-                                    <span class="font-semibold <?php echo $gosterilecek_fark > 50 ? 'text-danger' : ($gosterilecek_fark > 0 ? 'text-warning' : 'text-success'); ?>">
+                                    <span class="font-semibold fark-deger <?php echo $gosterilecek_fark > 50 ? 'text-danger' : ($gosterilecek_fark > 0 ? 'text-warning' : 'text-success'); ?>">
                                         %<?php echo number_format($gosterilecek_fark, 0); ?>
                                     </span>
                                 <?php else: ?>-<?php endif; ?>
@@ -4138,6 +4162,638 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     document.querySelectorAll('.bilesen-checkbox').forEach(function(chk) {
         chk.addEventListener('change', hesaplaUretilebilir);
     });
+    
+    // Açık input değişikliklerini dinle
+    document.querySelectorAll('.acik-input').forEach(function(input) {
+        input.addEventListener('change', function(e) {
+            hesaplaAcikDegisikligi(this);
+            gosterDegisiklikGostergesi(this);
+            guncelleGlobalSiparisListesi();
+        });
+        input.addEventListener('input', function(e) {
+            // Input değişince renk güncelle
+            var val = parseFloat(this.value) || 0;
+            var orijinal = parseFloat(this.getAttribute('data-orijinal')) || 0;
+            
+            this.classList.remove('text-danger', 'text-success', 'text-muted');
+            if (val > 0) {
+                this.classList.add('text-danger');
+            } else {
+                this.classList.add('text-success');
+            }
+            
+            // Değişiklik göstergesi: border rengi değiştir
+            if (val !== orijinal) {
+                this.style.borderColor = '#9c27b0'; // Mor renk
+                this.style.boxShadow = '0 0 3px rgba(156, 39, 176, 0.4)';
+            } else {
+                this.style.borderColor = '#ddd';
+                this.style.boxShadow = 'none';
+            }
+        });
+    });
+    
+    // Sıfırlama butonlarını dinle
+    document.querySelectorAll('.acik-sifirla-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var container = this.closest('.d-flex');
+            var input = container.querySelector('.acik-input');
+            if (input) {
+                var orijinal = parseFloat(input.getAttribute('data-orijinal')) || 0;
+                input.value = orijinal;
+                input.style.borderColor = '#ddd';
+                input.style.boxShadow = 'none';
+                this.style.display = 'none';
+                
+                // Renk güncelle
+                input.classList.remove('text-danger', 'text-success', 'text-muted');
+                if (orijinal > 0) {
+                    input.classList.add('text-danger');
+                } else {
+                    input.classList.add('text-success');
+                }
+                
+                // Hesaplamaları güncelle
+                hesaplaAcikDegisikligi(input);
+                guncelleGlobalSiparisListesi();
+            }
+        });
+    });
+    
+    // Değişiklik göstergesi ve sıfırlama butonu göster
+    function gosterDegisiklikGostergesi(inputEl) {
+        var orijinal = parseFloat(inputEl.getAttribute('data-orijinal')) || 0;
+        var mevcut = parseFloat(inputEl.value) || 0;
+        var container = inputEl.closest('.d-flex');
+        var sifirlaBtn = container ? container.querySelector('.acik-sifirla-btn') : null;
+        
+        if (mevcut !== orijinal) {
+            inputEl.style.borderColor = '#9c27b0';
+            inputEl.style.boxShadow = '0 0 3px rgba(156, 39, 176, 0.4)';
+            if (sifirlaBtn) sifirlaBtn.style.display = 'inline-block';
+        } else {
+            inputEl.style.borderColor = '#ddd';
+            inputEl.style.boxShadow = 'none';
+            if (sifirlaBtn) sifirlaBtn.style.display = 'none';
+        }
+    }
+    
+    // Global sipariş listesini güncelle
+    function guncelleGlobalSiparisListesi() {
+        var siparisData = [];
+        
+        document.querySelectorAll('#urunTable tbody tr').forEach(function(row) {
+            if (row.style.display === 'none') return; // Gizli satırları atla
+            
+            var acikKolonu = row.querySelector('.acik-kolonu');
+            var acikInput = row.querySelector('.acik-input');
+            if (!acikKolonu || !acikInput) return;
+            
+            var yeniAcik = parseFloat(acikInput.value) || 0;
+            if (yeniAcik <= 0) return;
+            
+            var bilesenDetaylari = JSON.parse(acikKolonu.getAttribute('data-bilesen-detaylari') || '[]');
+            var esansUretim = JSON.parse(acikKolonu.getAttribute('data-esans-uretim') || '{}');
+            var urunIsmi = row.querySelector('td:nth-child(2)')?.textContent?.trim() || '';
+            var urunKodu = row.getAttribute('data-urun-kodu') || '';
+            
+            // Malzeme siparişleri
+            bilesenDetaylari.forEach(function(bilesen) {
+                if (bilesen.tur !== 'esans' && bilesen.sozlesme_var) {
+                    var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                    var toplamIhtiyac = yeniAcik * birimIhtiyac;
+                    var mevcutVeYoldaki = (parseFloat(bilesen.mevcut_stok) || 0) + (parseFloat(bilesen.yoldaki_stok) || 0);
+                    var siparisGereken = Math.max(0, toplamIhtiyac - mevcutVeYoldaki);
+                    
+                    if (siparisGereken > 0) {
+                        siparisData.push({
+                            urun_ismi: urunIsmi,
+                            urun_kodu: urunKodu,
+                            tip: 'Malzeme',
+                            malzeme_adi: bilesen.isim,
+                            birim_ihtiyac: birimIhtiyac,
+                            toplam_ihtiyac: toplamIhtiyac,
+                            stok: bilesen.mevcut_stok || 0,
+                            yoldaki: bilesen.yoldaki_stok || 0,
+                            birim: bilesen.birim || 'adet',
+                            net_siparis: siparisGereken,
+                            tedarikci: bilesen.tedarikci || null
+                        });
+                    }
+                }
+            });
+            
+            // Esans hammadde siparişleri
+            bilesenDetaylari.forEach(function(bilesen) {
+                if (bilesen.tur === 'esans' && esansUretim[bilesen.kodu]) {
+                    var esansInfo = esansUretim[bilesen.kodu];
+                    var formulDetaylari = esansInfo.formul_detaylari || [];
+                    var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                    var brutIhtiyac = yeniAcik * birimIhtiyac;
+                    var stokEsans = parseFloat(bilesen.mevcut_stok) || 0;
+                    var uretimdeEsans = parseFloat(esansInfo.acik_is_emri_miktar) || 0;
+                    var netEsansIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
+                    
+                    if (netEsansIhtiyac > 0) {
+                        formulDetaylari.forEach(function(h) {
+                            var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
+                            var mevcut = parseFloat(h.mevcut_stok) || 0;
+                            var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
+                            var netSiparis = Math.max(0, toplamGereken - mevcut - bekleyen);
+                            
+                            if (netSiparis > 0) {
+                                siparisData.push({
+                                    urun_ismi: urunIsmi,
+                                    urun_kodu: urunKodu,
+                                    tip: 'Esans Hammadde (' + bilesen.isim + ')',
+                                    malzeme_adi: h.malzeme_ismi,
+                                    birim_ihtiyac: h.recete_miktari || 0,
+                                    toplam_ihtiyac: toplamGereken,
+                                    stok: mevcut,
+                                    yoldaki: bekleyen,
+                                    birim: h.birim || '',
+                                    net_siparis: netSiparis,
+                                    tedarikci: h.tedarikci || null
+                                });
+                            }
+                        });
+                    }
+                }
+            });
+        });
+        
+        // Global değişkeni güncelle
+        window.globalSiparisData = siparisData;
+    }
+    
+    // Açık değeri değiştiğinde tüm bağımlı hesaplamaları güncelle
+    function hesaplaAcikDegisikligi(inputEl) {
+        var row = inputEl.closest('tr');
+        var yeniAcik = parseFloat(inputEl.value) || 0;
+        var acikKolonu = inputEl.closest('.acik-kolonu');
+        
+        if (!acikKolonu) return;
+        
+        var bilesenDetaylari = JSON.parse(acikKolonu.getAttribute('data-bilesen-detaylari') || '[]');
+        var esansUretim = JSON.parse(acikKolonu.getAttribute('data-esans-uretim') || '{}');
+        
+        // 1. Üretilebilir hücresindeki data-acik değerini güncelle
+        var uretilebilirHucre = row.querySelector('.uretilebilir-hucre');
+        if (uretilebilirHucre) {
+            uretilebilirHucre.setAttribute('data-acik', yeniAcik);
+        }
+        
+        // 2. Aksiyon Önerisi hücresindeki data-acik değerini güncelle
+        var aksiyonHucre = row.querySelector('.aksiyon-onerisi-hucre');
+        if (aksiyonHucre) {
+            aksiyonHucre.setAttribute('data-acik', yeniAcik);
+        }
+        
+        // 3. Malzeme Stok kolonlarını yeniden hesapla (Sipariş Verilmesi Gereken)
+        var kolonlar = row.querySelectorAll('td');
+        
+        // Sipariş verilmesi gereken malzemeleri hesapla
+        var siparisListesi = [];
+        bilesenDetaylari.forEach(function(bilesen) {
+            if (bilesen.tur !== 'esans' && bilesen.sozlesme_var) {
+                var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                var toplamIhtiyac = yeniAcik * birimIhtiyac;
+                var mevcutVeYoldaki = (parseFloat(bilesen.mevcut_stok) || 0) + (parseFloat(bilesen.yoldaki_stok) || 0);
+                var siparisGereken = Math.max(0, toplamIhtiyac - mevcutVeYoldaki);
+                
+                if (siparisGereken > 0) {
+                    siparisListesi.push({
+                        isim: bilesen.isim,
+                        miktar: siparisGereken
+                    });
+                }
+            }
+        });
+        
+        // Sipariş Verilmesi Gereken Malzeme (19. kolon, 0-indexed = 18)
+        if (kolonlar.length > 18 && bilesenDetaylari.length > 0) {
+            var malzemeSiparisKolonu = kolonlar[18];
+            var html = '';
+            
+            siparisListesi.forEach(function(item) {
+                html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' + 
+                        item.isim + ': <span class="text-danger font-weight-bold">' + 
+                        item.miktar.toLocaleString('tr-TR') + '</span></div>';
+            });
+            
+            malzemeSiparisKolonu.innerHTML = siparisListesi.length > 0 ? html : '<span class="text-muted">0</span>';
+        }
+        
+        // 4. Esans İhtiyacı kolonlarını güncelle
+        // Toplam Esans İhtiyacı (20. kolon, 0-indexed = 19)
+        if (kolonlar.length > 19 && bilesenDetaylari.length > 0) {
+            var esansIhtiyacKolonu = kolonlar[19];
+            var html = '';
+            var esansBulundu = false;
+            
+            bilesenDetaylari.forEach(function(bilesen) {
+                if (bilesen.tur === 'esans') {
+                    esansBulundu = true;
+                    var birim = bilesen.birim || 'ml';
+                    var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                    var brutIhtiyac = yeniAcik * birimIhtiyac;
+                    
+                    html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' +
+                            bilesen.isim + ': <span class="font-weight-bold">' +
+                            brutIhtiyac.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + birim + '</div>';
+                }
+            });
+            
+            esansIhtiyacKolonu.innerHTML = esansBulundu ? html : '<span class="text-muted">-</span>';
+        }
+        
+        // 5. Net Esans İhtiyacı (23. kolon, 0-indexed = 22)
+        if (kolonlar.length > 22 && bilesenDetaylari.length > 0) {
+            var netEsansKolonu = kolonlar[22];
+            var html = '';
+            var esansBulundu = false;
+            
+            bilesenDetaylari.forEach(function(bilesen) {
+                if (bilesen.tur === 'esans') {
+                    esansBulundu = true;
+                    var birim = bilesen.birim || 'ml';
+                    var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                    var brutIhtiyac = yeniAcik * birimIhtiyac;
+                    var stokEsans = parseFloat(bilesen.mevcut_stok) || 0;
+                    
+                    // Üretimdeki esans miktarı
+                    var uretimdeEsans = 0;
+                    if (esansUretim[bilesen.kodu]) {
+                        uretimdeEsans = parseFloat(esansUretim[bilesen.kodu].acik_is_emri_miktar) || 0;
+                    }
+                    
+                    var netIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
+                    
+                    if (netIhtiyac > 0) {
+                        html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' +
+                                bilesen.isim + ': <span class="text-danger font-weight-bold">' +
+                                netIhtiyac.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + birim + '</div>';
+                    }
+                }
+            });
+            
+            netEsansKolonu.innerHTML = esansBulundu && html ? html : '<span class="text-muted">0</span>';
+        }
+        
+        // 6. Esans Hammadde Kolonlarını Güncelle
+        bilesenDetaylari.forEach(function(bilesen) {
+            if (bilesen.tur === 'esans' && esansUretim[bilesen.kodu]) {
+                var esansInfo = esansUretim[bilesen.kodu];
+                var formulDetaylari = esansInfo.formul_detaylari || [];
+                var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
+                var brutIhtiyac = yeniAcik * birimIhtiyac;
+                var stokEsans = parseFloat(bilesen.mevcut_stok) || 0;
+                var uretimdeEsans = parseFloat(esansInfo.acik_is_emri_miktar) || 0;
+                var netEsansIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
+                
+                // 6a. Hemen Üretilebilir Esans Miktarı (24. kolon, 0-indexed = 23)
+                if (kolonlar.length > 23) {
+                    var hemenUretilebilirKolonu = kolonlar[23];
+                    if (formulDetaylari.length > 0) {
+                        var minUretilebilir = Infinity;
+                        formulDetaylari.forEach(function(h) {
+                            var gerekli = parseFloat(h.recete_miktari) || 0;
+                            var mevcut = parseFloat(h.mevcut_stok) || 0;
+                            if (gerekli > 0) {
+                                minUretilebilir = Math.min(minUretilebilir, Math.floor(mevcut / gerekli));
+                            }
+                        });
+                        var uretilebilirMiktar = (minUretilebilir === Infinity) ? 0 : minUretilebilir;
+                        var birim = esansInfo.birim || 'ml';
+                        hemenUretilebilirKolonu.innerHTML = '<div class="text-nowrap" style="font-size: 11px;">' +
+                            bilesen.isim + ': <span class="text-success font-weight-bold">' +
+                            uretilebilirMiktar.toLocaleString('tr-TR') + '</span> ' + birim + '</div>';
+                    }
+                }
+                
+                // 6b. Üretilmesi Gereken (Hammadde Bekleyen) (25. kolon, 0-indexed = 24)
+                if (kolonlar.length > 24 && netEsansIhtiyac > 0) {
+                    var uretilmesiGerekenKolonu = kolonlar[24];
+                    var minUretilebilir = Infinity;
+                    formulDetaylari.forEach(function(h) {
+                        var gerekli = parseFloat(h.recete_miktari) || 0;
+                        var mevcut = parseFloat(h.mevcut_stok) || 0;
+                        if (gerekli > 0) {
+                            minUretilebilir = Math.min(minUretilebilir, Math.floor(mevcut / gerekli));
+                        }
+                    });
+                    var uretilebilirMiktar = (minUretilebilir === Infinity) ? 0 : minUretilebilir;
+                    var hammaddeBekleyen = Math.max(0, netEsansIhtiyac - uretilebilirMiktar);
+                    var birim = esansInfo.birim || 'ml';
+                    
+                    if (hammaddeBekleyen > 0) {
+                        uretilmesiGerekenKolonu.innerHTML = '<div class="text-nowrap" style="font-size: 11px;">' +
+                            bilesen.isim + ': <span class="text-warning font-weight-bold">' +
+                            hammaddeBekleyen.toLocaleString('tr-TR') + '</span> ' + birim + '</div>';
+                    } else {
+                        uretilmesiGerekenKolonu.innerHTML = '<span class="text-muted">0</span>';
+                    }
+                }
+                
+                // 6c. Sipariş Gereken Hammaddeler (26. kolon, 0-indexed = 25)
+                if (kolonlar.length > 25 && netEsansIhtiyac > 0 && formulDetaylari.length > 0) {
+                    var siparisGerekenHammaddeKolonu = kolonlar[25];
+                    var html = '';
+                    formulDetaylari.forEach(function(h) {
+                        var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
+                        var mevcut = parseFloat(h.mevcut_stok) || 0;
+                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
+                        var eksik = Math.max(0, toplamGereken - mevcut - bekleyen);
+                        
+                        if (eksik > 0) {
+                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
+                                    h.malzeme_ismi + ': <span class="text-danger font-weight-bold">' +
+                                    eksik.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + (h.birim || '') + '</div>';
+                        }
+                    });
+                    siparisGerekenHammaddeKolonu.innerHTML = html || '<span class="text-muted">0</span>';
+                }
+                
+                // 6d. Yoldaki Hammaddeler (27. kolon, 0-indexed = 26)
+                if (kolonlar.length > 26 && formulDetaylari.length > 0) {
+                    var yoldakiHammaddeKolonu = kolonlar[26];
+                    var html = '';
+                    formulDetaylari.forEach(function(h) {
+                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
+                        if (bekleyen > 0) {
+                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
+                                    h.malzeme_ismi + ': <span class="text-info font-weight-bold">' +
+                                    bekleyen.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span>' +
+                                    (h.po_list ? ' <small class="text-muted">(' + h.po_list + ')</small>' : '') + '</div>';
+                        }
+                    });
+                    yoldakiHammaddeKolonu.innerHTML = html || '<span class="text-muted">0</span>';
+                }
+                
+                // 6e. Net Verilecek Esans Siparişi (28. kolon, 0-indexed = 27)
+                if (kolonlar.length > 27 && netEsansIhtiyac > 0 && formulDetaylari.length > 0) {
+                    var netSiparisKolonu = kolonlar[27];
+                    var html = '';
+                    formulDetaylari.forEach(function(h) {
+                        var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
+                        var mevcut = parseFloat(h.mevcut_stok) || 0;
+                        var eksik = Math.max(0, toplamGereken - mevcut);
+                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
+                        var netSiparis = Math.max(0, eksik - bekleyen);
+                        
+                        if (netSiparis > 0) {
+                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
+                                    h.malzeme_ismi + ': <span class="text-danger font-weight-bold">' +
+                                    netSiparis.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + (h.birim || '') + '</div>';
+                        }
+                    });
+                    netSiparisKolonu.innerHTML = html || '<span class="text-muted">0</span>';
+                }
+            }
+        });
+        // 7. Fark% kolonunu güncelle
+        var farkKolonu = row.querySelector('.fark-kolonu');
+        if (farkKolonu) {
+            var kritikStok = parseFloat(farkKolonu.getAttribute('data-kritik-stok')) || 0;
+            if (kritikStok > 0 && yeniAcik > 0) {
+                var farkYuzde = (yeniAcik / kritikStok) * 100;
+                var farkDeger = farkKolonu.querySelector('.fark-deger');
+                
+                if (!farkDeger) {
+                    farkDeger = document.createElement('span');
+                    farkDeger.className = 'font-semibold fark-deger';
+                    farkKolonu.innerHTML = '';
+                    farkKolonu.appendChild(farkDeger);
+                }
+                
+                farkDeger.textContent = '%' + Math.round(farkYuzde);
+                farkDeger.classList.remove('text-danger', 'text-warning', 'text-success');
+                
+                if (farkYuzde > 50) {
+                    farkDeger.classList.add('text-danger');
+                } else if (farkYuzde > 0) {
+                    farkDeger.classList.add('text-warning');
+                } else {
+                    farkDeger.classList.add('text-success');
+                }
+            } else if (yeniAcik <= 0) {
+                var farkDeger = farkKolonu.querySelector('.fark-deger');
+                if (farkDeger) {
+                    farkDeger.textContent = '%0';
+                    farkDeger.classList.remove('text-danger', 'text-warning');
+                    farkDeger.classList.add('text-success');
+                }
+            }
+        }
+        
+        // 8. Üretilebilir hesaplamasını yeniden çağır
+        hesaplaUretilebilir();
+        
+        // 7. Dinamik üretilebilir değerini al
+        var dinamikUretilebilir = 0;
+        if (uretilebilirHucre) {
+            dinamikUretilebilir = parseFloat(uretilebilirHucre.getAttribute('data-uretilebilir')) || 0;
+        }
+        
+        // 8. Aksiyon Önerisi ve Detayı Güncelle
+        var aksiyonOnerisiHucre = row.querySelector('.aksiyon-onerisi-hucre');
+        var aksiyonDetayHucre = kolonlar[3]; // Aksiyon Detayı 4. kolon (0-indexed = 3)
+        
+        if (aksiyonOnerisiHucre) {
+            var eksikBilesenler = JSON.parse(aksiyonOnerisiHucre.getAttribute('data-eksik-bilesenler') || '[]');
+            var esansAgaciEksik = JSON.parse(aksiyonOnerisiHucre.getAttribute('data-esans-agaci-eksik') || '[]');
+            var sozlesmeEksik = JSON.parse(aksiyonOnerisiHucre.getAttribute('data-sozlesme-eksik') || '[]');
+            
+            var aksiyon = hesaplaAksiyonOnerisi(yeniAcik, eksikBilesenler, esansAgaciEksik, sozlesmeEksik, dinamikUretilebilir, siparisListesi, bilesenDetaylari);
+            
+            // Badge güncelle
+            var badge = aksiyonOnerisiHucre.querySelector('.aksiyon-badge');
+            if (badge) {
+                badge.className = 'badge badge-pill ' + aksiyon.class + ' p-2 aksiyon-badge';
+                badge.style.cssText = 'font-size: 11px; line-height: 1.4; white-space: normal; text-align: left; display: block;';
+                
+                var icon = badge.querySelector('.aksiyon-icon');
+                var mesaj = badge.querySelector('.aksiyon-mesaj');
+                
+                if (icon) icon.className = aksiyon.icon + ' mr-1 aksiyon-icon';
+                if (mesaj) mesaj.textContent = aksiyon.mesaj;
+                
+                // Kategori güncelle
+                badge.setAttribute('data-action-category', aksiyon.category);
+                aksiyonOnerisiHucre.setAttribute('data-action-category', aksiyon.category);
+            }
+            
+            // Aksiyon Detay güncelle
+            if (aksiyonDetayHucre) {
+                aksiyonDetayHucre.innerHTML = aksiyon.detay || '<span class="text-muted">-</span>';
+            }
+        }
+        
+        // 9. Satır stilini güncelle
+        if (yeniAcik > 0) {
+            row.classList.add('row-acil');
+            // Durum badge'ini güncelle
+            var durumBadge = row.querySelector('.badge-sm');
+            if (durumBadge) {
+                durumBadge.className = 'badge-sm badge-kotu';
+                durumBadge.textContent = 'KÖTÜ';
+            }
+        } else {
+            row.classList.remove('row-acil');
+            var durumBadge = row.querySelector('.badge-sm');
+            if (durumBadge) {
+                durumBadge.className = 'badge-sm badge-iyi';
+                durumBadge.textContent = 'İYİ';
+            }
+        }
+    }
+    
+    // Aksiyon önerisi hesaplama (JavaScript versiyonu)
+    function hesaplaAksiyonOnerisi(acik, eksikBilesenler, esansAgaciEksik, sozlesmeEksik, uretilebilir, siparisListesi, bilesenDetaylari) {
+        // 1. VERİ EKSİKLİĞİ VARSA
+        if (eksikBilesenler.length > 0 || esansAgaciEksik.length > 0) {
+            var detay = [];
+            var adimListesi = [];
+            
+            if (eksikBilesenler.length > 0) {
+                detay.push('<strong class="text-danger"><i class="fas fa-exclamation-circle"></i> Eksik Bileşenler:</strong><br>' + eksikBilesenler.join(', '));
+                adimListesi.push('<div style="margin-bottom: 8px;"><strong style="color: #ffc107;"><i class="fas fa-box"></i> Malzemeler İçin:</strong><br><small style="margin-left: 20px;">• Eğer malzemeyi <strong>tanımlamadıysanız</strong> → <a href="malzemeler.php" target="_blank" class="text-primary">Buradan tanımlayın</a><br>• Malzemeyi tanımladıysanız → <a href="urun_agaclari.php" target="_blank" class="text-primary">Ürün ağacına bağlayın</a></small></div>');
+            }
+            
+            if (esansAgaciEksik.length > 0) {
+                detay.push('<strong class="text-danger"><i class="fas fa-flask"></i> Formülü Olmayan Esanslar:</strong><br>' + esansAgaciEksik.join(', '));
+                adimListesi.push('<div style="margin-bottom: 8px;"><strong style="color: #0078d4;"><i class="fas fa-flask"></i> Esanslar İçin:</strong><br><small style="margin-left: 20px;">• <a href="urun_agaclari.php" target="_blank" class="text-primary">Ürün Ağaçları sayfasına gidin</a><br>• <strong>Esans Ağacı</strong> sekmesinden formül oluşturun</small></div>');
+            }
+            
+            var adimlar = '<div style="background: #f8f9fa; padding: 10px; border-radius: 4px; margin-top: 8px; border-left: 3px solid #0078d4;"><strong><i class="fas fa-info-circle text-primary"></i> Yapılması Gerekenler:</strong><br><div style="margin-top: 6px;">' + adimListesi.join('') + '</div></div>';
+            
+            return {
+                class: 'badge-aksiyon-kritik',
+                icon: 'fas fa-exclamation-triangle',
+                mesaj: 'Ürün Ağacı ve Esans Formüllerini Tamamlayın',
+                detay: detay.join('<br>') + adimlar,
+                category: 'critical'
+            };
+        }
+        
+        // 2. AÇIK = 0 İSE
+        if (acik <= 0) {
+            return {
+                class: 'badge-aksiyon-basarili',
+                icon: 'fas fa-check-circle',
+                mesaj: 'Stok Yeterli',
+                detay: '<span class="text-success"><i class="fas fa-check-circle"></i> Mevcut stok ve üretimdeki miktar yeterli düzeyde.</span>',
+                category: 'ok'
+            };
+        }
+        
+        // 3. SÖZLEŞME EKSİKSE
+        if (acik > 0 && sozlesmeEksik.length > 0) {
+            var stokYeterli = (uretilebilir >= acik);
+            var detay = '<strong class="text-warning"><i class="fas fa-file-contract"></i> Sözleşmesi Olmayan Malzemeler:</strong><br>' + sozlesmeEksik.slice(0, 5).join(', ');
+            if (sozlesmeEksik.length > 5) {
+                detay += '<br><small class="text-muted">+' + (sozlesmeEksik.length - 5) + ' malzeme daha</small>';
+            }
+            
+            var adimlar = '<div style="background: #fff3cd; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #ffc107;"><strong><i class="fas fa-info-circle text-warning"></i> Yapılması Gerekenler:</strong><br><small>1️⃣ <a href="cerceve_sozlesmeler.php" target="_blank" class="text-primary">Çerçeve sözleşme sayfasına gidin</a><br>2️⃣ Yukarıdaki malzemeler için sözleşme oluşturun</small></div>';
+            
+            if (stokYeterli) {
+                return {
+                    class: 'badge-aksiyon-uyari',
+                    icon: 'fas fa-file-contract',
+                    mesaj: 'Gelecek Siparişler İçin Sözleşme Tamamlayın',
+                    detay: detay + adimlar,
+                    category: 'warning'
+                };
+            } else {
+                return {
+                    class: 'badge-aksiyon-kritik',
+                    icon: 'fas fa-ban',
+                    mesaj: 'Sözleşme Eksik - Önce Sözleşme Tamamlayın',
+                    detay: detay + adimlar,
+                    category: 'critical'
+                };
+            }
+        }
+        
+        // 4. SİPARİŞ GEREKİYORSA
+        if (acik > 0 && siparisListesi.length > 0) {
+            var siparisHtml = siparisListesi.map(function(item) {
+                return '<i class="fas fa-box text-primary"></i> ' + item.isim + ': <strong>' + item.miktar.toLocaleString('tr-TR') + '</strong> adet';
+            }).join('<br>');
+            
+            var adimlar = '<div style="background: #e7f3ff; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #0078d4;"><strong><i class="fas fa-info-circle text-info"></i> Yapılması Gerekenler:</strong><br><small>1️⃣ <a href="satinalma_siparisler.php" target="_blank" class="text-primary">Satınalma sipariş sayfasına gidin</a><br>2️⃣ Yukarıdaki malzemeler için sipariş oluşturun</small></div>';
+            
+            return {
+                class: 'badge-aksiyon-bilgi',
+                icon: 'fas fa-shopping-cart',
+                mesaj: 'Malzeme Siparişi Verin',
+                detay: siparisHtml + adimlar,
+                category: 'order'
+            };
+        }
+        
+        // 5. ÜRETİLEBİLİR VARSA
+        if (acik > 0 && uretilebilir > 0) {
+            var uretilebilecek = Math.min(acik, uretilebilir);
+            var detay = '<span class="text-success"><i class="fas fa-industry"></i> <strong>' + uretilebilecek.toLocaleString('tr-TR') + '</strong> adet hemen üretilebilir.</span>';
+            
+            if (uretilebilir < acik) {
+                var eksik = acik - uretilebilir;
+                detay += '<br><span class="text-warning"><i class="fas fa-exclamation-circle"></i> Kalan ' + eksik.toLocaleString('tr-TR') + ' adet için malzeme siparişi gerekebilir.</span>';
+            }
+            
+            var adimlar = '<div style="background: #d4edda; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #28a745;"><strong><i class="fas fa-info-circle text-success"></i> Yapılması Gerekenler:</strong><br><small>1️⃣ <a href="montaj_is_emirleri.php" target="_blank" class="text-primary">Montaj iş emirleri sayfasına gidin</a><br>2️⃣ Yeni iş emri oluşturun</small></div>';
+            
+            return {
+                class: 'badge-aksiyon-bilgi',
+                icon: 'fas fa-play-circle',
+                mesaj: 'Üretime Başlayın (' + uretilebilecek.toLocaleString('tr-TR') + ' adet)',
+                detay: detay + adimlar,
+                category: 'production'
+            };
+        }
+        
+        // 6. ÜRETİLEMİYOR (Bileşen yetersiz)
+        if (acik > 0 && uretilebilir <= 0) {
+            var detay = '<span class="text-danger"><i class="fas fa-times-circle"></i> Yeterli bileşen stoğu yok.</span>';
+            
+            // Hangi bileşenler eksik?
+            var eksikBilesenListesi = [];
+            bilesenDetaylari.forEach(function(bilesen) {
+                if (bilesen.tur !== 'esans') {
+                    var stok = parseFloat(bilesen.mevcut_stok) || 0;
+                    if (stok <= 0) {
+                        eksikBilesenListesi.push(bilesen.isim);
+                    }
+                }
+            });
+            
+            if (eksikBilesenListesi.length > 0) {
+                detay += '<br><small class="text-muted">Eksik: ' + eksikBilesenListesi.slice(0, 3).join(', ') + '</small>';
+            }
+            
+            var adimlar = '<div style="background: #f8d7da; padding: 8px; border-radius: 4px; margin-top: 6px; border-left: 3px solid #dc3545;"><strong><i class="fas fa-info-circle text-danger"></i> Yapılması Gerekenler:</strong><br><small>1️⃣ <a href="satinalma_siparisler.php" target="_blank" class="text-primary">Malzeme siparişi verin</a><br>2️⃣ Malzeme geldikten sonra üretime başlayın</small></div>';
+            
+            return {
+                class: 'badge-aksiyon-kritik',
+                icon: 'fas fa-times-circle',
+                mesaj: 'Bileşen Yetersiz - Malzeme Siparişi Verin',
+                detay: detay + adimlar,
+                category: 'critical'
+            };
+        }
+        
+        // Varsayılan
+        return {
+            class: 'badge-aksiyon-basarili',
+            icon: 'fas fa-check-circle',
+            mesaj: 'Stok Yeterli',
+            detay: '<span class="text-muted">-</span>',
+            category: 'ok'
+        };
+    }
     
     // Üretilebilir detay modalı event handler
     // Üretilebilir detay modalı event handler
