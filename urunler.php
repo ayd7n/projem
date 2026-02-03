@@ -1491,52 +1491,97 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         if (this.modal.data.urun_tipi === 'hazir_alinan') {
                             const alisFiyati = parseFloat(this.modal.data.alis_fiyati) || 0;
                             if (alisFiyati <= 0) {
-                                this.showModalAlert('Hazır alınan ürünler için alış fiyatı 0\'dan büyük olmalıdır.', 'danger');
+                                Swal.fire({
+                                    title: 'Eksik Bilgi!',
+                                    text: 'Hazır alınan ürünler için alış fiyatı 0\'dan büyük olmalıdır.',
+                                    icon: 'warning',
+                                    confirmButtonText: 'Anladım',
+                                    confirmButtonColor: '#f8bb86'
+                                });
                                 return;
                             }
                         }
 
-                        let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
-                        let formData = new FormData();
-                        for (let key in this.modal.data) {
-                            formData.append(key, this.modal.data[key]);
-                        }
-                        formData.append('action', action);
-                        
-                        // Seçili malzeme türlerini gönder
-                        if (action === 'add_product') {
-                            formData.append('selected_material_types', JSON.stringify(this.selectedMaterialTypes));
-                            formData.append('create_essence', this.createEssence ? '1' : '0');
-                        }
+                        // Premium Confirmation
+                        const isEdit = !!this.modal.data.urun_kodu;
+                        const actionText = isEdit ? 'Ürün Güncellenecek' : 'Yeni Ürün Eklenecek';
+                        const confirmBtnText = isEdit ? 'Evet, Güncelle' : 'Evet, Ekle';
+                        const confirmBtnColor = isEdit ? '#4a0e63' : '#28a745'; // Primary or Success
 
-                        fetch('api_islemleri/urunler_islemler.php', {
-                            method: 'POST',
-                            body: formData
-                        })
-                            .then(response => response.json())
-                            .then(response => {
-                                if (response.status === 'success') {
-                                    this.showAlert(response.message, 'success');
-                                    $('#productModal').modal('hide');
-                                    this.loadProducts(this.currentPage);
-                                } else {
-                                    this.showAlert(response.message, 'danger');
+                        Swal.fire({
+                            title: actionText,
+                            html: `<strong>${this.modal.data.urun_ismi || 'Yeni Ürün'}</strong> isimli ürün için işlemleri onaylıyor musunuz?<br><small class="text-muted">Lütfen bilgileri kontrol ediniz.</small>`,
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonColor: confirmBtnColor,
+                            cancelButtonColor: '#6c757d',
+                            confirmButtonText: `<i class="fas fa-check"></i> ${confirmBtnText}`,
+                            cancelButtonText: '<i class="fas fa-times"></i> İptal',
+                            reverseButtons: true,
+                            focusConfirm: false,
+                            backdrop: `rgba(0,0,0,0.4)`
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                let action = this.modal.data.urun_kodu ? 'update_product' : 'add_product';
+                                let formData = new FormData();
+                                for (let key in this.modal.data) {
+                                    formData.append(key, this.modal.data[key]);
                                 }
-                            })
-                            .catch(error => {
-                                this.showAlert('İşlem sırasında bir hata oluştu.', 'danger');
-                            });
+                                formData.append('action', action);
+                                
+                                // Seçili malzeme türlerini gönder
+                                if (action === 'add_product') {
+                                    formData.append('selected_material_types', JSON.stringify(this.selectedMaterialTypes));
+                                    formData.append('create_essence', this.createEssence ? '1' : '0');
+                                }
+
+                                fetch('api_islemleri/urunler_islemler.php', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(response => response.json())
+                                .then(response => {
+                                    if (response.status === 'success') {
+                                        Swal.fire({
+                                            title: 'Başarılı!',
+                                            text: response.message,
+                                            icon: 'success',
+                                            timer: 1500,
+                                            showConfirmButton: false
+                                        });
+                                        $('#productModal').modal('hide');
+                                        this.loadProducts(this.currentPage);
+                                    } else {
+                                        Swal.fire({
+                                            title: 'Hata!',
+                                            text: response.message,
+                                            icon: 'error',
+                                            confirmButtonText: 'Tamam'
+                                        });
+                                    }
+                                })
+                                .catch(error => {
+                                    Swal.fire('Hata', 'İşlem sırasında bir hata oluştu.', 'error');
+                                });
+                            }
+                        });
                     },
                     deleteProduct(id) {
+                        // Find product name for better message
+                        const product = this.products.find(p => p.urun_kodu === id);
+                        const productName = product ? product.urun_ismi : id;
+
                         Swal.fire({
-                            title: 'Emin misiniz?',
-                            text: "Bu urunu silmek istediğinizden emin misiniz?",
+                            title: 'Silme İşlemi',
+                            html: `<strong>${productName}</strong> ürününü silmek üzeresiniz.<br><span style="color: #dc3545; font-size: 0.9em;">Bu işlem geri alınamaz!</span>`,
                             icon: 'warning',
                             showCancelButton: true,
-                            confirmButtonColor: '#3085d6',
-                            cancelButtonColor: '#d33',
-                            confirmButtonText: 'Evet, sil!',
-                            cancelButtonText: 'İptal'
+                            confirmButtonColor: '#d33',
+                            cancelButtonColor: '#3085d6',
+                            confirmButtonText: '<i class="fas fa-trash-alt"></i> Evet, Sil',
+                            cancelButtonText: 'İptal',
+                            focusCancel: true,
+                            backdrop: `rgba(0,0,0,0.4)`
                         }).then((result) => {
                             if (result.isConfirmed) {
                                 let formData = new FormData();
@@ -1550,14 +1595,20 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     .then(response => response.json())
                                     .then(response => {
                                         if (response.status === 'success') {
-                                            this.showAlert(response.message, 'success');
+                                            Swal.fire({
+                                                title: 'Silindi!',
+                                                text: response.message,
+                                                icon: 'success',
+                                                timer: 1500,
+                                                showConfirmButton: false
+                                            });
                                             this.loadProducts(this.currentPage);
                                         } else {
-                                            this.showAlert(response.message, 'danger');
+                                            Swal.fire('Hata!', response.message, 'error');
                                         }
                                     })
                                     .catch(error => {
-                                        this.showAlert('Silme işlemi sırasında bir hata oluştu.', 'danger');
+                                        Swal.fire('Hata!', 'Silme işlemi sırasında bir hata oluştu.', 'error');
                                     });
                             }
                         })
