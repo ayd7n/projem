@@ -216,13 +216,34 @@ function getSupplyChainData($connection) {
     }
     $data['bilesen_sozlesme_eksik'] = $bilesen_sozlesme_eksik;
 
-    // 4.5 Gecerli Sozlesmeleri Onbellege Al
+    // 4.5 Gecerli Sozlesmeleri Onbellege Al (Tüm tedarikçiler fiyat sıralı)
     $valid_contracts = [];
-    $vc_query = "SELECT DISTINCT malzeme_kodu FROM cerceve_sozlesmeler_gecerlilik WHERE gecerli_mi = 1";
+    $vc_query = "SELECT cs.malzeme_kodu, t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi
+                 FROM cerceve_sozlesmeler cs
+                 JOIN cerceve_sozlesmeler_gecerlilik csg ON cs.sozlesme_id = csg.sozlesme_id
+                 JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id
+                 WHERE csg.gecerli_mi = 1
+                 ORDER BY cs.malzeme_kodu, cs.birim_fiyat ASC";
     $vc_result = $connection->query($vc_query);
     if ($vc_result) {
         while ($vc = $vc_result->fetch_assoc()) {
-            $valid_contracts[$vc['malzeme_kodu']] = true;
+            // Her malzeme için tüm tedarikçileri sakla (fiyat sıralı)
+            if (!isset($valid_contracts[$vc['malzeme_kodu']])) {
+                $valid_contracts[$vc['malzeme_kodu']] = [
+                    'en_uygun' => [
+                        'tedarikci_adi' => $vc['tedarikci_adi'],
+                        'birim_fiyat' => $vc['birim_fiyat'],
+                        'para_birimi' => $vc['para_birimi']
+                    ],
+                    'tum_tedarikciler' => []
+                ];
+            }
+            // Tüm tedarikçileri listeye ekle
+            $valid_contracts[$vc['malzeme_kodu']]['tum_tedarikciler'][] = [
+                'adi' => $vc['tedarikci_adi'],
+                'fiyat' => $vc['birim_fiyat'],
+                'para_birimi' => $vc['para_birimi']
+            ];
         }
     }
 
@@ -426,6 +447,19 @@ function getSupplyChainData($connection) {
                 if ($gerekli > 0) {
                     $bu_bilesenden = max(0, floor($mevcut / $gerekli));
                     
+                    // Tedarikçi bilgisini al (en uygun + tüm tedarikçiler)
+                    $tedarikci_info = null;
+                    $tum_tedarikciler = [];
+                    if (isset($valid_contracts[$bom_row['bilesen_kodu']])) {
+                        $contract_data = $valid_contracts[$bom_row['bilesen_kodu']];
+                        $tedarikci_info = [
+                            'adi' => $contract_data['en_uygun']['tedarikci_adi'],
+                            'fiyat' => $contract_data['en_uygun']['birim_fiyat'],
+                            'para_birimi' => $contract_data['en_uygun']['para_birimi']
+                        ];
+                        $tum_tedarikciler = $contract_data['tum_tedarikciler'];
+                    }
+                    
                     // Bileşen detaylarını kaydet
                     $bilesen_detaylari[] = [
                         'isim' => $bilesen_ismi,
@@ -437,7 +471,9 @@ function getSupplyChainData($connection) {
                         'uretilebilir' => $bu_bilesenden,
                         'yoldaki_stok' => $pending_purchase_orders[$bom_row['bilesen_kodu']]['miktar'] ?? 0,
                         'po_list' => $pending_purchase_orders[$bom_row['bilesen_kodu']]['po_list'] ?? '',
-                        'sozlesme_var' => isset($valid_contracts[$bom_row['bilesen_kodu']])
+                        'sozlesme_var' => isset($valid_contracts[$bom_row['bilesen_kodu']]),
+                        'tedarikci' => $tedarikci_info,
+                        'tum_tedarikciler' => $tum_tedarikciler
                     ];
                     
                     // Her bileşen türü için ayrı üretilebilir hesapla
@@ -2123,7 +2159,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 'net_siparis' => $net_siparis,
                                                 'birim' => 'Adet',
                                                 'acik_miktar' => $acik,
-                                                'tedarikci' => $tedarikci_bilgi
+                                                'tedarikci' => $bilesen['tedarikci'] ?? $tedarikci_bilgi,
+                                                'tum_tedarikciler' => $bilesen['tum_tedarikciler'] ?? []
                                             ];
                                         }
                                     } 
@@ -2199,7 +2236,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                         'net_siparis' => $net_h_siparis,
                                                         'birim' => $h['birim'],
                                                         'acik_miktar' => $acik,
-                                                        'tedarikci' => $tedarikci_bilgi
+                                                        'tedarikci' => $tedarikci_bilgi,
+                                                        'tum_tedarikciler' => $h['tum_tedarikciler'] ?? []
                                                     ];
                                                 }
                                             }
@@ -2499,9 +2537,31 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                 
                                                 if ($siparis_gereken > 0) {
                                                     $malzeme_gosterildi = true;
-                                                    echo '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                    $tedarikci_str = '';
+                                                    
+                                                    // Tüm tedarikçileri listele
+                                                    if (!empty($bilesen['tum_tedarikciler'])) {
+                                                        $tedarikci_str = '<br>';
+                                                        $ilk_tedarikci = true;
+                                                        foreach ($bilesen['tum_tedarikciler'] as $ted) {
+                                                            $fiyat = number_format($ted['fiyat'], 2, ',', '.');
+                                                            $pb = $ted['para_birimi'];
+                                                            if ($ilk_tedarikci) {
+                                                                // En uygun tedarikçi (yeşil, bold)
+                                                                $tedarikci_str .= '<small class="d-block"><i class="fas fa-star text-warning"></i> <span class="text-dark font-weight-bold">' . 
+                                                                                mb_substr($ted['adi'], 0, 18) . '</span> - <span class="text-success font-weight-bold">' . $fiyat . ' ' . $pb . '</span></small>';
+                                                                $ilk_tedarikci = false;
+                                                            } else {
+                                                                // Diğer tedarikçiler (gri)
+                                                                $tedarikci_str .= '<small class="d-block text-muted"><i class="fas fa-truck"></i> ' . 
+                                                                                mb_substr($ted['adi'], 0, 18) . ' - ' . $fiyat . ' ' . $pb . '</small>';
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    echo '<div style="font-size: 11px; line-height: 1.4; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">' . 
                                                          htmlspecialchars($bilesen['isim']) . ': <span class="text-danger font-weight-bold">' . 
-                                                         number_format($siparis_gereken, 0, ',', '.') . '</span></div>';
+                                                         number_format($siparis_gereken, 0, ',', '.') . '</span>' . $tedarikci_str . '</div>';
                                                 }
                                             }
                                         }
@@ -3866,13 +3926,31 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                     <span style="font-size: 11px; color: #444; font-weight: 600; font-family: 'Roboto Mono', monospace;">${parseFloat(item.stok).toLocaleString('tr-TR', {maximumFractionDigits: 0})}</span>
                     ${parseFloat(item.yoldaki) > 0 ? `<span class="ml-2 badge badge-info font-weight-normal" style="font-size: 9px;">+${parseFloat(item.yoldaki).toLocaleString('tr-TR', {maximumFractionDigits: 0})} Yolda</span>` : ''}
                 </td>
-                <td class="py-2 border-bottom border-light pl-3" style="vertical-align: middle;">
-                    ${item.tedarikci && item.tedarikci.adi !== '-' ? 
-                        `<div class="d-flex align-items-center" style="font-size: 11px;">
-                             <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 180px;" title="${item.tedarikci.adi}">${item.tedarikci.adi}</span>
-                             <span class="text-success font-weight-bold" style="font-family: 'Roboto Mono', monospace;">${parseFloat(item.tedarikci.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${item.tedarikci.para_birimi}</span>
-                        </div>` 
-                        : '<span class="text-muted small">-</span>'}
+                <td class="py-2 border-bottom border-light pl-3" style="vertical-align: top;">
+                    ${item.tum_tedarikciler && item.tum_tedarikciler.length > 0 ? 
+                        `<div style="font-size: 10px; line-height: 1.5;">
+                            ${item.tum_tedarikciler.map((ted, idx) => {
+                                if (idx === 0) {
+                                    return `<div class="d-flex align-items-center mb-1">
+                                        <i class="fas fa-star text-warning mr-1" style="font-size: 9px;"></i>
+                                        <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 140px;" title="${ted.adi}">${ted.adi}</span>
+                                        <span class="text-success font-weight-bold" style="font-family: 'Roboto Mono', monospace;">${parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${ted.para_birimi}</span>
+                                    </div>`;
+                                } else {
+                                    return `<div class="d-flex align-items-center text-muted">
+                                        <i class="fas fa-truck mr-1" style="font-size: 8px;"></i>
+                                        <span class="text-truncate mr-2" style="max-width: 140px;" title="${ted.adi}">${ted.adi}</span>
+                                        <span style="font-family: 'Roboto Mono', monospace;">${parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${ted.para_birimi}</span>
+                                    </div>`;
+                                }
+                            }).join('')}
+                        </div>`
+                        : (item.tedarikci && item.tedarikci.adi !== '-' ? 
+                            `<div class="d-flex align-items-center" style="font-size: 11px;">
+                                 <span class="text-truncate font-weight-bold text-dark mr-2" style="max-width: 180px;" title="${item.tedarikci.adi}">${item.tedarikci.adi}</span>
+                                 <span class="text-success font-weight-bold" style="font-family: 'Roboto Mono', monospace;">${parseFloat(item.tedarikci.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 4})} ${item.tedarikci.para_birimi}</span>
+                            </div>` 
+                            : '<span class="text-muted small">-</span>')}
                 </td>
                 <td class="text-right py-2 pr-4 border-bottom border-light" style="vertical-align: middle; background-color: #fff5f5;">
                     <span style="font-size: 13px; font-weight: 700; color: #c53030; font-family: 'Roboto Mono', monospace;">
