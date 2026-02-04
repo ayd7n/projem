@@ -31,27 +31,28 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     <title>Yönetim Paneli - IDO KOZMETIK</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #1a0525; /* Deep Royal Purple */
-            --secondary: #580f75; /* Rich Plum */
-            --accent: #d4af37; /* Metallic Gold */
-            --bg-color: #f9f7fb; /* Very subtle warm porcelain */
+            --primary: #390b4d; /* Royal Plum - Deep, Premium from personeller.php */
+            --secondary: #7c2a99; /* Amethyst - Vivid from personeller.php */
+            --accent: #d4af37; /* Classic Gold - From personeller.php */
+            --bg-color: #fdfbfd; /* Porcelain White - Warmth for plum */
             --card-bg: #ffffff;
             --border-color: #e9ecef;
-            --text-primary: #2d3436;
-            --text-secondary: #636e72;
-            --shadow-sm: 0 4px 12px rgba(26, 5, 37, 0.05);
-            --shadow: 0 10px 30px rgba(26, 5, 37, 0.08);
-            --shadow-hover: 0 20px 40px rgba(26, 5, 37, 0.12);
+            --text-primary: #2d1b36; /* Deep Plum Black */
+            --text-secondary: #6a4c7d; /* Soft Plum */
+            --shadow-sm: 0 4px 12px rgba(57, 11, 77, 0.05);
+            --shadow: 0 10px 30px rgba(57, 11, 77, 0.08);
+            --shadow-hover: 0 20px 40px rgba(57, 11, 77, 0.12);
             --transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-            --gradient-primary: linear-gradient(135deg, var(--primary), var(--secondary));
+            --gradient-primary: linear-gradient(135deg, #390b4d, #7c2a99); /* Royal Plum to Amethyst */
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Fira Sans', sans-serif;
+            font-weight: 400;
             background-color: var(--bg-color);
             color: var(--text-primary);
             margin: 0;
@@ -59,7 +60,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             flex-direction: column;
             min-height: 100vh;
             overflow-x: hidden;
-            background-image: radial-gradient(circle at 10% 20%, rgba(88, 15, 117, 0.03) 0%, rgba(26, 5, 37, 0.03) 90%);
+            background-image: radial-gradient(circle at 10% 20%, rgba(124, 42, 153, 0.03) 0%, rgba(57, 11, 77, 0.03) 90%);
         }
 
         .container {
@@ -92,10 +93,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .logo h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-weight: 700; /* Increased weight */
-            font-style: italic;
-            font-size: 1.4rem; /* Slightly reduced for ultra-thin bar */
+            font-family: 'Fira Sans', sans-serif;
+            font-weight: 700;
+            font-style: normal;
+            font-size: 1.4rem;
             margin: 0;
             display: flex;
             align-items: center;
@@ -174,10 +175,10 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .page-header h1 {
-            font-family: 'Cormorant Garamond', serif;
-            font-size: 2.5rem;
-            font-weight: 700; /* Increased weight */
-            font-style: italic;
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 700;
+            font-style: normal;
             margin-bottom: 0.5rem;
             color: var(--primary);
             letter-spacing: 0;
@@ -229,9 +230,9 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-category h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.85rem;
-            font-weight: 700; /* Increased weight */
+            font-family: 'Fira Sans', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 2px;
             margin-bottom: 1rem;
@@ -240,11 +241,11 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             display: flex;
             align-items: center;
             gap: 1rem;
-            color: var(--text-secondary);
+            color: var(--secondary); /* Vivid Purple for Headers */
             background: none;
             padding: 0.5rem 0;
             border-radius: 0;
-            border-bottom: 1px solid rgba(0,0,0,0.05); /* Subtle divider */
+            border-bottom: 2px solid rgba(124, 42, 153, 0.15); /* Amethyst divider */
         }
         
         /* Gold dash/line next to category */
@@ -298,9 +299,9 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
         .module-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 8px 32px rgba(212, 175, 55, 0.15); /* Soft gold glow */
-            border-color: var(--accent); /* Gold border reveal */
-            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.15); /* Classic Gold Glow */
+            border-color: var(--accent);
+            background: #ffffff;
         }
 
         .module-card:hover::before {
@@ -308,9 +309,9 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-card .icon {
-            font-size: 2rem; /* Larger icon for center stage */
-            color: var(--primary); 
-            background: transparent; 
+            color: var(--primary); /* Solid Deep Indigo */
+            background: transparent;
+             /* Removed gradient text fill for professionalism */
             width: auto;
             height: auto;
             margin-bottom: 0.5rem; /* Spacing below icon */
@@ -337,20 +338,21 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         }
 
         .module-card .card-content .title {
-            font-size: 1.2rem; /* Slighly larger */
-            font-weight: 700; /* Increased weight */
+            font-size: 1.1rem;
+            font-weight: 700;
             margin-bottom: 0.2rem;
             color: var(--primary);
             display: block;
-            font-family: 'Cormorant Garamond', serif;
-            letter-spacing: 0.01em;
+            font-family: 'Fira Sans', sans-serif;
+            letter-spacing: normal;
         }
 
         .module-card .card-content .description {
-            font-size: 0.8rem;
+            font-size: 0.85rem; /* Ensure description is readable */
             color: var(--text-secondary);
-            line-height: 1.5;
+            line-height: 1.4;
             margin: 0;
+            font-weight: 400; /* Clearly regular weight */
         }
 
         footer {
@@ -859,10 +861,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
     <div class="container">
         <main>
-            <div class="page-header">
-                <h1>Yönetim Paneli</h1>
-                <p>Sistem modüllerine erişmek için aşağıdaki kartları kullanabilirsiniz.</p>
-            </div>
+
 
             <div class="module-grid-container">
                 <div class="module-category" id="relations">
@@ -1002,31 +1001,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     </div>
                 </div>
 
-                <div class="module-category" id="reports">
-                    <h3><i class="fas fa-chart-pie"></i> Raporlama</h3>
-                    <div class="module-grid">
-                        <a href="raporlar.php" class="module-card">
-                            <div class="icon"><i class="fas fa-chart-pie"></i></div>
-                            <div class="card-content">
-                                <span class="title">Raporlar</span>
-                                <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
 
-                <div class="module-category" id="system">
-                    <h3><i class="fas fa-cogs"></i> Sistem</h3>
-                    <div class="module-grid">
-                        <a href="ayarlar.php" class="module-card">
-                            <div class="icon"><i class="fas fa-cog"></i></div>
-                            <div class="card-content">
-                                <span class="title">Ayarlar</span>
-                                <p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
 
                 <div class="module-category" id="finance">
                     <h3><i class="fas fa-file-invoice-dollar"></i> Finans</h3>
@@ -1083,6 +1058,27 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 </div>
 
 
+            </div>
+
+                <div class="module-category" id="system-reports">
+                    <h3><i class="fas fa-cogs"></i> Sistem & Raporlama</h3>
+                    <div class="module-grid">
+                        <a href="raporlar.php" class="module-card">
+                            <div class="icon"><i class="fas fa-chart-pie"></i></div>
+                            <div class="card-content">
+                                <span class="title">Raporlar</span>
+                                <p class="description">Satış, stok ve maliyet raporlarını görüntüleyin.</p>
+                            </div>
+                        </a>
+                        <a href="ayarlar.php" class="module-card">
+                            <div class="icon"><i class="fas fa-cog"></i></div>
+                            <div class="card-content">
+                                <span class="title">Ayarlar</span>
+                                <p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p>
+                            </div>
+                        </a>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
