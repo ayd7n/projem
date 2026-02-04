@@ -389,7 +389,7 @@ function addCek() {
             INSERT INTO cek_kasasi (cek_no, cek_tutari, cek_para_birimi, cek_sahibi, cek_banka_adi, cek_subesi, vade_tarihi, cek_tipi, aciklama, kaydeden_personel)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $stmt->bind_param("sdsssssss", $cekNo, $cekTutari, $cekParaBirimi, $cekSahibi, $cekBankaAdi, $cekSubesi, $vadeTarihi, $cekTipi, $aciklama, $personel);
+        $stmt->bind_param("sdssssssss", $cekNo, $cekTutari, $cekParaBirimi, $cekSahibi, $cekBankaAdi, $cekSubesi, $vadeTarihi, $cekTipi, $aciklama, $personel);
         $stmt->execute();
         $cekId = $connection->insert_id;
         
