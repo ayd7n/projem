@@ -195,17 +195,19 @@ $status_beklemede = 0;
 $status_onaylandi = 0;
 $status_tamamlandi = 0;
 
-// Bakiye hesaplama değişkenleri
-$toplam_siparis_tutari = 0;
-$toplam_odenen = 0;
-$toplam_kalan_bakiye = 0; // Will start with Plan Debts
+// Bakiye hesaplama değişkenleri (Para birimi bazlı)
+$toplamlar = [
+    'TRY' => ['siparis' => 0, 'odenen' => 0, 'kalan' => 0],
+    'USD' => ['siparis' => 0, 'odenen' => 0, 'kalan' => 0],
+    'EUR' => ['siparis' => 0, 'odenen' => 0, 'kalan' => 0]
+];
 $odenmemis_siparis_sayisi = 0;
 
-// Initial debt from installments
-$toplam_kalan_bakiye += $total_plan_debt;
+// Taksit borçlarını TL olarak varsayıyoruz (Sistemdeki genel işleyişe göre)
+$toplam_kalan_bakiye_tl = $total_plan_debt;
 
 while ($order = $orders_result->fetch_assoc()) {
-    // Get order items for this order
+    // ... (item fetching logic remains same)
     $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
     $items_stmt = $connection->prepare($items_query);
     $items_stmt->bind_param('i', $order['siparis_id']);
@@ -214,13 +216,13 @@ while ($order = $orders_result->fetch_assoc()) {
 
     $order['items'] = [];
     $order_item_total = 0;
-    $order_currency = 'TRY'; // Default
+    $order_currency = 'TRY'; 
     $first_item = true;
 
     while ($item = $items_result->fetch_assoc()) {
         $order['items'][] = $item;
         if ($first_item) {
-            $order_currency = $item['para_birimi'] ?? 'TRY';
+            $order_currency = $item['para_birimi'] ?: 'TRY';
             $first_item = false;
         }
         $total_products += $item['adet'];
@@ -228,33 +230,33 @@ while ($order = $orders_result->fetch_assoc()) {
     }
     $items_stmt->close();
     
-    // Sipariş tutarını hesapla
     $order['para_birimi'] = $order_currency;
     $order['hesaplanan_tutar'] = $order_item_total;
     $odenen = floatval($order['odenen_tutar'] ?? 0);
     $order['kalan_tutar'] = $order_item_total - $odenen;
     
-    // Check if this order is linked to a plan
     $is_in_plan = isset($order_plan_map[$order['siparis_id']]);
     $order['is_in_plan'] = $is_in_plan;
     if($is_in_plan) {
         $order['plan_details'] = $order_plan_map[$order['siparis_id']];
     }
 
-    // Sadece onaylanmış veya tamamlanmış siparişler için bakiye hesapla
     if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])) {
-        $toplam_siparis_tutari += $order_item_total;
-        $toplam_odenen += $odenen;
+        $pb = $order['para_birimi'];
+        if (!isset($toplamlar[$pb])) $toplamlar[$pb] = ['siparis' => 0, 'odenen' => 0, 'kalan' => 0];
         
-        // ONLY add to balance if NOT in a plan
+        $toplamlar[$pb]['siparis'] += $order_item_total;
+        $toplamlar[$pb]['odenen'] += $odenen;
+        
         if (!$is_in_plan && $order['kalan_tutar'] > 0.01) {
-            $toplam_kalan_bakiye += $order['kalan_tutar'];
+            $toplamlar[$pb]['kalan'] += $order['kalan_tutar'];
             $odenmemis_siparis_sayisi++;
         }
     }
 
     $orders[] = $order;
     $total_orders++;
+    // ... (rest of the loop)
 
     // Count order statuses
     switch ($order['durum']) {
@@ -559,7 +561,13 @@ function formatCurrency($value, $currency = 'TRY') {
             if($p['kalan_tutar'] > 0.01) $active_plan_count++;
         }
 
-        if ($toplam_kalan_bakiye > 0.01): 
+        // Toplam borç var mı kontrol et (Dövizli veya Taksitli)
+        $has_any_debt = ($total_plan_debt > 0.01);
+        foreach($toplamlar as $pb_data) {
+            if($pb_data['kalan'] > 0.01) { $has_any_debt = true; break; }
+        }
+
+        if ($has_any_debt): 
             $alert_parts = [];
             if($odenmemis_siparis_sayisi > 0) {
                 $alert_parts[] = "<strong>$odenmemis_siparis_sayisi</strong> adet ödenmemiş sipariş";
@@ -577,10 +585,163 @@ function formatCurrency($value, $currency = 'TRY') {
             </div>
             <div>
                 <div style="font-size: 12px; font-weight: 700; color: #991b1b; margin-bottom: 2px;"><i class="fas fa-bell"></i> ÖDEME BEKLİYOR</div>
-                <div style="font-size: 11px; color: #b91c1c;">Bu müşterinin <?php echo $detail_text; ?> bulunmaktadır. Toplam bakiye: <strong style="font-size: 13px;"><?php echo formatCurrency($toplam_kalan_bakiye); ?></strong></div>
+                <div style="font-size: 11px; color: #b91c1c;">
+                    Bu müşterinin <?php echo $detail_text; ?> bulunmaktadır. 
+                    Toplam bakiye: <strong>
+                    <?php 
+                    $bakiye_strings = [];
+                    foreach($toplamlar as $pb => $d) {
+                        if($d['kalan'] > 0.01) $bakiye_strings[] = formatCurrency($d['kalan'], $pb);
+                    }
+                    if($total_plan_debt > 0.01) $bakiye_strings[] = formatCurrency($total_plan_debt, 'TRY') . " (Taksit)";
+                    echo implode(" + ", $bakiye_strings);
+                    ?>
+                    </strong>
+                </div>
             </div>
         </div>
         <?php endif; ?>
+        <div style="height: 8px;"></div>
+
+        <!-- Genel Özet İstatistikleri -->
+        <span class="box-title"><i class="fas fa-chart-line"></i> GENEL ÖZET</span>
+        <table class="stats-table">
+            <tr>
+                <td style="width: 33%;">
+                    <div style="font-size: 14px; font-weight: bold; color: #4a0e63;">
+                        <?php 
+                        foreach($toplamlar as $pb => $degerler) {
+                            if($degerler['siparis'] > 0) echo formatCurrency($degerler['siparis'], $pb) . "<br>";
+                        }
+                        ?>
+                    </div>
+                    <span class="stat-label">Toplam Sipariş</span>
+                </td>
+                <td style="width: 33%;">
+                    <div style="font-size: 14px; font-weight: bold; color: #059669;">
+                        <?php 
+                        foreach($toplamlar as $pb => $degerler) {
+                            if($degerler['odenen'] > 0) echo formatCurrency($degerler['odenen'], $pb) . "<br>";
+                        }
+                        ?>
+                    </div>
+                    <span class="stat-label">Toplam Ödenen</span>
+                </td>
+                <td style="width: 34%;">
+                    <div style="font-size: 14px; font-weight: bold; color: #dc2626;">
+                        <?php 
+                        $has_balance = false;
+                        foreach($toplamlar as $pb => $degerler) {
+                            if($degerler['kalan'] > 0.01) {
+                                echo formatCurrency($degerler['kalan'], $pb) . "<br>";
+                                $has_balance = true;
+                            }
+                        }
+                        if($total_plan_debt > 0.01) {
+                            echo formatCurrency($total_plan_debt, 'TRY') . " (Taksit)<br>";
+                            $has_balance = true;
+                        }
+                        if(!$has_balance) echo "0,00 ₺";
+                        ?>
+                    </div>
+                    <span class="stat-label">Kalan Bakiye</span>
+                </td>
+            </tr>
+        </table>
+
+        <div style="height: 15px;"></div>
+
+        <!-- Tablo Bilgilendirme -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #4a0e63; border-radius: 6px; padding: 12px 15px; margin-bottom: 15px; color: #475569; font-size: 11px; line-height: 1.5;">
+            <i class="fas fa-info-circle" style="color: #4a0e63; margin-right: 5px;"></i>
+            <strong>Tablo Hakkında Bilgi:</strong> Bu tabloda müşteriye ait <em>Beklemede</em>, <em>Onaylandı</em> ve <em>Tamamlandı</em> statüsündeki tüm hareketler listelenmektedir. 
+            <strong>Beklemede</strong> olan siparişler gri renkte gösterilir ve cari bakiyeyi etkilemez. 
+            Dip toplamlar ve bakiye hesaplaması sadece kesinleşmiş (<strong>Onaylandı</strong> veya <strong>Tamamlandı</strong>) siparişler üzerinden yapılmaktadır.
+        </div>
+
+        <!-- Detaylı Hareket Tablosu -->
+        <span class="box-title"><i class="fas fa-list-ul"></i> HAREKET DETAY TABLOSU</span>
+        <table class="data-table" style="margin-bottom: 25px;">
+            <thead>
+                <tr>
+                    <th style="width: 12%;">Tarih</th>
+                    <th style="width: 30%;">Ürün / Açıklama</th>
+                    <th style="width: 10%; text-align: center;">Adet</th>
+                    <th style="width: 13%; text-align: right;">Birim Fiyat</th>
+                    <th style="width: 13%; text-align: right;">Toplam</th>
+                    <th style="width: 11%; text-align: right;">Ödenen</th>
+                    <th style="width: 11%; text-align: right;">Kalan</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php 
+                if (count($orders) > 0):
+                    foreach ($orders as $order): 
+                        $is_confirmed = in_array($order['durum'], ['onaylandi', 'tamamlandi']);
+                        $row_style = !$is_confirmed ? 'opacity: 0.6; font-style: italic; background-color: #f9fafb;' : '';
+                        $first_item = true;
+                        foreach ($order['items'] as $item):
+                ?>
+                    <tr style="<?php echo $row_style; ?>">
+                        <td><?php echo $first_item ? date('d.m.Y', strtotime($order['tarih'])) : ''; ?></td>
+                        <td>
+                            <?php echo htmlspecialchars($item['urun_ismi']); ?>
+                            <?php if ($first_item && !$is_confirmed): ?>
+                                <span class="status-badge status-beklemede" style="font-size: 8px; padding: 2px 5px; margin-left: 5px;">BEKLEMEDE</span>
+                            <?php endif; ?>
+                        </td>
+                        <td class="text-center"><?php echo $item['adet']; ?> <?php echo $item['birim']; ?></td>
+                        <td class="text-right"><?php echo formatCurrency($item['birim_fiyat'], $item['para_birimi']); ?></td>
+                        <td class="text-right"><?php echo formatCurrency($item['toplam_tutar'], $item['para_birimi']); ?></td>
+                        <td class="text-right">
+                            <?php 
+                            if ($first_item && $is_confirmed) {
+                                echo formatCurrency($order['odenen_tutar'] ?? 0, $order['para_birimi']);
+                            } elseif ($first_item) {
+                                echo '-';
+                            }
+                            ?>
+                        </td>
+                        <td class="text-right">
+                            <?php 
+                            if ($first_item && $is_confirmed) {
+                                echo '<strong>' . formatCurrency($order['kalan_tutar'], $order['para_birimi']) . '</strong>';
+                            } elseif ($first_item) {
+                                echo '-';
+                            }
+                            ?>
+                        </td>
+                    </tr>
+                <?php 
+                        $first_item = false;
+                        endforeach; 
+                    endforeach; 
+                else:
+                ?>
+                    <tr>
+                        <td colspan="7" class="text-center" style="padding: 30px; color: #888;">Henüz hareket kaydı bulunmuyor.</td>
+                    </tr>
+                <?php endif; ?>
+            </tbody>
+            <?php if (count($orders) > 0): ?>
+            <tfoot style="background: #f8fafc; font-weight: bold; border-top: 2px solid #4a0e63;">
+                <?php foreach($toplamlar as $pb => $degerler): if($degerler['siparis'] > 0): ?>
+                <tr>
+                    <td colspan="4" class="text-right">TOPLAM (<?php echo $pb; ?>):</td>
+                    <td class="text-right"><?php echo formatCurrency($degerler['siparis'], $pb); ?></td>
+                    <td class="text-right" style="color: #059669;"><?php echo formatCurrency($degerler['odenen'], $pb); ?></td>
+                    <td class="text-right" style="color: #dc2626;"><?php echo formatCurrency($degerler['kalan'], $pb); ?></td>
+                </tr>
+                <?php endif; endforeach; ?>
+                <?php if($total_plan_debt > 0.01): ?>
+                <tr>
+                    <td colspan="6" class="text-right">AKTİF TAKSİT PLANI BAKİYESİ:</td>
+                    <td class="text-right" style="color: #dc2626;"><?php echo formatCurrency($total_plan_debt, 'TRY'); ?></td>
+                </tr>
+                <?php endif; ?>
+            </tfoot>
+            <?php endif; ?>
+        </table>
 
 
         <!-- Installment Plans Section -->
@@ -631,15 +792,6 @@ function formatCurrency($value, $currency = 'TRY') {
 
         <!-- Orders List -->
         <span class="box-title"><i class="fas fa-history"></i> SİPARİŞ GEÇMİŞİ</span>
-
-        <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-left: 4px solid #0ea5e9; border-radius: 4px; padding: 10px 15px; margin-bottom: 20px; color: #0369a1; font-size: 11px; display: flex; align-items: center; gap: 12px;">
-            <i class="fas fa-info-circle" style="font-size: 18px;"></i>
-            <div>
-                <strong>Bakiye Hesaplama Bilgisi:</strong>
-                Müşteri toplam bakiyesi hesaplanırken yalnızca <strong>Onaylandı</strong> ve <strong>Tamamlandı</strong> statüsündeki siparişler dikkate alınmaktadır.
-                Henüz kesinleşmemiş <em>Beklemede</em> statüsündeki siparişler cari bakiyeye yansıtılmamaktadır.
-            </div>
-        </div>
 
         <?php if (count($orders) > 0): ?>
             <?php foreach ($orders as $order): ?>
