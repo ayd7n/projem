@@ -68,7 +68,7 @@ if (isset($_GET['action'])) {
 
             $where_clause = !empty($where_conditions) ? 'WHERE ' . implode(' AND ', $where_conditions) : '';
 
-            $count_query = "SELECT COUNT(*) as total FROM urunler u {$where_clause}";
+            $count_query = "SELECT COUNT(*) as total, SUM(u.stok_miktari) as total_stock FROM urunler u {$where_clause}";
             $stmt_count = $connection->prepare($count_query);
             if (!empty($params)) {
                 $stmt_count->bind_param($param_types, ...$params);
@@ -76,6 +76,7 @@ if (isset($_GET['action'])) {
             $stmt_count->execute();
             $count_result = $stmt_count->get_result()->fetch_assoc();
             $total_products = $count_result['total'];
+            $total_stock = $count_result['total_stock'] ?? 0;
             $total_pages = ceil($total_products / $limit);
             $stmt_count->close();
 
@@ -211,6 +212,7 @@ if (isset($_GET['action'])) {
                 ],
                 'stats' => [
                     'total_products' => $total_products,
+                    'total_stock' => $total_stock,
                     'critical_products' => $filtered_critical
                 ]
             ];

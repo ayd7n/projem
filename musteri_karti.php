@@ -830,85 +830,82 @@ function formatCurrency($value, $currency = 'TRY') {
                         $status_bg = '#f3f4f6';
                     }
                 ?>
-                <div class="order-section" style="border: 1px solid <?php echo $border_color; ?>; background: <?php echo $bg_color; ?>; border-radius: 8px; margin-bottom: 20px; transition: all 0.2s;">
-                    <div class="order-header" style="border-bottom: 1px solid <?php echo $border_color; ?>; padding-bottom: 12px; margin-bottom: 12px;">
-                        <div class="d-flex align-items-center" style="gap: 10px;">
-                             <div style="font-weight: 700; font-size: 15px; color: #1f2937;">
-                                <i class="fas fa-file-invoice" style="color: #9ca3af; margin-right: 5px;"></i> 
-                                Sipariş #<?php echo $order['siparis_id']; ?>
+                <div class="order-section" style="border: 1px solid <?php echo $border_color; ?>; background: <?php echo $bg_color; ?>; border-radius: 4px; margin-bottom: 8px; padding: 10px;">
+                    <div class="order-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                             <div style="font-weight: 600; font-size: 12px; color: #1f2937;">
+                                #<?php echo $order['siparis_id']; ?>
                              </div>
-                             <div style="font-size: 12px; color: #6b7280;">
-                                <?php echo date('d.m.Y H:i', strtotime($order['tarih'])); ?>
+                             <div style="font-size: 10px; color: #9ca3af;">
+                                <?php echo date('d.m.Y', strtotime($order['tarih'])); ?>
                              </div>
                         </div>
-                        
-                        <div style="background: <?php echo $status_bg; ?>; color: <?php echo $status_color; ?>; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; letter-spacing: 0.5px;">
+
+                        <div style="background: <?php echo $status_bg; ?>; color: <?php echo $status_color; ?>; padding: 2px 6px; border-radius: 3px; font-size: 9px; font-weight: 700;">
                             <?php echo $status_badge; ?>
                         </div>
                     </div>
 
-                    <div class="order-body">
-                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
-                            <div class="meta-box">
-                                <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Toplam Tutar</div>
-                                <div style="font-size: 14px; font-weight: 700; color: #111827;"><?php echo formatCurrency($order['hesaplanan_tutar'], $order['para_birimi']); ?></div>
+                    <div style="display: flex; gap: 10px; margin-bottom: 8px; flex-wrap: wrap; align-items: flex-end;">
+                        <div>
+                            <div style="font-size: 8px; color: #9ca3af; text-transform: uppercase;">Toplam</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #111827;"><?php echo formatCurrency($order['hesaplanan_tutar'], $order['para_birimi']); ?></div>
+                        </div>
+
+                        <?php if(!$order['is_in_plan']): ?>
+                            <div>
+                                <div style="font-size: 8px; color: #9ca3af; text-transform: uppercase;">Ödenen</div>
+                                <div style="font-size: 12px; font-weight: 600; color: #059669;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0, $order['para_birimi']); ?></div>
                             </div>
-                            
-                            <?php if(!$order['is_in_plan']): ?>
-                                <div class="meta-box">
-                                    <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Ödenen</div>
-                                    <div style="font-size: 14px; font-weight: 600; color: #059669;"><?php echo formatCurrency($order['odenen_tutar'] ?? 0, $order['para_birimi']); ?></div>
-                                </div>
-                                <?php if($order['kalan_tutar'] > 0.01): ?>
-                                    <div class="meta-box">
-                                        <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Kalan</div>
-                                        <div style="font-size: 14px; font-weight: 700; color: #dc2626;"><?php echo formatCurrency($order['kalan_tutar'], $order['para_birimi']); ?></div>
-                                    </div>
-                                <?php endif; ?>
-                            <?php else: ?>
-                                <div class="meta-box">
-                                    <div style="font-size: 10px; color: #6b7280; text-transform: uppercase;">Plan Durumu</div>
-                                    <div style="font-size: 13px; font-weight: 600; color: #3b82f6;">
-                                        Plan Dahilinde
-                                        <?php if($order['plan_details']['remaining_plan'] > 0): ?>
-                                            Plan Borcu: <?php echo formatCurrency($order['plan_details']['remaining_plan']); ?>
-                                        <?php endif; ?>
-                                    </div>
+                            <?php if($order['kalan_tutar'] > 0.01): ?>
+                                <div>
+                                    <div style="font-size: 8px; color: #9ca3af; text-transform: uppercase;">Kalan</div>
+                                    <div style="font-size: 12px; font-weight: 700; color: #dc2626;"><?php echo formatCurrency($order['kalan_tutar'], $order['para_birimi']); ?></div>
                                 </div>
                             <?php endif; ?>
-                        </div>
-
-                        <?php if ($order['aciklama']): ?>
-                            <div style="background: #f9fafb; border: 1px dashed #d1d5db; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #4b5563; margin-bottom: 15px;">
-                                <i class="fas fa-sticky-note" style="margin-right: 5px; opacity: 0.5;"></i> <?php echo htmlspecialchars($order['aciklama']); ?>
+                        <?php else: ?>
+                            <div>
+                                <div style="font-size: 8px; color: #9ca3af; text-transform: uppercase;">Plan</div>
+                                <div style="font-size: 11px; font-weight: 600; color: #3b82f6;">
+                                    Aktif
+                                    <?php if($order['plan_details']['remaining_plan'] > 0): ?>
+                                        (<?php echo formatCurrency($order['plan_details']['remaining_plan']); ?>)
+                                    <?php endif; ?>
+                                </div>
                             </div>
                         <?php endif; ?>
+                    </div>
 
-                        <!-- Compact Item List -->
-                        <div style="background: white; border: 1px solid #f3f4f6; border-radius: 6px; overflow: hidden;">
-                            <table style="width: 100%; border-collapse: collapse;">
-                                <thead style="background: #f9fafb; font-size: 11px; color: #6b7280; text-transform: uppercase;">
-                                    <tr>
-                                        <th style="padding: 8px 12px; text-align: left; font-weight: 600;">Ürün</th>
-                                        <th style="padding: 8px 12px; text-align: center; font-weight: 600;">Adet</th>
-                                        <th style="padding: 8px 12px; text-align: right; font-weight: 600;">Toplam</th>
-                                    </tr>
-                                </thead>
-                                <tbody style="font-size: 13px; color: #374151;">
-                                    <?php foreach ($order['items'] as $item): ?>
-                                    <tr style="border-top: 1px solid #f3f4f6;">
-                                        <td style="padding: 8px 12px;"><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
-                                        <td style="padding: 8px 12px; text-align: center;">
-                                            <span style="background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 600;">
-                                                <?php echo $item['adet']; ?> <?php echo htmlspecialchars($item['birim']); ?>
-                                            </span>
-                                        </td>
-                                        <td style="padding: 8px 12px; text-align: right; font-weight: 500;"><?php echo formatCurrency($item['toplam_tutar'], $item['para_birimi']); ?></td>
-                                    </tr>
-                                    <?php endforeach; ?>
-                                </tbody>
-                            </table>
+                    <?php if ($order['aciklama']): ?>
+                        <div style="background: #f9fafb; border: 1px dashed #e5e7eb; padding: 4px 8px; border-radius: 3px; font-size: 10px; color: #9ca3af; margin-bottom: 8px;">
+                            <i class="fas fa-sticky-note" style="margin-right: 3px; opacity: 0.5;"></i> <?php echo htmlspecialchars($order['aciklama']); ?>
                         </div>
+                    <?php endif; ?>
+
+                    <!-- Ultra Compact Item List -->
+                    <div style="background: white; border: 1px solid #f3f4f6; border-radius: 3px; padding: 6px;">
+                        <table style="width: 100%; border-collapse: collapse; font-size: 11px;">
+                            <thead>
+                                <tr style="color: #9ca3af; text-transform: uppercase; font-size: 9px;">
+                                    <th style="padding: 4px 6px; text-align: left; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Ürün</th>
+                                    <th style="padding: 4px 6px; text-align: center; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Adet</th>
+                                    <th style="padding: 4px 6px; text-align: right; font-weight: 600; border-bottom: 1px solid #e5e7eb;">Toplam</th>
+                                </tr>
+                            </thead>
+                            <tbody style="color: #6b7280;">
+                                <?php foreach ($order['items'] as $item): ?>
+                                <tr style="border-bottom: 1px solid #f9fafb;">
+                                    <td style="padding: 4px 6px;"><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
+                                    <td style="padding: 4px 6px; text-align: center;">
+                                        <span style="background: #f3f4f6; color: #6b7280; padding: 1px 4px; border-radius: 2px; font-size: 9px; font-weight: 600;">
+                                            <?php echo $item['adet']; ?> <?php echo htmlspecialchars($item['birim']); ?>
+                                        </span>
+                                    </td>
+                                    <td style="padding: 4px 6px; text-align: right; font-weight: 600; color: #374151;"><?php echo formatCurrency($item['toplam_tutar'], $item['para_birimi']); ?></td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             <?php endforeach; ?>

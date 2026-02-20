@@ -25,6 +25,13 @@ $total_materials = $total_result->fetch_assoc()['total'] ?? 0;
 // Calculate materials below critical stock level
 $critical_result = $connection->query("SELECT COUNT(*) as total FROM malzemeler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0");
 $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
+
+// Calculate stock by unit
+$stock_by_unit_result = $connection->query("SELECT birim, SUM(stok_miktari) as total_stock FROM malzemeler GROUP BY birim");
+$initial_stock_by_unit = [];
+while ($row = $stock_by_unit_result->fetch_assoc()) {
+    $initial_stock_by_unit[] = $row;
+}
 ?>
 
 <!DOCTYPE html>
@@ -423,6 +430,12 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                         <i class="fas fa-boxes mr-1"></i>
                         <span style="font-weight: 600;">{{ totalMaterials }}</span>
                         <span class="ml-1" style="opacity: 0.9;">Malzeme</span>
+                    </div>
+                    <div v-for="stock in stockByUnit" :key="stock.birim" class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #28a745, #218838); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-layer-group mr-1"></i>
+                        <span style="font-weight: 600;">{{ stock.total_stock }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Toplam ({{ formatUnit(stock.birim) }})</span>
                     </div>
                     <div class="stat-card-mini" @click="toggleCriticalStockFilter"
                         style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; display: inline-flex; align-items: center; cursor: pointer; font-size: 0.75rem;"
@@ -910,6 +923,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                     totalPages: 1,
                     totalMaterials: <?php echo $total_materials; ?>,
                     criticalMaterials: <?php echo $critical_materials; ?>,
+                    stockByUnit: <?php echo json_encode($initial_stock_by_unit); ?>,
                     limit: 10,
                     modal: { title: '', data: {} },
                     depoList: [],
@@ -999,6 +1013,7 @@ $critical_materials = $critical_result->fetch_assoc()['total'] ?? 0;
                                 this.totalPages = response.pagination.total_pages;
                                 this.totalMaterials = response.pagination.total_materials;
                                 this.criticalMaterials = response.pagination.critical_materials;
+                                this.stockByUnit = response.pagination.stock_by_unit;
                             } else {
                                 this.showAlert('Malzemeler yüklenirken hata oluştu.', 'danger');
                             }

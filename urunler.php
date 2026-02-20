@@ -22,6 +22,10 @@ if (!yetkisi_var('page:view:urunler')) {
 $total_result = $connection->query("SELECT COUNT(*) as total FROM urunler");
 $total_products = $total_result->fetch_assoc()['total'] ?? 0;
 
+// Calculate total stock quantity
+$total_stock_result = $connection->query("SELECT SUM(stok_miktari) as total FROM urunler");
+$total_stock_quantity = $total_stock_result->fetch_assoc()['total'] ?? 0;
+
 // Calculate products below critical stock level
 $critical_result = $connection->query("SELECT COUNT(*) as total FROM urunler WHERE stok_miktari <= kritik_stok_seviyesi AND kritik_stok_seviyesi > 0");
 $critical_products = $critical_result->fetch_assoc()['total'] ?? 0;
@@ -473,6 +477,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         <i class="fas fa-boxes mr-1"></i>
                         <span style="font-weight: 600;">{{ totalProducts }}</span>
                         <span class="ml-1" style="opacity: 0.9;">Ürün</span>
+                    </div>
+                    <div class="stat-card-mini"
+                        style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #28a745, #218838); color: white; display: inline-flex; align-items: center; font-size: 0.75rem;">
+                        <i class="fas fa-cubes mr-1"></i>
+                        <span style="font-weight: 600;">{{ totalStockQuantity }}</span>
+                        <span class="ml-1" style="opacity: 0.9;">Toplam Stok</span>
                     </div>
                     <div class="stat-card-mini" @click="toggleCriticalStockFilter"
                         style="padding: 4px 10px; border-radius: 6px; background: linear-gradient(135deg, #dc3545, #c82333); color: white; display: inline-flex; align-items: center; cursor: pointer; font-size: 0.75rem;"
@@ -1244,6 +1254,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         currentPage: 1,
                         totalPages: 1,
                         totalProducts: <?php echo $total_products; ?>,
+                        totalStockQuantity: <?php echo $total_stock_quantity; ?>,
                         criticalProducts: <?php echo $critical_products; ?>,
                         limit: 10,
                         productTypeFilter: '',
@@ -1408,6 +1419,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     // Update stats
                                     if (response.stats) {
                                         this.totalProducts = response.stats.total_products;
+                                        this.totalStockQuantity = response.stats.total_stock;
                                         this.criticalProducts = response.stats.critical_products;
                                     }
                                 } else {

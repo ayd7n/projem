@@ -83,6 +83,18 @@ if (isset($_GET['action'])) {
         $total_pages = ceil($total_materials / $limit);
         $stmt->close();
 
+        // Calculate stock by unit
+        $stock_query = "SELECT birim, SUM(stok_miktari) as total_stock FROM malzemeler m {$where_clause} GROUP BY birim";
+        $stmt_stock = $connection->prepare($stock_query);
+        $stmt_stock->bind_param($param_types, ...$params);
+        $stmt_stock->execute();
+        $stock_result = $stmt_stock->get_result();
+        $stock_by_unit = [];
+        while ($stock_row = $stock_result->fetch_assoc()) {
+            $stock_by_unit[] = $stock_row;
+        }
+        $stmt_stock->close();
+
         // Get paginated data
         $query = "SELECT m.*, COUNT(mf.fotograf_id) as foto_sayisi 
                   FROM malzemeler m 
@@ -144,7 +156,8 @@ if (isset($_GET['action'])) {
                 'total_pages' => $total_pages,
                 'total_materials' => $total_materials,
                 'current_page' => $page,
-                'critical_materials' => $critical_materials
+                'critical_materials' => $critical_materials,
+                'stock_by_unit' => $stock_by_unit
             ]
         ];
     } elseif ($action == 'get_material_depolar') {
