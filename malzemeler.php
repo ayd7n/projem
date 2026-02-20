@@ -315,6 +315,14 @@ while ($row = $stock_by_unit_result->fetch_assoc()) {
             text-shadow: none;
             color: white;
         }
+
+        /* Stock Highlighting */
+        .row-stock-warning {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        .table-hover tbody tr.row-stock-warning:hover {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+        }
     </style>
 </head>
 
@@ -475,7 +483,7 @@ while ($row = $stock_by_unit_result->fetch_assoc()) {
                             <tr v-else-if="materials.length === 0">
                                 <td colspan="14" class="text-center p-4">Aramanızla eşleşen malzeme bulunamadı.</td>
                             </tr>
-                            <tr v-for="material in materials" :key="material.malzeme_kodu">
+                            <tr v-for="material in materials" :key="material.malzeme_kodu" :class="stockRowClass(material)">
                                 <td class="actions">
                                     <?php if (yetkisi_var('action:malzemeler:edit')): ?>
                                         <button @click="openModal(material)" class="btn btn-primary btn-sm"><i
@@ -1202,9 +1210,15 @@ while ($row = $stock_by_unit_result->fetch_assoc()) {
                 stockClass(material) {
                     const stok = parseFloat(material.stok_miktari);
                     const kritik = parseFloat(material.kritik_stok_seviyesi);
-                    if (stok <= 0) return 'stock-low';
-                    if (stok <= kritik) return 'stock-critical';
-                    return 'stock-normal';
+                    if (stok <= 0) return 'text-danger font-weight-bold';
+                    if (stok <= kritik) return 'text-warning font-weight-bold';
+                    return 'text-success';
+                },
+                stockRowClass(material) {
+                    const stok = parseFloat(material.stok_miktari);
+                    const kritik = parseFloat(material.kritik_stok_seviyesi);
+                    if (stok <= kritik && kritik > 0) return 'row-stock-warning';
+                    return '';
                 },
                 loadPhotos() {
                     if (!this.modal.data.malzeme_kodu) return;

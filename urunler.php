@@ -381,6 +381,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         .pagination-container .page-link {
             padding: 4px 10px;
         }
+
+        /* Stock Highlighting */
+        .row-stock-warning {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+        }
+        .table-hover tbody tr.row-stock-warning:hover {
+            background-color: rgba(255, 193, 7, 0.2) !important;
+        }
     </style>
 </head>
 
@@ -532,7 +540,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             <tr v-else-if="products.length === 0">
                                 <td colspan="11" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
-                            <tr v-for="product in products" :key="product.urun_kodu">
+                            <tr v-for="product in products" :key="product.urun_kodu" :class="stockRowClass(product)">
                                 <td class="actions">
                                     <?php if (yetkisi_var('action:urunler:edit')): ?>
                                         <button @click="openModal(product)" class="btn btn-primary btn-sm"><i
@@ -1691,9 +1699,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     stockClass(product) {
                         const stok = parseFloat(product.stok_miktari);
                         const kritik = parseFloat(product.kritik_stok_seviyesi);
-                        if (stok <= 0) return 'stock-low';
-                        if (stok <= kritik) return 'stock-critical';
-                        return 'stock-normal';
+                        if (stok <= 0) return 'text-danger font-weight-bold';
+                        if (stok <= kritik) return 'text-warning font-weight-bold';
+                        return 'text-success';
+                    },
+                    stockRowClass(product) {
+                        const stok = parseFloat(product.stok_miktari);
+                        const kritik = parseFloat(product.kritik_stok_seviyesi);
+                        if (stok <= kritik && kritik > 0) return 'row-stock-warning';
+                        return '';
                     },
                     stockStatus(product) {
                         const stok = parseFloat(product.stok_miktari);
