@@ -671,9 +671,9 @@ if (isset($_GET['action'])) {
 
             // 4. Çerçeve Sözleşme Oluştur (Spot Alım İçin)
             $sozlesme_aciklama = "Spot Alım - " . $aciklama;
-            $s_stmt = $connection->prepare("INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, olusturan, aciklama, oncelik, odeme_kasasi) VALUES (?, ?, 0, ?, ?, ?, ?, 0, ?, ?, ?, ?, 1, 'TL')");
+            $s_stmt = $connection->prepare("INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, olusturan, aciklama, oncelik, odeme_kasasi) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, 1, 'TL')");
             $kullanici = $_SESSION['kullanici_adi'];
-            $s_stmt->bind_param("isdssdssss", $tedarikci_id, $tedarikci_adi, $urun_ismi, $birim_fiyat, $para_birimi, $miktar, $tarih, $tarih, $kullanici, $sozlesme_aciklama);
+            $s_stmt->bind_param("isssdsdssss", $tedarikci_id, $tedarikci_adi, $urun_kodu, $urun_ismi, $birim_fiyat, $para_birimi, $miktar, $tarih, $tarih, $kullanici, $sozlesme_aciklama);
             $s_stmt->execute();
             $sozlesme_id = $connection->insert_id;
             $s_stmt->close();
@@ -681,7 +681,7 @@ if (isset($_GET['action'])) {
             // 5. Genel Stok Hareketi Kaydı (ÖNCE BU YAPILMALI - FK İÇİN)
             $log_sql = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, miktar, yon, hareket_turu, aciklama, kaydeden_personel_id, tedarikci_id, tedarikci_ismi) VALUES (?, ?, ?, ?, 'giris', 'mal_kabul', ?, ?, ?, ?)";
             $log_stmt = $connection->prepare($log_sql);
-            $log_aciklama = "Hızlı Satın Alma (Spot) - " . $aciklama;
+            $log_aciklama = "Hızlı Satın Alma (Spot) [Sözleşme ID: $sozlesme_id] - " . $aciklama;
             $user_id = $_SESSION['user_id'];
             $stok_turu = 'urun';
             // Düzeltildi: sssdsiss (8 parametre)
@@ -691,8 +691,8 @@ if (isset($_GET['action'])) {
             $log_stmt->close();
 
             // 6. Sözleşme Hareket Kaydı (Kasa Yönetimi ve FK için)
-            $sh_stmt = $connection->prepare("INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, malzeme_kodu, tarih, kullanilan_miktar, birim_fiyat, para_birimi, tedarikci_id, tedarikci_adi) VALUES (?, ?, 0, ?, ?, ?, ?, ?, ?)");
-            $sh_stmt->bind_param("iisddsis", $hareket_id, $sozlesme_id, $tarih, $miktar, $birim_fiyat, $para_birimi, $tedarikci_id, $tedarikci_adi);
+            $sh_stmt = $connection->prepare("INSERT INTO stok_hareketleri_sozlesmeler (hareket_id, sozlesme_id, malzeme_kodu, tarih, kullanilan_miktar, birim_fiyat, para_birimi, tedarikci_id, tedarikci_adi) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+            $sh_stmt->bind_param("iiisddsis", $hareket_id, $sozlesme_id, $urun_kodu, $tarih, $miktar, $birim_fiyat, $para_birimi, $tedarikci_id, $tedarikci_adi);
             $sh_stmt->execute();
             $sh_stmt->close();
 
