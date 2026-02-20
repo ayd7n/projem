@@ -28,7 +28,7 @@ CREATE TABLE `ayarlar` (
   `ayar_deger` varchar(255) NOT NULL,
   PRIMARY KEY (`ayar_id`),
   UNIQUE KEY `ayar_anahtar` (`ayar_anahtar`)
-) ENGINE=InnoDB AUTO_INCREMENT=77 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=79 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -37,7 +37,7 @@ CREATE TABLE `ayarlar` (
 
 LOCK TABLES `ayarlar` WRITE;
 /*!40000 ALTER TABLE `ayarlar` DISABLE KEYS */;
-INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2026-01-28 07:59:02'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
+INSERT INTO `ayarlar` VALUES (1,'dolar_kuru','42.8500'),(2,'euro_kuru','50.5070'),(3,'son_otomatik_yedek_tarihi','2026-02-03 01:56:20'),(4,'maintenance_mode','off'),(5,'telegram_bot_token','8410150322:AAFQb9IprNJi0_UTgOB1EGrOLuG7uXlePqw'),(6,'telegram_chat_id','5615404170');
 /*!40000 ALTER TABLE `ayarlar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -119,7 +119,7 @@ CREATE TABLE `cerceve_sozlesmeler` (
 
 LOCK TABLES `cerceve_sozlesmeler` WRITE;
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` DISABLE KEYS */;
-INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'Genel Tedarikçi',1,'Birinci Ürün, etiket',1.00,'TL',2147483647,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:18:29','',1,'TL',NULL),(2,1,'Genel Tedarikçi',2,'Birinci Ürün, ham esans',1.00,'TL',99999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:18:52','',1,'TL',NULL),(3,1,'Genel Tedarikçi',3,'Birinci Ürün, jelatin',1.00,'TL',9999999,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:19:13','',1,'TL',NULL),(4,1,'Genel Tedarikçi',6,'Birinci Ürün, kutu',1.00,'TL',999999,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:19:46','',1,'TL',NULL),(5,1,'Genel Tedarikçi',5,'Birinci Ürün, paket',1.00,'TL',9999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:20:29','',1,'TL',NULL),(6,1,'Genel Tedarikçi',4,'Birinci Ürün, takım',1.00,'TL',999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:20:52','',1,'TL',NULL),(7,1,'Genel Tedarikçi',0,'0',20.00,'TL',15,0,'2026-01-28','2026-01-28','Admin User','2026-01-28 18:31:52','Spot Alım - ',1,'TL',NULL);
+INSERT INTO `cerceve_sozlesmeler` VALUES (1,1,'Genel Tedarik??i',1,'Birinci ??r??n, etiket',1.00,'TL',2147483647,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:18:29','',1,'TL',NULL),(2,1,'Genel Tedarik??i',2,'Birinci ??r??n, ham esans',1.00,'TL',99999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:18:52','',1,'TL',NULL),(3,1,'Genel Tedarik??i',3,'Birinci ??r??n, jelatin',1.00,'TL',9999999,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:19:13','',1,'TL',NULL),(4,1,'Genel Tedarik??i',6,'Birinci ??r??n, kutu',1.00,'TL',999999,0,'2026-01-26','2026-01-30','Admin User','2026-01-28 16:19:46','',1,'TL',NULL),(5,1,'Genel Tedarik??i',5,'Birinci ??r??n, paket',1.00,'TL',9999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:20:29','',1,'TL',NULL),(6,1,'Genel Tedarik??i',4,'Birinci ??r??n, tak??m',1.00,'TL',999999,0,'2026-01-26','2026-01-31','Admin User','2026-01-28 16:20:52','',1,'TL',NULL),(7,1,'Genel Tedarik??i',0,'0',20.00,'TL',15,0,'2026-01-28','2026-01-28','Admin User','2026-01-28 18:31:52','Spot Al??m - ',1,'TL',NULL);
 /*!40000 ALTER TABLE `cerceve_sozlesmeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -275,7 +275,7 @@ CREATE TABLE `esanslar` (
 
 LOCK TABLES `esanslar` WRITE;
 /*!40000 ALTER TABLE `esanslar` DISABLE KEYS */;
-INSERT INTO `esanslar` VALUES (1,'ES-260128-336','Birinci Ürün, Esans','',0.00,'lt',1.00,'Tank1','Birinci Tankımız');
+INSERT INTO `esanslar` VALUES (1,'ES-260128-336','Birinci ??r??n, Esans','',0.00,'lt',1.00,'Tank1','Birinci Tank??m??z');
 /*!40000 ALTER TABLE `esanslar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -539,7 +539,7 @@ CREATE TABLE `log_tablosu` (
   `islem_turu` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -548,7 +548,7 @@ CREATE TABLE `log_tablosu` (
 
 LOCK TABLES `log_tablosu` WRITE;
 /*!40000 ALTER TABLE `log_tablosu` DISABLE KEYS */;
-INSERT INTO `log_tablosu` VALUES (1,'2026-01-28 14:42:59','Admin User','cerceve_sozlesmeler, esanslar, log_tablosu, lokasyonlar, malzemeler, stok_hareket_kayitlari, stok_hareketleri_sozlesmeler, tedarikciler, urun_agaci, urunler tabloları temizlendi','DELETE','2026-01-28 11:42:59'),(2,'2026-01-28 14:46:57','Admin User','Merkez Depo deposuna Raf 1 rafı eklendi','CREATE','2026-01-28 11:46:57'),(3,'2026-01-28 14:47:07','Admin User','Merkez Depo deposuna Raf 2 rafı eklendi','CREATE','2026-01-28 11:47:07'),(4,'2026-01-28 14:47:37','Admin User','Birinci Tankımız adlı tank sisteme eklendi','CREATE','2026-01-28 11:47:37'),(5,'2026-01-28 14:47:51','Admin User','İkinci Tankımız adlı tank sisteme eklendi','CREATE','2026-01-28 11:47:51'),(6,'2026-01-28 14:48:13','Admin User','Büyük Tank adlı tank sisteme eklendi','CREATE','2026-01-28 11:48:13'),(7,'2026-01-28 14:52:01','Admin User','Birinci Ürün ürünü sisteme eklendi','CREATE','2026-01-28 11:52:01'),(8,'2026-01-28 14:52:02','Admin User','Otomatik esans oluşturuldu: Birinci Ürün, Esans (Tank: Tank1)','CREATE','2026-01-28 11:52:02'),(9,'2026-01-28 14:52:03','Admin User','Otomatik ham esans esans ağacına eklendi: Birinci Ürün, ham esans','CREATE','2026-01-28 11:52:03'),(10,'2026-01-28 14:56:09','Admin User','Birinci Ürün, Esans ürün ağacındaki Birinci Ürün, ham esans bileşeni Birinci Ürün, ham esans olarak güncellendi','UPDATE','2026-01-28 11:56:09'),(11,'2026-01-28 15:02:18','Admin User','Birinci Ürün, ham esans malzemesi Birinci Ürün, ham esans olarak güncellendi','UPDATE','2026-01-28 12:02:18'),(12,'2026-01-28 15:05:36','Admin User','Alkol malzemesi sisteme eklendi','CREATE','2026-01-28 12:05:36'),(13,'2026-01-28 15:06:19','Admin User','Birinci Ürün, Esans ürün ağacına Alkol bileşeni eklendi','CREATE','2026-01-28 12:06:19'),(14,'2026-01-28 16:14:19','Admin User','Birinci Ürün ürün ağacındaki Birinci Ürün, Esans bileşeni Birinci Ürün, Esans olarak güncellendi','UPDATE','2026-01-28 13:14:19'),(15,'2026-01-28 16:17:43','Admin User','Genel Tedarikçi tedarikçisi sisteme eklendi','CREATE','2026-01-28 13:17:43'),(16,'2026-01-28 16:18:29','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, etiket malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:18:29'),(17,'2026-01-28 16:18:52','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, ham esans malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:18:52'),(18,'2026-01-28 16:19:13','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, jelatin malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:19:13'),(19,'2026-01-28 16:19:46','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, kutu malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:19:46'),(20,'2026-01-28 16:20:29','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, paket malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:20:29'),(21,'2026-01-28 16:20:52','Admin User','Genel Tedarikçi tedarikçisine Birinci Ürün, takım malzemesi için çerçeve sözleşme eklendi','CREATE','2026-01-28 13:20:52'),(22,'2026-01-28 16:24:09','Admin User','Genel Tedarikçi tedarikçisine PO-2026-00001 no\'lu satınalma siparişi oluşturuldu','CREATE','2026-01-28 13:24:09'),(23,'2026-01-28 16:30:02','Admin User','Personel giriş yaptı (E-posta/Telefon: admin@parfum.com)','Giriş Yapıldı','2026-01-28 13:30:02'),(24,'2026-01-28 17:27:35','Admin User','Satınalma siparişi #1 güncellendi','UPDATE','2026-01-28 14:27:35'),(25,'2026-01-28 17:28:28','Admin User','Satınalma siparişi #1 güncellendi','UPDATE','2026-01-28 14:28:28'),(26,'2026-01-28 17:28:57','Admin User','Satınalma siparişi #1 güncellendi','UPDATE','2026-01-28 14:28:57'),(27,'2026-01-28 17:59:19','Admin User','Satınalma siparişi #1 güncellendi','UPDATE','2026-01-28 14:59:19'),(28,'2026-01-28 17:59:26','Admin User','Birinci Ürün, etiket ürünü için stok hareketi silindi (ID: 1)','DELETE','2026-01-28 14:59:26'),(29,'2026-01-28 18:27:24','Admin User','Satınalma siparişi #1 güncellendi','UPDATE','2026-01-28 15:27:24'),(30,'2026-01-28 18:27:30','Admin User','Birinci Ürün, etiket ürünü için stok hareketi silindi (ID: 2)','DELETE','2026-01-28 15:27:30');
+INSERT INTO `log_tablosu` VALUES (1,'2026-01-28 14:42:59','Admin User','cerceve_sozlesmeler, esanslar, log_tablosu, lokasyonlar, malzemeler, stok_hareket_kayitlari, stok_hareketleri_sozlesmeler, tedarikciler, urun_agaci, urunler tablolar?? temizlendi','DELETE','2026-01-28 11:42:59'),(2,'2026-01-28 14:46:57','Admin User','Merkez Depo deposuna Raf 1 raf?? eklendi','CREATE','2026-01-28 11:46:57'),(3,'2026-01-28 14:47:07','Admin User','Merkez Depo deposuna Raf 2 raf?? eklendi','CREATE','2026-01-28 11:47:07'),(4,'2026-01-28 14:47:37','Admin User','Birinci Tank??m??z adl?? tank sisteme eklendi','CREATE','2026-01-28 11:47:37'),(5,'2026-01-28 14:47:51','Admin User','??kinci Tank??m??z adl?? tank sisteme eklendi','CREATE','2026-01-28 11:47:51'),(6,'2026-01-28 14:48:13','Admin User','B??y??k Tank adl?? tank sisteme eklendi','CREATE','2026-01-28 11:48:13'),(7,'2026-01-28 14:52:01','Admin User','Birinci ??r??n ??r??n?? sisteme eklendi','CREATE','2026-01-28 11:52:01'),(8,'2026-01-28 14:52:02','Admin User','Otomatik esans olu??turuldu: Birinci ??r??n, Esans (Tank: Tank1)','CREATE','2026-01-28 11:52:02'),(9,'2026-01-28 14:52:03','Admin User','Otomatik ham esans esans a??ac??na eklendi: Birinci ??r??n, ham esans','CREATE','2026-01-28 11:52:03'),(10,'2026-01-28 14:56:09','Admin User','Birinci ??r??n, Esans ??r??n a??ac??ndaki Birinci ??r??n, ham esans bile??eni Birinci ??r??n, ham esans olarak g??ncellendi','UPDATE','2026-01-28 11:56:09'),(11,'2026-01-28 15:02:18','Admin User','Birinci ??r??n, ham esans malzemesi Birinci ??r??n, ham esans olarak g??ncellendi','UPDATE','2026-01-28 12:02:18'),(12,'2026-01-28 15:05:36','Admin User','Alkol malzemesi sisteme eklendi','CREATE','2026-01-28 12:05:36'),(13,'2026-01-28 15:06:19','Admin User','Birinci ??r??n, Esans ??r??n a??ac??na Alkol bile??eni eklendi','CREATE','2026-01-28 12:06:19'),(14,'2026-01-28 16:14:19','Admin User','Birinci ??r??n ??r??n a??ac??ndaki Birinci ??r??n, Esans bile??eni Birinci ??r??n, Esans olarak g??ncellendi','UPDATE','2026-01-28 13:14:19'),(15,'2026-01-28 16:17:43','Admin User','Genel Tedarik??i tedarik??isi sisteme eklendi','CREATE','2026-01-28 13:17:43'),(16,'2026-01-28 16:18:29','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, etiket malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:18:29'),(17,'2026-01-28 16:18:52','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, ham esans malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:18:52'),(18,'2026-01-28 16:19:13','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, jelatin malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:19:13'),(19,'2026-01-28 16:19:46','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, kutu malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:19:46'),(20,'2026-01-28 16:20:29','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, paket malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:20:29'),(21,'2026-01-28 16:20:52','Admin User','Genel Tedarik??i tedarik??isine Birinci ??r??n, tak??m malzemesi i??in ??er??eve s??zle??me eklendi','CREATE','2026-01-28 13:20:52'),(22,'2026-01-28 16:24:09','Admin User','Genel Tedarik??i tedarik??isine PO-2026-00001 no\'lu sat??nalma sipari??i olu??turuldu','CREATE','2026-01-28 13:24:09'),(23,'2026-01-28 16:30:02','Admin User','Personel giri?? yapt?? (E-posta/Telefon: admin@parfum.com)','Giri?? Yap??ld??','2026-01-28 13:30:02'),(24,'2026-01-28 17:27:35','Admin User','Sat??nalma sipari??i #1 g??ncellendi','UPDATE','2026-01-28 14:27:35'),(25,'2026-01-28 17:28:28','Admin User','Sat??nalma sipari??i #1 g??ncellendi','UPDATE','2026-01-28 14:28:28'),(26,'2026-01-28 17:28:57','Admin User','Sat??nalma sipari??i #1 g??ncellendi','UPDATE','2026-01-28 14:28:57'),(27,'2026-01-28 17:59:19','Admin User','Sat??nalma sipari??i #1 g??ncellendi','UPDATE','2026-01-28 14:59:19'),(28,'2026-01-28 17:59:26','Admin User','Birinci ??r??n, etiket ??r??n?? i??in stok hareketi silindi (ID: 1)','DELETE','2026-01-28 14:59:26'),(29,'2026-01-28 18:27:24','Admin User','Sat??nalma sipari??i #1 g??ncellendi','UPDATE','2026-01-28 15:27:24'),(30,'2026-01-28 18:27:30','Admin User','Birinci ??r??n, etiket ??r??n?? i??in stok hareketi silindi (ID: 2)','DELETE','2026-01-28 15:27:30'),(31,'2026-02-03 01:56:26','Admin User','Personel giri?? yapt?? (E-posta/Telefon: admin@parfum.com)','Giri?? Yap??ld??','2026-02-02 22:56:26'),(32,'2026-02-03 01:57:32','Admin User','Birinci ??r??n ??r??n?? Birinci ??r??n olarak g??ncellendi','UPDATE','2026-02-02 22:57:32'),(33,'2026-02-03 01:59:51','Admin User','Deneme m????terisi sisteme eklendi','CREATE','2026-02-02 22:59:51'),(34,'2026-02-03 02:00:19','Deneme','M????teri giri?? yapt?? (E-posta/Telefon: 05510001069)','Giri?? Yap??ld??','2026-02-02 23:00:19'),(35,'2026-02-03 02:00:31','Deneme','Deneme m????terisi taraf??ndan sipari?? olu??turuldu (ID: 1)','CREATE','2026-02-02 23:00:31'),(36,'2026-02-03 02:07:49','Deneme','Deneme m????terisi taraf??ndan sipari?? olu??turuldu (ID: 2)','CREATE','2026-02-02 23:07:49'),(37,'2026-02-03 02:11:14','Admin User','Deneme m????terisine ait 1 nolu sipari??in yeni durumu: ??ptal Edildi','UPDATE','2026-02-02 23:11:14'),(38,'2026-02-03 02:11:20','Admin User','Deneme m????terisine ait 2 nolu sipari??in yeni durumu: Onayland??','UPDATE','2026-02-02 23:11:20'),(39,'2026-02-03 02:18:10','Deneme','Deneme m????terisi taraf??ndan sipari?? olu??turuldu (ID: 3)','CREATE','2026-02-02 23:18:10');
 /*!40000 ALTER TABLE `log_tablosu` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -726,7 +726,7 @@ CREATE TABLE `malzeme_turleri` (
 
 LOCK TABLES `malzeme_turleri` WRITE;
 /*!40000 ALTER TABLE `malzeme_turleri` DISABLE KEYS */;
-INSERT INTO `malzeme_turleri` VALUES (3,'kutu','kutu',1,'2025-12-25 08:21:49'),(4,'etiket','etiket',2,'2025-12-25 08:22:01'),(5,'takm','takım',3,'2025-12-25 08:22:10'),(6,'ham_esans','ham esans',4,'2025-12-25 08:22:38'),(7,'alkol','alkol',5,'2025-12-25 08:22:52'),(8,'paket','paket',6,'2025-12-25 08:23:11'),(9,'jelatin','jelatin',7,'2025-12-25 08:23:23');
+INSERT INTO `malzeme_turleri` VALUES (3,'kutu','kutu',1,'2025-12-25 08:21:49'),(4,'etiket','etiket',2,'2025-12-25 08:22:01'),(5,'takm','tak??m',3,'2025-12-25 08:22:10'),(6,'ham_esans','ham esans',4,'2025-12-25 08:22:38'),(7,'alkol','alkol',5,'2025-12-25 08:22:52'),(8,'paket','paket',6,'2025-12-25 08:23:11'),(9,'jelatin','jelatin',7,'2025-12-25 08:23:23');
 /*!40000 ALTER TABLE `malzeme_turleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -763,7 +763,7 @@ CREATE TABLE `malzemeler` (
 
 LOCK TABLES `malzemeler` WRITE;
 /*!40000 ALTER TABLE `malzemeler` DISABLE KEYS */;
-INSERT INTO `malzemeler` VALUES (1,'Birinci Ürün, etiket','etiket',NULL,90.00,'adet',1.00,'TL',0,0,'Merkez Depo','Raf 1',0),(2,'Birinci Ürün, ham esans','ham_esans','null',0.00,'lt',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(3,'Birinci Ürün, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(4,'Birinci Ürün, takım','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(5,'Birinci Ürün, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(6,'Birinci Ürün, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(7,'Alkol','alkol','',10000.00,'lt',1.00,'TRY',0,10,'Merkez Depo','Raf 1',3000000);
+INSERT INTO `malzemeler` VALUES (1,'Birinci ??r??n, etiket','etiket',NULL,90.00,'adet',1.00,'TL',0,0,'Merkez Depo','Raf 1',0),(2,'Birinci ??r??n, ham esans','ham_esans','null',0.00,'lt',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(3,'Birinci ??r??n, jelatin','jelatin',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(4,'Birinci ??r??n, tak??m','takm',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(5,'Birinci ??r??n, paket','paket',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(6,'Birinci ??r??n, kutu','kutu',NULL,0.00,'adet',0.00,'TRY',0,0,'Merkez Depo','Raf 1',0),(7,'Alkol','alkol','',10000.00,'lt',1.00,'TRY',0,10,'Merkez Depo','Raf 1',3000000);
 /*!40000 ALTER TABLE `malzemeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -870,7 +870,7 @@ CREATE TABLE `mrp_ihtiyaclar` (
   `gerekli_miktar` decimal(10,2) NOT NULL,
   `stokta_mevcut` decimal(10,2) DEFAULT 0.00,
   `siparis_verilen` decimal(10,2) DEFAULT 0.00,
-  `net_ihtiyaç` decimal(10,2) NOT NULL,
+  `net_ihtiya??` decimal(10,2) NOT NULL,
   `teslim_tarihi` date DEFAULT NULL,
   `durum` enum('yetersiz','planlandi','siparis_verildi','teslim_alindi') DEFAULT 'yetersiz',
   PRIMARY KEY (`ihtiyac_id`),
@@ -1042,7 +1042,7 @@ CREATE TABLE `musteriler` (
   PRIMARY KEY (`musteri_id`),
   UNIQUE KEY `musteri_id` (`musteri_id`),
   UNIQUE KEY `musteri_adi` (`musteri_adi`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1051,6 +1051,7 @@ CREATE TABLE `musteriler` (
 
 LOCK TABLES `musteriler` WRITE;
 /*!40000 ALTER TABLE `musteriler` DISABLE KEYS */;
+INSERT INTO `musteriler` VALUES (1,'Deneme','','','05510001069','','$2y$10$CHGCw2U.sqwiYlEHdRNGL.TffV2Y62mdbn953yL3pjXFc7OSbBtAS','',1,'',1);
 /*!40000 ALTER TABLE `musteriler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1253,7 +1254,7 @@ CREATE TABLE `personeller` (
 
 LOCK TABLES `personeller` WRITE;
 /*!40000 ALTER TABLE `personeller` DISABLE KEYS */;
-INSERT INTO `personeller` VALUES (1,'Admin User','12345678900',NULL,NULL,NULL,NULL,'admin@parfum.com','05551234567',NULL,NULL,'$2y$10$zaDE9ZOm7Qym4tkH3ZpzM.zGMkmCNhSJZQ1bylCpgNX3rpucgbq9q',NULL,0,0.00),(283,'Yedek Admin','',NULL,NULL,'Administrator','Yönetim','admin2@parfum.com',NULL,NULL,NULL,'$2y$10$z56pgRUputjO7M5.Pp0W1eHOgVJ16GX3OKYtPi4VGenFweT8xUidK',NULL,0,0.00);
+INSERT INTO `personeller` VALUES (1,'Admin User','12345678900',NULL,NULL,NULL,NULL,'admin@parfum.com','05551234567',NULL,NULL,'$2y$10$zaDE9ZOm7Qym4tkH3ZpzM.zGMkmCNhSJZQ1bylCpgNX3rpucgbq9q',NULL,0,0.00),(283,'Yedek Admin','',NULL,NULL,'Administrator','Y??netim','admin2@parfum.com',NULL,NULL,NULL,'$2y$10$z56pgRUputjO7M5.Pp0W1eHOgVJ16GX3OKYtPi4VGenFweT8xUidK',NULL,0,0.00);
 /*!40000 ALTER TABLE `personeller` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1289,7 +1290,7 @@ CREATE TABLE `satinalma_siparis_kalemleri` (
 
 LOCK TABLES `satinalma_siparis_kalemleri` WRITE;
 /*!40000 ALTER TABLE `satinalma_siparis_kalemleri` DISABLE KEYS */;
-INSERT INTO `satinalma_siparis_kalemleri` VALUES (31,1,1,'Birinci Ürün, etiket',90.00,'adet',1.00,'TL',90.00,90.00,''),(32,1,2,'Birinci Ürün, ham esans',7.20,'lt',1.00,'TL',7.20,0.00,''),(33,1,3,'Birinci Ürün, jelatin',90.00,'adet',1.00,'TL',90.00,0.00,''),(34,1,6,'Birinci Ürün, kutu',90.00,'adet',1.00,'TL',90.00,0.00,''),(35,1,5,'Birinci Ürün, paket',90.00,'adet',1.00,'TL',90.00,0.00,''),(36,1,4,'Birinci Ürün, takım',90.00,'adet',1.00,'TL',90.00,0.00,'');
+INSERT INTO `satinalma_siparis_kalemleri` VALUES (31,1,1,'Birinci ??r??n, etiket',90.00,'adet',1.00,'TL',90.00,90.00,''),(32,1,2,'Birinci ??r??n, ham esans',7.20,'lt',1.00,'TL',7.20,0.00,''),(33,1,3,'Birinci ??r??n, jelatin',90.00,'adet',1.00,'TL',90.00,0.00,''),(34,1,6,'Birinci ??r??n, kutu',90.00,'adet',1.00,'TL',90.00,0.00,''),(35,1,5,'Birinci ??r??n, paket',90.00,'adet',1.00,'TL',90.00,0.00,''),(36,1,4,'Birinci ??r??n, tak??m',90.00,'adet',1.00,'TL',90.00,0.00,'');
 /*!40000 ALTER TABLE `satinalma_siparis_kalemleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1331,7 +1332,7 @@ CREATE TABLE `satinalma_siparisler` (
 
 LOCK TABLES `satinalma_siparisler` WRITE;
 /*!40000 ALTER TABLE `satinalma_siparisler` DISABLE KEYS */;
-INSERT INTO `satinalma_siparisler` VALUES (1,'PO-2026-00001',1,'Genel Tedarikçi','2026-01-28','2026-01-30','kismen_teslim','bekliyor',NULL,457.20,'TL','',1,'Admin User','2026-01-28 13:24:09','2026-01-28 15:28:34');
+INSERT INTO `satinalma_siparisler` VALUES (1,'PO-2026-00001',1,'Genel Tedarik??i','2026-01-28','2026-01-30','kismen_teslim','bekliyor',NULL,457.20,'TL','',1,'Admin User','2026-01-28 13:24:09','2026-01-28 15:28:34');
 /*!40000 ALTER TABLE `satinalma_siparisler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1360,6 +1361,7 @@ CREATE TABLE `siparis_kalemleri` (
 
 LOCK TABLES `siparis_kalemleri` WRITE;
 /*!40000 ALTER TABLE `siparis_kalemleri` DISABLE KEYS */;
+INSERT INTO `siparis_kalemleri` VALUES (1,1,'Birinci ??r??n',1,'adet',10.00,10.00,'TRY'),(2,1,'Birinci ??r??n',12,'adet',10.00,120.00,'USD'),(3,1,'Birinci ??r??n',10,'adet',10.00,100.00,'USD');
 /*!40000 ALTER TABLE `siparis_kalemleri` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1387,7 +1389,7 @@ CREATE TABLE `siparisler` (
   `odenen_tutar` decimal(10,2) DEFAULT 0.00,
   `para_birimi` varchar(3) NOT NULL DEFAULT 'TL',
   PRIMARY KEY (`siparis_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1396,6 +1398,7 @@ CREATE TABLE `siparisler` (
 
 LOCK TABLES `siparisler` WRITE;
 /*!40000 ALTER TABLE `siparisler` DISABLE KEYS */;
+INSERT INTO `siparisler` VALUES (1,1,'Deneme','2026-02-03 02:00:31','iptal_edildi',1,'Deneme',NULL,NULL,NULL,'','bekliyor',NULL,0.00,'TL'),(2,1,'Deneme','2026-02-03 02:07:49','onaylandi',12,'Deneme',1,'Admin User','2026-02-03 02:11:20','','bekliyor',NULL,0.00,'TL'),(3,1,'Deneme','2026-02-03 02:18:10','beklemede',10,'Deneme',NULL,NULL,NULL,'Deneme....','bekliyor',NULL,0.00,'TL');
 /*!40000 ALTER TABLE `siparisler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1495,7 +1498,7 @@ CREATE TABLE `stok_hareket_kayitlari` (
 
 LOCK TABLES `stok_hareket_kayitlari` WRITE;
 /*!40000 ALTER TABLE `stok_hareket_kayitlari` DISABLE KEYS */;
-INSERT INTO `stok_hareket_kayitlari` VALUES (3,'2026-01-28 18:28:34','malzeme','1','Birinci Ürün, etiket','adet',90.00,'giris','mal_kabul','Merkez Depo','Raf 1',NULL,'',NULL,NULL,NULL,'.. [Sozlesme ID: 1] [Sipariş: PO-2026-00001]',1,'Admin User','Genel Tedarikçi',1),(4,'2026-01-28 18:31:52','urun','1','Birinci Ürün','',15.00,'giris','mal_kabul',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'Hızlı Satın Alma (Spot) - ',1,NULL,'Genel Tedarikçi',1);
+INSERT INTO `stok_hareket_kayitlari` VALUES (3,'2026-01-28 18:28:34','malzeme','1','Birinci ??r??n, etiket','adet',90.00,'giris','mal_kabul','Merkez Depo','Raf 1',NULL,'',NULL,NULL,NULL,'.. [Sozlesme ID: 1] [Sipari??: PO-2026-00001]',1,'Admin User','Genel Tedarik??i',1),(4,'2026-01-28 18:31:52','urun','1','Birinci ??r??n','',15.00,'giris','mal_kabul',NULL,NULL,NULL,NULL,NULL,NULL,NULL,'H??zl?? Sat??n Alma (Spot) - ',1,NULL,'Genel Tedarik??i',1);
 /*!40000 ALTER TABLE `stok_hareket_kayitlari` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1531,7 +1534,7 @@ CREATE TABLE `stok_hareketleri_sozlesmeler` (
 
 LOCK TABLES `stok_hareketleri_sozlesmeler` WRITE;
 /*!40000 ALTER TABLE `stok_hareketleri_sozlesmeler` DISABLE KEYS */;
-INSERT INTO `stok_hareketleri_sozlesmeler` VALUES (3,1,1,90.00,'2026-01-28 15:28:34',1.00,'TL','Genel Tedarikçi',1,'2026-01-26','2026-01-30'),(4,7,0,15.00,'2026-01-27 21:00:00',20.00,'TL','Genel Tedarikçi',1,NULL,NULL);
+INSERT INTO `stok_hareketleri_sozlesmeler` VALUES (3,1,1,90.00,'2026-01-28 15:28:34',1.00,'TL','Genel Tedarik??i',1,'2026-01-26','2026-01-30'),(4,7,0,15.00,'2026-01-27 21:00:00',20.00,'TL','Genel Tedarik??i',1,NULL,NULL);
 /*!40000 ALTER TABLE `stok_hareketleri_sozlesmeler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1654,7 +1657,7 @@ CREATE TABLE `tanklar` (
 
 LOCK TABLES `tanklar` WRITE;
 /*!40000 ALTER TABLE `tanklar` DISABLE KEYS */;
-INSERT INTO `tanklar` VALUES (1,'Tank1','Birinci Tankımız','',100.00),(2,'Tank2','İkinci Tankımız','',200.00),(3,'Tank3','Büyük Tank','En büyük tank...',500.00);
+INSERT INTO `tanklar` VALUES (1,'Tank1','Birinci Tank??m??z','',100.00),(2,'Tank2','??kinci Tank??m??z','',200.00),(3,'Tank3','B??y??k Tank','En b??y??k tank...',500.00);
 /*!40000 ALTER TABLE `tanklar` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1688,7 +1691,7 @@ CREATE TABLE `tedarikciler` (
 
 LOCK TABLES `tedarikciler` WRITE;
 /*!40000 ALTER TABLE `tedarikciler` DISABLE KEYS */;
-INSERT INTO `tedarikciler` VALUES (1,'Genel Tedarikçi','Genel','','','','','','','');
+INSERT INTO `tedarikciler` VALUES (1,'Genel Tedarik??i','Genel','','','','','','','');
 /*!40000 ALTER TABLE `tedarikciler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1790,7 +1793,7 @@ CREATE TABLE `urun_agaci` (
 
 LOCK TABLES `urun_agaci` WRITE;
 /*!40000 ALTER TABLE `urun_agaci` DISABLE KEYS */;
-INSERT INTO `urun_agaci` VALUES (1,1,'Birinci Ürün','etiket','1','Birinci Ürün, etiket',1.00,'urun'),(2,1,'Birinci Ürün','jelatin','3','Birinci Ürün, jelatin',1.00,'urun'),(3,1,'Birinci Ürün','takm','4','Birinci Ürün, takım',1.00,'urun'),(4,1,'Birinci Ürün','paket','5','Birinci Ürün, paket',1.00,'urun'),(5,1,'Birinci Ürün','kutu','6','Birinci Ürün, kutu',1.00,'urun'),(6,1,'Birinci Ürün','esans','ES-260128-336','Birinci Ürün, Esans',0.10,'urun'),(7,1,'Birinci Ürün, Esans','malzeme','2','Birinci Ürün, ham esans',0.80,'esans'),(8,1,'Birinci Ürün, Esans','malzeme','7','Alkol',0.20,'esans');
+INSERT INTO `urun_agaci` VALUES (1,1,'Birinci ??r??n','etiket','1','Birinci ??r??n, etiket',1.00,'urun'),(2,1,'Birinci ??r??n','jelatin','3','Birinci ??r??n, jelatin',1.00,'urun'),(3,1,'Birinci ??r??n','takm','4','Birinci ??r??n, tak??m',1.00,'urun'),(4,1,'Birinci ??r??n','paket','5','Birinci ??r??n, paket',1.00,'urun'),(5,1,'Birinci ??r??n','kutu','6','Birinci ??r??n, kutu',1.00,'urun'),(6,1,'Birinci ??r??n','esans','ES-260128-336','Birinci ??r??n, Esans',0.10,'urun'),(7,1,'Birinci ??r??n, Esans','malzeme','2','Birinci ??r??n, ham esans',0.80,'esans'),(8,1,'Birinci ??r??n, Esans','malzeme','7','Alkol',0.20,'esans');
 /*!40000 ALTER TABLE `urun_agaci` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1858,7 +1861,7 @@ CREATE TABLE `urunler` (
 
 LOCK TABLES `urunler` WRITE;
 /*!40000 ALTER TABLE `urunler` DISABLE KEYS */;
-INSERT INTO `urunler` VALUES (1,'Birinci Ürün','',25,'adet',10.00,'TRY',0.00,'TRY',100,'Merkez Depo','Raf 1','uretilen',NULL);
+INSERT INTO `urunler` VALUES (1,'Birinci ??r??n','',25,'adet',10.00,'USD',0.00,'TRY',100,'Merkez Depo','Raf 1','uretilen',NULL);
 /*!40000 ALTER TABLE `urunler` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1951,4 +1954,4 @@ SET character_set_client = @saved_cs_client;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-01-28 18:40:19
+-- Dump completed on 2026-02-13 23:02:44

@@ -17,7 +17,41 @@ if (!defined('DB_NAME')) {
 // Create connection
 // Only create connection if it doesn't exist to avoid multiple connections
 if (!isset($connection)) {
-    $connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    try {
+        $connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+    } catch (mysqli_sql_exception $e) {
+        // Eğer hata "Unknown database" ise (Hata kodu: 1049)
+        if ($e->getCode() === 1049) {
+            // Veritabanı olmadan bağlan
+            $temp_conn = new mysqli(DB_HOST, DB_USER, DB_PASS);
+            if ($temp_conn->connect_error) {
+                die("Kritik Bağlantı Hatası: " . $temp_conn->connect_error);
+            }
+
+            // Veritabanını oluştur
+            $create_db_query = "CREATE DATABASE IF NOT EXISTS " . DB_NAME . " CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
+            if ($temp_conn->query($create_db_query)) {
+                // Yeni oluşturulan veritabanına bağlan
+                $connection = new mysqli(DB_HOST, DB_USER, DB_PASS, DB_NAME);
+                
+                // Yedekleme fonksiyonlarını yükle
+                require_once __DIR__ . '/includes/backup_functions.php';
+                
+                // En son yedeği bul
+                $latest_backup = find_latest_backup();
+                if ($latest_backup) {
+                    // Veritabanını geri yükle
+                    restore_database($connection, $latest_backup);
+                }
+            } else {
+                die("Veritabanı oluşturulamadı: " . $temp_conn->error);
+            }
+            $temp_conn->close();
+        } else {
+            // Başka bir hata ise fırlat
+            throw $e;
+        }
+    }
 
     // Check connection
     if ($connection->connect_error) {
