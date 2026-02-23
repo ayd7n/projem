@@ -1,8 +1,7 @@
 Video 1 - Sisteme yeni lokasyonlar ekleme, Sisteme yeni tanklar ekleme, Sisteme iş merkezleri ekle,
 
-Yeni ürün (Üretilen) ekleme , silme , güncelleme
+Video 2 - Yeni ürün (Üretilen) ekleme , silme , güncelleme. Otomatik yaratılan malzemeleri ve ürün ağaçlarını inceleme
 
-Otomatik yaratılan malzemeleri ve ürün ağaçlarını inceleme
 Tedarikçi ekleme , silme , güncelleme
 
 Kokpiti inceleyerek otomatik yaratılan malzemelere ait sözleşmeleri yaratma
