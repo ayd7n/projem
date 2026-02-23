@@ -12,23 +12,9 @@ Esans iş emirleri sayfasını incele, kokpite bakarak açılması gereken esans
 
 Montaj iş emri sayfasını da aynı şekilde incele,
 
-Müşteri yarat,
+Müşteri yarat, Müşteri girişi yaparak sipariş oluştur. Manuel müşteri adına sipariş oluştur. Siparişi onayla, Kokpitten siparişten sonra ihtiyaçları incele, Siparişin teslimatını yap. sonra müşteri sayfasına bak stok düşüşlerini incele,
 
-Müşteri girişi yaparak sipariş oluştur.
-
-Manuel müşteri adına sipariş oluştur.
-
-Siparişi onayla,
-
-Kokpitten siparişten sonra ihtiyaçları incele,
-
-Siparişin teslimatını yap. sonra müşteri sayfasına bak stok düşüşlerini incele,
-
-Sisteme personel ekle,
-
-Personel bordrosu sayfasına girerek avans ve maaş ödemesini yap,
-
-Tekrarlı ödemeler sayfasına kira vs ekle onları ekle sil ödeme yap.
+Sisteme personel ekle, Personel bordrosu sayfasına girerek avans ve maaş ödemesini yap, Tekrarlı ödemeler sayfasına kira vs ekle onları ekle sil ödeme yap.
 
 ---
 
