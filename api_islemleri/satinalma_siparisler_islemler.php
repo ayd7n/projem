@@ -203,8 +203,19 @@ switch ($action) {
 
             // Insert order items
             foreach ($kalemler as $kalem) {
-                $malzeme_kodu = (int) $kalem['malzeme_kodu'];
-                $malzeme_adi = $connection->real_escape_string($kalem['malzeme_adi']);
+                $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
+                $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
+
+                // Kokpitten gelen kalemlerde kod boş/0 gelebilir; isimden eşleyip kaydet.
+                if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
+                    $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
+                    $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
+                    if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                        $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                    }
+                }
+
+                $malzeme_adi = $connection->real_escape_string($malzeme_adi_raw);
                 $miktar = floatval($kalem['miktar']);
                 $birim = $connection->real_escape_string($kalem['birim'] ?? 'adet');
                 $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);
@@ -277,8 +288,18 @@ switch ($action) {
 
             // Insert order items
             foreach ($kalemler as $kalem) {
-                $malzeme_kodu = (int) $kalem['malzeme_kodu'];
-                $malzeme_adi = $connection->real_escape_string($kalem['malzeme_adi']);
+                $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
+                $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
+
+                if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
+                    $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
+                    $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
+                    if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                        $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                    }
+                }
+
+                $malzeme_adi = $connection->real_escape_string($malzeme_adi_raw);
                 $miktar = floatval($kalem['miktar']);
                 $birim = $connection->real_escape_string($kalem['birim'] ?? 'adet');
                 $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);

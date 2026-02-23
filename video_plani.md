@@ -4,9 +4,9 @@ Video 2 - Yeni ürün (Üretilen) ekleme , silme , güncelleme. Otomatik yaratı
 
 Video 3 - Tedarikçi ekleme , silme , güncelleme , Kokpiti inceleyerek otomatik yaratılan malzemelere ait sözleşmeleri yaratma
 
-Video 4 - Kritik seviyenin altında kalan ürünler için malzeme siparişi verme. a) Kokpit üzerinden , b) Satınalma siparişleri kısmı üzerinden,
+Video 4 - Kritik seviyenin altında kalan ürünler için malzeme siparişi verme. a) Kokpit üzerinden , b) Satınalma siparişleri kısmı üzerinden, mal kabul yapma.
 
-Video 5 - Mal kabul sayfasını inceleme, mal kabul yapma. Stok hareketleri sayfasını inceleyerek diğer stok hareketlerine bakmak.
+Video 5 - Stok hareketleri sayfasını inceleyerek diğer stok hareketlerine bakmak.
 
 Esans iş emirleri sayfasını incele, kokpite bakarak açılması gereken esans iş emri var mı diye bak. İş emrini başlat sonra tamamla stok düşüşlerini incele,
 
