@@ -166,6 +166,10 @@ if ($_SESSION['taraf'] !== 'personel') {
             <div class="table-list-header">
                 <h5 class="mb-0">Tablolar</h5>
                 <div class="d-flex align-items-center">
+                    <div class="custom-control custom-switch mr-3">
+                        <input type="checkbox" class="custom-control-input" id="filterEmptyTables">
+                        <label class="custom-control-label" for="filterEmptyTables" style="white-space: nowrap; width: auto; font-size: 0.85rem;">Sadece Dolu Tablolar</label>
+                    </div>
                     <input type="text" id="tableSearch" class="form-control form-control-sm mr-3" placeholder="Tablo ara..." style="width: 200px;">
                     <button class="btn btn-sm btn-outline-primary mr-2" id="selectAllBtn">Tümünü Seç</button>
                     <button class="btn btn-sm btn-outline-secondary" id="deselectAllBtn">Seçimi Kaldır</button>
@@ -259,7 +263,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                             const badgeText = isCritical ? 'Kritik' : (table.rows);
                             
                             html += `
-                                <div class="table-item">
+                                <div class="table-item" data-rows="${table.rows}" data-name="${table.name.toLowerCase()}">
                                     <div class="custom-control custom-checkbox w-100 d-flex align-items-center justify-content-between">
                                         <div>
                                             <input type="checkbox" class="custom-control-input table-checkbox" id="tbl_${table.name}" name="tables[]" value="${table.name}">
@@ -277,6 +281,7 @@ if ($_SESSION['taraf'] !== 'personel') {
                                 </div>`;
                         });
                         $('#tableListContainer').html(html);
+                        applyFilters(); // Apply current filters to new data
                     } else {
                         $('#tableListContainer').html('<div class="alert alert-danger">Tablolar yüklenemedi.</div>');
                     }
@@ -289,9 +294,34 @@ if ($_SESSION['taraf'] !== 'personel') {
 
         loadTables();
 
+        function updateButtonState() {
+            const count = $('.table-checkbox:checked').length;
+            $('#clearBtn').prop('disabled', count === 0);
+        }
+
+        function applyFilters() {
+            const searchValue = $('#tableSearch').val().toLowerCase();
+            const onlyFull = $('#filterEmptyTables').is(':checked');
+
+            $('.table-item').each(function() {
+                const tableName = $(this).data('name') || "";
+                const rows = parseInt($(this).data('rows')) || 0;
+                
+                const matchesSearch = tableName.indexOf(searchValue) > -1;
+                const matchesFilter = !onlyFull || rows > 0;
+
+                $(this).toggle(matchesSearch && matchesFilter);
+            });
+            updateButtonState();
+        }
+
+        // Search and Filter Logic
+        $('#tableSearch').on('keyup', applyFilters);
+        $('#filterEmptyTables').on('change', applyFilters);
+
         // Selection Logic
         $('#selectAllBtn').click(function() {
-            $('.table-checkbox').prop('checked', true);
+            $('.table-checkbox:visible').prop('checked', true);
             updateButtonState();
         });
 
@@ -302,19 +332,6 @@ if ($_SESSION['taraf'] !== 'personel') {
 
         $(document).on('change', '.table-checkbox', function() {
             updateButtonState();
-        });
-
-        function updateButtonState() {
-            const count = $('.table-checkbox:checked').length;
-            $('#clearBtn').prop('disabled', count === 0);
-        }
-
-        // Search Logic
-        $('#tableSearch').on('keyup', function() {
-            const value = $(this).val().toLowerCase();
-            $('.table-item').filter(function() {
-                $(this).toggle($(this).text().toLowerCase().indexOf(value) > -1)
-            });
         });
 
         // Function to load table data

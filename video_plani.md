@@ -1,6 +1,11 @@
-Yeni ürün ekleme , silme , güncelleme
+Video 1 - Sisteme yeni lokasyonlar ekleme, Sisteme yeni tanklar ekleme, Sisteme iş merkezleri ekle,
+
+Yeni ürün (Üretilen) ekleme , silme , güncelleme
+
+Otomatik yaratılan malzemeleri ve ürün ağaçlarını inceleme
 Tedarikçi ekleme , silme , güncelleme
-Malzemelere ait sözleşmeleri yaratma
+
+Kokpiti inceleyerek otomatik yaratılan malzemelere ait sözleşmeleri yaratma
 Ürün ağacı sayfasını inceleme,
 Alkol ekleme ve alkolü 2 farklı ürünün ürünün esans ağacına ekleme. Burada amaç bir malzemenin birden çok üründe de kullanıldığını göstermek.
 Kritik seviyenin altında kalan ürünler için malzeme siparişi verme.
@@ -8,3 +13,35 @@ Kritik seviyenin altında kalan ürünler için malzeme siparişi verme.
 	b) Satınalma siparişleri kısmı üzerinden,
 Satınalma siparişi sayfasını inceleme,
 Mal kabul sayfasını inceleme, mal kabul yapma.
+
+Stok hareketleri sayfasını inceleyerek diğer stok hareketlerine bakmak.
+
+Esans iş emirleri sayfasını incele, kokpite bakarak açılması gereken esans iş emri var mı diye bak. İş emrini başlat sonra tamamla stok düşüşlerini incele,
+
+Montaj iş emri sayfasını da aynı şekilde incele,
+
+Müşteri yarat,
+
+Müşteri girişi yaparak sipariş oluştur.
+
+Manuel müşteri adına sipariş oluştur. 
+
+Siparişi onayla,
+
+Kokpitten siparişten sonra ihtiyaçları incele,
+
+Siparişin teslimatını yap. sonra müşteri sayfasına bak stok düşüşlerini incele,
+
+Sisteme personel ekle,
+
+Personel bordrosu sayfasına girerek avans ve maaş ödemesini yap,
+
+Tekrarlı ödemeler sayfasına kira vs ekle onları ekle sil ödeme yap.
+
+------------------------------------------------------------------------------------------
+
+5312467422
+
+40-1300
+
+50-1500
