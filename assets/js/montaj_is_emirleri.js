@@ -65,7 +65,7 @@ app = new Vue({
 
       for (const component of this.calculatedComponents) {
         // Sadece kritik bileşen türlerini kontrol et
-        const malzemeTuru = (component.malzeme_turu || "").toLowerCase();
+        const malzemeTuru = this.normalizeMalzemeTuru(component.malzeme_turu);
         if (!kritikTurler.includes(malzemeTuru)) {
           continue;
         }
@@ -99,7 +99,7 @@ app = new Vue({
 
       for (const component of this.calculatedComponents) {
         // Sadece kritik bileşen türlerini kontrol et
-        const malzemeTuru = (component.malzeme_turu || "").toLowerCase();
+        const malzemeTuru = this.normalizeMalzemeTuru(component.malzeme_turu);
         if (!kritikTurler.includes(malzemeTuru)) {
           continue;
         }
@@ -123,6 +123,25 @@ app = new Vue({
     },
   },
   methods: {
+    normalizeMalzemeTuru(malzemeTuru) {
+      const normalized = (malzemeTuru || "")
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/\u0131/g, "i")
+        .replace(/\u015f/g, "s")
+        .replace(/\u011f/g, "g")
+        .replace(/\u00fc/g, "u")
+        .replace(/\u00f6/g, "o")
+        .replace(/\u00e7/g, "c");
+
+      // Some records store "takim" as "takm".
+      if (normalized === "takm") {
+        return "takim";
+      }
+
+      return normalized;
+    },
     // Her bileşen için üretilebilir adet hesaplama
     getProducibleForComponent(component) {
       const bilesimOrani = parseFloat(component.bilesim_orani) || 0;

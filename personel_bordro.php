@@ -574,23 +574,47 @@ $current_month = date('n');
                         this.years.push(i);
                     }
                 },
-                loadBordroOzeti() {
+                async loadBordroOzeti(retryAttempt = 0) {
                     this.loading = true;
-                    fetch(`api_islemleri/personel_bordro_islemler.php?action=get_aylik_bordro_ozeti&yil=${this.selectedYear}&ay=${this.selectedMonth}`)
-                        .then(response => response.json())
-                        .then(response => {
-                            if (response.status === 'success') {
-                                this.bordroList = response.data;
-                                this.ozet = response.ozet;
-                            } else {
-                                this.showAlert('Bordro özeti yüklenirken hata oluştu.', 'danger');
+                    try {
+                        const response = await fetch(`api_islemleri/personel_bordro_islemler.php?action=get_aylik_bordro_ozeti&yil=${this.selectedYear}&ay=${this.selectedMonth}`);
+                        const rawText = await response.text();
+                        let payload = null;
+
+                        try {
+                            payload = JSON.parse(rawText);
+                        } catch (e) {
+                            payload = null;
+                        }
+
+                        if (!response.ok) {
+                            // Ilk acilista gecici 500 hatalari icin kisa retry uygula
+                            if (response.status >= 500 && retryAttempt < 2) {
+                                await new Promise((resolve) => setTimeout(resolve, 600));
+                                return this.loadBordroOzeti(retryAttempt + 1);
                             }
-                            this.loading = false;
-                        })
-                        .catch(error => {
-                            this.showAlert('Bordro özeti yüklenirken bir hata oluştu.', 'danger');
-                            this.loading = false;
-                        });
+
+                            const serverMsg = payload && payload.message ? payload.message : (rawText || 'Sunucudan detay alinamadi.');
+                            this.showAlert(`Bordro ozeti yuklenemedi (HTTP ${response.status}): ${serverMsg}`, 'danger');
+                            return;
+                        }
+
+                        if (payload && payload.status === 'success') {
+                            this.bordroList = payload.data || [];
+                            this.ozet = payload.ozet || this.ozet;
+                        } else {
+                            const appMsg = payload && payload.message ? payload.message : 'Bordro ozeti yuklenirken hata olustu.';
+                            this.showAlert(appMsg, 'danger');
+                        }
+                    } catch (error) {
+                        if (retryAttempt < 2) {
+                            await new Promise((resolve) => setTimeout(resolve, 600));
+                            return this.loadBordroOzeti(retryAttempt + 1);
+                        }
+                        this.showAlert('Bordro ozeti yuklenirken baglanti hatasi olustu.', 'danger');
+                    } finally {
+                        this.loading = false;
+                    }
                 },
                 openMaasOdemeModal(item) {
                     this.maasOdemeData = {

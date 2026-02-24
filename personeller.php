@@ -55,60 +55,98 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
         .form-control {
             font-size: 0.8rem !important;
         }
-        /* Modal Form Düzenlemeleri - Premium Kompakt Stil */
+        /* Modal Form Düzenlemeleri - Ultra Kompakt Stil */
+        #employeeModal .modal-dialog {
+            max-width: 850px; /* Biraz daha geniş yaparak kolon sayısını artıracağız */
+            margin-top: 10px;
+        }
         #employeeModal .modal-content {
-            border: none;
             border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            box-shadow: 0 5px 25px rgba(0,0,0,0.2);
         }
         #employeeModal .modal-header {
+            padding: 8px 15px;
             background: linear-gradient(135deg, #4a0e63, #7c2a99);
             color: white;
-            padding: 8px 15px;
-            border: none;
+            border-bottom: none;
         }
         #employeeModal .modal-title {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
+            color: white;
             font-weight: 600;
         }
+        #employeeModal .close {
+            color: white;
+            opacity: 0.8;
+            text-shadow: none;
+        }
+        #employeeModal .close:hover {
+            color: white;
+            opacity: 1;
+        }
         #employeeModal .modal-body {
-            padding: 10px 12px;
-            background: #fafafa;
+            padding: 12px 20px;
+        }
+        .form-section-title {
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: #7c2a99;
+            margin: 8px 0 5px 0;
+            padding-bottom: 2px;
+            border-bottom: 1px solid #eee;
+            text-transform: uppercase;
         }
         #employeeModal .form-group {
-            margin-bottom: 0.4rem !important;
+            margin-bottom: 6px !important;
         }
         #employeeModal label {
             font-size: 0.65rem;
             margin-bottom: 2px;
-            font-weight: 500;
+            font-weight: 600;
             color: #555;
-            display: block;
         }
         #employeeModal .form-control {
             font-size: 0.75rem;
-            padding: 4px 8px;
-            height: 28px;
+            padding: 4px 10px;
+            height: 30px;
             border-radius: 4px;
+            background-color: #fcfcfc;
         }
         #employeeModal textarea.form-control {
-            height: auto;
+            height: 40px; /* Notlar ve Adres için daha kısa */
+            min-height: 40px;
         }
         #employeeModal .modal-footer {
-            background: #f5f5f5;
-            border-top: 1px solid #e5e7eb;
-            padding: 6px 12px;
+            padding: 6px 15px;
         }
-        #employeeModal .btn {
-            padding: 4px 10px;
-            font-size: 0.75rem;
+        .input-icon-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .input-icon-group i {
+            position: absolute;
+            left: 10px;
+            color: #888;
+            font-size: 0.7rem;
+            z-index: 5;
+        }
+        .input-icon-group .form-control {
+            padding-left: 28px !important; /* İkonun yazıya girmesini engeller */
+            width: 100%;
+        }
+        .payroll-box {
+            background: #f8f4f9;
+            padding: 4px 8px;
             border-radius: 4px;
+            border: 1px solid #e9dcee;
+            height: 30px;
+            display: flex;
+            align-items: center;
         }
-        #employeeModal .close {
-            opacity: 1;
-            text-shadow: none;
-            color: white;
+        .payroll-box .form-check {
+            margin-bottom: 0;
+            font-size: 0.7rem;
         }
     </style>
 </head>
@@ -319,114 +357,146 @@ $total_employees = $total_result->fetch_assoc()['total'] ?? 0;
             <div class="modal-dialog modal-lg" role="document">
                 <div class="modal-content">
                     <form @submit.prevent="saveEmployee">
-                        <div class="modal-header"
-                            style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                            <h5 class="modal-title">{{ modal.title }}</h5>
-                            <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <div class="modal-header">
+                            <h5 class="modal-title">
+                                <i class="fas" :class="modal.data.personel_id ? 'fa-user-edit' : 'fa-user-plus'"></i> 
+                                {{ modal.title }}
+                            </h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
                             <input type="hidden" v-model="modal.data.personel_id">
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-user"></i> Ad Soyad *</label>
-                                        <input type="text" class="form-control" v-model="modal.data.ad_soyad" required>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-briefcase"></i> Pozisyon</label>
-                                        <input type="text" class="form-control" v-model="modal.data.pozisyon">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-building"></i> Departman</label>
-                                        <input type="text" class="form-control" v-model="modal.data.departman">
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-calendar-plus"></i> İşe Giriş Tarihi</label>
-                                        <input type="date" class="form-control" v-model="modal.data.ise_giris_tarihi">
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <div class="form-check">
-                                            <input type="checkbox" class="form-check-input"
-                                                v-model="modal.data.bordrolu_calisan_mi" id="bordrolu_calisan_mi"
-                                                true-value="1" false-value="0">
-                                            <label class="form-check-label" for="bordrolu_calisan_mi"><i
-                                                    class="fas fa-wallet"></i> Bordrolu Çalışan
-                                                Mı?</label>
+                            
+                            <!-- Kişisel & İş Bilgileri -->
+                            <div class="form-section-title">Kişisel & İş Bilgileri</div>
+                            <div class="row mx-n1">
+                                <div class="col-md-4 px-1">
+                                    <div class="form-group">
+                                        <label>Ad Soyad *</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-user"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.ad_soyad" required>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-money-bill-wave"></i> Aylık Brüt Ücret (₺)</label>
-                                        <input type="number" step="0.01" class="form-control"
-                                            v-model="modal.data.aylik_brut_ucret" placeholder="0.00"
-                                            :disabled="!modal.data.bordrolu_calisan_mi">
+                                <div class="col-md-4 px-1">
+                                    <div class="form-group">
+                                        <label>TC Kimlik No</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-fingerprint"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.tc_kimlik_no" maxlength="11">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4 px-1">
+                                    <div class="form-group">
+                                        <label>Doğum Tarihi *</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-birthday-cake"></i>
+                                            <input type="date" class="form-control" v-model="modal.data.dogum_tarihi" required>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Pozisyon</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-id-badge"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.pozisyon">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Departman</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-sitemap"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.departman">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>İşe Giriş</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-calendar-check"></i>
+                                            <input type="date" class="form-control" v-model="modal.data.ise_giris_tarihi">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Bordro / Ücret</label>
+                                        <div class="d-flex" style="gap: 4px;">
+                                            <div class="payroll-box" style="flex: 0 0 40px; justify-content: center;">
+                                                <input type="checkbox" v-model="modal.data.bordrolu_calisan_mi" true-value="1" false-value="0">
+                                            </div>
+                                            <div class="input-icon-group" style="flex: 1;">
+                                                <i class="fas fa-lira-sign"></i>
+                                                <input type="number" step="0.01" class="form-control" v-model="modal.data.aylik_brut_ucret" :disabled="modal.data.bordrolu_calisan_mi != 1" placeholder="Brüt">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-phone"></i> Telefon</label>
-                                        <input type="text" class="form-control" v-model="modal.data.telefon">
+
+                            <!-- İletişim & Güvenlik -->
+                            <div class="form-section-title">İletişim & Güvenlik</div>
+                            <div class="row mx-n1">
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Telefon</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-phone"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.telefon">
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-phone"></i> Telefon 2</label>
-                                        <input type="text" class="form-control" v-model="modal.data.telefon_2">
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>E-posta</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-envelope"></i>
+                                            <input type="email" class="form-control" v-model="modal.data.e_posta">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Şifre</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-lock"></i>
+                                            <input type="password" class="form-control" v-model="modal.data.sifre" placeholder="Şifre">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-3 px-1">
+                                    <div class="form-group">
+                                        <label>Yedek Tel</label>
+                                        <div class="input-icon-group">
+                                            <i class="fas fa-phone-alt"></i>
+                                            <input type="text" class="form-control" v-model="modal.data.telefon_2">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-envelope"></i> E-posta</label>
-                                        <input type="email" class="form-control" v-model="modal.data.e_posta">
+
+                            <!-- Adres & Notlar -->
+                            <div class="row mx-n1 mt-1">
+                                <div class="col-md-6 px-1">
+                                    <div class="form-group">
+                                        <label>Adres</label>
+                                        <textarea class="form-control" v-model="modal.data.adres"></textarea>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-id-card"></i> TC Kimlik No</label>
-                                        <input type="text" class="form-control" v-model="modal.data.tc_kimlik_no">
+                                <div class="col-md-6 px-1">
+                                    <div class="form-group">
+                                        <label>Notlar</label>
+                                        <textarea class="form-control" v-model="modal.data.notlar"></textarea>
                                     </div>
                                 </div>
-                                <div class="col-md-6">
-                                    <div class="form-group mb-3">
-                                        <label><i class="fas fa-birthday-cake"></i> Doğum Tarihi *</label>
-                                        <input type="date" class="form-control" v-model="modal.data.dogum_tarihi"
-                                            required>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label><i class="fas fa-map-marker-alt"></i> Adres</label>
-                                <textarea class="form-control" v-model="modal.data.adres" rows="2"></textarea>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label><i class="fas fa-sticky-note"></i> Notlar</label>
-                                <textarea class="form-control" v-model="modal.data.notlar" rows="2"></textarea>
-                            </div>
-                            <div class="form-group mb-3">
-                                <label><i class="fas fa-lock"></i> Şifre</label>
-                                <input type="password" class="form-control" v-model="modal.data.sifre"
-                                    placeholder="Yeni şifre (boş bırakırsanız değişmez)">
                             </div>
                         </div>
                         <div class="modal-footer">

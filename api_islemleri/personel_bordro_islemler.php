@@ -1,7 +1,15 @@
 <?php
-include '../config.php';
-
 header('Content-Type: application/json');
+
+try {
+    include '../config.php';
+} catch (Throwable $e) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Sistem baslatilamadi. Veritabani baglantisini kontrol edin.'
+    ]);
+    exit;
+}
 
 // Check if user is logged in and is staff
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
@@ -14,30 +22,37 @@ $response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
 if (isset($_REQUEST['action'])) {
     $action = $_REQUEST['action'];
 
-    switch ($action) {
-        case 'get_bordrolu_personeller':
-            getBordroPersoneller();
-            break;
-        case 'get_aylik_bordro_ozeti':
-            getAylikBordroOzeti();
-            break;
-        case 'get_personel_odeme_gecmisi':
-            getPersonelOdemeGecmisi();
-            break;
-        case 'get_personel_avanslar':
-            getPersonelAvanslar();
-            break;
-        case 'kaydet_maas_odemesi':
-            kaydetMaasOdemesi();
-            break;
-        case 'kaydet_avans':
-            kaydetAvans();
-            break;
-        case 'get_donem_avanslar':
-            getDonemAvanslar();
-            break;
-        default:
-            echo json_encode($response);
+    try {
+        switch ($action) {
+            case 'get_bordrolu_personeller':
+                getBordroPersoneller();
+                break;
+            case 'get_aylik_bordro_ozeti':
+                getAylikBordroOzeti();
+                break;
+            case 'get_personel_odeme_gecmisi':
+                getPersonelOdemeGecmisi();
+                break;
+            case 'get_personel_avanslar':
+                getPersonelAvanslar();
+                break;
+            case 'kaydet_maas_odemesi':
+                kaydetMaasOdemesi();
+                break;
+            case 'kaydet_avans':
+                kaydetAvans();
+                break;
+            case 'get_donem_avanslar':
+                getDonemAvanslar();
+                break;
+            default:
+                echo json_encode($response);
+        }
+    } catch (Throwable $e) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Islem sirasinda beklenmeyen bir hata olustu.'
+        ]);
     }
 } else {
     echo json_encode($response);
@@ -77,29 +92,43 @@ function getAylikBordroOzeti()
     $ay = isset($_GET['ay']) ? (int) $_GET['ay'] : date('n');
 
     try {
-        // Bordrolu personelleri ve avans bilgilerini getir (kullanılmamış avanslar)
-        $query = "SELECT 
+        // Bordrolu personelleri ve aylik avans/odeme ozetlerini getir
+        $query = "SELECT
                     p.personel_id,
                     p.ad_soyad,
                     p.pozisyon,
                     p.departman,
                     p.aylik_brut_ucret,
-                    COALESCE(SUM(a.avans_tutari), 0) as avans_toplami,
-                    (p.aylik_brut_ucret - COALESCE(SUM(a.avans_tutari), 0)) as net_odenecek,
+                    COALESCE(a.avans_toplami, 0) as avans_toplami,
+                    (p.aylik_brut_ucret - COALESCE(a.avans_toplami, 0)) as net_odenecek,
                     o.odeme_id,
-                    o.net_odenen,
-                    o.avans_toplami as kullanilan_avans,
+                    COALESCE(o.net_odenen, 0) as net_odenen,
+                    COALESCE(o.kullanilan_avans, 0) as kullanilan_avans,
                     o.odeme_tarihi
                   FROM personeller p
-                  LEFT JOIN personel_avanslar a ON p.personel_id = a.personel_id 
-                    AND a.donem_yil = $yil 
-                    AND a.donem_ay = $ay
-                    AND a.maas_odemesinde_kullanildi = 0
-                  LEFT JOIN personel_maas_odemeleri o ON p.personel_id = o.personel_id 
-                    AND o.donem_yil = $yil 
-                    AND o.donem_ay = $ay
+                  LEFT JOIN (
+                      SELECT
+                          personel_id,
+                          SUM(avans_tutari) as avans_toplami
+                      FROM personel_avanslar
+                      WHERE donem_yil = $yil
+                        AND donem_ay = $ay
+                        AND maas_odemesinde_kullanildi = 0
+                      GROUP BY personel_id
+                  ) a ON p.personel_id = a.personel_id
+                  LEFT JOIN (
+                      SELECT
+                          personel_id,
+                          MAX(odeme_id) as odeme_id,
+                          SUM(net_odenen) as net_odenen,
+                          SUM(avans_toplami) as kullanilan_avans,
+                          MAX(odeme_tarihi) as odeme_tarihi
+                      FROM personel_maas_odemeleri
+                      WHERE donem_yil = $yil
+                        AND donem_ay = $ay
+                      GROUP BY personel_id
+                  ) o ON p.personel_id = o.personel_id
                   WHERE p.bordrolu_calisan_mi = 1
-                  GROUP BY p.personel_id
                   ORDER BY p.ad_soyad";
 
         $result = $connection->query($query);
@@ -294,6 +323,11 @@ function kaydetMaasOdemesi()
                             AND donem_yil = $donem_yil 
                             AND donem_ay = $donem_ay 
                             AND maas_odemesinde_kullanildi = 0";
+
+            if (!$connection->query($avans_update)) {
+                throw new Exception('Avans kayitlari guncellenemedi: ' . $connection->error);
+            }
+        }
 
         // Döviz kurlarını çek
         $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
