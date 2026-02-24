@@ -46,7 +46,74 @@ app = new Vue({
         loading: true,
         showContent: false
     },
+    computed: {
+        kritikBilesenTurleri() {
+            // Esans recetesinde ana bilesenler genelde "malzeme" turunde gelir.
+            return ['malzeme', 'esans', 'kutu', 'takim', 'takm'];
+        },
+        maxProducibleQuantity() {
+            if (!this.calculatedComponents || this.calculatedComponents.length === 0) {
+                return 0;
+            }
+
+            let maxProducible = Infinity;
+            const kritikTurler = this.kritikBilesenTurleri;
+
+            for (const component of this.calculatedComponents) {
+                const malzemeTuru = (component.malzeme_turu || '').toLowerCase();
+                if (!kritikTurler.includes(malzemeTuru)) {
+                    continue;
+                }
+
+                const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
+                const stokMiktari = parseFloat(component.stok_miktari) || 0;
+                if (bilesimOrani > 0) {
+                    const producibleFromThis = Math.max(0, Math.floor(stokMiktari / bilesimOrani));
+                    maxProducible = Math.min(maxProducible, producibleFromThis);
+                }
+            }
+
+            return maxProducible === Infinity ? 0 : maxProducible;
+        },
+        limitingComponent() {
+            if (!this.calculatedComponents || this.calculatedComponents.length === 0) {
+                return null;
+            }
+
+            let minProducible = Infinity;
+            let limitingName = null;
+            const kritikTurler = this.kritikBilesenTurleri;
+
+            for (const component of this.calculatedComponents) {
+                const malzemeTuru = (component.malzeme_turu || '').toLowerCase();
+                if (!kritikTurler.includes(malzemeTuru)) {
+                    continue;
+                }
+
+                const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
+                const stokMiktari = parseFloat(component.stok_miktari) || 0;
+                if (bilesimOrani > 0) {
+                    const producibleFromThis = Math.max(0, Math.floor(stokMiktari / bilesimOrani));
+                    if (producibleFromThis < minProducible) {
+                        minProducible = producibleFromThis;
+                        limitingName = component.malzeme_ismi;
+                    }
+                }
+            }
+
+            return limitingName;
+        }
+    },
     methods: {
+        getProducibleForComponent(component) {
+            const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
+            const stokMiktari = parseFloat(component.stok_miktari) || 0;
+
+            if (bilesimOrani > 0) {
+                return Math.max(0, Math.floor(stokMiktari / bilesimOrani));
+            }
+            return 0;
+        },
         async fetchWorkOrders(page = 1) {
             this.loading = true; // Show loading state
             this.showContent = false; // Hide content initially
@@ -179,17 +246,16 @@ app = new Vue({
                 });
 
                 if (response.data.status === 'success') {
-                    // Calculate the required amounts based on the formula
                     const calculated = response.data.data.map(component => {
-                        // Calculate: original_component_amount * user_quantity
-                        const calculatedAmount = parseFloat(component.bilesen_miktari) * parseFloat(this.selectedWorkOrder.planlanan_miktar);
                         return {
                             malzeme_kodu: component.bilesen_kodu,
                             malzeme_ismi: component.bilesen_ismi,
                             malzeme_turu: component.bilesenin_malzeme_turu,
-                            miktar: calculatedAmount.toFixed(2),
-                            birim: this.essenceUnit, // Use the essence unit instead of work order unit
-                            bilesim_orani: component.bilesen_miktari // Bileşim oranı (formül oranı)
+                            miktar: parseFloat(component.gereken_miktar).toFixed(2),
+                            birim: this.essenceUnit,
+                            bilesim_orani: component.bilesen_miktari,
+                            stok_miktari: parseFloat(component.stok_miktari).toFixed(2),
+                            stok_yeterli: component.stok_yeterli
                         };
                     });
 
@@ -924,3 +990,4 @@ app = new Vue({
 
     }
 });
+

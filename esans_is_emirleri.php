@@ -51,6 +51,49 @@ $tanks_result = $connection->query($tanks_query);
     <link rel="stylesheet" href="assets/css/stil.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+    html {
+        font-size: 13.5px;
+    }
+
+    .workorder-modal .modal-dialog.modal-xl {
+        width: 96vw !important;
+        max-width: 96vw !important;
+        margin: 0.5rem auto !important;
+    }
+
+    .workorder-modal .modal-content {
+        max-height: calc(100vh - 1rem);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .workorder-modal .modal-header,
+    .workorder-modal .modal-footer {
+        flex-shrink: 0;
+    }
+
+    .workorder-modal .modal-body {
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+
+    .workorder-modal .table-responsive {
+        overflow-x: auto;
+    }
+
+    .workorder-modal .table td,
+    .workorder-modal .table th {
+        white-space: normal;
+    }
+
+    @media (max-width: 991.98px) {
+        .workorder-modal .modal-dialog.modal-xl {
+            width: 98vw !important;
+            max-width: 98vw !important;
+            margin: 0.25rem auto !important;
+        }
+    }
+
     @media (min-width: 1200px) {
         .modal-xl {
             max-width: 100vw !important;
@@ -830,7 +873,7 @@ $tanks_result = $connection->query($tanks_query);
     </div>
 
     <!-- Work Order Modal -->
-    <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
+    <div class="modal fade workorder-modal" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
         <div class="modal-dialog modal-xl" @click.stop>
             <div class="modal-content">
                 <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
@@ -842,7 +885,7 @@ $tanks_result = $connection->query($tanks_query);
                 <div class="modal-body">
                     <form id="workOrderForm" @submit.prevent="saveWorkOrder">
                     <div class="row">
-                        <div class="col-lg-7">
+                        <div class="col-xl-5 col-lg-6">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="form-group mb-3">
@@ -917,13 +960,30 @@ $tanks_result = $connection->query($tanks_query);
                                 <textarea class="form-control" v-model="selectedWorkOrder.aciklama" rows="2"></textarea>
                             </div>
                         </div>
-                        <div class="col-lg-5">
+                        <div class="col-xl-7 col-lg-6">
                             <!-- Calculated Components Section -->
                             <div class="card h-100">
                                 <div class="card-header">
                                     <h5><i class="fas fa-cubes"></i> Hesaplanan Bilesenler</h5>
                                 </div>
                                 <div class="card-body">
+                                    <div v-if="calculatedComponents.length > 0" class="alert mb-3"
+                                        :class="maxProducibleQuantity > 0 ? 'alert-success' : 'alert-danger'"
+                                        style="padding: 10px 15px;">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                            <div>
+                                                <i class="fas fa-calculator mr-2"></i>
+                                                <strong>Uretilebilir Miktar:</strong>
+                                                <span class="ml-2" style="font-size: 1.2rem; font-weight: bold;">
+                                                    {{ maxProducibleQuantity }} {{ selectedWorkOrder.birim }}
+                                                </span>
+                                            </div>
+                                            <div v-if="limitingComponent" class="text-muted" style="font-size: 0.85rem;">
+                                                <i class="fas fa-exclamation-triangle"></i>
+                                                Sinirlayan: {{ limitingComponent }}
+                                            </div>
+                                        </div>
+                                    </div>
                                     <div class="table-responsive">
                                         <table class="table table-sm">
                                             <thead>
@@ -933,6 +993,8 @@ $tanks_result = $connection->query($tanks_query);
                                                     <th>Malzeme Turu</th>
                                                     <th>Gerekli Miktar</th>
                                                     <th>Bilesim Orani</th>
+                                                    <th>Stok Miktari</th>
+                                                    <th>Uretilebilir</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -942,6 +1004,12 @@ $tanks_result = $connection->query($tanks_query);
                                                     <td>{{ component.malzeme_turu }}</td>
                                                     <td>{{ component.miktar }} {{ component.birim }}</td>
                                                     <td>{{ component.bilesim_orani || (component.miktar / selectedWorkOrder.planlanan_miktar).toFixed(4) }}</td>
+                                                    <td :class="component.stok_yeterli ? 'text-success' : 'text-danger font-weight-bold'">
+                                                        {{ component.stok_miktari }}
+                                                    </td>
+                                                    <td :class="getProducibleForComponent(component) === maxProducibleQuantity ? 'text-warning font-weight-bold' : 'text-muted'">
+                                                        {{ getProducibleForComponent(component) }}
+                                                    </td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -1060,7 +1128,7 @@ $tanks_result = $connection->query($tanks_query);
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     
     <!-- Include the Vue.js application -->
-    <script src="assets/js/esans_is_emirleri.js"></script>
+    <script src="assets/js/esans_is_emirleri.js?v=<?php echo filemtime(__DIR__ . '/assets/js/esans_is_emirleri.js'); ?>"></script>
     
     <script>
         // Define user info for the Vue app

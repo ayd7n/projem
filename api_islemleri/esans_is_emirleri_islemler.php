@@ -454,7 +454,35 @@ function calculateComponents() {
         $components = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
-                $components[] = $row;
+                // Get stock quantity based on material type
+                $stock_quantity = 0;
+                $material_type = strtolower($row['bilesenin_malzeme_turu'] ?? '');
+
+                if ($material_type === 'esans') {
+                    $stock_query = "SELECT stok_miktari FROM esanslar WHERE esans_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
+                } else {
+                    // All other component types are stored in malzemeler table
+                    $stock_query = "SELECT stok_miktari FROM malzemeler WHERE malzeme_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
+                }
+
+                if (isset($stock_query)) {
+                    $stock_result = $connection->query($stock_query);
+                    if ($stock_result && $stock_row = $stock_result->fetch_assoc()) {
+                        $stock_quantity = floatval($stock_row['stok_miktari']);
+                    }
+                }
+
+                $required_amount = floatval($row['bilesen_miktari']) * floatval($quantity);
+
+                $components[] = [
+                    'bilesen_kodu' => $row['bilesen_kodu'],
+                    'bilesen_ismi' => $row['bilesen_ismi'],
+                    'bilesenin_malzeme_turu' => $row['bilesenin_malzeme_turu'],
+                    'bilesen_miktari' => $row['bilesen_miktari'],
+                    'stok_miktari' => $stock_quantity,
+                    'gereken_miktar' => $required_amount,
+                    'stok_yeterli' => $stock_quantity >= $required_amount
+                ];
             }
         }
         

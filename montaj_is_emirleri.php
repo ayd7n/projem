@@ -48,6 +48,10 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
     <link rel="stylesheet" href="assets/css/montaj_is_emirleri.css?v=1.2">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
+        html {
+            font-size: 13.5px;
+        }
+
         @media (min-width: 1200px) {
             .modal-xl {
                 max-width: 100vw !important;
