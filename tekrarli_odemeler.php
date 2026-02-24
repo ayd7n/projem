@@ -379,6 +379,18 @@ $current_month = date('n');
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-group">
+                                        <label>Kasa Seçimi *</label>
+                                        <select class="form-control" v-model="odemeYapData.kasa_secimi" required>
+                                            <option value="TL">TL Kasası</option>
+                                            <option value="USD">USD Kasası</option>
+                                            <option value="EUR">EUR Kasası</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
                                         <label>Ödeme Yöntemi *</label>
                                         <select class="form-control" v-model="odemeYapData.odeme_yontemi" required>
                                             <option value="Havale">Havale/EFT</option>
@@ -496,6 +508,7 @@ $current_month = date('n');
                         alici_firma: '',
                         odeme_tarihi: new Date().toISOString().split('T')[0],
                         odeme_yontemi: 'Havale',
+                        kasa_secimi: 'TL',
                         aciklama: ''
                     },
                     gecmisData: {
@@ -649,6 +662,7 @@ $current_month = date('n');
                         alici_firma: item.alici_firma || '',
                         odeme_tarihi: new Date().toISOString().split('T')[0],
                         odeme_yontemi: 'Havale',
+                        kasa_secimi: 'TL',
                         aciklama: ''
                     };
                     $('#odemeYapModal').modal('show');
@@ -664,6 +678,7 @@ $current_month = date('n');
                     formData.append('donem_ay', this.selectedMonth);
                     formData.append('odeme_tarihi', this.odemeYapData.odeme_tarihi);
                     formData.append('odeme_yontemi', this.odemeYapData.odeme_yontemi);
+                    formData.append('kasa_secimi', this.odemeYapData.kasa_secimi);
                     formData.append('aciklama', this.odemeYapData.aciklama);
                     formData.append('alici_firma', this.odemeYapData.alici_firma);
 

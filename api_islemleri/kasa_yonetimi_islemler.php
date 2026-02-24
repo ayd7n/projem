@@ -795,21 +795,19 @@ function getDashboardSummary() {
         $mOdeme = $connection->query("SELECT SUM(net_odenen) as toplam FROM personel_maas_odemeleri WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay")->fetch_assoc();
         $odenenMaas = floatval($mOdeme['toplam'] ?? 0);
         
-        // Bu personelin bu ay kullanılmış avansı var mı?
-        // Not: Burada sadece maaş ödemesi sırasında düşülmüş avansları değil, genel olarak henüz düşülmemiş avansları hesaba katmalıyız ki net ödeme tahmini doğru olsun.
-        // Ancak basitlik adına "maaş ödemesinde kullanıldı = 0" olanları düşüyoruz.
-        $kAvans = $connection->query("SELECT SUM(avans_tutari) as toplam FROM personel_avanslar WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay AND maas_odemesinde_kullanildi = 0")->fetch_assoc();
-        $kullanilmamisAvans = floatval($kAvans['toplam'] ?? 0);
+        // Bu personelin bu ay aldığı tüm avanslar (kullanılmış olsun olmasın)
+        $kAvans = $connection->query("SELECT SUM(avans_tutari) as toplam FROM personel_avanslar WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay")->fetch_assoc();
+        $toplamAvans = floatval($kAvans['toplam'] ?? 0);
         
         // Kalan ödenecek tahmini tutar
-        $kalanOdeme = ($brutUcret - $kullanilmamisAvans) - $odenenMaas;
+        $kalanOdeme = $brutUcret - ($odenenMaas + $toplamAvans);
         
         // Eğer kalan ödeme 0'dan büyükse listeye ekle
-        if ($kalanOdeme > 0) {
+        if ($kalanOdeme > 0.01) {
             $bekleyenPersonelListesi[] = [
                 'ad_soyad' => $p['ad_soyad'],
                 'brut_ucret' => $brutUcret,
-                'avans' => $kullanilmamisAvans,
+                'avans' => $toplamAvans,
                 'odenen' => $odenenMaas,
                 'kalan_odeme' => round($kalanOdeme, 2)
             ];
