@@ -1077,6 +1077,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Sistem genel ayarlarını ve yapılandırmasını yönetin.</p>
                             </div>
                         </a>
+                        <a href="videolar.php" class="module-card">
+                            <div class="icon"><i class="fas fa-video"></i></div>
+                            <div class="card-content">
+                                <span class="title">Videolar</span>
+                                <p class="description">Videolar klasorundeki dosyalari secip izleyin.</p>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
