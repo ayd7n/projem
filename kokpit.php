@@ -665,7 +665,8 @@ function getSupplyChainData($connection) {
                         'mevcut_stok' => $mevcut,
                         'birim' => $formul_row['birim'],
                         'bekleyen_siparis' => $get_pending_purchase($formul_row['bilesen_kodu'], $formul_row['malzeme_ismi'])['miktar'],
-                        'po_list' => $get_pending_purchase($formul_row['bilesen_kodu'], $formul_row['malzeme_ismi'])['po_list']
+                        'po_list' => $get_pending_purchase($formul_row['bilesen_kodu'], $formul_row['malzeme_ismi'])['po_list'],
+                        'tum_tedarikciler' => isset($valid_contracts[$formul_row['bilesen_kodu']]) ? $valid_contracts[$formul_row['bilesen_kodu']]['tum_tedarikciler'] : []
                     ];
 
                     // Basit kontrol: malzeme stoğu 0 ise eksik
@@ -2920,9 +2921,27 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                                         $net_h_siparis = max(0, $eksik_h - $h['bekleyen_siparis']);
                                                         
                                                         if ($net_h_siparis > 0) {
-                                                            $net_siparis_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' . 
+                                                            $tedarikci_str = '';
+                                                            if (!empty($h['tum_tedarikciler'])) {
+                                                                $tedarikci_str = '<br>';
+                                                                $ilk_tedarikci = true;
+                                                                foreach ($h['tum_tedarikciler'] as $ted) {
+                                                                    $fiyat = number_format($ted['fiyat'], 2, ',', '.');
+                                                                    $pb = $ted['para_birimi'];
+                                                                    if ($ilk_tedarikci) {
+                                                                        $tedarikci_str .= '<small class="d-block"><i class="fas fa-star text-warning"></i> <span class="text-dark font-weight-bold">' . 
+                                                                                        mb_substr($ted['adi'], 0, 18) . '</span> - <span class="text-success font-weight-bold">' . $fiyat . ' ' . $pb . '</span></small>';
+                                                                        $ilk_tedarikci = false;
+                                                                    } else {
+                                                                        $tedarikci_str .= '<small class="d-block text-muted"><i class="fas fa-truck"></i> ' . 
+                                                                                        mb_substr($ted['adi'], 0, 18) . ' - ' . $fiyat . ' ' . $pb . '</small>';
+                                                                    }
+                                                                }
+                                                            }
+
+                                                            $net_siparis_hammaddeler[] = '<div class="text-nowrap" style="font-size: 11px; line-height: 1.4; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">' . 
                                                                 htmlspecialchars($h['malzeme_ismi']) . ': <span class="text-danger font-weight-bold">' . 
-                                                                number_format($net_h_siparis, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small></div>';
+                                                                number_format($net_h_siparis, 2, ',', '.') . '</span> <small>' . $h['birim'] . '</small>' . $tedarikci_str . '</div>';
                                                         }
                                                     }
                                                     
@@ -4574,7 +4593,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             yoldaki: bilesen.yoldaki_stok || 0,
                             birim: bilesen.birim || 'adet',
                             net_siparis: siparisGereken,
-                            tedarikci: bilesen.tedarikci || null
+                            tedarikci: bilesen.tedarikci || null,
+                            tum_tedarikciler: bilesen.tum_tedarikciler || []
                         });
                     }
                 }
@@ -4611,7 +4631,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                     yoldaki: bekleyen,
                                     birim: h.birim || '',
                                     net_siparis: netSiparis,
-                                    tedarikci: h.tedarikci || null
+                                    tedarikci: h.tedarikci || null,
+                                    tum_tedarikciler: h.tum_tedarikciler || []
                                 });
                             }
                         });
@@ -4662,7 +4683,8 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 if (siparisGereken > 0) {
                     siparisListesi.push({
                         isim: bilesen.isim,
-                        miktar: siparisGereken
+                        miktar: siparisGereken,
+                        tum_tedarikciler: bilesen.tum_tedarikciler || []
                     });
                 }
             }
@@ -4674,181 +4696,85 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             var html = '';
             
             siparisListesi.forEach(function(item) {
-                html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' + 
+                var tedarikciStr = '';
+                if (item.tum_tedarikciler && item.tum_tedarikciler.length > 0) {
+                    tedarikciStr = '<br>';
+                    item.tum_tedarikciler.forEach(function(ted, idx) {
+                        var fiyatStr = parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                        if (idx === 0) {
+                            tedarikciStr += '<small class="d-block"><i class="fas fa-star text-warning"></i> <span class="text-dark font-weight-bold">' + 
+                                            ted.adi.substring(0, 18) + '</span> - <span class="text-success font-weight-bold">' + fiyatStr + ' ' + ted.para_birimi + '</span></small>';
+                        } else {
+                            tedarikciStr += '<small class="d-block text-muted"><i class="fas fa-truck"></i> ' + 
+                                            ted.adi.substring(0, 18) + ' - ' + fiyatStr + ' ' + ted.para_birimi + '</small>';
+                        }
+                    });
+                }
+
+                html += '<div style="font-size: 11px; line-height: 1.4; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">' + 
                         item.isim + ': <span class="text-danger font-weight-bold">' + 
-                        item.miktar.toLocaleString('tr-TR') + '</span></div>';
+                        item.miktar.toLocaleString('tr-TR') + '</span>' + tedarikciStr + '</div>';
             });
             
             malzemeSiparisKolonu.innerHTML = siparisListesi.length > 0 ? html : '<span class="text-muted">0</span>';
         }
         
         // 4. Esans İhtiyacı kolonlarını güncelle
-        // Toplam Esans İhtiyacı (20. kolon, 0-indexed = 19)
-        if (kolonlar.length > 19 && bilesenDetaylari.length > 0) {
-            var esansIhtiyacKolonu = kolonlar[19];
+        // ... (remaining code should be fine, but I should check the last column)
+
+        // I'll replace the whole block of esans updates to be sure
+
+        // 6e. Net Verilecek Esans Siparişi (28. kolon, 0-indexed = 27)
+        if (kolonlar.length > 27 && yeniAcik > 0 && bilesenDetaylari.length > 0) {
+            var netSiparisKolonu = kolonlar[27];
             var html = '';
             var esansBulundu = false;
-            
+
             bilesenDetaylari.forEach(function(bilesen) {
-                if (bilesen.tur === 'esans') {
+                if (bilesen.tur === 'esans' && esansUretim[bilesen.kodu]) {
                     esansBulundu = true;
-                    var birim = bilesen.birim || 'ml';
-                    var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
-                    var brutIhtiyac = yeniAcik * birimIhtiyac;
-                    
-                    html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' +
-                            bilesen.isim + ': <span class="font-weight-bold">' +
-                            brutIhtiyac.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + birim + '</div>';
-                }
-            });
-            
-            esansIhtiyacKolonu.innerHTML = esansBulundu ? html : '<span class="text-muted">-</span>';
-        }
-        
-        // 5. Net Esans İhtiyacı (23. kolon, 0-indexed = 22)
-        if (kolonlar.length > 22 && bilesenDetaylari.length > 0) {
-            var netEsansKolonu = kolonlar[22];
-            var html = '';
-            var esansBulundu = false;
-            
-            bilesenDetaylari.forEach(function(bilesen) {
-                if (bilesen.tur === 'esans') {
-                    esansBulundu = true;
-                    var birim = bilesen.birim || 'ml';
+                    var esansInfo = esansUretim[bilesen.kodu];
+                    var formulDetaylari = esansInfo.formul_detaylari || [];
                     var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
                     var brutIhtiyac = yeniAcik * birimIhtiyac;
                     var stokEsans = parseFloat(bilesen.mevcut_stok) || 0;
+                    var uretimdeEsans = parseFloat(esansInfo.acik_is_emri_miktar) || 0;
+                    var netEsansIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
                     
-                    // Üretimdeki esans miktarı
-                    var uretimdeEsans = 0;
-                    if (esansUretim[bilesen.kodu]) {
-                        uretimdeEsans = parseFloat(esansUretim[bilesen.kodu].acik_is_emri_miktar) || 0;
-                    }
-                    
-                    var netIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
-                    
-                    if (netIhtiyac > 0) {
-                        html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.2;">' +
-                                bilesen.isim + ': <span class="text-danger font-weight-bold">' +
-                                netIhtiyac.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + birim + '</div>';
+                    if (netEsansIhtiyac > 0) {
+                        formulDetaylari.forEach(function(h) {
+                            var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
+                            var mevcut = parseFloat(h.mevcut_stok) || 0;
+                            var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
+                            var netSiparis = Math.max(0, toplamGereken - mevcut - bekleyen);
+                            
+                            if (netSiparis > 0) {
+                                var tedarikciStr = '';
+                                if (h.tum_tedarikciler && h.tum_tedarikciler.length > 0) {
+                                    tedarikciStr = '<br>';
+                                    h.tum_tedarikciler.forEach(function(ted, idx) {
+                                        var fiyatStr = parseFloat(ted.fiyat).toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                        if (idx === 0) {
+                                            tedarikciStr += '<small class="d-block"><i class="fas fa-star text-warning"></i> <span class="text-dark font-weight-bold">' + 
+                                                            ted.adi.substring(0, 18) + '</span> - <span class="text-success font-weight-bold">' + fiyatStr + ' ' + ted.para_birimi + '</span></small>';
+                                        } else {
+                                            tedarikciStr += '<small class="d-block text-muted"><i class="fas fa-truck"></i> ' + 
+                                                            ted.adi.substring(0, 18) + ' - ' + fiyatStr + ' ' + ted.para_birimi + '</small>';
+                                        }
+                                    });
+                                }
+
+                                html += '<div class="text-nowrap" style="font-size: 11px; line-height: 1.4; margin-bottom: 6px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">' +
+                                        h.malzeme_ismi + ': <span class="text-danger font-weight-bold">' +
+                                        netSiparis.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + (h.birim || '') + tedarikciStr + '</div>';
+                            }
+                        });
                     }
                 }
             });
-            
-            netEsansKolonu.innerHTML = esansBulundu && html ? html : '<span class="text-muted">0</span>';
+            netSiparisKolonu.innerHTML = esansBulundu && html ? html : '<span class="text-muted">0</span>';
         }
-        
-        // 6. Esans Hammadde Kolonlarını Güncelle
-        bilesenDetaylari.forEach(function(bilesen) {
-            if (bilesen.tur === 'esans' && esansUretim[bilesen.kodu]) {
-                var esansInfo = esansUretim[bilesen.kodu];
-                var formulDetaylari = esansInfo.formul_detaylari || [];
-                var birimIhtiyac = parseFloat(bilesen.gerekli_adet) || 0;
-                var brutIhtiyac = yeniAcik * birimIhtiyac;
-                var stokEsans = parseFloat(bilesen.mevcut_stok) || 0;
-                var uretimdeEsans = parseFloat(esansInfo.acik_is_emri_miktar) || 0;
-                var netEsansIhtiyac = Math.max(0, brutIhtiyac - (stokEsans + uretimdeEsans));
-                
-                // 6a. Hemen Üretilebilir Esans Miktarı (24. kolon, 0-indexed = 23)
-                if (kolonlar.length > 23) {
-                    var hemenUretilebilirKolonu = kolonlar[23];
-                    if (formulDetaylari.length > 0) {
-                        var minUretilebilir = Infinity;
-                        formulDetaylari.forEach(function(h) {
-                            var gerekli = parseFloat(h.recete_miktari) || 0;
-                            var mevcut = parseFloat(h.mevcut_stok) || 0;
-                            if (gerekli > 0) {
-                                minUretilebilir = Math.min(minUretilebilir, Math.floor(mevcut / gerekli));
-                            }
-                        });
-                        var uretilebilirMiktar = (minUretilebilir === Infinity) ? 0 : minUretilebilir;
-                        var birim = esansInfo.birim || 'ml';
-                        hemenUretilebilirKolonu.innerHTML = '<div class="text-nowrap" style="font-size: 11px;">' +
-                            bilesen.isim + ': <span class="text-success font-weight-bold">' +
-                            uretilebilirMiktar.toLocaleString('tr-TR') + '</span> ' + birim + '</div>';
-                    }
-                }
-                
-                // 6b. Üretilmesi Gereken (Hammadde Bekleyen) (25. kolon, 0-indexed = 24)
-                if (kolonlar.length > 24 && netEsansIhtiyac > 0) {
-                    var uretilmesiGerekenKolonu = kolonlar[24];
-                    var minUretilebilir = Infinity;
-                    formulDetaylari.forEach(function(h) {
-                        var gerekli = parseFloat(h.recete_miktari) || 0;
-                        var mevcut = parseFloat(h.mevcut_stok) || 0;
-                        if (gerekli > 0) {
-                            minUretilebilir = Math.min(minUretilebilir, Math.floor(mevcut / gerekli));
-                        }
-                    });
-                    var uretilebilirMiktar = (minUretilebilir === Infinity) ? 0 : minUretilebilir;
-                    var hammaddeBekleyen = Math.max(0, netEsansIhtiyac - uretilebilirMiktar);
-                    var birim = esansInfo.birim || 'ml';
-                    
-                    if (hammaddeBekleyen > 0) {
-                        uretilmesiGerekenKolonu.innerHTML = '<div class="text-nowrap" style="font-size: 11px;">' +
-                            bilesen.isim + ': <span class="text-warning font-weight-bold">' +
-                            hammaddeBekleyen.toLocaleString('tr-TR') + '</span> ' + birim + '</div>';
-                    } else {
-                        uretilmesiGerekenKolonu.innerHTML = '<span class="text-muted">0</span>';
-                    }
-                }
-                
-                // 6c. Sipariş Gereken Hammaddeler (26. kolon, 0-indexed = 25)
-                if (kolonlar.length > 25 && netEsansIhtiyac > 0 && formulDetaylari.length > 0) {
-                    var siparisGerekenHammaddeKolonu = kolonlar[25];
-                    var html = '';
-                    formulDetaylari.forEach(function(h) {
-                        var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
-                        var mevcut = parseFloat(h.mevcut_stok) || 0;
-                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
-                        var eksik = Math.max(0, toplamGereken - mevcut - bekleyen);
-                        
-                        if (eksik > 0) {
-                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
-                                    h.malzeme_ismi + ': <span class="text-danger font-weight-bold">' +
-                                    eksik.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + (h.birim || '') + '</div>';
-                        }
-                    });
-                    siparisGerekenHammaddeKolonu.innerHTML = html || '<span class="text-muted">0</span>';
-                }
-                
-                // 6d. Yoldaki Hammaddeler (27. kolon, 0-indexed = 26)
-                if (kolonlar.length > 26 && formulDetaylari.length > 0) {
-                    var yoldakiHammaddeKolonu = kolonlar[26];
-                    var html = '';
-                    formulDetaylari.forEach(function(h) {
-                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
-                        if (bekleyen > 0) {
-                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
-                                    h.malzeme_ismi + ': <span class="text-info font-weight-bold">' +
-                                    bekleyen.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span>' +
-                                    (h.po_list ? ' <small class="text-muted">(' + h.po_list + ')</small>' : '') + '</div>';
-                        }
-                    });
-                    yoldakiHammaddeKolonu.innerHTML = html || '<span class="text-muted">0</span>';
-                }
-                
-                // 6e. Net Verilecek Esans Siparişi (28. kolon, 0-indexed = 27)
-                if (kolonlar.length > 27 && netEsansIhtiyac > 0 && formulDetaylari.length > 0) {
-                    var netSiparisKolonu = kolonlar[27];
-                    var html = '';
-                    formulDetaylari.forEach(function(h) {
-                        var toplamGereken = netEsansIhtiyac * (parseFloat(h.recete_miktari) || 0);
-                        var mevcut = parseFloat(h.mevcut_stok) || 0;
-                        var eksik = Math.max(0, toplamGereken - mevcut);
-                        var bekleyen = parseFloat(h.bekleyen_siparis) || 0;
-                        var netSiparis = Math.max(0, eksik - bekleyen);
-                        
-                        if (netSiparis > 0) {
-                            html += '<div class="text-nowrap" style="font-size: 10px; line-height: 1.2;">' +
-                                    h.malzeme_ismi + ': <span class="text-danger font-weight-bold">' +
-                                    netSiparis.toLocaleString('tr-TR', {maximumFractionDigits: 2}) + '</span> ' + (h.birim || '') + '</div>';
-                        }
-                    });
-                    netSiparisKolonu.innerHTML = html || '<span class="text-muted">0</span>';
-                }
-            }
-        });
+
         // 7. Fark% kolonunu güncelle
         var farkKolonu = row.querySelector('.fark-kolonu');
         if (farkKolonu) {
