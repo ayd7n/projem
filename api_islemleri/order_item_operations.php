@@ -59,8 +59,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $product['satis_fiyati'] = !empty($product['satis_fiyati']) ? floatval($product['satis_fiyati']) : 0;
             $para_birimi = $product['satis_fiyati_para_birimi'] ?? 'TRY';
 
-            $toplam_tutar = $adet * $product['satis_fiyati'];
-
             // Validate and clean data before insertion to ensure non-empty values
             $urun_ismi_check = isset($product['urun_ismi']) && !is_null($product['urun_ismi']) ? trim($product['urun_ismi']) : '';
             $birim_check = isset($product['birim']) && !is_null($product['birim']) ? trim($product['birim']) : '';
@@ -74,8 +72,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $birim_check = 'adet';
             }
             if ($fiyat_check <= 0) {
-                $fiyat_check = 150.00; // Use default price
+                $fiyat_check = 0.00;
             }
+
+            $toplam_tutar = $adet * $fiyat_check;
 
             // Insert order item using prepared statements
             $item_query = "INSERT INTO siparis_kalemleri (siparis_id, urun_kodu, urun_ismi, adet, birim, birim_fiyat, toplam_tutar, para_birimi)
@@ -85,7 +85,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             if ($item_stmt->execute()) {
                 // Update total quantity in order
-                $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                $update_total_query = "UPDATE siparisler SET toplam_adet = COALESCE((SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?), 0) WHERE siparis_id = ?";
                 $update_total_stmt = $connection->prepare($update_total_query);
                 $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                 $update_total_stmt->execute();
@@ -158,8 +158,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $product['satis_fiyati'] = !empty($product['satis_fiyati']) ? floatval($product['satis_fiyati']) : 0;
             $para_birimi = $product['satis_fiyati_para_birimi'] ?? 'TRY';
 
-            $toplam_tutar = $adet * $product['satis_fiyati'];
-
             // Validate data before update to ensure non-empty values
             $urun_ismi_check = trim($product['urun_ismi']);
             $birim_check = trim($product['birim']);
@@ -176,6 +174,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $fiyat_check = 0.00;
             }
 
+            $toplam_tutar = $adet * $fiyat_check;
+
             // Update order item
             $urun_ismi_escaped = $connection->real_escape_string($urun_ismi_check);
             $birim_escaped = $connection->real_escape_string($birim_check);
@@ -187,7 +187,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($item_stmt->execute()) {
                 if ($item_stmt->affected_rows > 0) {
                     // Update total quantity in order
-                    $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                    $update_total_query = "UPDATE siparisler SET toplam_adet = COALESCE((SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?), 0) WHERE siparis_id = ?";
                     $update_total_stmt = $connection->prepare($update_total_query);
                     $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                     $update_total_stmt->execute();
@@ -262,7 +262,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($delete_stmt->execute()) {
                 if ($delete_stmt->affected_rows > 0) {
                     // Update total quantity in order
-                    $update_total_query = "UPDATE siparisler SET toplam_adet = (SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?) WHERE siparis_id = ?";
+                    $update_total_query = "UPDATE siparisler SET toplam_adet = COALESCE((SELECT SUM(adet) FROM siparis_kalemleri WHERE siparis_id = ?), 0) WHERE siparis_id = ?";
                     $update_total_stmt = $connection->prepare($update_total_query);
                     $update_total_stmt->bind_param('ii', $siparis_id, $siparis_id);
                     $update_total_stmt->execute();

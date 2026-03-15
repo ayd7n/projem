@@ -639,20 +639,19 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .module-grid {
-                grid-template-columns: 1fr;
-                gap: 0.6rem;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.5rem;
             }
 
             .module-card {
-                flex-direction: row; /* Keep row on VERY small settings if needed, or column? Let's stick to column for consistency unless typically row is better. User asked for centered icons. */
                 flex-direction: column;
                 text-align: center;
                 align-items: center;
-                gap: 0.8rem;
-                padding: 1rem;
+                gap: 0.4rem;
+                padding: 0.75rem 0.5rem;
                 min-height: auto;
                 justify-content: center;
-                border-radius: 12px;
+                border-radius: 10px;
             }
 
             .module-card .icon {
@@ -673,16 +672,16 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }
 
             .module-card .card-content .title {
-                font-size: 0.9rem;
-                margin-bottom: 0.2rem;
-                line-height: 1.3;
+                font-size: 0.8rem;
+                margin-bottom: 0.1rem;
+                line-height: 1.2;
                 font-weight: 600;
                 width: auto;
+                word-break: break-word;
             }
 
             .module-card .card-content .description {
-                display: block;
-                font-size: 0.75rem;
+                display: none;
             }
 
             .module-card {
@@ -701,6 +700,14 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             .module-card .icon {
                 background: var(--gradient-primary);
                 box-shadow: 0 4px 10px rgba(74, 14, 99, 0.2);
+                color: white !important;
+                width: 38px;
+                height: 38px;
+                font-size: 1rem;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }
 
             .module-card .card-content .title {
@@ -784,7 +791,8 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
         /* Extra small devices (phones, 320px and up) */
         @media (max-width: 320px) {
             .module-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.4rem;
             }
 
             .module-card .icon {
@@ -841,7 +849,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             <i class="fas fa-users-cog"></i>
             <span class="nav-text">İlişkiler</span>
         </a>
-        <a href="#products" class="nav-item">
+        <a href="urunler.php" class="nav-item">
             <i class="fas fa-boxes-stacked"></i>
             <span class="nav-text">Ürünler</span>
         </a>
@@ -1117,13 +1125,13 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
             // Mobile bottom navigation functionality
             navItems.forEach(item => {
-                // Check if the item is the logout button
-                const isLogoutButton = item.getAttribute('href') === 'logout.php';
-
                 item.addEventListener('click', function (e) {
-                    if (isLogoutButton) {
-                        // For logout button, allow the default behavior
-                        return; // Allow default navigation to logout.php
+                    const href = this.getAttribute('href') || '';
+                    const isHashLink = href.charAt(0) === '#';
+
+                    // Hash olmayan linklerde normal sayfa gecisini engelleme.
+                    if (!isHashLink) {
+                        return;
                     }
 
                     e.preventDefault();
@@ -1135,7 +1143,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                     this.classList.add('active');
 
                     // Get the target category ID
-                    const targetId = this.getAttribute('href').substring(1);
+                    const targetId = href.substring(1);
 
                     // Scroll to the corresponding module category
                     const targetElement = document.getElementById(targetId);

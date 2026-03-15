@@ -46,6 +46,75 @@ function get_durum_adi($durum) {
     return $durum_map[$durum] ?? ucfirst($durum);
 }
 
+function siparis_gecis_gecerli_mi($mevcut_durum, $hedef_durum)
+{
+    $gecisler = [
+        'beklemede' => ['onaylandi', 'iptal_edildi'],
+        'onaylandi' => ['beklemede', 'tamamlandi'],
+        'tamamlandi' => ['onaylandi'],
+    ];
+
+    return in_array($hedef_durum, $gecisler[$mevcut_durum] ?? [], true);
+}
+
+function siparis_kalemlerini_yukle($connection, $siparis_id)
+{
+    $items_stmt = $connection->prepare("SELECT urun_kodu, urun_ismi, adet, birim FROM siparis_kalemleri WHERE siparis_id = ?");
+    $items_stmt->bind_param('i', $siparis_id);
+    $items_stmt->execute();
+    $items_result = $items_stmt->get_result();
+
+    $items = [];
+    while ($item = $items_result->fetch_assoc()) {
+        $items[] = $item;
+    }
+
+    $items_stmt->close();
+    return $items;
+}
+
+function siparis_stok_hareketi_ekle($connection, $siparis_id, $musteri_id, $musteri_adi, $item, $yon, $hareket_turu, $aciklama, $personel_id, $personel_adi)
+{
+    $stok_turu = 'urun';
+    $kod = (string) $item['urun_kodu'];
+    $isim = (string) $item['urun_ismi'];
+    $birim = (string) ($item['birim'] ?: 'adet');
+    $miktar = (float) $item['adet'];
+
+    $stmt = $connection->prepare(
+        "INSERT INTO stok_hareket_kayitlari
+        (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, ilgili_belge_no, musteri_id, musteri_adi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+    );
+
+    if (!$stmt) {
+        throw new Exception('Stok hareketi sorgusu hazirlanamadi: ' . $connection->error);
+    }
+
+    $stmt->bind_param(
+        'ssssdssiissis',
+        $stok_turu,
+        $kod,
+        $isim,
+        $birim,
+        $miktar,
+        $yon,
+        $hareket_turu,
+        $siparis_id,
+        $musteri_id,
+        $musteri_adi,
+        $aciklama,
+        $personel_id,
+        $personel_adi
+    );
+
+    if (!$stmt->execute()) {
+        throw new Exception('Stok hareketi kaydedilemedi: ' . $stmt->error);
+    }
+
+    $stmt->close();
+}
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['delete'])) {
@@ -104,6 +173,138 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = "Only cancelled orders can be deleted.";
         }
     } elseif (isset($_POST['update'])) {
+        $siparis_id = (int) ($_POST['siparis_id'] ?? 0);
+        $durum = trim((string) ($_POST['durum'] ?? ''));
+        $gecerli_durumlar = ['beklemede', 'onaylandi', 'tamamlandi', 'iptal_edildi'];
+
+        if ($siparis_id <= 0 || !in_array($durum, $gecerli_durumlar, true)) {
+            $error = "Gecersiz siparis guncelleme istegi.";
+        } else {
+            $connection->begin_transaction();
+
+            try {
+                $order_stmt = $connection->prepare("SELECT siparis_id, musteri_id, musteri_adi, durum FROM siparisler WHERE siparis_id = ? FOR UPDATE");
+                $order_stmt->bind_param('i', $siparis_id);
+                $order_stmt->execute();
+                $order_result = $order_stmt->get_result();
+                $order = $order_result->fetch_assoc();
+                $order_stmt->close();
+
+                if (!$order) {
+                    throw new Exception('Siparis bulunamadi.');
+                }
+
+                $mevcut_durum = $order['durum'];
+                if ($mevcut_durum === $durum) {
+                    throw new Exception('Siparis zaten secilen durumda.');
+                }
+
+                if (!siparis_gecis_gecerli_mi($mevcut_durum, $durum)) {
+                    throw new Exception('Bu durum gecisi desteklenmiyor.');
+                }
+
+                $musteri_id = (int) $order['musteri_id'];
+                $musteri_adi = (string) $order['musteri_adi'];
+                $personel_id = (int) $_SESSION['user_id'];
+
+                if ($durum === 'tamamlandi') {
+                    $items = siparis_kalemlerini_yukle($connection, $siparis_id);
+                    if (empty($items)) {
+                        throw new Exception('Sipariste islenecek kalem bulunamadi.');
+                    }
+
+                    foreach ($items as $item) {
+                        $adet = (int) $item['adet'];
+                        $urun_kodu = (int) $item['urun_kodu'];
+                        if ($adet <= 0 || $urun_kodu <= 0) {
+                            throw new Exception('Siparis kaleminde gecersiz urun veya adet bulundu.');
+                        }
+
+                        $stock_stmt = $connection->prepare("UPDATE urunler SET stok_miktari = stok_miktari - ? WHERE urun_kodu = ? AND stok_miktari >= ?");
+                        $stock_stmt->bind_param('iii', $adet, $urun_kodu, $adet);
+                        if (!$stock_stmt->execute() || $stock_stmt->affected_rows !== 1) {
+                            $stock_stmt->close();
+                            throw new Exception("{$item['urun_ismi']} icin yeterli stok bulunmuyor.");
+                        }
+                        $stock_stmt->close();
+
+                        siparis_stok_hareketi_ekle(
+                            $connection,
+                            $siparis_id,
+                            $musteri_id,
+                            $musteri_adi,
+                            $item,
+                            'cikis',
+                            'cikis',
+                            'Musteri siparisi',
+                            $personel_id,
+                            $user_name
+                        );
+                    }
+                } elseif ($durum === 'onaylandi' && $mevcut_durum === 'tamamlandi') {
+                    $items = siparis_kalemlerini_yukle($connection, $siparis_id);
+                    foreach ($items as $item) {
+                        $adet = (int) $item['adet'];
+                        $urun_kodu = (int) $item['urun_kodu'];
+                        if ($adet <= 0 || $urun_kodu <= 0) {
+                            throw new Exception('Siparis kaleminde gecersiz urun veya adet bulundu.');
+                        }
+
+                        $stock_stmt = $connection->prepare("UPDATE urunler SET stok_miktari = stok_miktari + ? WHERE urun_kodu = ?");
+                        $stock_stmt->bind_param('ii', $adet, $urun_kodu);
+                        if (!$stock_stmt->execute() || $stock_stmt->affected_rows !== 1) {
+                            $stock_stmt->close();
+                            throw new Exception("{$item['urun_ismi']} icin stok geri yuklenemedi.");
+                        }
+                        $stock_stmt->close();
+
+                        siparis_stok_hareketi_ekle(
+                            $connection,
+                            $siparis_id,
+                            $musteri_id,
+                            $musteri_adi,
+                            $item,
+                            'giris',
+                            'iptal_cikis',
+                            'Satis iptali - Musteri siparisi',
+                            $personel_id,
+                            $user_name
+                        );
+                    }
+                }
+
+                if ($durum === 'onaylandi' && $mevcut_durum === 'beklemede') {
+                    $update_stmt = $connection->prepare("UPDATE siparisler SET durum = ?, onaylayan_personel_id = ?, onaylayan_personel_adi = ?, onay_tarihi = NOW() WHERE siparis_id = ?");
+                    $personel_adi = (string) $_SESSION['kullanici_adi'];
+                    $update_stmt->bind_param('sisi', $durum, $personel_id, $personel_adi, $siparis_id);
+                } elseif ($durum === 'beklemede') {
+                    $update_stmt = $connection->prepare("UPDATE siparisler SET durum = ?, onaylayan_personel_id = NULL, onaylayan_personel_adi = NULL, onay_tarihi = NULL WHERE siparis_id = ?");
+                    $update_stmt->bind_param('si', $durum, $siparis_id);
+                } else {
+                    $update_stmt = $connection->prepare("UPDATE siparisler SET durum = ? WHERE siparis_id = ?");
+                    $update_stmt->bind_param('si', $durum, $siparis_id);
+                }
+
+                if (!$update_stmt || !$update_stmt->execute()) {
+                    $stmt_error = $update_stmt ? $update_stmt->error : $connection->error;
+                    if ($update_stmt) {
+                        $update_stmt->close();
+                    }
+                    throw new Exception('Siparis durumu guncellenemedi: ' . $stmt_error);
+                }
+                $update_stmt->close();
+
+                $connection->commit();
+
+                $durum_adi = get_durum_adi($durum);
+                log_islem($connection, $_SESSION['kullanici_adi'], "{$musteri_adi} musterisine ait {$siparis_id} nolu siparisin yeni durumu: {$durum_adi}", 'UPDATE');
+                $message = "Siparis basariyla guncellendi.";
+            } catch (Throwable $e) {
+                $connection->rollback();
+                $error = $e->getMessage();
+            }
+        }
+    } elseif (false && isset($_POST['update'])) {
         // Debug logging for form submission
         error_log("DEBUG - Form submission initiated");
 

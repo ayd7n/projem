@@ -1,5 +1,6 @@
 <?php
 include '../config.php';
+header('Content-Type: application/json; charset=utf-8');
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
@@ -106,14 +107,6 @@ switch ($action) {
         // Insert contract
         $olusturan = $connection->real_escape_string((string)($_SESSION['kullanici_adi'] ?? ''));
         $query = "INSERT INTO cerceve_sozlesmeler (tedarikci_id, tedarikci_adi, malzeme_kodu, malzeme_ismi, birim_fiyat, para_birimi, limit_miktar, toplu_odenen_miktar, baslangic_tarihi, bitis_tarihi, oncelik, aciklama, olusturan) VALUES ($tedarikci_id, '$tedarikci_adi', $malzeme_kodu, '$malzeme_ismi', $birim_fiyat, '$para_birimi', $limit_miktar, $toplu_odenen_miktar, '$baslangic_tarihi', '$bitis_tarihi', $oncelik, '$aciklama', '$olusturan')";
-
-        // --- DEBUG LOGGING ---
-        $log_file = 'C:/Users/AYDIN/.gemini/tmp/de7b2d039006603d4eef2de07c6180acfffb7c9889e7c7fd347c897d4a766b4a/debug_log.txt';
-        $log_content = "Timestamp: " . date('Y-m-d H:i:s') . "\n";
-        $log_content .= "Session Data: " . print_r($_SESSION, true) . "\n";
-        $log_content .= "Generated Query: " . $query . "\n\n";
-        file_put_contents($log_file, $log_content, FILE_APPEND);
-        // --- END DEBUG LOGGING ---
 
         if ($connection->query($query)) {
             // Log ekleme

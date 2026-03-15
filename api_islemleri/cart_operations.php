@@ -3,32 +3,68 @@ include '../config.php';
 
 // Check if user is logged in as customer
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'musteri') {
-    echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim!']);
+    echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erisim!']);
     exit;
+}
+
+function get_cart_product($connection, $urun_kodu)
+{
+    $query = "SELECT urun_ismi, stok_miktari FROM urunler WHERE urun_kodu = ?";
+    $stmt = $connection->prepare($query);
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param('i', $urun_kodu);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    return $product;
 }
 
 $action = isset($_POST['action']) ? $_POST['action'] : '';
 
 if ($action === 'add_to_cart') {
-    $urun_kodu = $_POST['urun_kodu'];
-    $adet = (int) $_POST['adet'];
+    $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
+    $adet = (int) ($_POST['adet'] ?? 0);
 
-    // Check if product exists (no stock check)
-    $check_query = "SELECT * FROM urunler WHERE urun_kodu = ?";
-    $check_stmt = $connection->prepare($check_query);
-    $check_stmt->bind_param('i', $urun_kodu);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
+    if ($urun_kodu <= 0 || $adet <= 0) {
+        echo json_encode([
+            'status' => 'error',
+            'message' => 'Lutfen gecerli bir urun ve pozitif adet girin.'
+        ]);
+        exit;
+    }
 
-    if ($check_result->num_rows > 0) {
-        // Handle cart in session
+    $product = get_cart_product($connection, $urun_kodu);
+    if ($product) {
         if (!isset($_SESSION['cart'])) {
             $_SESSION['cart'] = array();
         }
 
         $cart = &$_SESSION['cart'];
+        $mevcut_adet = isset($cart[$urun_kodu]) ? (int) $cart[$urun_kodu] : 0;
+        $yeni_toplam_adet = $mevcut_adet + $adet;
+        $stok_miktari = (int) ($product['stok_miktari'] ?? 0);
 
-        // Add to cart
+        if ($stok_miktari <= 0) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Bu urun stokta kalmamis.'
+            ]);
+            exit;
+        }
+
+        if ($yeni_toplam_adet > $stok_miktari) {
+            echo json_encode([
+                'status' => 'error',
+                'message' => "Sepetteki toplam adet mevcut stogu asamaz. En fazla {$stok_miktari} adet ekleyebilirsiniz."
+            ]);
+            exit;
+        }
+
         if (isset($cart[$urun_kodu])) {
             $cart[$urun_kodu] += $adet;
         } else {
@@ -39,35 +75,35 @@ if ($action === 'add_to_cart') {
 
         echo json_encode([
             'status' => 'success',
-            'message' => 'Ürün sepete eklendi!',
+            'message' => 'Urun sepete eklendi!',
             'total_different_products' => count($cart)
         ]);
     } else {
         echo json_encode([
             'status' => 'error',
-            'message' => 'Ürün bulunamadı!'
+            'message' => 'Urun bulunamadi!'
         ]);
     }
-
-    $check_stmt->close();
 } elseif ($action === 'remove_from_cart') {
-    $urun_kodu = $_POST['urun_kodu'];
+    $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
 
     if (isset($_SESSION['cart'][$urun_kodu])) {
         unset($_SESSION['cart'][$urun_kodu]);
-        echo json_encode(['status' => 'success', 'message' => 'Ürün sepetten kaldırıldı!']);
+        echo json_encode(['status' => 'success', 'message' => 'Urun sepetten kaldirildi!']);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Ürün sepette bulunamadı!']);
+        echo json_encode(['status' => 'error', 'message' => 'Urun sepette bulunamadi!']);
     }
 } elseif ($action === 'get_cart_contents') {
-    // Return current cart contents with product information
     $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
-
     $cart_items = array();
 
     if (!empty($cart)) {
         foreach ($cart as $urun_kodu => $adet) {
-            // Get product information
+            $adet = (int) $adet;
+            if ($adet <= 0) {
+                continue;
+            }
+
             $product_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
             $product_stmt = $connection->prepare($product_query);
             $product_stmt->bind_param('i', $urun_kodu);
@@ -82,16 +118,16 @@ if ($action === 'add_to_cart') {
                     'adet' => $adet
                 );
             }
+
+            $product_stmt->close();
         }
     }
-
-    $total_items = count($cart_items);
 
     echo json_encode([
         'status' => 'success',
         'cart_items' => $cart_items,
-        'total_items' => $total_items
+        'total_items' => count($cart_items)
     ]);
 } else {
-    echo json_encode(['status' => 'error', 'message' => 'Geçersiz istek!']);
+    echo json_encode(['status' => 'error', 'message' => 'Gecersiz istek!']);
 }

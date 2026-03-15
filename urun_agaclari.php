@@ -334,53 +334,136 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
             </div>
         </div>
 
-        <!-- Product Tree Modal -->
+                     <!-- Product Tree Modal -->
         <div class="modal fade" :class="{show: showModal}" v-if="showModal" style="display: block; background-color: rgba(0,0,0,0.5);" @click="closeModal">
             <div class="modal-dialog modal-lg" @click.stop>
                 <div class="modal-content">
                     <form @submit.prevent="saveProductTree">
                         <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white;">
-                            <h5 class="modal-title">{{ modalTitle }}</h5>
+                            <h5 class="modal-title"><i class="fas fa-box-open mr-1"></i> {{ modalTitle }}</h5>
                             <button type="button" class="close text-white" @click="closeModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
+                            <!-- Basit Açıklama Kartı -->
+                            <div class="wizard-help-card mb-3">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Aşağıda <b>hangi üründen</b>, <b>hangi parçayı</b> ve <b>ne kadar</b> kullanıldığını seçin. Sadece 3 alan doldurmanız yeterli!</span>
+                            </div>
+
                             <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="urun_kodu">Ürün *</label>
-                                    <select class="form-control" id="urun_kodu" v-model="selectedProductTree.urun_kodu" @change="updateProductName" required>
-                                        <option value="">Ürün Seçin</option>
-                                        <option v-for="product in products" :key="product.urun_kodu" :value="product.urun_kodu">
-                                            {{ product.urun_kodu }} - {{ product.urun_ismi }}
-                                        </option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="bilesen_kodu">Bileşen *</label>
-                                    <select class="form-control" id="bilesen_kodu" v-model="selectedProductTree.bilesen_kodu" @change="updateBilesenInfo" required>
-                                        <option value="">Bileşen Seçin</option>
-                                        <optgroup label="Esanslar">
-                                            <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
-                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                <!-- 1) Ürün Seçimi -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">1</div>
+                                    <div class="wizard-step-content">
+                                        <label for="urun_kodu"><i class="fas fa-box mr-1"></i> Hangi ürünü üretiyorsunuz?</label>
+                                        <select class="form-control" id="urun_kodu" v-model="selectedProductTree.urun_kodu" @change="updateProductName" required>
+                                            <option value="">-- Listeden ürün seçin --</option>
+                                            <option v-for="product in products" :key="product.urun_kodu" :value="product.urun_kodu">
+                                                {{ product.urun_kodu }} - {{ product.urun_ismi }}
                                             </option>
-                                        </optgroup>
-                                        <optgroup label="Malzemeler">
-                                            <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
-                                                {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
-                                            </option>
-                                        </optgroup>
-                                    </select>
+                                        </select>
+                                        <small class="form-text text-muted">Üretmek istediğiniz parfüm veya ürünü listeden bulup seçin.</small>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="bilesen_miktari">Bileşen Miktarı *</label>
-                                    <input type="number" step="0.01" class="form-control" id="bilesen_miktari" v-model.number="selectedProductTree.bilesen_miktari" min="0" required>
+
+                                <!-- 2) Bileşen Seçimi -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">2</div>
+                                    <div class="wizard-step-content">
+                                        <label for="bilesen_kodu"><i class="fas fa-puzzle-piece mr-1"></i> Bu üründe hangi parça / malzeme kullanılıyor?</label>
+                                        <select class="form-control" id="bilesen_kodu" v-model="selectedProductTree.bilesen_kodu" @change="updateBilesenInfo" required>
+                                            <option value="">-- Listeden parça seçin --</option>
+                                            <optgroup label="🧪 Esanslar">
+                                                <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
+                                                    {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                                </option>
+                                            </optgroup>
+                                            <optgroup label="📦 Malzemeler (Şişe, Kapak, Kutu vb.)">
+                                                <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
+                                                    {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
+                                                </option>
+                                            </optgroup>
+                                        </select>
+                                        <small class="form-text text-muted">Şişe, kapak, etiket, esans gibi kullanılan parçayı seçin.</small>
+                                    </div>
+                                </div>
+
+                                <!-- 3) Miktar -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">3</div>
+                                    <div class="wizard-step-content">
+                                        <label><i class="fas fa-calculator mr-1"></i> Miktar nasıl hesaplansın?</label>
+
+                                        <!-- Mod Seçimi -->
+                                        <div class="wizard-mode-toggle mb-3">
+                                            <label class="wizard-mode-option" :class="{ active: productRatioWizard.inputMode === 'direct' }">
+                                                <input type="radio" v-model="productRatioWizard.inputMode" value="direct" class="d-none">
+                                                <i class="fas fa-cube mr-1"></i> Her üründe kaç tane lazım
+                                            </label>
+                                            <label class="wizard-mode-option" :class="{ active: productRatioWizard.inputMode === 'coverage' }">
+                                                <input type="radio" v-model="productRatioWizard.inputMode" value="coverage" class="d-none">
+                                                <i class="fas fa-boxes mr-1"></i> 1 birimden kaç ürün çıkar
+                                            </label>
+                                        </div>
+
+                                        <!-- Mod A: Direkt miktar (her üründe X tane) -->
+                                        <div v-if="productRatioWizard.inputMode === 'direct'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Örnek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li>Her üründe <b>1 kapak</b> varsa: <code>1</code> yazın</li>
+                                                    <li>Her üründe <b>2 kapak</b> varsa: <code>2</code> yazın</li>
+                                                    <li>Her üründe <b>3 etiket</b> varsa: <code>3</code> yazın</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="number" step="1" min="1" class="form-control form-control-lg" v-model="productRatioWizard.directCount" @input="recalcDirect('product')" placeholder="Örn: 1, 2 veya 3">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">{{ getComponentUnitLabel('product') }} lazım</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mod B: Coverage (1 birimden X ürün) -->
+                                        <div v-if="productRatioWizard.inputMode === 'coverage'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Örnek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li><b>1 {{ getComponentUnitLabel('product') }} = 1 ürün</b> çıkıyorsa: <code>1</code> yazın</li>
+                                                    <li><b>1 {{ getComponentUnitLabel('product') }} = 6 ürün</b> çıkıyorsa: <code>6</code> yazın</li>
+                                                    <li><b>1 {{ getComponentUnitLabel('product') }} = 10 ürün</b> çıkıyorsa: <code>10</code> yazın</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="number" step="1" min="1" class="form-control form-control-lg" v-model="productRatioWizard.coverageCount" @input="recalcRatioFromCoverage('product')" placeholder="Örn: 1, 6 veya 10">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">ürün çıkar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sonuç Gösterimi -->
+                                        <div class="wizard-result-card" v-if="productRatioWizard.calculatedAmount > 0">
+                                            <div class="wizard-result-icon"><i class="fas fa-thumbs-up"></i></div>
+                                            <div class="wizard-result-text">
+                                                <span v-if="productRatioWizard.inputMode === 'direct'">Tamamdır! Her 1 <b>{{ selectedProductTree.urun_ismi || 'ürün' }}</b> için <b>{{ productRatioWizard.directCount }} {{ getComponentUnitLabel('product') }} {{ selectedProductTree.bilesen_ismi || 'bileşen' }}</b> kullanılacak.</span>
+                                                <span v-else-if="String(productRatioWizard.coverageCount).trim() === '1'">Tamamdır! Her 1 <b>{{ selectedProductTree.urun_ismi || 'ürün' }}</b> için <b>1 {{ getComponentUnitLabel('product') }} {{ selectedProductTree.bilesen_ismi || 'bileşen' }}</b> kullanılacak.</span>
+                                                <span v-else>Tamamdır! <b>1 {{ getComponentUnitLabel('product') }} {{ selectedProductTree.bilesen_ismi || 'bileşen' }}</b>'den <b>{{ productRatioWizard.coverageCount }} adet {{ selectedProductTree.urun_ismi || 'ürün' }}</b> çıkıyor.</span>
+                                            </div>
+                                        </div>
+
+                                        <small class="text-danger d-block mt-1" v-if="productRatioWizard.error"><i class="fas fa-exclamation-triangle mr-1"></i>{{ productRatioWizard.error }}</small>
+                                        <small class="text-success d-block mt-1" v-if="productRatioWizard.isValid && !productRatioWizard.error"><i class="fas fa-check-circle mr-1"></i> Kaydetmeye hazır!</small>
+                                        <small class="text-warning d-block" v-if="productRatioWizard.approximateCoverage">Yaklaşık değer gösteriliyor.</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> İptal</button>
-                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedProductTree.urun_agaci_id}"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                            <button type="button" class="btn btn-secondary" @click="closeModal"><i class="fas fa-times"></i> Vazgeç</button>
+                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedProductTree.urun_agaci_id}" :disabled="!isProductFormReady()"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
                         </div>
                     </form>
                 </div>
@@ -393,40 +476,123 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                 <div class="modal-content">
                     <form @submit.prevent="saveEssenceTree">
                         <div class="modal-header" style="background: linear-gradient(135deg, #4a0e63, #7c2a99); color: white;">
-                            <h5 class="modal-title">{{ modalTitle }}</h5>
+                            <h5 class="modal-title"><i class="fas fa-flask mr-1"></i> {{ modalTitle }}</h5>
                             <button type="button" class="close text-white" @click="closeEssenceModal" aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
                             </button>
                         </div>
                         <div class="modal-body">
+                            <!-- Basit Açıklama Kartı -->
+                            <div class="wizard-help-card mb-3">
+                                <i class="fas fa-lightbulb"></i>
+                                <span>Aşağıda <b>hangi esansın</b> formülünde <b>hangi hammadde</b> ve <b>ne kadar</b> kullanıldığını belirtin. Sadece 3 alan!</span>
+                            </div>
+
                             <div class="form-grid">
-                                <div class="form-group">
-                                    <label for="essence_urun_kodu">Esans *</label>
-                                    <select class="form-control" id="essence_urun_kodu" v-model="selectedEssenceTree.urun_kodu" @change="updateEssenceName" required>
-                                        <option value="">Esans Seçin</option>
-                                        <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
-                                            {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
-                                        </option>
-                                    </select>
+                                <!-- 1) Esans Seçimi -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">1</div>
+                                    <div class="wizard-step-content">
+                                        <label for="essence_urun_kodu"><i class="fas fa-flask mr-1"></i> Hangi esansın formülünü giriyorsunuz?</label>
+                                        <select class="form-control" id="essence_urun_kodu" v-model="selectedEssenceTree.urun_kodu" @change="updateEssenceName" required>
+                                            <option value="">-- Listeden esans seçin --</option>
+                                            <option v-for="essence in essences" :key="essence.esans_kodu" :value="essence.esans_kodu">
+                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                            </option>
+                                        </select>
+                                        <small class="form-text text-muted">Formülünü tanımlayacağınız esansı listeden seçin.</small>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="essence_bilesen_kodu">Bileşen (Sadece Malzeme) *</label>
-                                    <select class="form-control" id="essence_bilesen_kodu" v-model="selectedEssenceTree.bilesen_kodu" @change="updateEssenceBilesenInfo" required>
-                                        <option value="">Malzeme Seçin</option>
-                                        <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
-                                            {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
-                                        </option>
-                                    </select>
+
+                                <!-- 2) Hammadde Seçimi -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">2</div>
+                                    <div class="wizard-step-content">
+                                        <label for="essence_bilesen_kodu"><i class="fas fa-mortar-pestle mr-1"></i> Bu esansta hangi hammadde kullanılıyor?</label>
+                                        <select class="form-control" id="essence_bilesen_kodu" v-model="selectedEssenceTree.bilesen_kodu" @change="updateEssenceBilesenInfo" required>
+                                            <option value="">-- Listeden hammadde seçin --</option>
+                                            <option v-for="material in materials" :key="material.malzeme_kodu" :value="material.malzeme_kodu">
+                                                {{ material.malzeme_kodu }} - {{ material.malzeme_ismi }}
+                                            </option>
+                                        </select>
+                                        <small class="form-text text-muted">Esans formülüne giren hammaddeyi (yağ, alkol vb.) seçin.</small>
+                                    </div>
                                 </div>
-                                <div class="form-group">
-                                    <label for="essence_bilesen_miktari">Bileşen Miktarı *</label>
-                                    <input type="number" step="0.01" class="form-control" id="essence_bilesen_miktari" v-model.number="selectedEssenceTree.bilesen_miktari" min="0" required>
+
+                                <!-- 3) Miktar -->
+                                <div class="form-group wizard-step-box">
+                                    <div class="wizard-step-number">3</div>
+                                    <div class="wizard-step-content">
+                                        <label><i class="fas fa-calculator mr-1"></i> Miktar nasıl hesaplansın?</label>
+
+                                        <!-- Mod Seçimi -->
+                                        <div class="wizard-mode-toggle mb-3">
+                                            <label class="wizard-mode-option" :class="{ active: essenceRatioWizard.inputMode === 'direct' }">
+                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="direct" class="d-none">
+                                                <i class="fas fa-cube mr-1"></i> Her esansta kaç birim lazım
+                                            </label>
+                                            <label class="wizard-mode-option" :class="{ active: essenceRatioWizard.inputMode === 'coverage' }">
+                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="coverage" class="d-none">
+                                                <i class="fas fa-boxes mr-1"></i> 1 birimden kaç esans çıkar
+                                            </label>
+                                        </div>
+
+                                        <!-- Mod A: Direkt miktar -->
+                                        <div v-if="essenceRatioWizard.inputMode === 'direct'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Örnek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li>Her esansta <b>1 {{ getComponentUnitLabel('essence') }}</b> varsa: <code>1</code> yazın</li>
+                                                    <li>Her esansta <b>2 {{ getComponentUnitLabel('essence') }}</b> varsa: <code>2</code> yazın</li>
+                                                    <li>Her esansta <b>3 {{ getComponentUnitLabel('essence') }}</b> varsa: <code>3</code> yazın</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="number" step="1" min="1" class="form-control form-control-lg" v-model="essenceRatioWizard.directCount" @input="recalcDirect('essence')" placeholder="Örn: 1, 2 veya 3">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">{{ getComponentUnitLabel('essence') }} lazım</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Mod B: Coverage -->
+                                        <div v-if="essenceRatioWizard.inputMode === 'coverage'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Örnek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li><b>1 {{ getComponentUnitLabel('essence') }} = 1 esans</b> çıkıyorsa: <code>1</code> yazın</li>
+                                                    <li><b>1 {{ getComponentUnitLabel('essence') }} = 5 esans</b> çıkıyorsa: <code>5</code> yazın</li>
+                                                    <li><b>1 {{ getComponentUnitLabel('essence') }} = 10 esans</b> çıkıyorsa: <code>10</code> yazın</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="number" step="1" min="1" class="form-control form-control-lg" v-model="essenceRatioWizard.coverageCount" @input="recalcRatioFromCoverage('essence')" placeholder="Örn: 1, 5 veya 10">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">esans çıkar</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Sonuç Gösterimi -->
+                                        <div class="wizard-result-card" v-if="essenceRatioWizard.calculatedAmount > 0">
+                                            <div class="wizard-result-icon"><i class="fas fa-thumbs-up"></i></div>
+                                            <div class="wizard-result-text">
+                                                <span v-if="essenceRatioWizard.inputMode === 'direct'">Tamamdır! Her 1 <b>{{ selectedEssenceTree.urun_ismi || 'esans' }}</b> için <b>{{ essenceRatioWizard.directCount }} {{ getComponentUnitLabel('essence') }} {{ selectedEssenceTree.bilesen_ismi || 'hammadde' }}</b> kullanılacak.</span>
+                                                <span v-else-if="String(essenceRatioWizard.coverageCount).trim() === '1'">Tamamdır! Her 1 <b>{{ selectedEssenceTree.urun_ismi || 'esans' }}</b> için <b>1 {{ getComponentUnitLabel('essence') }} {{ selectedEssenceTree.bilesen_ismi || 'hammadde' }}</b> kullanılacak.</span>
+                                                <span v-else>Tamamdır! <b>1 {{ getComponentUnitLabel('essence') }} {{ selectedEssenceTree.bilesen_ismi || 'hammadde' }}</b>'den <b>{{ essenceRatioWizard.coverageCount }} adet {{ selectedEssenceTree.urun_ismi || 'esans' }}</b> çıkıyor.</span>
+                                            </div>
+                                        </div>
+
+                                        <small class="text-danger d-block mt-1" v-if="essenceRatioWizard.error"><i class="fas fa-exclamation-triangle mr-1"></i>{{ essenceRatioWizard.error }}</small>
+                                        <small class="text-success d-block mt-1" v-if="essenceRatioWizard.isValid && !essenceRatioWizard.error"><i class="fas fa-check-circle mr-1"></i> Kaydetmeye hazır!</small>
+                                        <small class="text-warning d-block" v-if="essenceRatioWizard.approximateCoverage">Yaklaşık değer gösteriliyor.</small>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" @click="closeEssenceModal"><i class="fas fa-times"></i> İptal</button>
-                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedEssenceTree.urun_agaci_id}"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
+                            <button type="button" class="btn btn-secondary" @click="closeEssenceModal"><i class="fas fa-times"></i> Vazgeç</button>
+                            <button type="submit" class="btn btn-primary" :class="{'btn-success': selectedEssenceTree.urun_agaci_id}" :disabled="!isEssenceFormReady()"><i class="fas fa-save"></i> {{ submitButtonText }}</button>
                         </div>
                     </form>
                 </div>
@@ -453,3 +619,6 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
     <script src="assets/js/urun_agaclari.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
+
+
+

@@ -828,7 +828,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                             <div style="width: 90px;" class="ml-1" v-if="modal.isEdit">
                                                 <input type="number" class="form-control form-control-sm px-1"
                                                     v-model.number="kalem.teslim_edilen_miktar" min="0" step="0.01"
-                                                    placeholder="0">
+                                                    placeholder="0" readonly title="Teslim edilen miktar mal kabul ile guncellenir.">
                                             </div>
                                             <div style="width: 30px;" class="ml-1 text-right">
                                                 <div class="remove-kalem ml-auto" @click="removeKalem(index)" style="width: 22px; height: 22px; font-size: 0.8rem;">
@@ -1046,6 +1046,8 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                             tedarikci_id: '',
                             istenen_teslim_tarihi: '',
                             durum: 'olusturuldu',
+                            mappedDurum: 'olusturuldu',
+                            originalDurum: 'taslak',
                             aciklama: '',
                             para_birimi: 'TRY',
                             kalemler: []
@@ -1151,6 +1153,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                                         istenen_teslim_tarihi: o.istenen_teslim_tarihi || '',
                                         durum: o.durum, // Keep original status
                                         mappedDurum: this.getMappedStatus(o.durum), // Use mapped status for dropdown
+                                        originalDurum: o.durum,
                                         aciklama: o.aciklama || '',
                                         para_birimi: o.para_birimi || 'TRY',
                                         kalemler: (o.kalemler || []).map(k => ({
@@ -1179,6 +1182,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                             istenen_teslim_tarihi: '',
                             durum: 'olusturuldu',
                             mappedDurum: 'olusturuldu',
+                            originalDurum: 'taslak',
                             aciklama: '',
                             para_birimi: 'TRY',
                             kalemler: []
@@ -1283,7 +1287,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                     formData.append('siparis_tarihi', new Date().toISOString().split('T')[0]);
                     formData.append('istenen_teslim_tarihi', this.modal.data.istenen_teslim_tarihi);
                     // Map the selected status back to appropriate database value
-                    let saveStatus = this.getRealStatusFromMapped(this.modal.data.mappedDurum);
+                    let saveStatus = this.getRealStatusFromMapped(this.modal.data.mappedDurum, this.modal.data.originalDurum);
                     formData.append('durum', saveStatus);
                     formData.append('aciklama', this.modal.data.aciklama);
                     formData.append('para_birimi', this.modal.data.para_birimi);
@@ -1322,7 +1326,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                     const formData = new FormData();
                     formData.append('action', 'update_status');
                     formData.append('siparis_id', siparisId);
-                    formData.append('durum', this.getRealStatusFromMapped(this.newStatus));
+                    formData.append('durum', this.getRealStatusFromMapped(this.newStatus, this.viewData.durum));
 
                     fetch('api_islemleri/satinalma_siparisler_islemler.php', {
                         method: 'POST',
@@ -1332,7 +1336,7 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                         .then(data => {
                             if (data.status === 'success') {
                                 this.showAlert(data.message, 'success');
-                                this.viewData.durum = this.getRealStatusFromMapped(this.newStatus);
+                                this.viewData.durum = this.getRealStatusFromMapped(this.newStatus, this.viewData.durum);
                                 this.loadOrders(this.currentPage);
                                 this.loadStats();
                             } else {
@@ -1397,17 +1401,22 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                     // Return the original value if it's already a new value
                     return durum;
                 },
-                getRealStatusFromMapped(mappedDurum) {
-                    // Map mapped status values back to real database values
+                getRealStatusFromMapped(mappedDurum, existingDurum = '') {
+                    let targetStatus = mappedDurum;
+
                     if (mappedDurum === 'olusturuldu') {
-                        return 'taslak';
+                        targetStatus = 'taslak';
                     } else if (mappedDurum === 'yollandi') {
-                        return 'gonderildi';
+                        targetStatus = 'gonderildi';
                     } else if (mappedDurum === 'kapatildi') {
-                        return 'kapatildi';
+                        targetStatus = 'kapatildi';
                     }
-                    // Return the original value if it's already a real value
-                    return mappedDurum;
+
+                    if (existingDurum && this.getMappedStatus(existingDurum) === mappedDurum) {
+                        return existingDurum;
+                    }
+
+                    return targetStatus;
                 },
                 formatDate(dateString) {
                     if (!dateString) return '-';

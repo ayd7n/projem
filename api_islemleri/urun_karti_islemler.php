@@ -10,6 +10,70 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
 
 $response = ['status' => 'error', 'message' => 'Geçersiz istek.'];
 
+function normalize_currency_code($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TL' || $currency === 'TRY') {
+        return 'TRY';
+    }
+    if ($currency === 'USD' || $currency === 'EUR') {
+        return $currency;
+    }
+    return 'TRY';
+}
+
+function get_exchange_rates($connection)
+{
+    static $cached_rates = null;
+    if ($cached_rates !== null) {
+        return $cached_rates;
+    }
+
+    $rates = ['TRY' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+    $result = $connection->query($query);
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $value = (float) $row['ayar_deger'];
+            if ($value <= 0) {
+                continue;
+            }
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = $value;
+            } elseif ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = $value;
+            }
+        }
+    }
+
+    $cached_rates = $rates;
+    return $rates;
+}
+
+function convert_currency_amount($amount, $from_currency, $to_currency, $rates)
+{
+    $from_currency = normalize_currency_code($from_currency);
+    $to_currency = normalize_currency_code($to_currency);
+    $amount = (float) $amount;
+
+    if ($from_currency === $to_currency) {
+        return $amount;
+    }
+
+    $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 1.0;
+    $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 1.0;
+    if ($from_rate <= 0 || $to_rate <= 0) {
+        return $amount;
+    }
+
+    $amount_try = ($from_currency === 'TRY') ? $amount : ($amount * $from_rate);
+    if ($to_currency === 'TRY') {
+        return $amount_try;
+    }
+
+    return $amount_try / $to_rate;
+}
+
 if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
     $action = $_GET['action'];
     $urun_kodu = (int) $_GET['urun_kodu'];
@@ -65,6 +129,40 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
             // If user doesn't have cost permission, ensure teorik_maliyet is not available
             if (!$can_view_cost) {
                 unset($product['teorik_maliyet']);
+            }
+
+            $rates = get_exchange_rates($connection);
+            $display_currency = normalize_currency_code($product['satis_fiyati_para_birimi'] ?? 'TRY');
+            $product['cost_display_currency'] = $display_currency;
+            $product['alis_fiyati_display'] = round(
+                convert_currency_amount(
+                    (float) ($product['alis_fiyati'] ?? 0),
+                    $product['alis_fiyati_para_birimi'] ?? 'TRY',
+                    $display_currency,
+                    $rates
+                ),
+                6
+            );
+            if ($can_view_cost) {
+                $teorik_maliyet_try = (float) ($product['teorik_maliyet'] ?? 0);
+                if (($product['urun_tipi'] ?? '') === 'hazir_alinan') {
+                    $teorik_maliyet_try = convert_currency_amount(
+                        (float) ($product['alis_fiyati'] ?? 0),
+                        $product['alis_fiyati_para_birimi'] ?? 'TRY',
+                        'TRY',
+                        $rates
+                    );
+                    $product['teorik_maliyet'] = $teorik_maliyet_try;
+                }
+                $product['teorik_maliyet_display'] = round(
+                    convert_currency_amount(
+                        $teorik_maliyet_try,
+                        'TRY',
+                        $display_currency,
+                        $rates
+                    ),
+                    6
+                );
             }
 
             // 2. Ürün Fotoğraflarını Getir

@@ -89,8 +89,8 @@ function cancelOrder() {
         return;
     }
     
-    // Update order status to cancelled
-    $update_sql = "UPDATE siparisler SET durum = 'iptal_edildi', tarih = NOW() WHERE siparis_id = ? AND musteri_id = ?";
+    // Update order status to cancelled without overwriting the original order date
+    $update_sql = "UPDATE siparisler SET durum = 'iptal_edildi' WHERE siparis_id = ? AND musteri_id = ?";
     $update_stmt = $connection->prepare($update_sql);
     $update_stmt->bind_param('ii', $siparis_id, $musteri_id);
     

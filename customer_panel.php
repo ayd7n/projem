@@ -82,28 +82,69 @@ $products_count = $products_count_result->fetch_assoc()['count'];
 // Handle adding to cart
 $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
 
+/*
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-    $urun_kodu = $_POST['urun_kodu'];
-    $adet = $_POST['adet'];
+    $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
+    $adet = (int) ($_POST['adet'] ?? 0);
 
-    // Check if product exists (no stock check)
-    $check_query = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
-    $check_stmt = $connection->prepare($check_query);
-    $check_stmt->bind_param('i', $urun_kodu);
-    $check_stmt->execute();
-    $check_result = $check_stmt->get_result();
+    if ($urun_kodu <= 0 || $adet <= 0) {
+        $error = "Lutfen gecerli bir urun ve pozitif adet girin.";
+    } else {
+        $check_query = "SELECT urun_ismi, stok_miktari FROM urunler WHERE urun_kodu = ?";
+        $check_stmt = $connection->prepare($check_query);
+        $check_stmt->bind_param('i', $urun_kodu);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
 
-    if ($check_result->num_rows > 0) {
-        // Add to cart
-        if (isset($cart[$urun_kodu])) {
-            $cart[$urun_kodu] += $adet;
-        } else {
-            $cart[$urun_kodu] = $adet;
-        }
-        $_SESSION['cart'] = $cart;
+        if ($check_result->num_rows > 0) {
+            $product_row = $check_result->fetch_assoc();
+            $stok_miktari = (int) ($product_row['stok_miktari'] ?? 0);
+            $mevcut_adet = isset($cart[$urun_kodu]) ? (int) $cart[$urun_kodu] : 0;
+            $yeni_toplam_adet = $mevcut_adet + $adet;
+            if ($stok_miktari <= 0) {
+                $error = "Bu urun stokta kalmamis.";
+            } elseif ($yeni_toplam_adet > $stok_miktari) {
         $message = "Ürün sepete eklendi!";
     } else {
         $error = "Ürün bulunamadı!";
+    }
+}
+
+*/
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
+    $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
+    $adet = (int) ($_POST['adet'] ?? 0);
+
+    if ($urun_kodu <= 0 || $adet <= 0) {
+        $error = "Lutfen gecerli bir urun ve pozitif adet girin.";
+    } else {
+        $check_query = "SELECT urun_ismi, stok_miktari FROM urunler WHERE urun_kodu = ?";
+        $check_stmt = $connection->prepare($check_query);
+        $check_stmt->bind_param('i', $urun_kodu);
+        $check_stmt->execute();
+        $check_result = $check_stmt->get_result();
+
+        if ($check_result->num_rows > 0) {
+            $product_row = $check_result->fetch_assoc();
+            $stok_miktari = (int) ($product_row['stok_miktari'] ?? 0);
+            $mevcut_adet = isset($cart[$urun_kodu]) ? (int) $cart[$urun_kodu] : 0;
+            $yeni_toplam_adet = $mevcut_adet + $adet;
+
+            if ($stok_miktari <= 0) {
+                $error = "Bu urun stokta kalmamis.";
+            } elseif ($yeni_toplam_adet > $stok_miktari) {
+                $error = "Istenen adet mevcut stogu asiyor.";
+            } else {
+                $cart[$urun_kodu] = $yeni_toplam_adet;
+                $_SESSION['cart'] = $cart;
+                $message = "Urun sepete eklendi!";
+            }
+        } else {
+            $error = "Urun bulunamadi!";
+        }
+
+        $check_stmt->close();
     }
 }
 

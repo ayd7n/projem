@@ -95,7 +95,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
         }
 
         .main-content {
-            padding: 20px;
+            width: 100%;
+            max-width: none;
+            padding: 14px;
+        }
+
+        @media (min-width: 1200px) {
+            .main-content {
+                padding: 10px 12px;
+            }
         }
 
         .page-header {
@@ -361,6 +369,537 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             opacity: 1;
         }
 
+        /* Cost breakdown modal */
+        #costBreakdownModal .modal-dialog {
+            width: calc(100vw - 24px);
+            max-width: 1420px;
+            margin: 1rem auto;
+        }
+
+        #costBreakdownModal .modal-content {
+            border: none;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 55px rgba(39, 19, 77, 0.26);
+            background: linear-gradient(180deg, #ffffff 0%, #fbf9fd 100%);
+        }
+
+        #costBreakdownModal .modal-header {
+            padding: 12px 16px 10px;
+            background: linear-gradient(135deg, rgba(74, 14, 99, 0.97), rgba(124, 42, 153, 0.92));
+            color: #fff;
+            align-items: flex-start;
+        }
+
+        #costBreakdownModal .modal-title {
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+        }
+
+        #costBreakdownModal .close {
+            color: #fff;
+            text-shadow: none;
+            opacity: 0.85;
+        }
+
+        #costBreakdownModal .modal-body {
+            padding: 14px 16px 12px;
+            background: transparent;
+        }
+
+        .cost-modal-subtitle {
+            margin-top: 3px;
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.4;
+            max-width: 560px;
+        }
+
+        .cost-breakdown-chip-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .cost-breakdown-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: #fff;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            color: #5b6474;
+            font-size: 0.71rem;
+            font-weight: 600;
+        }
+
+        .cost-summary-card {
+            height: 100%;
+            padding: 11px;
+            border-radius: 12px;
+            background: #fff;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            box-shadow: 0 5px 14px rgba(25, 33, 61, 0.05);
+        }
+
+        .cost-summary-card__label {
+            margin-bottom: 5px;
+            font-size: 0.69rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            color: #7b8596;
+        }
+
+        .cost-summary-card__value {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.25;
+        }
+
+        .cost-summary-card__subtext {
+            margin-top: 4px;
+            font-size: 0.72rem;
+            line-height: 1.4;
+            color: var(--text-secondary);
+        }
+
+        .cost-summary-card__value.is-positive {
+            color: #198754;
+        }
+
+        .cost-summary-card__value.is-negative {
+            color: #dc3545;
+        }
+
+        .cost-summary-card__value.is-neutral {
+            color: #0c8599;
+        }
+
+        .cost-health-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 7px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+        }
+
+        .cost-health-pill.is-positive {
+            color: #146c43;
+            background: rgba(25, 135, 84, 0.12);
+        }
+
+        .cost-health-pill.is-negative {
+            color: #b42318;
+            background: rgba(220, 53, 69, 0.12);
+        }
+
+        .cost-health-pill.is-neutral {
+            color: #0c8599;
+            background: rgba(23, 162, 184, 0.12);
+        }
+
+        .cost-insight-card {
+            height: 100%;
+            padding: 12px 13px;
+            border-radius: 12px;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            background: #fff;
+            box-shadow: 0 6px 14px rgba(25, 33, 61, 0.05);
+        }
+
+        .cost-insight-card__title {
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .cost-step-list {
+            display: grid;
+            gap: 10px;
+        }
+
+        .cost-step-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .cost-step-item__index {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(74, 14, 99, 0.1);
+            color: #4a0e63;
+            font-size: 0.76rem;
+            font-weight: 700;
+        }
+
+        .cost-step-item__body {
+            font-size: 0.79rem;
+            line-height: 1.55;
+            color: var(--text-secondary);
+        }
+
+        .cost-step-item__body strong {
+            display: block;
+            margin-bottom: 2px;
+            color: var(--text-primary);
+        }
+
+        .cost-inline-note {
+            margin-top: 8px;
+            padding: 7px 10px;
+            border-radius: 12px;
+            background: rgba(23, 162, 184, 0.08);
+            color: #395364;
+            font-size: 0.72rem;
+            line-height: 1.42;
+        }
+
+        .cost-rate-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .cost-rate-card {
+            padding: 9px;
+            border-radius: 12px;
+            background: #f8f9fc;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+        }
+
+        .cost-rate-card__label {
+            font-size: 0.66rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #7b8596;
+        }
+
+        .cost-rate-card__value {
+            margin-top: 2px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .cost-warning-panel {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), rgba(255, 152, 0, 0.08));
+        }
+
+        .cost-clean-note {
+            padding: 9px 11px;
+            border-radius: 12px;
+            background: rgba(40, 167, 69, 0.1);
+            color: #2f6f44;
+            font-size: 0.73rem;
+            font-weight: 600;
+        }
+
+        .cost-warning-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .cost-warning-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.82);
+            color: #7a5200;
+            font-size: 0.69rem;
+            line-height: 1.3;
+        }
+
+        .cost-warning-pill--table {
+            margin-bottom: 4px;
+            background: rgba(255, 193, 7, 0.12);
+            color: #8a5a00;
+            font-size: 0.67rem;
+        }
+
+        .cost-table-wrap {
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            background: #fff;
+            box-shadow: 0 6px 16px rgba(25, 33, 61, 0.05);
+        }
+
+        .cost-table-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(74, 14, 99, 0.08);
+            background: linear-gradient(180deg, rgba(74, 14, 99, 0.04), rgba(74, 14, 99, 0.01));
+        }
+
+        .cost-table-header h6 {
+            margin: 0 0 4px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .cost-table-header p {
+            margin: 0;
+            font-size: 0.71rem;
+            color: var(--text-secondary);
+        }
+
+        .cost-breakdown-table {
+            margin-bottom: 0;
+        }
+
+        .cost-breakdown-table thead th {
+            background: #f5f2f9;
+            border-top: none;
+            border-bottom: 1px solid rgba(74, 14, 99, 0.08);
+            color: #5d4d78;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .cost-breakdown-table td {
+            font-size: 0.73rem;
+            vertical-align: top;
+            border-color: rgba(74, 14, 99, 0.07);
+        }
+
+        .cost-calc-toggle {
+            border: none;
+            background: transparent;
+            padding: 0;
+            margin-right: 6px;
+            color: #6a4d93;
+            cursor: pointer;
+            font-size: 0.85rem;
+            line-height: 1;
+        }
+
+        .cost-calc-toggle:hover {
+            color: #4a0e63;
+        }
+
+        .cost-calc-row td {
+            background: #fcfafd;
+            border-top: none;
+        }
+
+        .cost-calc-panel {
+            padding: 10px 12px;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            border-radius: 10px;
+            background: linear-gradient(180deg, #fff 0%, #faf8fd 100%);
+        }
+
+        .cost-calc-panel__title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .cost-calc-panel__line {
+            font-size: 0.7rem;
+            color: #5b6474;
+            margin-bottom: 4px;
+            line-height: 1.45;
+        }
+
+        .cost-calc-panel__line strong {
+            color: #3f3358;
+        }
+
+        .cost-contract-list {
+            margin-top: 8px;
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .cost-contract-item {
+            padding: 7px 9px;
+            background: #fff;
+            border-bottom: 1px solid rgba(74, 14, 99, 0.07);
+            font-size: 0.69rem;
+            color: #5b6474;
+        }
+
+        .cost-contract-item:last-child {
+            border-bottom: none;
+        }
+
+        .cost-contract-empty {
+            font-size: 0.72rem;
+            color: #6b7280;
+        }
+
+        .cost-source-badge,
+        .cost-type-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.66rem;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .cost-type-badge {
+            background: rgba(74, 14, 99, 0.08);
+            color: #5f5176;
+        }
+
+        .cost-source-badge.is-material {
+            background: rgba(74, 14, 99, 0.1);
+            color: #5a2b75;
+        }
+
+        .cost-source-badge.is-essence {
+            background: rgba(23, 162, 184, 0.12);
+            color: #0f6674;
+        }
+
+        .cost-source-badge.is-ready-product {
+            background: rgba(40, 167, 69, 0.12);
+            color: #1f6b3a;
+        }
+
+        .cost-source-badge.is-not-costed,
+        .cost-source-badge.is-none {
+            background: rgba(255, 193, 7, 0.14);
+            color: #7a5200;
+        }
+
+        .cost-child-row td {
+            background: #faf8fd;
+        }
+
+        .cost-empty-state {
+            padding: 18px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.76rem;
+        }
+
+        #costLineDetailModal .modal-dialog {
+            max-width: 820px;
+            margin: 1.2rem auto;
+        }
+
+        #costLineDetailModal .modal-content {
+            border: none;
+            border-radius: 14px;
+            overflow: hidden;
+            box-shadow: 0 18px 44px rgba(39, 19, 77, 0.22);
+        }
+
+        #costLineDetailModal .modal-header {
+            padding: 11px 14px;
+            background: linear-gradient(135deg, rgba(74, 14, 99, 0.96), rgba(124, 42, 153, 0.9));
+            color: #fff;
+        }
+
+        #costLineDetailModal .modal-title {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        #costLineDetailModal .close {
+            color: #fff;
+            opacity: 0.85;
+            text-shadow: none;
+        }
+
+        #costLineDetailModal .modal-body {
+            padding: 12px;
+            background: linear-gradient(180deg, #ffffff 0%, #fbf9fd 100%);
+        }
+
+        .cost-line-section-title {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #3f3358;
+            margin: 0 0 5px;
+        }
+
+        .cost-line-table-wrap {
+            border: 1px solid rgba(74, 14, 99, 0.08);
+            border-radius: 10px;
+            overflow: hidden;
+            background: #fff;
+            margin-bottom: 8px;
+        }
+
+        .cost-line-table {
+            margin-bottom: 0;
+            font-size: 0.72rem;
+        }
+
+        .cost-line-table thead th {
+            background: #f5f2f9;
+            border-top: none;
+            border-bottom: 1px solid rgba(74, 14, 99, 0.08);
+            color: #5d4d78;
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            white-space: nowrap;
+        }
+
+        .cost-line-table td,
+        .cost-line-table th {
+            border-color: rgba(74, 14, 99, 0.07);
+            vertical-align: middle;
+        }
+
+        .cost-line-table .cost-line-key {
+            width: 200px;
+            font-weight: 700;
+            color: #3f3358;
+            background: #faf8fd;
+        }
+
+        @media (max-width: 767.98px) {
+            #costBreakdownModal .modal-body {
+                padding: 12px;
+            }
+
+            .cost-table-header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .cost-line-table .cost-line-key {
+                width: 140px;
+            }
+        }
+
         /* Pagination area styling */
         .pagination-container {
             font-size: 0.75rem;
@@ -534,11 +1073,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="11" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 13 : 11; ?>" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="products.length === 0">
-                                <td colspan="11" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 13 : 11; ?>" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu" :class="stockRowClass(product)">
                                 <td class="actions">
@@ -572,7 +1111,20 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <td>{{ formatPriceWithCurrency(product) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <td>{{ formatAlisFiyati(product) }}</td>
-                                    <td>{{ formatTeorikMaliyet(product) }}</td>
+                                    <td>
+                                        {{ formatTeorikMaliyet(product) }}
+                                        <button type="button"
+                                            class="btn btn-link btn-sm p-0 ml-1 align-baseline"
+                                            @click="openCostBreakdown(product)"
+                                            title="Maliyet Detayi">
+                                            <i class="fas fa-search-plus"></i>
+                                        </button>
+                                        <span v-if="product.maliyet_eksik_uyari"
+                                            class="badge badge-warning ml-1"
+                                            title="Reçete var ancak maliyet 0 görünüyor. Bileşen maliyet verilerini kontrol edin.">
+                                            !
+                                        </span>
+                                    </td>
 
                                 <?php endif; ?>
                                 <td>{{ product.depo }}</td>
@@ -829,8 +1381,20 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                     </div>
                                                     <div class="custom-control custom-checkbox" style="min-width: 120px;">
                                                         <input type="checkbox" class="custom-control-input" id="check_create_essence" v-model="createEssence">
-                                                        <label class="custom-control-label" for="check_create_essence" style="font-size: 0.75rem !important; cursor: pointer; color: var(--primary); font-weight: 600;">Esans (Oto. Tank)</label>
+                                                        <label class="custom-control-label" for="check_create_essence" style="font-size: 0.75rem !important; cursor: pointer; color: var(--primary); font-weight: 600;">Esans</label>
                                                     </div>
+                                                </div>
+                                                <div v-if="createEssence" class="mt-2">
+                                                    <label class="mb-1" style="font-size: 0.8rem;"><strong>Esans Tankı *</strong></label>
+                                                    <select class="form-control form-control-sm" v-model="selectedTankKodu">
+                                                        <option value="">Tank Seçin</option>
+                                                        <option v-for="tank in availableTanks" :key="tank.tank_kodu" :value="tank.tank_kodu">
+                                                            {{ tank.tank_kodu }} - {{ tank.tank_ismi }}
+                                                        </option>
+                                                    </select>
+                                                    <small v-if="availableTanks.length === 0" class="text-danger d-block mt-1">
+                                                        Kullanılabilir boş tank bulunamadı.
+                                                    </small>
                                                 </div>
                                             </div>
                                             <div class="form-group mb-2">
@@ -878,7 +1442,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                                 <span class="font-weight-bold text-warning">Otomatik Esans Üretimi</span>
                                                                 <ul class="list-unstyled mt-1 small text-muted">
                                                                     <li><i class="fas fa-caret-right"></i> İsim: {{ modal.data.urun_ismi }}, Esans</li>
-                                                                    <li><i class="fas fa-caret-right"></i> Tank: Sistemdeki ilk uygun/boş tank seçilecek.</li>
+                                                                    <li><i class="fas fa-caret-right"></i> Tank: Kullanıcı boş tank seçecek <span v-if="selectedTankKodu">({{ selectedTankKodu }})</span>.</li>
                                                                     <li><i class="fas fa-caret-right"></i> Bağlantı: Esans, ana ürünün reçetesine eklenecek.</li>
                                                                 </ul>
                                                                 
@@ -1176,6 +1740,325 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
             </button>
         </div>
 
+        <!-- Cost Breakdown Modal -->
+        <?php if (yetkisi_var('action:urunler:view_cost')): ?>
+        <div class="modal fade" id="costBreakdownModal" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header border-bottom-0">
+                        <div>
+                            <h5 class="modal-title">
+                                <i class="fas fa-calculator mr-2"></i>Urun Maliyet Detayi
+                            </h5>
+                            <div class="cost-modal-subtitle">
+                                Recetedeki her satirin maliyete etkisini, kur bilgisini ve toplam teorik maliyeti tek ekranda daha rahat inceleyin.
+                            </div>
+                        </div>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div v-if="costBreakdown.loading" class="text-center py-5">
+                            <i class="fas fa-spinner fa-spin fa-2x text-primary"></i>
+                            <div class="mt-2 text-muted">Maliyet detayi yukleniyor...</div>
+                        </div>
+
+                        <div v-else-if="costBreakdown.error" class="alert alert-danger mb-0">
+                            {{ costBreakdown.error }}
+                        </div>
+
+                        <div v-else-if="costBreakdown.product && costBreakdown.summary">
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-2">
+                                <div class="font-weight-bold text-dark" style="font-size: 0.98rem;">
+                                    {{ costBreakdown.product.urun_ismi }}
+                                </div>
+                                <div class="cost-breakdown-chip-list">
+                                    <span class="cost-breakdown-chip">
+                                        <i class="fas fa-layer-group text-primary"></i>{{ costBreakdown.items.length }} satir
+                                    </span>
+                                    <span class="cost-breakdown-chip">
+                                        <i class="fas fa-exclamation-triangle text-warning"></i>{{ getTotalCostWarningCount() }} uyari
+                                    </span>
+                                    <span class="cost-breakdown-chip">
+                                        <i class="fas fa-coins text-info"></i>{{ costBreakdown.product.cost_display_currency }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="row mb-2">
+                                <div class="col-md-6 col-xl-3 mb-3">
+                                    <div class="cost-summary-card">
+                                        <div class="cost-summary-card__label">Satis Fiyati</div>
+                                        <div class="cost-summary-card__value">
+                                            {{ formatCurrency(costBreakdown.product.satis_fiyati, costBreakdown.product.satis_fiyati_para_birimi) }}
+                                        </div>
+                                        <div class="cost-summary-card__subtext">Musteriye gorunen etiket fiyatidir.</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xl-3 mb-3">
+                                    <div class="cost-summary-card">
+                                        <div class="cost-summary-card__label">Teorik Maliyet</div>
+                                        <div class="cost-summary-card__value is-negative">
+                                            {{ formatCurrency(costBreakdown.summary.teorik_maliyet_display, costBreakdown.product.cost_display_currency) }}
+                                        </div>
+                                        <div class="cost-summary-card__subtext">
+                                            ({{ formatCurrency(costBreakdown.summary.teorik_maliyet_try, 'TRY') }})<br>
+                                            Sistem karar verirken bu ozet maliyeti esas alir.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xl-3 mb-3">
+                                    <div class="cost-summary-card">
+                                        <div class="cost-summary-card__label">Recete Satir Toplami</div>
+                                        <div class="cost-summary-card__value">
+                                            {{ formatCurrency(costBreakdown.summary.toplam_bilesen_maliyeti_display, costBreakdown.product.cost_display_currency) }}
+                                        </div>
+                                        <div class="cost-summary-card__subtext">
+                                            ({{ formatCurrency(costBreakdown.summary.toplam_bilesen_maliyeti_try, 'TRY') }})<br>
+                                            Tablodaki satirlarin birikimli toplamidir.
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-xl-3 mb-3">
+                                    <div class="cost-summary-card">
+                                        <div :class="['cost-health-pill', getCostHealthClass(costBreakdown.product, costBreakdown.summary)]">
+                                            <i :class="getCostHealthIcon(costBreakdown.product, costBreakdown.summary)"></i>
+                                            {{ getCostHealthLabel(costBreakdown.product, costBreakdown.summary) }}
+                                        </div>
+                                        <div :class="['cost-summary-card__value', getCostHealthClass(costBreakdown.product, costBreakdown.summary)]">
+                                            {{ formatCurrency(getCostDelta(costBreakdown.product, costBreakdown.summary), costBreakdown.product.cost_display_currency) }}
+                                        </div>
+                                        <div v-if="getCostMarginPercent(costBreakdown.product, costBreakdown.summary) !== null" class="cost-summary-card__subtext">
+                                            Oran: {{ getCostMarginPercent(costBreakdown.product, costBreakdown.summary) }}
+                                        </div>
+                                        <div v-else class="cost-summary-card__subtext">
+                                            Maliyet 0 oldugu icin oran hesaplanamadi.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cost-inline-note mb-2">
+                                <strong>Formul:</strong> <code>SUM(Bilesen Miktari x Birim Maliyet)</code> |
+                                <strong>1 USD:</strong> {{ ((costBreakdown.rates && costBreakdown.rates.USD) || 1).toLocaleString('tr-TR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) }} TRY |
+                                <strong>1 EUR:</strong> {{ ((costBreakdown.rates && costBreakdown.rates.EUR) || 1).toLocaleString('tr-TR', { minimumFractionDigits: 4, maximumFractionDigits: 4 }) }} TRY
+                            </div>
+
+                            <div v-if="Math.abs(Number(costBreakdown.summary.fark_display || 0)) > 0.01" class="cost-inline-note mb-2">
+                                <i class="fas fa-info-circle mr-2 text-info"></i>
+                                Teorik maliyet ile recete satir toplami arasinda
+                                <strong>{{ formatCurrency(costBreakdown.summary.fark_display, costBreakdown.product.cost_display_currency) }}</strong>
+                                fark var. Sistem, guncel gorunum formulune gore teorik maliyeti esas alir.
+                            </div>
+
+                            <div v-if="costBreakdown.warnings && costBreakdown.warnings.length" class="cost-warning-panel mb-2">
+                                <div class="cost-insight-card__title mb-2">
+                                    <i class="fas fa-exclamation-triangle mr-2 text-warning"></i>Dikkat Gerektiren Noktalar
+                                </div>
+                                <div class="cost-warning-list">
+                                    <div v-for="(warn, widx) in costBreakdown.warnings" :key="'w-' + widx" class="cost-warning-pill">
+                                        <i class="fas fa-exclamation-circle"></i>{{ warn }}
+                                    </div>
+                                </div>
+                            </div>
+                            <div v-else class="cost-clean-note mb-2">
+                                <i class="fas fa-check-circle mr-2"></i>Genel seviyede aktif maliyet uyarisi bulunmuyor.
+                            </div>
+
+                            <div class="cost-table-wrap">
+                                <div class="cost-table-header">
+                                    <div>
+                                        <h6>Recete Satirlari</h6>
+                                        <p>Birim maliyet, secilen kaynaktaki 1 birim bedeldir. Satir maliyeti ise kullanim miktari ile carpilarak hesaplanir.</p>
+                                    </div>
+                                    <div class="cost-breakdown-chip-list">
+                                        <span class="cost-breakdown-chip">
+                                            <i class="fas fa-ruler-combined text-primary"></i>
+                                            Birim x Miktar = Satir Maliyeti
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div v-if="costBreakdown.items && costBreakdown.items.length" class="table-responsive">
+                                    <table class="table table-sm cost-breakdown-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Bilesen</th>
+                                                <th>Tur</th>
+                                                <th class="text-right">Miktar</th>
+                                                <th class="text-right">Birim Maliyet</th>
+                                                <th class="text-right">Satir Maliyeti</th>
+                                                <th>Kaynak</th>
+                                                <th>Uyari</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template v-for="item in costBreakdown.items" :key="'grp-' + item.row_id + '-' + item.bilesen_kodu">
+                                                <tr>
+                                                    <td>
+                                                        <strong>{{ item.bilesen_ismi }}</strong>
+                                                        <div class="small text-muted">Kod: {{ item.bilesen_kodu }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span class="cost-type-badge">{{ item.bilesen_turu }}</span>
+                                                    </td>
+                                                    <td class="text-right">{{ Number(item.bilesen_miktari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) }}</td>
+                                                    <td class="text-right">
+                                                        <div class="d-flex justify-content-end align-items-start">
+                                                            <button type="button" class="cost-calc-toggle"
+                                                                @click="openCostLineDetail(item, null, false)"
+                                                                title="Satir detayini modalda goster">
+                                                                <i class="fas fa-plus-square"></i>
+                                                            </button>
+                                                            <div class="text-right">
+                                                                {{ formatCurrency(item.unit_cost_display, costBreakdown.product.cost_display_currency) }}
+                                                                <div class="small text-muted">{{ formatCurrency(item.unit_cost_try, 'TRY') }}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="text-right">
+                                                        {{ formatCurrency(item.line_cost_display, costBreakdown.product.cost_display_currency) }}
+                                                        <div class="small text-muted">{{ formatCurrency(item.line_cost_try, 'TRY') }}</div>
+                                                    </td>
+                                                    <td>
+                                                        <span :class="['cost-source-badge', costSourceBadgeClass(item.cost_source)]">
+                                                            {{ costSourceLabel(item.cost_source) }}
+                                                        </span>
+                                                    </td>
+                                                    <td>
+                                                        <div v-if="item.warnings && item.warnings.length">
+                                                            <div v-for="(iwarn, iwidx) in item.warnings" :key="'iw-' + item.row_id + '-' + iwidx" class="cost-warning-pill cost-warning-pill--table">
+                                                                <i class="fas fa-exclamation-circle"></i>{{ iwarn }}
+                                                            </div>
+                                                        </div>
+                                                        <span v-else class="text-muted small">Temiz</span>
+                                                    </td>
+                                                </tr>
+                                                <template v-for="(child, cidx) in (item.children || [])" :key="'child-group-' + item.row_id + '-' + cidx">
+                                                    <tr class="cost-child-row">
+                                                        <td class="pl-4">
+                                                            <i class="fas fa-level-up-alt fa-rotate-90 mr-1 text-muted"></i>
+                                                            {{ child.bilesen_ismi }}
+                                                            <div class="small text-muted">Kod: {{ child.bilesen_kodu }}</div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="cost-type-badge">{{ child.bilesen_turu }}</span>
+                                                        </td>
+                                                        <td class="text-right">{{ Number(child.bilesen_miktari || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 4 }) }}</td>
+                                                        <td class="text-right">
+                                                            <div class="d-flex justify-content-end align-items-start">
+                                                                <button type="button" class="cost-calc-toggle"
+                                                                    @click="openCostLineDetail(child, item, true)"
+                                                                    title="Alt satir detayini modalda goster">
+                                                                    <i class="fas fa-plus-square"></i>
+                                                                </button>
+                                                                <div class="text-right">
+                                                                    {{ formatCurrency(child.unit_cost_display, costBreakdown.product.cost_display_currency) }}
+                                                                    <div class="small text-muted">{{ formatCurrency(child.unit_cost_try, 'TRY') }}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td class="text-right">
+                                                            {{ formatCurrency(child.line_cost_display, costBreakdown.product.cost_display_currency) }}
+                                                            <div class="small text-muted">{{ formatCurrency(child.line_cost_try, 'TRY') }}</div>
+                                                        </td>
+                                                        <td>
+                                                            <span :class="['cost-source-badge', costSourceBadgeClass(child.cost_source)]">
+                                                                {{ costSourceLabel(child.cost_source) }}
+                                                            </span>
+                                                        </td>
+                                                        <td>
+                                                            <div v-if="child.warnings && child.warnings.length">
+                                                                <div v-for="(cwarn, cwidx) in child.warnings" :key="'cw-' + item.row_id + '-' + cidx + '-' + cwidx" class="cost-warning-pill cost-warning-pill--table">
+                                                                    <i class="fas fa-exclamation-circle"></i>{{ cwarn }}
+                                                                </div>
+                                                            </div>
+                                                            <span v-else class="text-muted small">Temiz</span>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div v-else class="cost-empty-state">
+                                    Bu urun icin henuz listelenecek maliyet satiri bulunamadi.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-2">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal fade" id="costLineDetailModal" tabindex="-1" role="dialog" data-backdrop="false">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="fas fa-list-ul mr-2"></i>Satir Maliyet Detayi
+                        </h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div v-if="costLineDetail.line">
+                            <h6 class="cost-line-section-title">Sozlesme Kayitlari</h6>
+                            <div v-if="costLineDetail.line.cost_calc && costLineDetail.line.cost_calc.contracts && costLineDetail.line.cost_calc.contracts.length" class="cost-line-table-wrap mb-2">
+                                <div class="table-responsive">
+                                    <table class="table table-sm cost-line-table mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Sozlesme</th>
+                                                <th>Tedarikci</th>
+                                                <th>Birim Fiyat</th>
+                                                <th>Birim Fiyat (TRY)</th>
+                                                <th>Kullanilan</th>
+                                                <th>Tarih</th>
+                                                <th>Donem</th>
+                                                <th>Kaynak</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr v-for="contract in costLineDetail.line.cost_calc.contracts" :key="'contract-line-' + (costLineDetail.line.row_id || 0) + '-' + contract.sozlesme_id + '-' + contract.tarih">
+                                                <td>#{{ contract.sozlesme_id || '-' }}</td>
+                                                <td>{{ contract.tedarikci_adi || '-' }}</td>
+                                                <td>
+                                                    {{ Number(contract.birim_fiyat || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) }}
+                                                    {{ contract.para_birimi || 'TRY' }}
+                                                </td>
+                                                <td>{{ Number(contract.birim_fiyat_try || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) }} TRY</td>
+                                                <td>{{ Number(contract.kullanilan_miktar || 0).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 6 }) }}</td>
+                                                <td>{{ formatShortDate(contract.tarih) }}</td>
+                                                <td>
+                                                    {{ (contract.baslangic_tarihi || contract.bitis_tarihi) ? (formatShortDate(contract.baslangic_tarihi) + ' - ' + formatShortDate(contract.bitis_tarihi)) : '-' }}
+                                                </td>
+                                                <td>{{ contract.kaynak_turu || '-' }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div v-else class="cost-contract-empty mb-2">
+                                Bu satir icin sozlesme kullanim kaydi bulunamadi.
+                            </div>
+                        </div>
+                        <div v-else class="cost-empty-state">
+                            Gosterilecek satir detayi bulunamadi.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Kapat</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <?php endif; ?>
+
         <!-- Info Modal -->
         <div class="modal fade" id="infoModal" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-xl" role="document">
@@ -1291,7 +2174,23 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         kurlar: { dolar: 1, euro: 1 },
                         malzemeTurleri: [],
                         selectedMaterialTypes: [],
-                        createEssence: false
+                        createEssence: false,
+                        availableTanks: [],
+                        selectedTankKodu: '',
+                        costBreakdown: {
+                            loading: false,
+                            error: '',
+                            product: null,
+                            summary: null,
+                            items: [],
+                            warnings: [],
+                            rates: { TRY: 1, USD: 1, EUR: 1 }
+                        },
+                        costLineDetail: {
+                            line: null,
+                            parent: null,
+                            isChild: false
+                        }
                     }
                 },
                 computed: {
@@ -1314,6 +2213,16 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         return pages;
                     }
                 },
+                watch: {
+                    createEssence(newValue) {
+                        if (newValue) {
+                            this.loadAvailableTanks();
+                        } else {
+                            this.selectedTankKodu = '';
+                            this.availableTanks = [];
+                        }
+                    }
+                },
                 methods: {
                     showAlert(message, type) {
                         this.alert.message = message;
@@ -1324,6 +2233,160 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.modalAlert.message = message;
                         this.modalAlert.type = type;
                         setTimeout(() => { this.modalAlert.message = ''; }, 3000);
+                    },
+                    resetCostBreakdown() {
+                        this.costBreakdown = {
+                            loading: false,
+                            error: '',
+                            product: null,
+                            summary: null,
+                            items: [],
+                            warnings: [],
+                            rates: { TRY: 1, USD: 1, EUR: 1 }
+                        };
+                        this.costLineDetail = { line: null, parent: null, isChild: false };
+                        $('#costLineDetailModal').modal('hide');
+                    },
+                    openCostBreakdown(product) {
+                        if (!product || !product.urun_kodu) return;
+                        this.resetCostBreakdown();
+                        this.costBreakdown.loading = true;
+                        this.costBreakdown.product = {
+                            urun_kodu: product.urun_kodu,
+                            urun_ismi: product.urun_ismi || '',
+                            satis_fiyati: product.satis_fiyati || 0,
+                            satis_fiyati_para_birimi: product.satis_fiyati_para_birimi || 'TRY',
+                            cost_display_currency: product.cost_display_currency || product.satis_fiyati_para_birimi || 'TRY'
+                        };
+                        $('#costBreakdownModal').modal('show');
+                        this.loadCostBreakdown(product.urun_kodu);
+                    },
+                    loadCostBreakdown(urunKodu) {
+                        fetch(`api_islemleri/urunler_islemler.php?action=get_cost_breakdown&urun_kodu=${encodeURIComponent(urunKodu)}`)
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success' && response.data) {
+                                    const data = response.data;
+                                    this.costBreakdown.loading = false;
+                                    this.costBreakdown.error = '';
+                                    this.costBreakdown.product = data.product || null;
+                                    this.costBreakdown.summary = data.summary || null;
+                                    this.costBreakdown.items = data.items || [];
+                                    this.costBreakdown.warnings = data.warnings || [];
+                                    this.costBreakdown.rates = data.rates || { TRY: 1, USD: 1, EUR: 1 };
+                                } else {
+                                    this.costBreakdown.loading = false;
+                                    this.costBreakdown.error = response.message || 'Maliyet detayi alinamadi.';
+                                }
+                            })
+                            .catch(() => {
+                                this.costBreakdown.loading = false;
+                                this.costBreakdown.error = 'Maliyet detayi yuklenirken bir hata olustu.';
+                            });
+                    },
+                    openCostLineDetail(line, parent = null, isChild = false) {
+                        if (!line) {
+                            return;
+                        }
+
+                        this.costLineDetail = {
+                            line,
+                            parent: parent || null,
+                            isChild: !!isChild
+                        };
+                        $('#costLineDetailModal').modal('show');
+                    },
+                    formatShortDate(dateInput) {
+                        if (!dateInput) {
+                            return '-';
+                        }
+
+                        const date = new Date(dateInput);
+                        if (Number.isNaN(date.getTime())) {
+                            return String(dateInput);
+                        }
+
+                        return date.toLocaleDateString('tr-TR', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                        });
+                    },
+                    getTotalCostWarningCount() {
+                        let count = Array.isArray(this.costBreakdown.warnings) ? this.costBreakdown.warnings.length : 0;
+
+                        (this.costBreakdown.items || []).forEach(item => {
+                            count += Array.isArray(item.warnings) ? item.warnings.length : 0;
+                            (item.children || []).forEach(child => {
+                                count += Array.isArray(child.warnings) ? child.warnings.length : 0;
+                            });
+                        });
+
+                        return count;
+                    },
+                    getCostDelta(product, summary) {
+                        const satisFiyati = parseFloat(product && product.satis_fiyati !== undefined ? product.satis_fiyati : 0) || 0;
+                        const teorikMaliyet = parseFloat(summary && summary.teorik_maliyet_display !== undefined ? summary.teorik_maliyet_display : 0) || 0;
+                        return satisFiyati - teorikMaliyet;
+                    },
+                    getCostMarginPercent(product, summary) {
+                        const teorikMaliyet = parseFloat(summary && summary.teorik_maliyet_display !== undefined ? summary.teorik_maliyet_display : 0) || 0;
+                        if (teorikMaliyet <= 0) {
+                            return null;
+                        }
+
+                        const ratio = (this.getCostDelta(product, summary) / teorikMaliyet) * 100;
+                        return `%${ratio.toLocaleString('tr-TR', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}`;
+                    },
+                    getCostHealthClass(product, summary) {
+                        const delta = this.getCostDelta(product, summary);
+                        if (delta > 0.01) {
+                            return 'is-positive';
+                        }
+                        if (delta < -0.01) {
+                            return 'is-negative';
+                        }
+                        return 'is-neutral';
+                    },
+                    getCostHealthLabel(product, summary) {
+                        const delta = this.getCostDelta(product, summary);
+                        if (delta > 0.01) {
+                            return 'Tahmini kar alani';
+                        }
+                        if (delta < -0.01) {
+                            return 'Zarar riski';
+                        }
+                        return 'Basabas nokta';
+                    },
+                    getCostHealthIcon(product, summary) {
+                        const delta = this.getCostDelta(product, summary);
+                        if (delta > 0.01) {
+                            return 'fas fa-arrow-trend-up';
+                        }
+                        if (delta < -0.01) {
+                            return 'fas fa-arrow-trend-down';
+                        }
+                        return 'fas fa-equals';
+                    },
+                    costSourceBadgeClass(source) {
+                        const classes = {
+                            material_purchase_price: 'is-material',
+                            essence_view_cost: 'is-essence',
+                            ready_product_purchase_price: 'is-ready-product',
+                            product_component_not_costed: 'is-not-costed',
+                            none: 'is-none'
+                        };
+                        return classes[source] || 'is-none';
+                    },
+                    costSourceLabel(source) {
+                        const labels = {
+                            material_purchase_price: 'Malzeme alis fiyati',
+                            essence_view_cost: 'Esans maliyet gorunumu',
+                            ready_product_purchase_price: 'Hazir urun alis fiyati',
+                            product_component_not_costed: 'Urun bileseni (0 kabul)',
+                            none: 'Kaynak bulunamadi'
+                        };
+                        return labels[source] || source || '-';
                     },
                     loadSupplierList() {
                         fetch('api_islemleri/tedarikciler_islemler.php?action=get_suppliers')
@@ -1352,8 +2415,13 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     onPurchaseProductChange() {
                         const product = this.products.find(p => p.urun_kodu === this.purchase.urun_kodu);
                         if (product) {
-                            this.purchase.birim_fiyat = parseFloat(product.alis_fiyati) || 0;
-                            this.purchase.para_birimi = product.alis_fiyati_para_birimi || 'TL';
+                            this.purchase.birim_fiyat = parseFloat(
+                                product.alis_fiyati_display !== undefined ? product.alis_fiyati_display : product.alis_fiyati
+                            ) || 0;
+                            const productCurrency = (
+                                product.cost_display_currency || product.satis_fiyati_para_birimi || product.alis_fiyati_para_birimi || 'TRY'
+                            ).toUpperCase();
+                            this.purchase.para_birimi = productCurrency === 'TRY' ? 'TL' : productCurrency;
                             this.purchase.birim = product.birim || 'adet';
                         }
                     },
@@ -1396,9 +2464,29 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             .then(response => response.json())
                             .then(response => {
                                 if (response.status === 'success') {
-                                    // 'alkol' türünü listeden filtrele
-                                    this.malzemeTurleri = response.data.filter(tur => tur.value !== 'alkol');
+                                    // 'alkol' ve 'su' türlerini listeden filtrele
+                                    this.malzemeTurleri = response.data.filter(tur => !['alkol', 'su'].includes(String(tur.value).toLowerCase()));
                                 }
+                            });
+                    },
+                    loadAvailableTanks() {
+                        fetch('api_islemleri/urunler_islemler.php?action=get_available_tanks')
+                            .then(response => response.json())
+                            .then(response => {
+                                if (response.status === 'success') {
+                                    this.availableTanks = response.data || [];
+                                    const tankExists = this.availableTanks.some(tank => tank.tank_kodu === this.selectedTankKodu);
+                                    if (!tankExists) {
+                                        this.selectedTankKodu = '';
+                                    }
+                                } else {
+                                    this.availableTanks = [];
+                                    this.selectedTankKodu = '';
+                                }
+                            })
+                            .catch(() => {
+                                this.availableTanks = [];
+                                this.selectedTankKodu = '';
                             });
                     },
                     loadProducts(page = 1) {
@@ -1480,6 +2568,8 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         this.uploadProgress = 0; // Reset progress
                         this.selectedMaterialTypes = []; // Reset selected types
                         this.createEssence = false; // Reset essence creation
+                        this.availableTanks = []; // Reset available tanks
+                        this.selectedTankKodu = ''; // Reset selected tank
                         this.modalAlert = { message: '', type: '' }; // Clear modal alert
 
                         if (product) {
@@ -1522,6 +2612,17 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             }
                         }
 
+                        const isNewProducedProduct = !this.modal.data.urun_kodu && this.modal.data.urun_tipi === 'uretilen';
+                        if (isNewProducedProduct && this.createEssence && !this.selectedTankKodu) {
+                            Swal.fire({
+                                title: 'Tank Seçimi Gerekli',
+                                text: 'Esans oluşturmak için boş bir tank seçmelisiniz.',
+                                icon: 'warning',
+                                confirmButtonText: 'Tamam'
+                            });
+                            return;
+                        }
+
                         // Premium Confirmation
                         const isEdit = !!this.modal.data.urun_kodu;
                         const actionText = isEdit ? 'Ürün Güncellenecek' : 'Yeni Ürün Eklenecek';
@@ -1553,6 +2654,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 if (action === 'add_product') {
                                     formData.append('selected_material_types', JSON.stringify(this.selectedMaterialTypes));
                                     formData.append('create_essence', this.createEssence ? '1' : '0');
+                                    if (this.createEssence) {
+                                        formData.append('selected_tank_kodu', this.selectedTankKodu);
+                                    }
                                 }
 
                                 fetch('api_islemleri/urunler_islemler.php', {
@@ -1672,8 +2776,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     formatCurrency(value, currency = 'TRY') {
                         if (isNaN(value)) return '0,00 ₺';
                         const num = parseFloat(value);
-                        const currencySymbols = { 'TRY': '₺', 'USD': '$', 'EUR': '€' };
-                        const symbol = currencySymbols[currency] || '₺';
+                        const normalizedCurrency = (currency || 'TRY').toUpperCase();
+                        const currencySymbols = { 'TRY': '₺', 'TL': '₺', 'USD': '$', 'EUR': '€' };
+                        const symbol = currencySymbols[normalizedCurrency] || '₺';
                         return num.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + symbol;
                     },
                     formatPriceWithCurrency(product) {
@@ -1682,19 +2787,33 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         return this.formatCurrency(price, currency);
                     },
                     formatTeorikMaliyet(product) {
-                        // Hazır alınan ürün için alış fiyatını göster
-                        if (product.urun_tipi === 'hazir_alinan') {
-                            return this.formatAlisFiyati(product);
-                        }
-                        // Üretilen ürün için teorik maliyeti göster (satış fiyatı para birimiyle)
-                        const teorikMaliyet = parseFloat(product.teorik_maliyet) || 0;
-                        const currency = product.satis_fiyati_para_birimi || 'TRY';
+                        // Backend tarafinda maliyet satis para birimine normalize edilir.
+                        const teorikMaliyet = parseFloat(
+                            product.teorik_maliyet_display !== undefined ? product.teorik_maliyet_display : product.teorik_maliyet
+                        ) || 0;
+                        const currency = product.cost_display_currency || product.satis_fiyati_para_birimi || 'TRY';
                         return this.formatCurrency(teorikMaliyet, currency);
                     },
                     formatAlisFiyati(product) {
-                        const alisFiyati = parseFloat(product.alis_fiyati) || 0;
-                        const currency = product.alis_fiyati_para_birimi || 'TRY';
+                        // Backend tarafinda alis fiyati satis para birimine normalize edilir.
+                        const alisFiyati = parseFloat(
+                            product.alis_fiyati_display !== undefined ? product.alis_fiyati_display : product.alis_fiyati
+                        ) || 0;
+                        const currency = product.cost_display_currency || product.satis_fiyati_para_birimi || product.alis_fiyati_para_birimi || 'TRY';
                         return this.formatCurrency(alisFiyati, currency);
+                    },
+                    convertFromTry(value, currency = 'TRY') {
+                        const amount = parseFloat(value) || 0;
+                        const normalized = (currency || 'TRY').toUpperCase();
+                        if (normalized === 'USD') {
+                            const usdRate = parseFloat(this.kurlar?.dolar) || 1;
+                            return usdRate > 0 ? amount / usdRate : amount;
+                        }
+                        if (normalized === 'EUR') {
+                            const eurRate = parseFloat(this.kurlar?.euro) || 1;
+                            return eurRate > 0 ? amount / eurRate : amount;
+                        }
+                        return amount;
                     },
                     stockClass(product) {
                         const stok = parseFloat(product.stok_miktari);
@@ -1993,10 +3112,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             });
                     },
                     calculateProfitability(product) {
-                        if (!this.operatingCostMetrics || !product.teorik_maliyet) return '<span class="text-muted">-</span>';
+                        if (!this.operatingCostMetrics) return '<span class="text-muted">-</span>';
 
-                        const theoreticalCost = parseFloat(product.teorik_maliyet);
-                        const operatingCost = parseFloat(this.operatingCostMetrics.unit_operating_cost);
+                        const currency = product.cost_display_currency || product.satis_fiyati_para_birimi || 'TRY';
+                        const theoreticalCost = parseFloat(
+                            product.teorik_maliyet_display !== undefined ? product.teorik_maliyet_display : product.teorik_maliyet
+                        ) || 0;
+                        const operatingCostTry = parseFloat(this.operatingCostMetrics.unit_operating_cost) || 0;
+                        const operatingCost = this.convertFromTry(operatingCostTry, currency);
                         const totalCost = theoreticalCost + operatingCost;
                         const sellingPrice = parseFloat(product.satis_fiyati);
 
@@ -2006,9 +3129,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         const diff = sellingPrice - totalCost;
 
                         if (diff > 0) {
-                            return `<span class="badge badge-success" title="Tahmini Kâr: ${this.formatCurrency(diff)}">Kârlı</span>`;
+                            return `<span class="badge badge-success" title="Tahmini Kâr: ${this.formatCurrency(diff, currency)}">Kârlı</span>`;
                         } else {
-                            return `<span class="badge badge-danger" title="Tahmini Zarar: ${this.formatCurrency(Math.abs(diff))}">Zarar</span>`;
+                            return `<span class="badge badge-danger" title="Tahmini Zarar: ${this.formatCurrency(Math.abs(diff), currency)}">Zarar</span>`;
                         }
                     },
                     loadKurlar() {
@@ -2040,6 +3163,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                     // Modal açıldığında tab'ı Ürün Bilgileri'ne sıfırla
                     $('#productModal').on('shown.bs.modal', () => {
                         $('#info-tab').tab('show');
+                    });
+
+                    $('#costBreakdownModal').on('hidden.bs.modal', () => {
+                        $('#costLineDetailModal').modal('hide');
+                        this.costLineDetail = { line: null, parent: null, isChild: false };
+                    });
+
+                    $('#costLineDetailModal').on('hidden.bs.modal', () => {
+                        this.costLineDetail = { line: null, parent: null, isChild: false };
                     });
                 }
             });

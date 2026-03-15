@@ -637,9 +637,17 @@ function startWorkOrder() {
             $miktar = floatval($component['miktar']);
 
             // 3a. Update material stock
-            $update_material_stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($miktar) . "' WHERE malzeme_kodu = '" . $connection->real_escape_string($malzeme_kodu) . "'";
+            $escaped_miktar = $connection->real_escape_string($miktar);
+            $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
+            $update_material_stock_query = "UPDATE malzemeler 
+                                            SET stok_miktari = stok_miktari - '" . $escaped_miktar . "' 
+                                            WHERE malzeme_kodu = '" . $escaped_malzeme_kodu . "' 
+                                            AND stok_miktari >= '" . $escaped_miktar . "'";
             if (!$connection->query($update_material_stock_query)) {
                 throw new Exception("Malzeme stok miktarı güncellenemedi: " . $connection->error);
+            }
+            if ($connection->affected_rows === 0) {
+                throw new Exception("Yetersiz stok: " . $malzeme_kodu . " kodlu malzeme için yeterli miktar bulunmuyor.");
             }
 
             // 3b. Log stock movement
@@ -864,9 +872,17 @@ function revertCompletion() {
         $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
 
         // 2. Decrease stock for the produced essence
-        $update_essence_stock_query = "UPDATE esanslar SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($tamamlanan_miktar) . "' WHERE esans_kodu = '" . $connection->real_escape_string($work_order['esans_kodu']) . "'";
+        $escaped_tamamlanan_miktar = $connection->real_escape_string($tamamlanan_miktar);
+        $escaped_esans_kodu = $connection->real_escape_string($work_order['esans_kodu']);
+        $update_essence_stock_query = "UPDATE esanslar 
+                                       SET stok_miktari = stok_miktari - '" . $escaped_tamamlanan_miktar . "' 
+                                       WHERE esans_kodu = '" . $escaped_esans_kodu . "' 
+                                       AND stok_miktari >= '" . $escaped_tamamlanan_miktar . "'";
         if (!$connection->query($update_essence_stock_query)) {
             throw new Exception('Esans stok miktarı güncellenirken hata oluştu: ' . $connection->error);
+        }
+        if ($connection->affected_rows === 0) {
+            throw new Exception('Yetersiz stok: üretilen esans stoğu geri alma işlemi için yeterli değil.');
         }
 
         // 3. Log the stock reversal for the essence

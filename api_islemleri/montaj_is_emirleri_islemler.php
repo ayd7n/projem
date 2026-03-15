@@ -674,9 +674,17 @@ function startWorkOrder() {
             $miktar = floatval($component['miktar']);
 
             // 3a. Update material stock
-            $update_material_stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($miktar) . "' WHERE malzeme_kodu = '" . $connection->real_escape_string($malzeme_kodu) . "'";
+            $escaped_miktar = $connection->real_escape_string($miktar);
+            $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
+            $update_material_stock_query = "UPDATE malzemeler 
+                                            SET stok_miktari = stok_miktari - '" . $escaped_miktar . "' 
+                                            WHERE malzeme_kodu = '" . $escaped_malzeme_kodu . "' 
+                                            AND stok_miktari >= '" . $escaped_miktar . "'";
             if (!$connection->query($update_material_stock_query)) {
                 throw new Exception("Malzeme stok miktarı güncellenemedi: " . $connection->error);
+            }
+            if ($connection->affected_rows === 0) {
+                throw new Exception("Yetersiz stok: " . $malzeme_kodu . " kodlu malzeme için yeterli miktar bulunmuyor.");
             }
 
             // 3b. Log stock movement
@@ -905,9 +913,17 @@ function revertCompletion() {
         $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
 
         // 2. Decrease stock for the produced product
-        $update_product_stock_query = "UPDATE urunler SET stok_miktari = stok_miktari - '" . $connection->real_escape_string($tamamlanan_miktar) . "' WHERE urun_kodu = '" . $connection->real_escape_string($work_order['urun_kodu']) . "'";
+        $escaped_tamamlanan_miktar = $connection->real_escape_string($tamamlanan_miktar);
+        $escaped_urun_kodu = $connection->real_escape_string($work_order['urun_kodu']);
+        $update_product_stock_query = "UPDATE urunler 
+                                       SET stok_miktari = stok_miktari - '" . $escaped_tamamlanan_miktar . "' 
+                                       WHERE urun_kodu = '" . $escaped_urun_kodu . "' 
+                                       AND stok_miktari >= '" . $escaped_tamamlanan_miktar . "'";
         if (!$connection->query($update_product_stock_query)) {
             throw new Exception('Ürün stok miktarı güncellenirken hata oluştu: ' . $connection->error);
+        }
+        if ($connection->affected_rows === 0) {
+            throw new Exception('Yetersiz stok: üretilen ürün stoğu geri alma işlemi için yeterli değil.');
         }
 
         // 3. Log the stock reversal for the product

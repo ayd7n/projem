@@ -26,6 +26,38 @@ if ($_SESSION['taraf'] !== 'personel') {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+function get_purchase_order_status_group($durum)
+{
+    if (in_array($durum, ['taslak', 'onaylandi', 'olusturuldu'], true)) {
+        return 'olusturuldu';
+    }
+
+    if (in_array($durum, ['gonderildi', 'kismen_teslim', 'tamamlandi', 'yollandi'], true)) {
+        return 'yollandi';
+    }
+
+    if ($durum === 'kapatildi') {
+        return 'kapatildi';
+    }
+
+    return $durum;
+}
+
+function resolve_purchase_order_status($durum, $existing_durum = '')
+{
+    if ($durum === 'olusturuldu') {
+        $durum = 'taslak';
+    } elseif ($durum === 'yollandi') {
+        $durum = 'gonderildi';
+    }
+
+    if (!empty($existing_durum) && get_purchase_order_status_group($existing_durum) === get_purchase_order_status_group($durum)) {
+        return $existing_durum;
+    }
+
+    return $durum;
+}
+
 switch ($action) {
     case 'get_all_orders':
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
@@ -137,7 +169,7 @@ switch ($action) {
         $siparis_tarihi = $_POST['siparis_tarihi'] ?? date('Y-m-d');
         $istenen_teslim_tarihi = $_POST['istenen_teslim_tarihi'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
-        $durum = $_POST['durum'] ?? 'taslak';
+        $durum = resolve_purchase_order_status($_POST['durum'] ?? 'taslak');
         $para_birimi = $_POST['para_birimi'] ?? 'TRY';
         $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
 
@@ -250,6 +282,129 @@ switch ($action) {
         $para_birimi = $_POST['para_birimi'] ?? 'TRY';
         $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
 
+        if (!$siparis_id || empty($kalemler)) {
+            echo json_encode(['status' => 'error', 'message' => 'Siparis ID ve en az bir siparis kalemi gereklidir.']);
+            break;
+        }
+
+        $connection->begin_transaction();
+
+        try {
+            $current_order_result = $connection->query("SELECT durum FROM satinalma_siparisler WHERE siparis_id = $siparis_id FOR UPDATE");
+            if (!$current_order_result || $current_order_result->num_rows === 0) {
+                throw new Exception('Guncellenecek siparis bulunamadi.');
+            }
+
+            $current_order = $current_order_result->fetch_assoc();
+            $resolved_status = resolve_purchase_order_status($durum, $current_order['durum'] ?? '');
+
+            $existing_items_result = $connection->query("SELECT malzeme_kodu, teslim_edilen_miktar FROM satinalma_siparis_kalemleri WHERE siparis_id = $siparis_id");
+            $existing_delivered = [];
+            if ($existing_items_result) {
+                while ($existing_item = $existing_items_result->fetch_assoc()) {
+                    $existing_delivered[(int) $existing_item['malzeme_kodu']] = (float) $existing_item['teslim_edilen_miktar'];
+                }
+            }
+
+            $normalized_items = [];
+            $seen_codes = [];
+            $toplam_tutar = 0;
+
+            foreach ($kalemler as $kalem) {
+                $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
+                $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
+
+                if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
+                    $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
+                    $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
+                    if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                        $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                    }
+                }
+
+                $miktar = floatval($kalem['miktar'] ?? 0);
+                if ($malzeme_kodu <= 0 || $miktar <= 0) {
+                    throw new Exception('Siparis kalemlerinde gecersiz malzeme veya miktar bulundu.');
+                }
+
+                $teslim_edilen = $existing_delivered[$malzeme_kodu] ?? 0.0;
+                if ($teslim_edilen > $miktar) {
+                    throw new Exception("{$malzeme_adi_raw} kalemi icin miktar, teslim edilen miktarin altina dusurulemez.");
+                }
+
+                $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);
+                $toplam_fiyat = floatval($kalem['toplam_fiyat'] ?? ($miktar * $birim_fiyat));
+                $toplam_tutar += $toplam_fiyat;
+
+                $normalized_items[] = [
+                    'malzeme_kodu' => $malzeme_kodu,
+                    'malzeme_adi' => $connection->real_escape_string($malzeme_adi_raw),
+                    'miktar' => $miktar,
+                    'birim' => $connection->real_escape_string($kalem['birim'] ?? 'adet'),
+                    'birim_fiyat' => $birim_fiyat,
+                    'para_birimi' => $connection->real_escape_string($kalem['para_birimi'] ?? 'TRY'),
+                    'toplam_fiyat' => $toplam_fiyat,
+                    'teslim_edilen_miktar' => $teslim_edilen,
+                    'aciklama' => $connection->real_escape_string($kalem['aciklama'] ?? ''),
+                ];
+                $seen_codes[$malzeme_kodu] = true;
+            }
+
+            foreach ($existing_delivered as $existing_code => $delivered_amount) {
+                if ($delivered_amount > 0 && !isset($seen_codes[$existing_code])) {
+                    throw new Exception('Teslim alinmis kalemler siparisten kaldirilamaz.');
+                }
+            }
+
+            $istenen_teslim_esc = !empty($istenen_teslim_tarihi) ? "'" . $connection->real_escape_string($istenen_teslim_tarihi) . "'" : "NULL";
+            $durum_esc = $connection->real_escape_string($resolved_status);
+            $para_birimi_esc = $connection->real_escape_string($para_birimi);
+            $aciklama_esc = $connection->real_escape_string($aciklama);
+
+            $update_sql = "UPDATE satinalma_siparisler SET 
+                istenen_teslim_tarihi = $istenen_teslim_esc, 
+                durum = '$durum_esc', 
+                toplam_tutar = $toplam_tutar, 
+                para_birimi = '$para_birimi_esc', 
+                aciklama = '$aciklama_esc' 
+                WHERE siparis_id = $siparis_id";
+
+            if (!$connection->query($update_sql)) {
+                throw new Exception('Siparis guncellenemedi: ' . $connection->error);
+            }
+
+            if (!$connection->query("DELETE FROM satinalma_siparis_kalemleri WHERE siparis_id = $siparis_id")) {
+                throw new Exception('Eski siparis kalemleri silinemedi: ' . $connection->error);
+            }
+
+            foreach ($normalized_items as $kalem) {
+                $item_sql = "INSERT INTO satinalma_siparis_kalemleri 
+                    (siparis_id, malzeme_kodu, malzeme_adi, miktar, birim, birim_fiyat, para_birimi, toplam_fiyat, teslim_edilen_miktar, aciklama)
+                    VALUES ($siparis_id, {$kalem['malzeme_kodu']}, '{$kalem['malzeme_adi']}', {$kalem['miktar']}, '{$kalem['birim']}', {$kalem['birim_fiyat']}, '{$kalem['para_birimi']}', {$kalem['toplam_fiyat']}, {$kalem['teslim_edilen_miktar']}, '{$kalem['aciklama']}')";
+
+                if (!$connection->query($item_sql)) {
+                    throw new Exception('Siparis kalemi kaydedilemedi: ' . $connection->error);
+                }
+            }
+
+            $connection->commit();
+
+            log_islem($connection, $_SESSION['kullanici_adi'], "Satinalma siparisi #$siparis_id guncellendi", 'UPDATE');
+            echo json_encode(['status' => 'success', 'message' => 'Siparis basariyla guncellendi.']);
+        } catch (Exception $e) {
+            $connection->rollback();
+            echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+        break;
+
+    case '__legacy_update_order':
+        $siparis_id = (int) ($_POST['siparis_id'] ?? 0);
+        $istenen_teslim_tarihi = $_POST['istenen_teslim_tarihi'] ?? '';
+        $aciklama = $_POST['aciklama'] ?? '';
+        $durum = $_POST['durum'] ?? 'taslak';
+        $para_birimi = $_POST['para_birimi'] ?? 'TRY';
+        $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
+
         if (!$siparis_id) {
             echo json_encode(['status' => 'error', 'message' => 'Sipariş ID belirtilmedi.']);
             break;
@@ -341,6 +496,15 @@ switch ($action) {
             echo json_encode(['status' => 'error', 'message' => 'Geçersiz durum.']);
             break;
         }
+
+        $current_status_result = $connection->query("SELECT durum FROM satinalma_siparisler WHERE siparis_id = $siparis_id");
+        if (!$current_status_result || $current_status_result->num_rows === 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Siparis bulunamadi.']);
+            break;
+        }
+
+        $current_status = $current_status_result->fetch_assoc()['durum'] ?? '';
+        $durum = resolve_purchase_order_status($durum, $current_status);
 
         if ($connection->query("UPDATE satinalma_siparisler SET durum = '$durum' WHERE siparis_id = $siparis_id")) {
             log_islem($connection, $_SESSION['kullanici_adi'], "Satınalma siparişi #$siparis_id durumu '$durum' olarak güncellendi", 'UPDATE');
