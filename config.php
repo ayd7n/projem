@@ -78,6 +78,14 @@ if (session_status() == PHP_SESSION_NONE) {
 require_once __DIR__ . '/includes/backup_functions.php';
 // Include the new authentication helper functions
 require_once __DIR__ . '/includes/auth_functions.php';
+// Include stock guard helpers
+require_once __DIR__ . '/includes/stock_guard.php';
+
+try {
+    ensure_negative_stock_triggers($connection);
+} catch (Throwable $e) {
+    error_log("Negatif stok trigger kontrolu basarisiz oldu: " . $e->getMessage());
+}
 
 // Use a try-catch block to prevent backup errors from crashing the entire site
 try {

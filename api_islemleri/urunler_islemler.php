@@ -902,6 +902,14 @@ if (isset($_GET['action'])) {
     $create_essence = isset($_POST['create_essence']) && $_POST['create_essence'] === '1';
     $selected_tank_kodu = trim($_POST['selected_tank_kodu'] ?? '');
 
+    if (in_array($action, ['add_product', 'update_product'], true)) {
+        $stock_validation_error = validate_non_negative_stock_value($stok_miktari);
+        if ($stock_validation_error !== null) {
+            echo json_encode(['status' => 'error', 'message' => $stock_validation_error]);
+            exit;
+        }
+    }
+
     if ($action == 'add_product') {
         if (!yetkisi_var('action:urunler:create')) {
             echo json_encode(['status' => 'error', 'message' => 'Yeni ürün ekleme yetkiniz yok.']);
@@ -1099,7 +1107,13 @@ if (isset($_GET['action'])) {
                         $response = ['status' => 'success', 'message' => $resp_message];
                     }
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+                    $response = [
+                        'status' => 'error',
+                        'message' => normalize_negative_stock_error_message(
+                            $connection->error,
+                            'Veritabani hatasi: ' . $connection->error
+                        )
+                    ];
                 }
             }
             }
@@ -1166,7 +1180,13 @@ if (isset($_GET['action'])) {
                     log_islem($connection, $_SESSION['kullanici_adi'], "$old_product_name ürünü $urun_ismi olarak güncellendi", 'UPDATE');
                     $response = ['status' => 'success', 'message' => 'Ürün başarıyla güncellendi.'];
                 } else {
-                    $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $connection->error];
+                    $response = [
+                        'status' => 'error',
+                        'message' => normalize_negative_stock_error_message(
+                            $connection->error,
+                            'Veritabani hatasi: ' . $connection->error
+                        )
+                    ];
                 }
             }
         }

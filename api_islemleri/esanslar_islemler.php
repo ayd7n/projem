@@ -140,6 +140,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $tank_kodu = $input['tank_kodu'] ?? null;
             $tank_ismi = $input['tank_ismi'] ?? null;
 
+            $stock_validation_error = validate_non_negative_stock_value($stok_miktari);
+            if ($stock_validation_error !== null) {
+                echo json_encode(['status' => 'error', 'message' => $stock_validation_error]);
+                exit;
+            }
+
             // Check if esans_kodu already exists
             $check_query = "SELECT esans_id FROM esanslar WHERE esans_kodu = ?";
             $check_stmt = $connection->prepare($check_query);
@@ -179,7 +185,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı sisteme eklendi", 'CREATE');
                 echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla eklendi']);
             } else {
-                echo json_encode(['status' => 'error', 'error_code' => 'ES008', 'message' => 'Esans eklenirken bir hata oluştu']);
+                echo json_encode([
+                    'status' => 'error',
+                    'error_code' => 'ES008',
+                    'message' => normalize_negative_stock_error_message(
+                        $stmt->error ?: $connection->error,
+                        'Esans eklenirken bir hata olustu'
+                    )
+                ]);
             }
             break;
             
@@ -197,6 +210,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $not_bilgisi = $input['not_bilgisi'] ?? '';
             $tank_kodu = $input['tank_kodu'] ?? null;
             $tank_ismi = $input['tank_ismi'] ?? null;
+
+            $stock_validation_error = validate_non_negative_stock_value($stok_miktari);
+            if ($stock_validation_error !== null) {
+                echo json_encode(['status' => 'error', 'message' => $stock_validation_error]);
+                exit;
+            }
 
             if ($esans_id) {
                 // Check if another esans with the same code exists (excluding current esans)
@@ -238,7 +257,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı güncellendi", 'UPDATE');
                     echo json_encode(['status' => 'success', 'message' => 'Esans başarıyla güncellendi']);
                 } else {
-                    echo json_encode(['status' => 'error', 'error_code' => 'ES010', 'message' => 'Esans güncellenirken bir hata oluştu']);
+                    echo json_encode([
+                        'status' => 'error',
+                        'error_code' => 'ES010',
+                        'message' => normalize_negative_stock_error_message(
+                            $stmt->error ?: $connection->error,
+                            'Esans guncellenirken bir hata olustu'
+                        )
+                    ]);
                 }
             } else {
                 echo json_encode(['status' => 'error', 'error_code' => 'ES011', 'message' => 'Geçersiz esans ID']);

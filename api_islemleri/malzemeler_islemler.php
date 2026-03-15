@@ -259,6 +259,14 @@ if (isset($_GET['action'])) {
     $raf = $_POST['raf'] ?? '';
     $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
 
+    if (in_array($action, ['add_material', 'update_material'], true)) {
+        $stock_validation_error = validate_non_negative_stock_value($stok_miktari);
+        if ($stock_validation_error !== null) {
+            echo json_encode(['status' => 'error', 'message' => $stock_validation_error]);
+            exit;
+        }
+    }
+
     if ($action == 'add_material') {
         if (!yetkisi_var('action:malzemeler:create')) {
             echo json_encode(['status' => 'error', 'message' => 'Yeni malzeme ekleme yetkiniz yok.']);
@@ -277,7 +285,13 @@ if (isset($_GET['action'])) {
                 log_islem($connection, $_SESSION['kullanici_adi'], "$malzeme_ismi malzemesi sisteme eklendi", 'CREATE');
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla eklendi.'];
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $response = [
+                    'status' => 'error',
+                    'message' => normalize_negative_stock_error_message(
+                        $stmt->error ?: $connection->error,
+                        'Veritabani hatasi: ' . ($stmt->error ?: $connection->error)
+                    )
+                ];
             }
             $stmt->close();
         }
@@ -323,7 +337,13 @@ if (isset($_GET['action'])) {
                 log_islem($connection, $_SESSION['kullanici_adi'], "$old_name malzemesi $malzeme_ismi olarak güncellendi", 'UPDATE');
                 $response = ['status' => 'success', 'message' => 'Malzeme başarıyla güncellendi.'];
             } else {
-                $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $stmt->error];
+                $response = [
+                    'status' => 'error',
+                    'message' => normalize_negative_stock_error_message(
+                        $stmt->error ?: $connection->error,
+                        'Veritabani hatasi: ' . ($stmt->error ?: $connection->error)
+                    )
+                ];
             }
             $stmt->close();
         }

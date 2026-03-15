@@ -563,10 +563,16 @@ switch ($action) {
                 }
             } else {
                 $connection->query("DELETE FROM stok_hareket_kayitlari WHERE hareket_id = " . intval($hareket_id));
+                $stock_error = $connection->error;
+                $error_message = $stock_error !== ''
+                    ? normalize_negative_stock_error_message($stock_error, 'Yetersiz stok: hareket kaydi iptal edildi.')
+                    : 'Yetersiz stok: hareket kaydi iptal edildi.';
                 echo json_encode([
                     'status' => 'error',
-                    'message' => 'Yetersiz stok: hareket kaydi iptal edildi.',
-                    'error_code' => 'INSUFFICIENT_STOCK'
+                    'message' => $error_message,
+                    'error_code' => $stock_error !== '' && is_negative_stock_guard_error($stock_error)
+                        ? 'NEGATIVE_STOCK_BLOCKED'
+                        : 'INSUFFICIENT_STOCK'
                 ]);
             }
         } else {
@@ -1096,10 +1102,11 @@ switch ($action) {
             $hedef_raf_escaped = $connection->real_escape_string($hedef_raf);
             $dest_description_escaped = $connection->real_escape_string($dest_description);
             $yon_giris_escaped = $connection->real_escape_string($yon_giris);
+            $hedef_tank_kodu_escaped = $connection->real_escape_string($hedef_tank_kodu);
 
             // For essence transfers, we use tank_kodu in the movements, for materials/products we use depot/raf
             if ($stok_turu === 'esans') {
-                $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_giris_escaped', '$hareket_turu_transfer_escaped', '$hedef_depo_escaped', '$hedef_raf_escaped', '$tank_kodu_escaped', '$ilgili_belge_no_escaped', '$dest_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
+                $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_giris_escaped', '$hareket_turu_transfer_escaped', '$hedef_depo_escaped', '$hedef_raf_escaped', '$hedef_tank_kodu_escaped', '$ilgili_belge_no_escaped', '$dest_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
             } else {
                 $null1_escaped = $connection->real_escape_string($null1);
                 $dest_movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, tank_kodu, ilgili_belge_no, aciklama, kaydeden_personel_id, kaydeden_personel_adi) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $miktar_val, '$yon_giris_escaped', '$hareket_turu_transfer_escaped', '$hedef_depo_escaped', '$hedef_raf_escaped', '$null1_escaped', '$ilgili_belge_no_escaped', '$dest_description_escaped', $user_id_val, '$kullanici_adi_escaped')";
@@ -1110,30 +1117,43 @@ switch ($action) {
             }
             $dest_movement_id = $connection->insert_id;
 
-            // Commit transaction
-            $connection->commit();
-
             // Update the location in the main item table (urunler, malzemeler or esanslar) to the destination location
             switch ($stok_turu) {
                 case 'malzeme':
                     $update_query = "UPDATE malzemeler SET depo = ?, raf = ? WHERE malzeme_kodu = ?";
                     $update_stmt = $connection->prepare($update_query);
+                    if (!$update_stmt) {
+                        throw new Exception('Malzeme transfer guncellemesi hazirlanamadi: ' . $connection->error);
+                    }
                     $update_stmt->bind_param('ssi', $hedef_depo, $hedef_raf, $kod);
-                    $update_stmt->execute();
+                    if (!$update_stmt->execute() || $update_stmt->affected_rows !== 1) {
+                        $update_error = $update_stmt->error ?: $connection->error;
+                        $update_stmt->close();
+                        throw new Exception('Malzeme transferi tamamlanamadi: ' . ($update_error ?: 'Kayit guncellenemedi.'));
+                    }
                     $update_stmt->close();
                     break;
                 case 'urun':
                     $update_query = "UPDATE urunler SET depo = ?, raf = ? WHERE urun_kodu = ?";
                     $update_stmt = $connection->prepare($update_query);
+                    if (!$update_stmt) {
+                        throw new Exception('Urun transfer guncellemesi hazirlanamadi: ' . $connection->error);
+                    }
                     $update_stmt->bind_param('ssi', $hedef_depo, $hedef_raf, $kod);
-                    $update_stmt->execute();
+                    if (!$update_stmt->execute() || $update_stmt->affected_rows !== 1) {
+                        $update_error = $update_stmt->error ?: $connection->error;
+                        $update_stmt->close();
+                        throw new Exception('Urun transferi tamamlanamadi: ' . ($update_error ?: 'Kayit guncellenemedi.'));
+                    }
                     $update_stmt->close();
                     break;
                 case 'esans':
-                    // For essences, we update the tank information and stock amounts
-                    // First, get the target tank name
+                    // Essence transfers only change tank assignment; total stock stays unchanged.
                     $tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_kodu = ?";
                     $tank_stmt = $connection->prepare($tank_query);
+                    if (!$tank_stmt) {
+                        throw new Exception('Hedef tank sorgusu hazirlanamadi: ' . $connection->error);
+                    }
                     $tank_stmt->bind_param('s', $hedef_tank_kodu);
                     $tank_stmt->execute();
                     $tank_result = $tank_stmt->get_result();
@@ -1145,22 +1165,26 @@ switch ($action) {
                     $tank_info = $tank_result->fetch_assoc();
                     $hedef_tank_ismi = $tank_info['tank_ismi'];
                     $tank_stmt->close();
-                    
-                    // First, reduce stock from source
-                    $reduce_query = "UPDATE esanslar SET stok_miktari = stok_miktari - ? WHERE esans_kodu = ?";
-                    $reduce_stmt = $connection->prepare($reduce_query);
-                    $reduce_stmt->bind_param('ds', $miktar, $kod);
-                    $reduce_stmt->execute();
-                    $reduce_stmt->close();
 
-                    // Then increase stock at destination with new tank assignment
-                    $increase_query = "UPDATE esanslar SET stok_miktari = stok_miktari + ?, tank_kodu = ?, tank_ismi = ? WHERE esans_kodu = ?";
-                    $increase_stmt = $connection->prepare($increase_query);
-                    $increase_stmt->bind_param('dsss', $miktar, $hedef_tank_kodu, $hedef_tank_ismi, $kod);
-                    $increase_stmt->execute();
-                    $increase_stmt->close();
+                    $update_query = "UPDATE esanslar SET tank_kodu = ?, tank_ismi = ? WHERE esans_kodu = ?";
+                    $update_stmt = $connection->prepare($update_query);
+                    if (!$update_stmt) {
+                        throw new Exception('Esans transfer guncellemesi hazirlanamadi: ' . $connection->error);
+                    }
+                    $update_stmt->bind_param('sss', $hedef_tank_kodu, $hedef_tank_ismi, $kod);
+                    if (!$update_stmt->execute() || $update_stmt->affected_rows !== 1) {
+                        $update_error = $update_stmt->error ?: $connection->error;
+                        $update_stmt->close();
+                        throw new Exception(normalize_negative_stock_error_message(
+                            $update_error,
+                            'Esans transferi tamamlanamadi: ' . ($update_error ?: 'Kayit guncellenemedi.')
+                        ));
+                    }
+                    $update_stmt->close();
                     break;
             }
+
+            $connection->commit();
 
             echo json_encode(['status' => 'success', 'message' => 'Stok başarıyla transfer edildi.']);
 
