@@ -233,6 +233,8 @@ switch ($action) {
 
             $siparis_id = $connection->insert_id;
 
+            $seen_codes = [];
+
             // Insert order items
             foreach ($kalemler as $kalem) {
                 $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
@@ -242,9 +244,13 @@ switch ($action) {
                 if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
                     $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
                     $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
-                    if ($code_result && $code_row = $code_result->fetch_assoc()) {
-                        $malzeme_kodu = (int) $code_row['malzeme_kodu'];
-                    }
+                if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                    $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                }
+            }
+
+                if ($malzeme_kodu > 0 && isset($seen_codes[$malzeme_kodu])) {
+                    throw new Exception('Ayni malzeme ayni satinalma siparisinde birden fazla kez eklenemez.');
                 }
 
                 $malzeme_adi = $connection->real_escape_string($malzeme_adi_raw);
@@ -254,6 +260,8 @@ switch ($action) {
                 $kalem_para_birimi = $connection->real_escape_string($kalem['para_birimi'] ?? 'TRY');
                 $toplam_fiyat = floatval($kalem['toplam_fiyat'] ?? 0);
                 $kalem_aciklama = $connection->real_escape_string($kalem['aciklama'] ?? '');
+
+                $seen_codes[$malzeme_kodu] = true;
 
                 $item_sql = "INSERT INTO satinalma_siparis_kalemleri 
                     (siparis_id, malzeme_kodu, malzeme_adi, miktar, birim, birim_fiyat, para_birimi, toplam_fiyat, aciklama)
@@ -320,6 +328,10 @@ switch ($action) {
                     if ($code_result && $code_row = $code_result->fetch_assoc()) {
                         $malzeme_kodu = (int) $code_row['malzeme_kodu'];
                     }
+                }
+
+                if (isset($seen_codes[$malzeme_kodu])) {
+                    throw new Exception('Ayni malzeme ayni satinalma siparisinde birden fazla kez yer alamaz.');
                 }
 
                 $miktar = floatval($kalem['miktar'] ?? 0);

@@ -63,6 +63,7 @@ $sql2 = "CREATE TABLE IF NOT EXISTS `satinalma_siparis_kalemleri` (
   `teslim_edilen_miktar` DECIMAL(10,2) DEFAULT 0.00,
   `aciklama` TEXT DEFAULT NULL,
   PRIMARY KEY (`kalem_id`),
+  UNIQUE KEY `uq_siparis_malzeme` (`siparis_id`, `malzeme_kodu`),
   KEY `idx_siparis` (`siparis_id`),
   KEY `idx_malzeme` (`malzeme_kodu`),
   CONSTRAINT `fk_satinalma_siparis` FOREIGN KEY (`siparis_id`) REFERENCES `satinalma_siparisler` (`siparis_id`) ON DELETE CASCADE

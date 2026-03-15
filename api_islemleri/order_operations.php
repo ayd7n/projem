@@ -7,6 +7,16 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'musteri') {
     exit;
 }
 
+function normalize_order_currency_code($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+
+    return $currency;
+}
+
 function prepare_or_throw($connection, $query, $error_message)
 {
     $stmt = $connection->prepare($query);
@@ -60,6 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $siparis_id = (int) $connection->insert_id;
         $toplam_adet = 0;
+        $siparis_para_birimi = 'TRY';
+        $is_currency_set = false;
 
         $product_stmt = prepare_or_throw(
             $connection,
@@ -92,7 +104,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $urun_ismi = (string) ($urun['urun_ismi'] ?: 'Bilinmeyen Urun');
             $urun_birimi = (string) ($urun['birim'] ?: 'adet');
             $satis_fiyati = (float) ($urun['satis_fiyati'] ?: 0);
-            $para_birimi = (string) ($urun['satis_fiyati_para_birimi'] ?? 'TRY');
+            $para_birimi = normalize_order_currency_code($urun['satis_fiyati_para_birimi'] ?? 'TRY');
+
+            if (!$is_currency_set) {
+                $siparis_para_birimi = $para_birimi;
+                $is_currency_set = true;
+            } elseif ($siparis_para_birimi !== $para_birimi) {
+                throw new Exception('Ayni sipariste farkli para birimlerine sahip urunler kullanilamaz.');
+            }
+
             $toplam_tutar = $adet * $satis_fiyati;
 
             $item_stmt->bind_param(
@@ -123,10 +143,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $update_order_stmt = prepare_or_throw(
             $connection,
-            "UPDATE siparisler SET toplam_adet = ? WHERE siparis_id = ?",
+            "UPDATE siparisler SET toplam_adet = ?, para_birimi = ? WHERE siparis_id = ?",
             'Siparis toplam sorgusu hazirlanamadi'
         );
-        $update_order_stmt->bind_param('ii', $toplam_adet, $siparis_id);
+        $update_order_stmt->bind_param('isi', $toplam_adet, $siparis_para_birimi, $siparis_id);
         if (!$update_order_stmt->execute()) {
             throw new Exception('Siparis toplami guncellenemedi: ' . $update_order_stmt->error);
         }

@@ -42,7 +42,7 @@ if (!$order) {
 }
 
 // Fetch order items
-$items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
+$items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ? ORDER BY kalem_id";
 $items_stmt = $connection->prepare($items_query);
 $items_stmt->bind_param('i', $siparis_id);
 $items_stmt->execute();
@@ -555,7 +555,7 @@ $products_result = $connection->query($products_query);
                             <?php 
                             $items_result->data_seek(0); // Reset the result pointer to the beginning
                             while ($item = $items_result->fetch_assoc()): ?>
-                                <tr id="order-item-<?php echo $item['urun_kodu']; ?>">
+                                <tr id="order-item-<?php echo $item['kalem_id']; ?>">
                                     <td><?php echo $item['urun_kodu']; ?></td>
                                     <td><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
                                     <td><?php echo $item['adet']; ?></td>
@@ -571,11 +571,11 @@ $products_result = $connection->query($products_query);
                                     <td><?php echo number_format($item['toplam_tutar'], 2); ?> <?php echo $symbol; ?></td>
                                                                          <td class="actions">
                                                                             <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
-                                                                                <a href="#update-form-<?php echo $item['urun_kodu']; ?>" class="btn btn-primary btn-sm">
+                                                                                <a href="#update-form-<?php echo $item['kalem_id']; ?>" class="btn btn-primary btn-sm">
                                                                                     <i class="fas fa-edit"></i> Düzenle
                                                                                 </a>
                                                                                 <form style="display: inline;" class="d-inline">
-                                                                                    <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
+                                                                                    <input type="hidden" name="item_id" value="<?php echo $item['kalem_id']; ?>">
                                                                                     <button type="button" class="btn btn-danger btn-sm delete-item-btn">
                                                                                         <i class="fas fa-trash"></i> Sil
                                                                                     </button>
@@ -587,16 +587,16 @@ $products_result = $connection->query($products_query);
                                                                             <?php endif; ?>
                                                                         </td>
                                                                     </tr>
-                                                                    <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>                                <tr id="update-form-<?php echo $item['urun_kodu']; ?>" style="display:none;">
+                                                                    <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>                                <tr id="update-form-<?php echo $item['kalem_id']; ?>" style="display:none;">
                                     <td colspan="7">
                                         <div class="card mt-3">
                                             <div class="card-body">
                                                 <h5 class="card-title">Sipariş Kalemi Güncelle</h5>
                                                 <form class="update-item-form">
-                                                    <input type="hidden" name="item_id" value="<?php echo $item['urun_kodu']; ?>">
+                                                    <input type="hidden" name="item_id" value="<?php echo $item['kalem_id']; ?>">
                                                     <div class="form-group">
-                                                        <label for="urun_kodu_<?php echo $item['urun_kodu']; ?>">Ürün:</label>
-                                                        <select class="form-control" id="urun_kodu_<?php echo $item['urun_kodu']; ?>" name="urun_kodu" required>
+                                                        <label for="urun_kodu_<?php echo $item['kalem_id']; ?>">Ürün:</label>
+                                                        <select class="form-control" id="urun_kodu_<?php echo $item['kalem_id']; ?>" name="urun_kodu" required>
                                                             <option value="">Ürün Seçin</option>
                                                             <?php 
                                                             $products_result->data_seek(0);
@@ -609,13 +609,13 @@ $products_result = $connection->query($products_query);
                                                         </select>
                                                     </div>
                                                     <div class="form-group">
-                                                        <label for="adet_<?php echo $item['urun_kodu']; ?>">Adet:</label>
-                                                        <input type="number" class="form-control" id="adet_<?php echo $item['urun_kodu']; ?>" name="adet" value="<?php echo $item['adet']; ?>" min="1" required>
+                                                        <label for="adet_<?php echo $item['kalem_id']; ?>">Adet:</label>
+                                                        <input type="number" class="form-control" id="adet_<?php echo $item['kalem_id']; ?>" name="adet" value="<?php echo $item['adet']; ?>" min="1" required>
                                                     </div>
                                                     <button type="submit" class="btn btn-success">
                                                         <i class="fas fa-sync-alt"></i> Güncelle
                                                     </button>
-                                                    <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(<?php echo $item['urun_kodu']; ?>)">
+                                                    <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(<?php echo $item['kalem_id']; ?>)">
                                                         <i class="fas fa-times"></i> İptal
                                                     </button>
                                                 </form>
@@ -721,7 +721,7 @@ $products_result = $connection->query($products_query);
 
     function showUpdateForm(itemId) {
         // Hide all other update forms
-        document.querySelectorAll('[id^="update-form-\"]').forEach(function(form) {
+        document.querySelectorAll('[id^="update-form-"]').forEach(function(form) {
             form.style.display = 'none';
         });
         
@@ -734,13 +734,12 @@ $products_result = $connection->query($products_query);
     }
     
     <?php if ($order['durum'] === 'beklemede'): ?>
-    // Add click event to all edit buttons
-    document.querySelectorAll('a[href^="#update-form-"]').forEach(function(button) {
-        button.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href').substring(1);
-            showUpdateForm(targetId.split('-')[2]);
-        });
+    // Handle edit buttons, including rows added after page load.
+    $(document).on('click', 'a[href^="#update-form-"]', function(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href').substring(1);
+        const itemId = targetId.replace('update-form-', '');
+        showUpdateForm(itemId);
     });
     <?php endif; ?>
     
@@ -836,7 +835,7 @@ $products_result = $connection->query($products_query);
                     data: {
                         action: 'delete_order_item',
                         siparis_id: <?php echo $siparis_id; ?>,
-                        urun_kodu: itemId
+                        item_id: itemId
                     },
                     dataType: 'json',
                     success: function(response) {
@@ -845,6 +844,7 @@ $products_result = $connection->query($products_query);
 
                             // Remove the row from the table
                             $(`#order-item-${itemId}`).remove();
+                            $(`#update-form-${itemId}`).remove();
 
                             // Update the order total
                             updateOrderTotal();
@@ -876,7 +876,7 @@ $products_result = $connection->query($products_query);
             data: {
                 action: 'update_order_item',
                 siparis_id: <?php echo $siparis_id; ?>,
-                old_urun_kodu: itemId,
+                item_id: itemId,
                 urun_kodu: urunKodu,
                 adet: adet
             },
@@ -905,14 +905,34 @@ $products_result = $connection->query($products_query);
     });
     <?php endif; ?>
     
+    function getCurrencySymbol(currency) {
+        if (currency === 'USD') {
+            return '$';
+        }
+
+        if (currency === 'EUR') {
+            return '€';
+        }
+
+        return '₺';
+    }
+
+    function buildProductOptions(selectedProductCode) {
+        const options = $('#urun_kodu option').clone();
+
+        options.each(function() {
+            $(this).prop('selected', $(this).val() === String(selectedProductCode));
+        });
+
+        return $('<div>').append(options).html();
+    }
+
     // Function to add new order item to the table
     function addOrderItemToTable(itemData) {
-        let symbol = '₺';
-        if (itemData.para_birimi === 'USD') symbol = '$';
-        else if (itemData.para_birimi === 'EUR') symbol = '€';
-
+        const symbol = getCurrencySymbol(itemData.para_birimi);
+        const productOptions = buildProductOptions(itemData.urun_kodu);
         const newRow = `
-            <tr id="order-item-${itemData.urun_kodu}">
+            <tr id="order-item-${itemData.kalem_id}">
                 <td>${itemData.urun_kodu}</td>
                 <td>${itemData.urun_ismi}</td>
                 <td>${itemData.adet}</td>
@@ -920,38 +940,38 @@ $products_result = $connection->query($products_query);
                 <td>${itemData.birim_fiyat} ${symbol}</td>
                 <td>${itemData.toplam_tutar} ${symbol}</td>
                 <td class="actions">
-                    <a href="#update-form-${itemData.urun_kodu}" class="btn btn-primary btn-sm">
+                    <a href="#update-form-${itemData.kalem_id}" class="btn btn-primary btn-sm">
                         <i class="fas fa-edit"></i> Düzenle
                     </a>
                     <form style="display: inline;" class="d-inline">
-                        <input type="hidden" name="item_id" value="${itemData.urun_kodu}">
+                        <input type="hidden" name="item_id" value="${itemData.kalem_id}">
                         <button type="button" class="btn btn-danger btn-sm delete-item-btn">
                             <i class="fas fa-trash"></i> Sil
                         </button>
                     </form>
                 </td>
             </tr>
-            <tr id="update-form-${itemData.urun_kodu}" style="display:none;">
+            <tr id="update-form-${itemData.kalem_id}" style="display:none;">
                 <td colspan="7">
                     <div class="card mt-3">
                         <div class="card-body">
                             <h5 class="card-title">Sipariş Kalemi Güncelle</h5>
                             <form class="update-item-form">
-                                <input type="hidden" name="item_id" value="${itemData.urun_kodu}">
+                                <input type="hidden" name="item_id" value="${itemData.kalem_id}">
                                 <div class="form-group">
-                                    <label for="urun_kodu_${itemData.urun_kodu}">Ürün:</label>
-                                    <select class="form-control" id="urun_kodu_${itemData.urun_kodu}" name="urun_kodu" required>
-                                        <option value="">Ürün Seçin</option>
+                                    <label for="urun_kodu_${itemData.kalem_id}">Ürün:</label>
+                                    <select class="form-control" id="urun_kodu_${itemData.kalem_id}" name="urun_kodu" required>
+                                        ${productOptions}
                                     </select>
                                 </div>
                                 <div class="form-group">
-                                    <label for="adet_${itemData.urun_kodu}">Adet:</label>
-                                    <input type="number" class="form-control" id="adet_${itemData.urun_kodu}" name="adet" value="${itemData.adet}" min="1" required>
+                                    <label for="adet_${itemData.kalem_id}">Adet:</label>
+                                    <input type="number" class="form-control" id="adet_${itemData.kalem_id}" name="adet" value="${itemData.adet}" min="1" required>
                                 </div>
                                 <button type="submit" class="btn btn-success">
                                     <i class="fas fa-sync-alt"></i> Güncelle
                                 </button>
-                                <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(${itemData.urun_kodu})">
+                                <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(${itemData.kalem_id})">
                                     <i class="fas fa-times"></i> İptal
                                 </button>
                             </form>
@@ -960,19 +980,18 @@ $products_result = $connection->query($products_query);
                 </td>
             </tr>
         `;
-        
-        // Add the new row to the table body
-        $('tbody').append(newRow);
+
+        $('#order-items tbody').append(newRow);
     }
     
     // Function to update an existing order item in the table
     function updateOrderItemInTable(itemData) {
-        let symbol = '₺';
-        if (itemData.para_birimi === 'USD') symbol = '$';
-        else if (itemData.para_birimi === 'EUR') symbol = '€';
+        const symbol = getCurrencySymbol(itemData.para_birimi);
+        const productOptions = buildProductOptions(itemData.urun_kodu);
+        const row = $(`#order-item-${itemData.kalem_id}`);
+        const updateRow = $(`#update-form-${itemData.kalem_id}`);
 
-        // Update the main row
-        $(`#order-item-${itemData.old_urun_kodu}`).html(`
+        row.html(`
             <td>${itemData.urun_kodu}</td>
             <td>${itemData.urun_ismi}</td>
             <td>${itemData.adet}</td>
@@ -980,20 +999,46 @@ $products_result = $connection->query($products_query);
             <td>${itemData.birim_fiyat} ${symbol}</td>
             <td>${itemData.toplam_tutar} ${symbol}</td>
             <td class="actions">
-                <a href="#update-form-${itemData.urun_kodu}" class="btn btn-primary btn-sm">
+                <a href="#update-form-${itemData.kalem_id}" class="btn btn-primary btn-sm">
                     <i class="fas fa-edit"></i> Düzenle
                 </a>
                 <form style="display: inline;" class="d-inline">
-                    <input type="hidden" name="item_id" value="${itemData.urun_kodu}">
+                    <input type="hidden" name="item_id" value="${itemData.kalem_id}">
                     <button type="button" class="btn btn-danger btn-sm delete-item-btn">
                         <i class="fas fa-trash"></i> Sil
                     </button>
                 </form>
             </td>
-        `).attr('id', `order-item-${itemData.urun_kodu}`);
-        
-        // Update the update form row ID
-        $(`#update-form-${itemData.old_urun_kodu}`).attr('id', `update-form-${itemData.urun_kodu}`);
+        `);
+
+        updateRow.html(`
+            <td colspan="7">
+                <div class="card mt-3">
+                    <div class="card-body">
+                        <h5 class="card-title">Sipariş Kalemi Güncelle</h5>
+                        <form class="update-item-form">
+                            <input type="hidden" name="item_id" value="${itemData.kalem_id}">
+                            <div class="form-group">
+                                <label for="urun_kodu_${itemData.kalem_id}">Ürün:</label>
+                                <select class="form-control" id="urun_kodu_${itemData.kalem_id}" name="urun_kodu" required>
+                                    ${productOptions}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="adet_${itemData.kalem_id}">Adet:</label>
+                                <input type="number" class="form-control" id="adet_${itemData.kalem_id}" name="adet" value="${itemData.adet}" min="1" required>
+                            </div>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-sync-alt"></i> Güncelle
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(${itemData.kalem_id})">
+                                <i class="fas fa-times"></i> İptal
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </td>
+        `);
     }
     
     // Function to update the order total display

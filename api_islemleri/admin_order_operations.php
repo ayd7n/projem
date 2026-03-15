@@ -3,6 +3,16 @@ include '../config.php';
 
 header('Content-Type: application/json');
 
+function normalize_order_currency_code($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+
+    return $currency;
+}
+
 // Check if user is logged in and is staff
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erişim!']);
@@ -59,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         $siparis_id = $connection->insert_id;
         $toplam_adet = 0;
-        $siparis_para_birimi = 'TL'; // Default
+        $siparis_para_birimi = 'TRY';
         $is_currency_set = false;
 
         // Insert order items
@@ -82,12 +92,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 $urun_ismi = $urun['urun_ismi'];
                 $urun_birimi = $urun['birim'];
                 $satis_fiyati = $urun['satis_fiyati'];
-                $para_birimi = $urun['satis_fiyati_para_birimi'] ?? 'TRY';
+                $para_birimi = normalize_order_currency_code($urun['satis_fiyati_para_birimi'] ?? 'TRY');
 
-                // Set order currency based on the first item (or overwrite/logic as needed)
                 if (!$is_currency_set) {
                     $siparis_para_birimi = $para_birimi;
                     $is_currency_set = true;
+                } elseif ($siparis_para_birimi !== $para_birimi) {
+                    throw new Exception('Ayni sipariste farkli para birimlerine sahip urunler kullanilamaz.');
                 }
 
                 $toplam_tutar = $adet * $satis_fiyati;
