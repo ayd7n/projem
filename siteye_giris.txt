@@ -1,14 +1,22 @@
-komut satiri Uzerinden Siteye ve veritabanina Erisim Talimatlari:
+Komut satiri uzerinden siteye ve veritabanina erisim talimatlari:
 
-1. CMD'yi acin
-2. Asagidaki komutu girerek siteye erisebilirsiniz:
-   curl http://localhost/projem/
-   
-3. Login islemi icin su komutu kullanabilirsiniz:
-   curl -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php
+1. PowerShell veya CMD acin.
 
-veritabanina erismek icin asagidaki komutu kullanabilirsiniz
-mysql -h localhost -u root parfum_erp
+2. Siteyi test etmek icin:
+   curl.exe http://localhost/projem/
 
-server hataları için aşağıdaki logları kontrol et
+3. Login islemi icin:
+   curl.exe -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php
+
+4. Korumali sayfaya oturum cerezini tasiyarak gitmek icin:
+   curl.exe -c cookie_cli.txt -b cookie_cli.txt -L -X POST -d "username=admin@parfum.com&password=12345" http://localhost/projem/login.php
+   curl.exe -b cookie_cli.txt http://localhost/projem/navigation.php
+
+Not:
+- PowerShell'de `curl` yerine `curl.exe` kullanin. `curl` takma adi `Invoke-WebRequest` oldugu icin `-X` ve `-d` parametrelerinde hata verir.
+
+Veritabanina erismek icin:
+C:\xampp\mysql\bin\mysql.exe -h localhost -u root parfum_erp
+
+Server hatalari icin loglar:
 C:\xampp\apache\logs

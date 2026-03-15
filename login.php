@@ -37,7 +37,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // EMERGENCY RESTORE: Check for emergency restore credentials
     else if ($username === 'restore@sistem.com' && $password === '_!ERp*R3sT0rE_99!') {
         $latest_backup = find_latest_backup();
-        if ($latest_backup && restore_database($connection, $latest_backup)) {
+        $restore_error = null;
+        if ($latest_backup && restore_database($connection, $latest_backup, $restore_error)) {
             // Log this critical action
             log_islem($connection, 'SISTEM', 'Acil durum kullanıcısı ile en son yedekten geri yükleme yapıldı.', 'Kritik Eylem');
             header('Location: login.php?status=restored');

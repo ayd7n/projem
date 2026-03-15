@@ -41,7 +41,10 @@ if (!isset($connection)) {
                 $latest_backup = find_latest_backup();
                 if ($latest_backup) {
                     // Veritabanını geri yükle
-                    restore_database($connection, $latest_backup);
+                    $restore_error = null;
+                    if (!restore_database($connection, $latest_backup, $restore_error)) {
+                        error_log('Ilk kurulum geri yukleme hatasi: ' . ($restore_error ?: 'Bilinmeyen hata'));
+                    }
                 }
             } else {
                 die("Veritabanı oluşturulamadı: " . $temp_conn->error);
