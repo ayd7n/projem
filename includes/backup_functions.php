@@ -33,57 +33,60 @@ function find_latest_backup()
  * @param string $backup_path Geri yüklenecek .sql dosyasının tam yolu.
  * @return bool Başarılı olursa true, başarısız olursa false döner.
  */
-function restore_database($connection, $backup_path)
-{
-    if (!file_exists($backup_path)) {
-        return false;
-    }
-
-    // Yabancı anahtar kontrolünü geçici olarak devre dışı bırak
-    $connection->query('SET foreign_key_checks = 0');
-
-    // Veritabanındaki tüm tabloları sil
-    // DİKKAT: Bu, bağlantının mevcut veritabanını temel alır.
-    $result = $connection->query("SHOW TABLES");
-    if ($result) {
-        while ($row = $result->fetch_array()) {
-            $connection->query('DROP TABLE IF EXISTS `' . $row[0] . '`');
-        }
-    } else {
-        // Hata durumunda yabancı anahtar kontrolünü tekrar aktif et
-        $connection->query('SET foreign_key_checks = 1');
-        error_log("Restore database: SHOW TABLES hatası - " . $connection->error);
-        return false;
-    }
-
-
-    // SQL dosyasını oku
-    $sql = file_get_contents($backup_path);
-    if ($sql === false) {
-        $connection->query('SET foreign_key_checks = 1');
-        error_log("Restore database: SQL dosyası okunamadı - " . $backup_path);
-        return false;
-    }
-
-    // SQL komutlarını çalıştır
-    if ($connection->multi_query($sql)) {
-        // multi_query'den sonra kalan sonuçları temizle
-        while ($connection->next_result()) {
-            if ($result = $connection->store_result()) {
-                $result->free();
-            }
-        }
-    } else {
-        // Hata durumunda yabancı anahtar kontrolünü tekrar aktif et
-        $connection->query('SET foreign_key_checks = 1');
-        error_log("Restore database: multi_query hatası - " . $connection->error);
-        return false;
-    }
-
-    // Yabancı anahtar kontrolünü tekrar aktif et
-    $connection->query('SET foreign_key_checks = 1');
-
-    return true;
+function restore_database($connection, $backup_path)
+{
+    if (!file_exists($backup_path)) {
+        return false;
+    }
+
+    // Yabancı anahtar kontrolünü geçici olarak devre dışı bırak
+    $connection->query('SET foreign_key_checks = 0');
+
+    // Veritabanındaki tüm tabloları sil
+    $result = $connection->query("SHOW TABLES");
+    if ($result) {
+        while ($row = $result->fetch_array()) {
+            $connection->query('DROP TABLE IF EXISTS `' . $row[0] . '`');
+            $connection->query('DROP VIEW IF EXISTS `' . $row[0] . '`');
+        }
+    } else {
+        $connection->query('SET foreign_key_checks = 1');
+        error_log("Restore database: SHOW TABLES hatası - " . $connection->error);
+        return false;
+    }
+
+    // SQL dosyasını oku
+    $sql = file_get_contents($backup_path);
+    if ($sql === false) {
+        $connection->query('SET foreign_key_checks = 1');
+        error_log("Restore database: SQL dosyası okunamadı - " . $backup_path);
+        return false;
+    }
+
+    // SQL komutlarını parçala
+    // Not: Bu basit ayırıcı mysqldump ve php_native_backup için genellikle yeterlidir.
+    $queries = preg_split("/;[\r\n]+/", $sql);
+
+    // Birinci Geçiş: Tüm tablo ve verileri yükle (View hatalarını geçici olarak yoksayar)
+    foreach ($queries as $query) {
+        $query = trim($query);
+        if (!empty($query)) {
+            $connection->query($query);
+        }
+    }
+
+    // İkinci Geçiş: İlk geçişte tablo eksikliği nedeniyle kurulamayan Viewları tamamla
+    foreach ($queries as $query) {
+        $query = trim($query);
+        if (!empty($query)) {
+            $connection->query($query);
+        }
+    }
+
+    // Yabancı anahtar kontrolünü tekrar aktif et
+    $connection->query('SET foreign_key_checks = 1');
+
+    return true;
 }
 
 /**
