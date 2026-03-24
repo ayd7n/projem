@@ -49,6 +49,43 @@ if (!function_exists('get_stock_table_info')) {
     }
 }
 
+if (!function_exists('stock_table_has_column')) {
+    function stock_table_has_column($connection, $table_name, $column_name)
+    {
+        static $cache = [];
+
+        $table_name = (string) $table_name;
+        $column_name = (string) $column_name;
+        $cache_key = $table_name . '.' . $column_name;
+
+        if (array_key_exists($cache_key, $cache)) {
+            return $cache[$cache_key];
+        }
+
+        $stmt = $connection->prepare(
+            "SELECT 1
+             FROM information_schema.COLUMNS
+             WHERE TABLE_SCHEMA = DATABASE()
+               AND TABLE_NAME = ?
+               AND COLUMN_NAME = ?
+             LIMIT 1"
+        );
+
+        if (!$stmt) {
+            $cache[$cache_key] = false;
+            return false;
+        }
+
+        $stmt->bind_param('ss', $table_name, $column_name);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $cache[$cache_key] = (bool) ($result && $result->num_rows > 0);
+        $stmt->close();
+
+        return $cache[$cache_key];
+    }
+}
+
 if (!function_exists('normalize_stock_currency_code')) {
     function normalize_stock_currency_code($currency)
     {
@@ -1159,6 +1196,7 @@ switch ($action) {
             $mevcut_stok = 0;
             $mevcut_alis_fiyati = 0;
             $mevcut_para_birimi = 'TRY';
+            $maliyet_manuel_girildi = false;
             $linked_purchase_order_id = 0;
 
             if ($is_mal_kabul) {
@@ -1171,12 +1209,16 @@ switch ($action) {
                 }
 
                 $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
-                $material_query = "SELECT stok_miktari, alis_fiyati, para_birimi FROM malzemeler WHERE malzeme_kodu = '$escaped_malzeme_kodu'";
+                $material_query = "SELECT stok_miktari, alis_fiyati, para_birimi, maliyet_manuel_girildi FROM malzemeler WHERE malzeme_kodu = '$escaped_malzeme_kodu'";
                 $material_result = $connection->query($material_query);
+                if (!$material_result || $material_result->num_rows === 0) {
+                    throw new Exception('Mal kabul ile baglantili malzeme bulunamadi.');
+                }
                 $material_data = $material_result->fetch_assoc();
                 $mevcut_stok = (float)$material_data['stok_miktari'];
                 $mevcut_alis_fiyati = (float)$material_data['alis_fiyati'];
                 $mevcut_para_birimi = normalize_stock_currency_code($material_data['para_birimi'] ?? 'TRY');
+                $maliyet_manuel_girildi = (bool)($material_data['maliyet_manuel_girildi'] ?? false);
                 $linked_purchase_order_id = find_purchase_order_id_for_movement($connection, $movement);
             }
 
@@ -1793,6 +1835,7 @@ switch ($action) {
         $remaining_amount = $requested_amount;
         $total_updated_stock = 0;
         $error_occured = false;
+        $has_purchase_order_column = stock_table_has_column($connection, 'stok_hareket_kayitlari', 'satinalma_siparis_id');
         $rates = get_stock_exchange_rates($connection);
         
         $yeni_gelen_toplam_maliyet = 0;
@@ -1836,7 +1879,18 @@ switch ($action) {
             $tedarikci_id_val = intval($tedarikci_id);
             $siparis_id_val = $siparis_id > 0 ? $siparis_id : 'NULL';
 
-            $movement_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no, satinalma_siparis_id, aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id) VALUES ('$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $contract_amount, '$yon', '$hareket_turu', '$depo_escaped', '$raf_escaped', '$ilgili_belge_no_escaped', $siparis_id_val, '$contract_specific_aciklama_escaped', $user_id_val, '$kullanici_adi_escaped', '$tedarikci_ismi_escaped', $tedarikci_id_val)";
+            $movement_columns = "stok_turu, kod, isim, birim, miktar, yon, hareket_turu, depo, raf, ilgili_belge_no";
+            $movement_values = "'$stok_turu_escaped', '$kod_escaped', '$item_name_escaped', '$item_unit_escaped', $contract_amount, '$yon', '$hareket_turu', '$depo_escaped', '$raf_escaped', '$ilgili_belge_no_escaped'";
+
+            if ($has_purchase_order_column) {
+                $movement_columns .= ", satinalma_siparis_id";
+                $movement_values .= ", $siparis_id_val";
+            }
+
+            $movement_columns .= ", aciklama, kaydeden_personel_id, kaydeden_personel_adi, tedarikci_ismi, tedarikci_id";
+            $movement_values .= ", '$contract_specific_aciklama_escaped', $user_id_val, '$kullanici_adi_escaped', '$tedarikci_ismi_escaped', $tedarikci_id_val";
+
+            $movement_query = "INSERT INTO stok_hareket_kayitlari ($movement_columns) VALUES ($movement_values)";
 
             if (!$connection->query($movement_query)) {
                 $error_occured = true;
