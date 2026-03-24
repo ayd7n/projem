@@ -393,7 +393,22 @@ elseif ($request_method === 'POST') {
         return (float) $normalized;
     };
 
-    $parseBilesenMiktari = function ($rawMiktar, $rawCoverage, &$errorMessage) use ($roundTo4, $parseDecimalText) {
+    $parsePercentText = function ($value) use ($roundTo4, $parseDecimalText) {
+        $rawText = trim((string) $value);
+        if ($rawText === '' || strpos($rawText, '%') === false) {
+            return null;
+        }
+
+        $percentText = str_replace('%', '', $rawText);
+        $parsedPercent = $parseDecimalText($percentText);
+        if ($parsedPercent === null || $parsedPercent <= 0) {
+            return null;
+        }
+
+        return $roundTo4($parsedPercent / 100);
+    };
+
+    $parseBilesenMiktari = function ($rawMiktar, $rawCoverage, &$errorMessage) use ($roundTo4, $parseDecimalText, $parsePercentText) {
         $errorMessage = '';
 
         if ($rawCoverage !== null && $rawCoverage !== '') {
@@ -418,6 +433,11 @@ elseif ($request_method === 'POST') {
         }
 
         $rawText = trim((string) $rawMiktar);
+        $parsedPercent = $parsePercentText($rawText);
+        if ($parsedPercent !== null) {
+            return $parsedPercent;
+        }
+
         if (strpos($rawText, '/') !== false) {
             $parts = explode('/', $rawText);
             if (count($parts) !== 2) {

@@ -50,6 +50,7 @@ new Vue({
             inputMode: 'coverage',
             coverageCount: '',
             directCount: '',
+            percentValue: '',
             advancedInput: '',
             calculatedAmount: null,
             error: '',
@@ -61,6 +62,7 @@ new Vue({
             inputMode: 'coverage',
             coverageCount: '',
             directCount: '',
+            percentValue: '',
             advancedInput: '',
             calculatedAmount: null,
             error: '',
@@ -95,8 +97,38 @@ new Vue({
             }
             return this.roundTo4(value).toFixed(4);
         },
+        formatPercentTextFromAmount(value) {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue) || numericValue <= 0) {
+                return '0';
+            }
+
+            return (numericValue * 100).toLocaleString('tr-TR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        },
+        formatTreeAmount(value) {
+            const numericValue = Number(value);
+            if (!Number.isFinite(numericValue)) {
+                return '0';
+            }
+
+            if (numericValue > 0 && numericValue < 1) {
+                return '%' + this.formatPercentTextFromAmount(numericValue);
+            }
+
+            return numericValue.toLocaleString('tr-TR', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 4
+            });
+        },
         roundTo4(value) {
             return Math.round((Number(value) + Number.EPSILON) * 10000) / 10000;
+        },
+        isAlmostInteger(value) {
+            const numericValue = Number(value);
+            return Number.isFinite(numericValue) && Math.abs(numericValue - Math.round(numericValue)) <= 0.0001;
         },
         parsePositiveInteger(value) {
             const raw = String(value ?? '').trim();
@@ -115,6 +147,24 @@ new Vue({
                 return null;
             }
             return this.roundTo4(1 / parsedCoverage);
+        },
+        parsePercentInput(value) {
+            const input = String(value ?? '').trim();
+            if (input === '') {
+                return null;
+            }
+
+            const normalized = input
+                .replace(/\s+/g, '')
+                .replace(/%/g, '')
+                .replace(',', '.');
+            const parsedValue = Number(normalized);
+
+            if (!Number.isFinite(parsedValue) || parsedValue <= 0) {
+                return null;
+            }
+
+            return this.roundTo4(parsedValue / 100);
         },
         parseAdvancedInput(value) {
             const input = String(value ?? '').trim();
@@ -162,6 +212,16 @@ new Vue({
                 selectedTree.bilesen_miktari = 0;
             }
         },
+        clearWizardResult(treeType) {
+            const wizard = this.getWizardState(treeType);
+            const selectedTree = this.getSelectedTree(treeType);
+
+            wizard.calculatedAmount = null;
+            wizard.isValid = false;
+            wizard.error = '';
+            wizard.approximateCoverage = false;
+            selectedTree.bilesen_miktari = 0;
+        },
         recalcRatioFromCoverage(treeType) {
             const wizard = this.getWizardState(treeType);
             const amount = this.computeFromCoverage(wizard.coverageCount);
@@ -188,6 +248,18 @@ new Vue({
             wizard.advancedInput = this.formatFourDecimal(rounded);
             this.applyWizardResult(treeType, rounded);
         },
+        recalcPercent(treeType) {
+            const wizard = this.getWizardState(treeType);
+            const amount = this.parsePercentInput(wizard.percentValue);
+
+            if (amount === null) {
+                this.applyWizardResult(treeType, null, { error: "Lutfen gecerli bir yuzde girin. Ornek: %15, 15 veya 15,5" });
+                return;
+            }
+
+            wizard.advancedInput = this.formatFourDecimal(amount);
+            this.applyWizardResult(treeType, amount);
+        },
         recalcRatioFromAdvanced(treeType) {
             const wizard = this.getWizardState(treeType);
             const amount = this.parseAdvancedInput(wizard.advancedInput);
@@ -210,11 +282,32 @@ new Vue({
             const wizard = this.getWizardState(treeType);
             wizard.showAdvanced = !wizard.showAdvanced;
         },
+        handleRatioModeChange(treeType) {
+            const wizard = this.getWizardState(treeType);
+
+            if (wizard.inputMode === 'direct' && String(wizard.directCount ?? '').trim() !== '') {
+                this.recalcDirect(treeType);
+                return;
+            }
+
+            if (wizard.inputMode === 'coverage' && String(wizard.coverageCount ?? '').trim() !== '') {
+                this.recalcRatioFromCoverage(treeType);
+                return;
+            }
+
+            if (wizard.inputMode === 'percent' && String(wizard.percentValue ?? '').trim() !== '') {
+                this.recalcPercent(treeType);
+                return;
+            }
+
+            this.clearWizardResult(treeType);
+        },
         resetRatioWizard(treeType) {
             const wizard = this.getWizardState(treeType);
             wizard.inputMode = 'coverage';
             wizard.coverageCount = '';
             wizard.directCount = '';
+            wizard.percentValue = '';
             wizard.advancedInput = '';
             wizard.calculatedAmount = null;
             wizard.error = '';
@@ -233,27 +326,31 @@ new Vue({
 
             const roundedAmount = this.roundTo4(numericAmount);
 
-            if (roundedAmount >= 1 && Number.isInteger(roundedAmount)) {
+            if (roundedAmount >= 1) {
                 wizard.inputMode = 'direct';
                 wizard.directCount = roundedAmount;
             } else {
-                wizard.inputMode = 'coverage';
-                const approximatedCoverage = this.parsePositiveInteger(Math.round(1 / roundedAmount));
-                let isApproximate = false;
+                const inverseAmount = 1 / roundedAmount;
+                const roundedCoverage = Math.round(inverseAmount);
+                const isCleanCoverage = roundedCoverage > 0 && this.isAlmostInteger(inverseAmount);
 
-                if (approximatedCoverage) {
-                    wizard.coverageCount = approximatedCoverage;
-                    const reconstructed = this.roundTo4(1 / approximatedCoverage);
-                    isApproximate = Math.abs(reconstructed - roundedAmount) > 0.0001;
+                if (isCleanCoverage) {
+                    wizard.inputMode = 'coverage';
+                    wizard.coverageCount = roundedCoverage;
+                } else {
+                    wizard.inputMode = 'percent';
+                    wizard.percentValue = this.formatPercentTextFromAmount(roundedAmount);
                 }
-                wizard.approximateCoverage = isApproximate;
             }
 
             wizard.advancedInput = this.formatFourDecimal(roundedAmount);
-            this.applyWizardResult(treeType, roundedAmount, { approximateCoverage: wizard.approximateCoverage });
+            this.applyWizardResult(treeType, roundedAmount);
         },
         getCoverageValueForPayload(treeType) {
             const wizard = this.getWizardState(treeType);
+            if (wizard.inputMode !== 'coverage') {
+                return null;
+            }
             return this.parsePositiveInteger(wizard.coverageCount);
         },
         prepareRatioForSave(treeType) {

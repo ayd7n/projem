@@ -177,7 +177,7 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                                 <td><strong>{{ pt.urun_ismi }}</strong></td>
                                                 <td>{{ pt.bilesen_kodu }}</td>
                                                 <td>{{ pt.bilesen_ismi }}</td>
-                                                <td>{{ pt.bilesen_miktari }}</td>
+                                                <td>{{ formatTreeAmount(pt.bilesen_miktari) }}</td>
                                                 <td>{{ pt.bilesenin_malzeme_turu }}</td>
                                             </tr>
                                             <tr v-if="productTrees.length === 0">
@@ -281,7 +281,7 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                                 <td><strong>{{ et.urun_ismi }}</strong></td>
                                                 <td>{{ et.bilesen_kodu }}</td>
                                                 <td>{{ et.bilesen_ismi }}</td>
-                                                <td>{{ et.bilesen_miktari }}</td>
+                                                <td>{{ formatTreeAmount(et.bilesen_miktari) }}</td>
                                                 <td>{{ et.bilesenin_malzeme_turu }}</td>
                                             </tr>
                                             <tr v-if="essenceTrees.length === 0">
@@ -399,12 +399,16 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <!-- Mod Seçimi -->
                                         <div class="wizard-mode-toggle mb-3">
                                             <label class="wizard-mode-option" :class="{ active: productRatioWizard.inputMode === 'direct' }">
-                                                <input type="radio" v-model="productRatioWizard.inputMode" value="direct" class="d-none">
+                                                <input type="radio" v-model="productRatioWizard.inputMode" value="direct" class="d-none" @change="handleRatioModeChange('product')">
                                                 <i class="fas fa-cube mr-1"></i> Her üründe kaç tane lazım
                                             </label>
                                             <label class="wizard-mode-option" :class="{ active: productRatioWizard.inputMode === 'coverage' }">
-                                                <input type="radio" v-model="productRatioWizard.inputMode" value="coverage" class="d-none">
+                                                <input type="radio" v-model="productRatioWizard.inputMode" value="coverage" class="d-none" @change="handleRatioModeChange('product')">
                                                 <i class="fas fa-boxes mr-1"></i> 1 birimden kaç ürün çıkar
+                                            </label>
+                                            <label class="wizard-mode-option" :class="{ active: productRatioWizard.inputMode === 'percent' }">
+                                                <input type="radio" v-model="productRatioWizard.inputMode" value="percent" class="d-none" @change="handleRatioModeChange('product')">
+                                                <i class="fas fa-percent mr-1"></i> Yuzde gir
                                             </label>
                                         </div>
 
@@ -445,7 +449,24 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         </div>
 
                                         <!-- Sonuç Gösterimi -->
-                                        <div class="wizard-result-card" v-if="productRatioWizard.calculatedAmount > 0">
+                                        <div v-if="productRatioWizard.inputMode === 'percent'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Ornek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li>Bu bilesen formulde <b>%15</b> ise: <code>%15</code> yazin</li>
+                                                    <li>Yuzdeyi sade girmek icin: <code>15</code> yazin</li>
+                                                    <li>Ondalik yuzde icin: <code>15,5</code> yazin</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control form-control-lg" v-model="productRatioWizard.percentValue" @input="recalcPercent('product')" placeholder="Orn: %15, 15 veya 15,5">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">% oran</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="wizard-result-card" v-if="productRatioWizard.calculatedAmount > 0 && productRatioWizard.inputMode !== 'percent'">
                                             <div class="wizard-result-icon"><i class="fas fa-thumbs-up"></i></div>
                                             <div class="wizard-result-text">
                                                 <span v-if="productRatioWizard.inputMode === 'direct'">Tamamdır! Her 1 <b>{{ selectedProductTree.urun_ismi || 'ürün' }}</b> için <b>{{ productRatioWizard.directCount }} {{ getComponentUnitLabel('product') }} {{ selectedProductTree.bilesen_ismi || 'bileşen' }}</b> kullanılacak.</span>
@@ -528,15 +549,18 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         <!-- Mod Seçimi -->
                                         <div class="wizard-mode-toggle mb-3">
                                             <label class="wizard-mode-option" :class="{ active: essenceRatioWizard.inputMode === 'direct' }">
-                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="direct" class="d-none">
+                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="direct" class="d-none" @change="handleRatioModeChange('essence')">
                                                 <i class="fas fa-cube mr-1"></i> Her esansta kaç birim lazım
                                             </label>
                                             <label class="wizard-mode-option" :class="{ active: essenceRatioWizard.inputMode === 'coverage' }">
-                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="coverage" class="d-none">
+                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="coverage" class="d-none" @change="handleRatioModeChange('essence')">
                                                 <i class="fas fa-boxes mr-1"></i> 1 birimden kaç esans çıkar
                                             </label>
+                                            <label class="wizard-mode-option" :class="{ active: essenceRatioWizard.inputMode === 'percent' }">
+                                                <input type="radio" v-model="essenceRatioWizard.inputMode" value="percent" class="d-none" @change="handleRatioModeChange('essence')">
+                                                <i class="fas fa-percent mr-1"></i> Yuzde gir
+                                            </label>
                                         </div>
-
                                         <!-- Mod A: Direkt miktar -->
                                         <div v-if="essenceRatioWizard.inputMode === 'direct'">
                                             <div class="wizard-example-card">
@@ -574,7 +598,24 @@ $total_product_trees = $total_result->fetch_assoc()['total'] ?? 0;
                                         </div>
 
                                         <!-- Sonuç Gösterimi -->
-                                        <div class="wizard-result-card" v-if="essenceRatioWizard.calculatedAmount > 0">
+                                        <div v-if="essenceRatioWizard.inputMode === 'percent'">
+                                            <div class="wizard-example-card">
+                                                <div class="wizard-example-title"><i class="fas fa-info-circle mr-1"></i> Ornek</div>
+                                                <ul class="wizard-example-list">
+                                                    <li>Bu hammadde formulde <b>%15</b> ise: <code>%15</code> yazin</li>
+                                                    <li>Yuzdeyi sade girmek icin: <code>15</code> yazin</li>
+                                                    <li>Ondalik yuzde icin: <code>15,5</code> yazin</li>
+                                                </ul>
+                                            </div>
+                                            <div class="input-group mb-2">
+                                                <input type="text" class="form-control form-control-lg" v-model="essenceRatioWizard.percentValue" @input="recalcPercent('essence')" placeholder="Orn: %15, 15 veya 15,5">
+                                                <div class="input-group-append">
+                                                    <span class="input-group-text">% oran</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="wizard-result-card" v-if="essenceRatioWizard.calculatedAmount > 0 && essenceRatioWizard.inputMode !== 'percent'">
                                             <div class="wizard-result-icon"><i class="fas fa-thumbs-up"></i></div>
                                             <div class="wizard-result-text">
                                                 <span v-if="essenceRatioWizard.inputMode === 'direct'">Tamamdır! Her 1 <b>{{ selectedEssenceTree.urun_ismi || 'esans' }}</b> için <b>{{ essenceRatioWizard.directCount }} {{ getComponentUnitLabel('essence') }} {{ selectedEssenceTree.bilesen_ismi || 'hammadde' }}</b> kullanılacak.</span>
