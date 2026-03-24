@@ -25,6 +25,39 @@ function validateDate($date, $format = 'Y-m-d') {
     return $d && $d->format($format) === $date;
 }
 
+function normalizeMaterialType($materialType) {
+    return strtolower(trim((string) ($materialType ?? '')));
+}
+
+function getStockSourceConfig($materialType) {
+    if (normalizeMaterialType($materialType) === 'esans') {
+        return [
+            'table' => 'esanslar',
+            'code_column' => 'esans_kodu',
+            'type_label' => 'esans'
+        ];
+    }
+
+    return [
+        'table' => 'malzemeler',
+        'code_column' => 'malzeme_kodu',
+        'type_label' => 'malzeme'
+    ];
+}
+
+function getComponentStockQuantity($connection, $materialType, $componentCode) {
+    $stockSource = getStockSourceConfig($materialType);
+    $escapedComponentCode = $connection->real_escape_string($componentCode);
+    $stockQuery = "SELECT stok_miktari FROM {$stockSource['table']} WHERE {$stockSource['code_column']} = '{$escapedComponentCode}'";
+    $stockResult = $connection->query($stockQuery);
+
+    if ($stockResult && $stockRow = $stockResult->fetch_assoc()) {
+        return floatval($stockRow['stok_miktari']);
+    }
+
+    return 0;
+}
+
 // Get the action from the request (handle both form data and JSON)
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 if (!$action) {
@@ -503,21 +536,12 @@ function calculateComponents() {
         $components = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
-                // Get stock quantity based on material type
-                $stock_quantity = 0;
-                if ($row['bilesenin_malzeme_turu'] === 'esans') {
-                    $stock_query = "SELECT stok_miktari FROM esanslar WHERE esans_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
-                } else {
-                    // All other types (malzeme, takim, kutu, etiket, jelatin, etc.) are stored in malzemeler table
-                    $stock_query = "SELECT stok_miktari FROM malzemeler WHERE malzeme_kodu = '" . $connection->real_escape_string($row['bilesen_kodu']) . "'";
-                }
-
-                if (isset($stock_query)) {
-                    $stock_result = $connection->query($stock_query);
-                    if ($stock_result && $stock_row = $stock_result->fetch_assoc()) {
-                        $stock_quantity = floatval($stock_row['stok_miktari']);
-                    }
-                }
+                // Get stock quantity from the correct source table for the component type
+                $stock_quantity = getComponentStockQuantity(
+                    $connection,
+                    $row['bilesenin_malzeme_turu'] ?? '',
+                    $row['bilesen_kodu']
+                );
 
                 $required_amount = floatval($row['bilesen_miktari']) * floatval($quantity);
 
@@ -557,6 +581,14 @@ function getComponents() {
         $components = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
+                $stockQuantity = getComponentStockQuantity(
+                    $connection,
+                    $row['malzeme_turu'] ?? '',
+                    $row['malzeme_kodu']
+                );
+
+                $row['stok_miktari'] = $stockQuantity;
+                $row['stok_yeterli'] = $stockQuantity >= floatval($row['miktar']);
                 $components[] = $row;
             }
         }
@@ -603,13 +635,20 @@ function getWorkOrderComponents() {
             while ($row = $result->fetch_assoc()) {
                 // Calculate the required amount: original component amount * actual quantity for this work order
                 $calculated_amount = floatval($row['bilesen_miktari']) * floatval($quantity);
+                $stock_quantity = getComponentStockQuantity(
+                    $connection,
+                    $row['malzeme_turu'] ?? '',
+                    $row['malzeme_kodu']
+                );
                 
                 $components[] = [
                     'malzeme_kodu' => $row['malzeme_kodu'],
                     'malzeme_ismi' => $row['malzeme_ismi'],
                     'malzeme_turu' => $row['malzeme_turu'],
                     'miktar' => $calculated_amount,
-                    'birim' => $row['bilesen_miktari']  // Original per unit amount
+                    'birim' => $row['bilesen_miktari'],  // Original per unit amount
+                    'stok_miktari' => $stock_quantity,
+                    'stok_yeterli' => $stock_quantity >= $calculated_amount
                 ];
             }
         }
@@ -672,13 +711,14 @@ function startWorkOrder() {
         while ($component = $components_result->fetch_assoc()) {
             $malzeme_kodu = $component['malzeme_kodu'];
             $miktar = floatval($component['miktar']);
+            $stockSource = getStockSourceConfig($component['malzeme_turu'] ?? '');
 
-            // 3a. Update material stock
+            // 3a. Update component stock in the correct source table
             $escaped_miktar = $connection->real_escape_string($miktar);
             $escaped_malzeme_kodu = $connection->real_escape_string($malzeme_kodu);
-            $update_material_stock_query = "UPDATE malzemeler 
-                                            SET stok_miktari = stok_miktari - '" . $escaped_miktar . "' 
-                                            WHERE malzeme_kodu = '" . $escaped_malzeme_kodu . "' 
+            $update_material_stock_query = "UPDATE {$stockSource['table']}
+                                            SET stok_miktari = stok_miktari - '" . $escaped_miktar . "'
+                                            WHERE {$stockSource['code_column']} = '" . $escaped_malzeme_kodu . "'
                                             AND stok_miktari >= '" . $escaped_miktar . "'";
             if (!$connection->query($update_material_stock_query)) {
                 throw new Exception("Malzeme stok miktarı güncellenemedi: " . $connection->error);
@@ -764,9 +804,10 @@ function revertWorkOrder() {
         while ($component = $components_result->fetch_assoc()) {
             $malzeme_kodu = $component['malzeme_kodu'];
             $miktar = floatval($component['miktar']);
+            $stockSource = getStockSourceConfig($component['malzeme_turu'] ?? '');
 
-            // 3a. Update material stock
-            $update_material_stock_query = "UPDATE malzemeler SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($miktar) . "' WHERE malzeme_kodu = '" . $connection->real_escape_string($malzeme_kodu) . "'";
+            // 3a. Return component stock to the correct source table
+            $update_material_stock_query = "UPDATE {$stockSource['table']} SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($miktar) . "' WHERE {$stockSource['code_column']} = '" . $connection->real_escape_string($malzeme_kodu) . "'";
             if (!$connection->query($update_material_stock_query)) {
                 throw new Exception("Malzeme stok miktarı iade edilemedi: " . $connection->error);
             }
