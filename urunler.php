@@ -2659,11 +2659,34 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     }
                                 }
 
+                                const isAddAction = action === 'add_product';
+
                                 fetch('api_islemleri/urunler_islemler.php', {
                                     method: 'POST',
                                     body: formData
                                 })
-                                .then(response => response.json())
+                                .then(async (httpResponse) => {
+                                    const rawResponse = await httpResponse.text();
+                                    let parsedResponse = null;
+
+                                    try {
+                                        parsedResponse = rawResponse ? JSON.parse(rawResponse) : null;
+                                    } catch (parseError) {
+                                        const responsePreview = rawResponse
+                                            ? rawResponse.replace(/\s+/g, ' ').slice(0, 180)
+                                            : 'Bos yanit';
+                                        throw new Error(`Sunucu beklenen formatta yanit vermedi (HTTP ${httpResponse.status}). ${responsePreview}`);
+                                    }
+
+                                    if (!httpResponse.ok) {
+                                        const errorMessage = parsedResponse && parsedResponse.message
+                                            ? parsedResponse.message
+                                            : `HTTP ${httpResponse.status} hatasi alindi.`;
+                                        throw new Error(errorMessage);
+                                    }
+
+                                    return parsedResponse || { status: 'error', message: 'Sunucudan bos yanit alindi.' };
+                                })
                                 .then(response => {
                                     if (response.status === 'success') {
                                         Swal.fire({
@@ -2672,6 +2695,15 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             icon: 'success',
                                             timer: 1500,
                                             showConfirmButton: false
+                                        });
+                                        $('#productModal').modal('hide');
+                                        this.loadProducts(this.currentPage);
+                                    } else if (response.status === 'partial_success') {
+                                        Swal.fire({
+                                            title: 'Kismi Basari',
+                                            text: response.message || 'Urun kaydi tamamlanamadi.',
+                                            icon: 'warning',
+                                            confirmButtonText: 'Tamam'
                                         });
                                         $('#productModal').modal('hide');
                                         this.loadProducts(this.currentPage);
@@ -2685,7 +2717,28 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                     }
                                 })
                                 .catch(error => {
-                                    Swal.fire('Hata', 'İşlem sırasında bir hata oluştu.', 'error');
+                                    const rawError = error && error.message ? String(error.message) : '';
+                                    let displayMessage = 'Yeni urun kaydi sirasinda beklenmeyen bir hata olustu.';
+
+                                    if (/JSON|Unexpected token|Unexpected end|beklenen formatta yanit vermedi/i.test(rawError)) {
+                                        displayMessage = 'Sunucudan gecersiz yanit alindi. Urun kaydi tamamlanmis olabilir; liste yenilenerek kontrol edildi.';
+                                    } else if (/Failed to fetch|NetworkError|Load failed/i.test(rawError)) {
+                                        displayMessage = 'Sunucuya baglanirken hata olustu. Baglantiyi kontrol edip tekrar deneyin.';
+                                    } else if (rawError) {
+                                        displayMessage = rawError;
+                                    }
+
+                                    Swal.fire({
+                                        title: isAddAction ? 'Urun ekleme tamamlanamadi' : 'Urun guncelleme tamamlanamadi',
+                                        text: displayMessage,
+                                        icon: 'error',
+                                        confirmButtonText: 'Tamam'
+                                    });
+
+                                    if (isAddAction) {
+                                        this.loadProducts(this.currentPage);
+                                    }
+                                    return;
                                 });
                             }
                         });

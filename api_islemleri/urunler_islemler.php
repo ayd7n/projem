@@ -920,6 +920,10 @@ if (isset($_GET['action'])) {
         } elseif ($create_essence && empty($selected_tank_kodu)) {
             $response = ['status' => 'error', 'message' => 'Esans oluşturmak için boş bir tank seçmelisiniz.'];
         } else {
+            $product_inserted = false;
+            $new_product_id = null;
+
+            try {
             $precheck_failed = false;
             if ($create_essence) {
                 $precheck_query = "SELECT t.tank_kodu
@@ -974,7 +978,8 @@ if (isset($_GET['action'])) {
                 $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES ('" . $connection->real_escape_string($urun_ismi) . "', '" . $connection->real_escape_string($not_bilgisi) . "', " . (int)$stok_miktari . ", '" . $connection->real_escape_string($birim) . "', " . (float)$satis_fiyati . ", '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', " . (float)$alis_fiyati . ", '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', " . (int)$kritik_stok_seviyesi . ", " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", '" . $connection->real_escape_string($urun_tipi) . "')";
 
                 if ($connection->query($query)) {
-                    $new_product_id = $connection->insert_id;
+                    $product_inserted = true;
+                    $new_product_id = (int) $connection->insert_id;
                     // Log ekleme
                     log_islem($connection, $_SESSION['kullanici_adi'], "$urun_ismi ürünü sisteme eklendi", 'CREATE');
                     
@@ -1096,7 +1101,10 @@ if (isset($_GET['action'])) {
                     }
 
                     if ($essence_error !== null) {
-                        $response = ['status' => 'error', 'message' => $essence_error];
+                        $response = [
+                            'status' => 'partial_success',
+                            'message' => 'Urun eklendi ancak esans olusturma adimi tamamlanamadi. Detay: ' . $essence_error . ' (Urun Kodu: ' . $new_product_id . ')'
+                        ];
                     } else {
                         $resp_message = 'Ürün başarıyla eklendi';
                         if (!empty($selected_material_types))
@@ -1116,6 +1124,19 @@ if (isset($_GET['action'])) {
                     ];
                 }
             }
+            }
+            } catch (Throwable $t) {
+                if ($product_inserted && $new_product_id !== null) {
+                    $response = [
+                        'status' => 'partial_success',
+                        'message' => 'Urun eklendi ancak ek adimlarda hata olustu: ' . $t->getMessage() . ' (Urun Kodu: ' . $new_product_id . ')'
+                    ];
+                } else {
+                    $response = [
+                        'status' => 'error',
+                        'message' => 'Urun ekleme sirasinda hata olustu: ' . $t->getMessage()
+                    ];
+                }
             }
         }
     } elseif ($action == 'update_product' && isset($_POST['urun_kodu'])) {
