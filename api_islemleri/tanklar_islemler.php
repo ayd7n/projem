@@ -41,26 +41,55 @@ switch ($action) {
 function getTanks() {
     global $connection;
 
-    // Get tanks with their assignment status to essences
-    $query = "SELECT t.tank_id, t.tank_kodu, t.tank_ismi, t.kapasite, t.not_bilgisi, 
-              e.esans_id, e.esans_ismi 
-              FROM tanklar t 
-              LEFT JOIN esanslar e ON t.tank_kodu = e.tank_kodu 
+    // Return one row per tank with current fill amount and fill percentage.
+    $query = "SELECT 
+                t.tank_id,
+                t.tank_kodu,
+                t.tank_ismi,
+                t.kapasite,
+                t.not_bilgisi,
+                MIN(e.esans_id) AS esans_id,
+                GROUP_CONCAT(DISTINCT e.esans_ismi ORDER BY e.esans_ismi SEPARATOR ', ') AS esans_ismi,
+                COALESCE(SUM(
+                    CASE
+                        WHEN LOWER(TRIM(COALESCE(e.birim, ''))) IN ('ml', 'mililitre', 'millilitre') THEN COALESCE(e.stok_miktari, 0) / 1000
+                        WHEN LOWER(TRIM(COALESCE(e.birim, ''))) IN ('lt', 'l', 'litre', 'liter') THEN COALESCE(e.stok_miktari, 0)
+                        ELSE COALESCE(e.stok_miktari, 0)
+                    END
+                ), 0) AS doluluk_litre
+              FROM tanklar t
+              LEFT JOIN esanslar e ON t.tank_kodu = e.tank_kodu
+              GROUP BY t.tank_id, t.tank_kodu, t.tank_ismi, t.kapasite, t.not_bilgisi
               ORDER BY t.tank_ismi";
     $result = $connection->query($query);
 
     $tanks = [];
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
+            $kapasite = (float) ($row['kapasite'] ?? 0);
+            $dolulukLitre = (float) ($row['doluluk_litre'] ?? 0);
+            if ($dolulukLitre < 0) {
+                $dolulukLitre = 0;
+            }
+
+            $dolulukYuzdesi = 0.0;
+            if ($kapasite > 0) {
+                $dolulukYuzdesi = ($dolulukLitre / $kapasite) * 100;
+            }
+
+            $esansIsmi = trim((string) ($row['esans_ismi'] ?? ''));
             $tanks[] = [
                 'tank_id' => $row['tank_id'],
                 'tank_kodu' => $row['tank_kodu'],
                 'tank_ismi' => $row['tank_ismi'],
                 'kapasite' => $row['kapasite'],
                 'not_bilgisi' => $row['not_bilgisi'],
-                'in_use' => !empty($row['esans_id']),
+                'in_use' => $esansIsmi !== '',
                 'used_by_essence_id' => $row['esans_id'],
-                'used_by_essence_name' => $row['esans_ismi']
+                'used_by_essence_name' => $row['esans_ismi'],
+                'doluluk_litre' => round($dolulukLitre, 4),
+                'doluluk_yuzdesi' => round($dolulukYuzdesi, 2),
+                'doluluk_bar_yuzdesi' => round(min(100, max(0, $dolulukYuzdesi)), 2)
             ];
         }
     }
@@ -194,11 +223,11 @@ function getTanksPaginated() {
     $whereClause = '';
     $search = $connection->real_escape_string($search);
     if (!empty($search)) {
-        $whereClause = "WHERE tank_kodu LIKE '%$search%' OR tank_ismi LIKE '%$search%' OR not_bilgisi LIKE '%$search%'";
+        $whereClause = "WHERE t.tank_kodu LIKE '%$search%' OR t.tank_ismi LIKE '%$search%' OR t.not_bilgisi LIKE '%$search%'";
     }
     
     // Get total count
-    $totalQuery = "SELECT COUNT(*) AS total FROM tanklar $whereClause";
+    $totalQuery = "SELECT COUNT(*) AS total FROM tanklar t $whereClause";
     $totalResult = $connection->query($totalQuery);
     $total = 0;
     if ($totalResult && $totalRow = $totalResult->fetch_assoc()) {
@@ -206,12 +235,47 @@ function getTanksPaginated() {
     }
     
     // Get paginated results
-    $query = "SELECT tank_id, tank_kodu, tank_ismi, kapasite, not_bilgisi FROM tanklar $whereClause ORDER BY tank_ismi LIMIT $limit OFFSET $offset";
+    $query = "SELECT 
+                t.tank_id,
+                t.tank_kodu,
+                t.tank_ismi,
+                t.kapasite,
+                t.not_bilgisi,
+                MIN(e.esans_id) AS esans_id,
+                GROUP_CONCAT(DISTINCT e.esans_ismi ORDER BY e.esans_ismi SEPARATOR ', ') AS esans_ismi,
+                COALESCE(SUM(
+                    CASE
+                        WHEN LOWER(TRIM(COALESCE(e.birim, ''))) IN ('ml', 'mililitre', 'millilitre') THEN COALESCE(e.stok_miktari, 0) / 1000
+                        WHEN LOWER(TRIM(COALESCE(e.birim, ''))) IN ('lt', 'l', 'litre', 'liter') THEN COALESCE(e.stok_miktari, 0)
+                        ELSE COALESCE(e.stok_miktari, 0)
+                    END
+                ), 0) AS doluluk_litre
+              FROM tanklar t
+              LEFT JOIN esanslar e ON t.tank_kodu = e.tank_kodu
+              $whereClause
+              GROUP BY t.tank_id, t.tank_kodu, t.tank_ismi, t.kapasite, t.not_bilgisi
+              ORDER BY t.tank_ismi
+              LIMIT $limit OFFSET $offset";
     $result = $connection->query($query);
     
     $tanks = [];
     if ($result && $result->num_rows > 0) {
         while ($row = $result->fetch_assoc()) {
+            $kapasite = (float) ($row['kapasite'] ?? 0);
+            $dolulukLitre = (float) ($row['doluluk_litre'] ?? 0);
+            if ($dolulukLitre < 0) {
+                $dolulukLitre = 0;
+            }
+            $dolulukYuzdesi = $kapasite > 0 ? (($dolulukLitre / $kapasite) * 100) : 0.0;
+            $esansIsmi = trim((string) ($row['esans_ismi'] ?? ''));
+
+            $row['in_use'] = $esansIsmi !== '';
+            $row['used_by_essence_id'] = $row['esans_id'];
+            $row['used_by_essence_name'] = $row['esans_ismi'];
+            $row['doluluk_litre'] = round($dolulukLitre, 4);
+            $row['doluluk_yuzdesi'] = round($dolulukYuzdesi, 2);
+            $row['doluluk_bar_yuzdesi'] = round(min(100, max(0, $dolulukYuzdesi)), 2);
+
             $tanks[] = $row;
         }
     }

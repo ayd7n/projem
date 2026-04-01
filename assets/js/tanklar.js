@@ -95,12 +95,23 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 if (this.search && this.search.trim() !== '') {
                     const searchTerm = this.search.toLowerCase().trim();
-                    filtered = this.allTanks.filter(tank => 
-                        tank.tank_kodu.toLowerCase().includes(searchTerm) ||
-                        tank.tank_ismi.toLowerCase().includes(searchTerm) ||
-                        tank.kapasite.toString().includes(searchTerm) ||
-                        (tank.not_bilgisi && tank.not_bilgisi.toLowerCase().includes(searchTerm))
-                    );
+                    filtered = this.allTanks.filter(tank => {
+                        const tankKodu = (tank.tank_kodu || '').toLowerCase();
+                        const tankIsmi = (tank.tank_ismi || '').toLowerCase();
+                        const kapasite = this.toNumber(tank.kapasite).toString();
+                        const notBilgisi = (tank.not_bilgisi || '').toLowerCase();
+                        const dolulukLitre = this.toNumber(tank.doluluk_litre).toString();
+                        const dolulukYuzde = this.toNumber(tank.doluluk_yuzdesi).toString();
+
+                        return (
+                            tankKodu.includes(searchTerm) ||
+                            tankIsmi.includes(searchTerm) ||
+                            kapasite.includes(searchTerm) ||
+                            notBilgisi.includes(searchTerm) ||
+                            dolulukLitre.includes(searchTerm) ||
+                            dolulukYuzde.includes(searchTerm)
+                        );
+                    });
                 }
                 
                 this.filtered_tanks = filtered;
@@ -146,6 +157,43 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (page >= 1 && page <= this.totalPages) {
                     this.currentPage = page;
                 }
+            },
+            toNumber(value, fallback = 0) {
+                const parsed = parseFloat(value);
+                return Number.isFinite(parsed) ? parsed : fallback;
+            },
+            normalizedPercent(value) {
+                return Math.max(0, this.toNumber(value, 0));
+            },
+            fillBarWidth(value) {
+                return Math.min(100, this.normalizedPercent(value));
+            },
+            fillBarClass(value) {
+                const percent = this.normalizedPercent(value);
+                if (percent > 100) {
+                    return 'bg-danger';
+                }
+                if (percent >= 85) {
+                    return 'bg-warning';
+                }
+                if (percent >= 50) {
+                    return 'bg-info';
+                }
+                return 'bg-success';
+            },
+            formatLiters(value) {
+                const amount = this.toNumber(value, 0);
+                return amount.toLocaleString('tr-TR', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                });
+            },
+            formatPercent(value) {
+                const amount = this.normalizedPercent(value);
+                return amount.toLocaleString('tr-TR', {
+                    minimumFractionDigits: 0,
+                    maximumFractionDigits: 2
+                });
             },
             
             openTankModal() {

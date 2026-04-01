@@ -154,15 +154,16 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                     <th><i class="fas fa-barcode"></i> Tank Kodu</th>
                                     <th><i class="fas fa-tag"></i> Tank İsmi</th>
                                     <th><i class="fas fa-water"></i> Kapasite (Litre)</th>
+                                    <th><i class="fas fa-chart-pie"></i> Doluluk</th>
                                     <th><i class="fas fa-sticky-note"></i> Not Bilgisi</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-if="isLoading">
-                                    <td colspan="5" class="text-center p-4">Yukleniyor...</td>
+                                    <td colspan="6" class="text-center p-4">Yukleniyor...</td>
                                 </tr>
                                 <tr v-else-if="filtered_tanks.length === 0">
-                                    <td colspan="5" class="text-center p-4">Kayit bulunamadi.</td>
+                                    <td colspan="6" class="text-center p-4">Kayit bulunamadi.</td>
                                 </tr>
                                 <tr v-else v-for="tank in paginatedTanks" :key="tank.tank_id">
                                     <td class="actions">
@@ -180,6 +181,34 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
                                     <td><strong>{{ tank.tank_kodu }}</strong></td>
                                     <td>{{ tank.tank_ismi }}</td>
                                     <td>{{ tank.kapasite }} L</td>
+                                    <td>
+                                        <div class="tank-fill-cell">
+                                            <div class="tank-fill-meta">
+                                                <span>
+                                                    {{ Number(tank.doluluk_litre || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) }}
+                                                    /
+                                                    {{ Number(tank.kapasite || 0).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) }}
+                                                    L
+                                                </span>
+                                                <strong>
+                                                    %{{ Number(Math.max(0, tank.doluluk_yuzdesi || 0)).toLocaleString('tr-TR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) }}
+                                                </strong>
+                                            </div>
+                                            <div class="progress tank-fill-progress">
+                                                <div
+                                                    class="progress-bar"
+                                                    :class="(Number(tank.doluluk_yuzdesi || 0) > 100) ? 'bg-danger' : ((Number(tank.doluluk_yuzdesi || 0) >= 85) ? 'bg-warning' : ((Number(tank.doluluk_yuzdesi || 0) >= 50) ? 'bg-info' : 'bg-success'))"
+                                                    role="progressbar"
+                                                    :style="{ width: Math.min(100, Math.max(0, Number(tank.doluluk_yuzdesi || 0))) + '%' }"
+                                                    :aria-valuenow="Math.max(0, Number(tank.doluluk_yuzdesi || 0))"
+                                                    aria-valuemin="0"
+                                                    aria-valuemax="100"></div>
+                                            </div>
+                                            <small v-if="Number(tank.doluluk_yuzdesi || 0) > 100" class="tank-fill-overflow">
+                                                Kapasite asimi var
+                                            </small>
+                                        </div>
+                                    </td>
                                     <td>{{ tank.not_bilgisi || '-' }}</td>
                                 </tr>
                             </tbody>
@@ -300,7 +329,7 @@ $user_name = addslashes($_SESSION['kullanici_adi'] ?? 'Kullanıcı');
         var session_kullanici_adi = <?php echo json_encode($user_name); ?>;
     </script>
 
-    <script src="assets/js/tanklar.js"></script>
+    <script src="assets/js/tanklar.js?v=<?php echo filemtime(__DIR__ . '/assets/js/tanklar.js'); ?>"></script>
 </body>
 
 </html>
