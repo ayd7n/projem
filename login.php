@@ -108,6 +108,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 // Set a flag for the admin user
                 if ($username === 'admin@parfum.com' || $username === 'admin2@parfum.com') {
                     $_SESSION['is_admin'] = true;
+                    // Trigger one-time async exchange rate refresh after redirect.
+                    $_SESSION['admin_login_refresh_rates'] = true;
                 } else {
                     // For non-admin staff, load their specific permissions
                     $_SESSION['is_admin'] = false;

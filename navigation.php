@@ -19,6 +19,11 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+$should_refresh_rates_after_login = !empty($_SESSION['admin_login_refresh_rates']) && $is_admin;
+if ($should_refresh_rates_after_login) {
+    unset($_SESSION['admin_login_refresh_rates']);
+}
+
 $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION['kullanici_adi']) : 'Kullanıcı';
 
 ?>
@@ -1104,6 +1109,18 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            <?php if ($should_refresh_rates_after_login): ?>
+            fetch('api_islemleri/admin_login_doviz_guncelle.php', {
+                method: 'POST',
+                keepalive: true,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            }).catch(() => {
+                // Silent fail: this task runs in background and should not block admin login.
+            });
+            <?php endif; ?>
+
             const hamburger = document.querySelector('.hamburger-menu');
             const userControls = document.querySelector('.user-controls');
             const navItems = document.querySelectorAll('.nav-item');
