@@ -18,6 +18,33 @@ if (!yetkisi_var('page:view:musteri_siparisleri')) {
     die('Bu sayfayı görüntüleme yetkiniz yok.');
 }
 
+function ensure_siparis_kalemleri_kalem_id($connection)
+{
+    try {
+        $check_result = $connection->query("SHOW COLUMNS FROM siparis_kalemleri LIKE 'kalem_id'");
+        if ($check_result && $check_result->num_rows > 0) {
+            return true;
+        }
+
+        $alter_query = "
+            ALTER TABLE siparis_kalemleri
+            ADD COLUMN kalem_id INT(11) NOT NULL AUTO_INCREMENT FIRST,
+            ADD UNIQUE KEY uniq_siparis_kalemleri_kalem_id (kalem_id)
+        ";
+
+        if (!$connection->query($alter_query)) {
+            error_log('siparis_kalemleri.kalem_id eklenemedi: ' . $connection->error);
+            return false;
+        }
+
+        $verify_result = $connection->query("SHOW COLUMNS FROM siparis_kalemleri LIKE 'kalem_id'");
+        return $verify_result && $verify_result->num_rows > 0;
+    } catch (Throwable $e) {
+        error_log('siparis_kalemleri.kalem_id kontrol hatasi: ' . $e->getMessage());
+        return false;
+    }
+}
+
 $siparis_id = isset($_GET['siparis_id']) ? (int)$_GET['siparis_id'] : 0;
 
 if ($siparis_id <= 0) {
@@ -41,16 +68,35 @@ if (!$order) {
     exit;
 }
 
+$kalem_id_kullanilabilir = ensure_siparis_kalemleri_kalem_id($connection);
+$can_edit_order_items = $order['durum'] === 'beklemede'
+    && yetkisi_var('action:musteri_siparisleri:edit')
+    && $kalem_id_kullanilabilir;
+$pending_without_kalem_id = $order['durum'] === 'beklemede' && !$kalem_id_kullanilabilir;
+
 // Fetch order items
-$items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ? ORDER BY kalem_id";
+$items_order_column = $kalem_id_kullanilabilir ? 'kalem_id' : 'urun_kodu, urun_ismi';
+$items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ? ORDER BY $items_order_column";
 $items_stmt = $connection->prepare($items_query);
-$items_stmt->bind_param('i', $siparis_id);
-$items_stmt->execute();
-$items_result = $items_stmt->get_result();
+if ($items_stmt) {
+    $items_stmt->bind_param('i', $siparis_id);
+    $items_stmt->execute();
+    $items_result = $items_stmt->get_result();
+} else {
+    $items_result = false;
+    $error = 'Siparis kalemleri su an yuklenemedi.';
+    error_log('siparis_detay items prepare hatasi: ' . $connection->error);
+}
 
 // Fetch all products for dropdown
 $products_query = "SELECT * FROM urunler WHERE stok_miktari > 0 ORDER BY urun_ismi";
 $products_result = $connection->query($products_query);
+if (!$products_result) {
+    if ($error === '') {
+        $error = 'Urun listesi su an yuklenemedi.';
+    }
+    error_log('siparis_detay products query hatasi: ' . $connection->error);
+}
 ?>
 
 <!DOCTYPE html>
@@ -450,6 +496,13 @@ $products_result = $connection->query($products_query);
                     <?php echo htmlspecialchars($error); ?>
                 </div>
             <?php endif; ?>
+
+            <?php if ($pending_without_kalem_id): ?>
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Siparis kalemi tablosunda kalem ID alani eksik oldugu icin duzenleme islemleri gecici olarak kapatildi.
+                </div>
+            <?php endif; ?>
         </div>
 
         <div class="card mb-4">
@@ -552,86 +605,108 @@ $products_result = $connection->query($products_query);
                             </tr>
                         </thead>
                         <tbody>
-                            <?php 
-                            $items_result->data_seek(0); // Reset the result pointer to the beginning
-                            while ($item = $items_result->fetch_assoc()): ?>
-                                <tr id="order-item-<?php echo $item['kalem_id']; ?>">
-                                    <td><?php echo $item['urun_kodu']; ?></td>
-                                    <td><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
-                                    <td><?php echo $item['adet']; ?></td>
-                                    <td><?php echo htmlspecialchars($item['birim']); ?></td>
-                                    <?php 
-                                    $symbol = '₺';
-                                    if(isset($item['para_birimi'])) {
-                                        if($item['para_birimi'] == 'USD') $symbol = '$';
-                                        elseif($item['para_birimi'] == 'EUR') $symbol = '€';
-                                    }
-                                    ?>
-                                    <td><?php echo number_format($item['birim_fiyat'], 2); ?> <?php echo $symbol; ?></td>
-                                    <td><?php echo number_format($item['toplam_tutar'], 2); ?> <?php echo $symbol; ?></td>
-                                                                         <td class="actions">
-                                                                            <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
-                                                                                <a href="#update-form-<?php echo $item['kalem_id']; ?>" class="btn btn-primary btn-sm">
-                                                                                    <i class="fas fa-edit"></i> Düzenle
-                                                                                </a>
-                                                                                <form style="display: inline;" class="d-inline">
-                                                                                    <input type="hidden" name="item_id" value="<?php echo $item['kalem_id']; ?>">
-                                                                                    <button type="button" class="btn btn-danger btn-sm delete-item-btn">
-                                                                                        <i class="fas fa-trash"></i> Sil
-                                                                                    </button>
-                                                                                </form>
-                                                                            <?php elseif ($order['durum'] === 'beklemede'): ?>
-                                                                                <span class="text-muted">Düzenleme yetkiniz yok</span>
-                                                                            <?php else: ?>
-                                                                                <span class="text-muted">İşlem yok</span>
-                                                                            <?php endif; ?>
-                                                                        </td>
-                                                                    </tr>
-                                                                    <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>                                <tr id="update-form-<?php echo $item['kalem_id']; ?>" style="display:none;">
-                                    <td colspan="7">
-                                        <div class="card mt-3">
-                                            <div class="card-body">
-                                                <h5 class="card-title">Sipariş Kalemi Güncelle</h5>
-                                                <form class="update-item-form">
-                                                    <input type="hidden" name="item_id" value="<?php echo $item['kalem_id']; ?>">
-                                                    <div class="form-group">
-                                                        <label for="urun_kodu_<?php echo $item['kalem_id']; ?>">Ürün:</label>
-                                                        <select class="form-control" id="urun_kodu_<?php echo $item['kalem_id']; ?>" name="urun_kodu" required>
-                                                            <option value="">Ürün Seçin</option>
-                                                            <?php 
-                                                            $products_result->data_seek(0);
-                                                            while($product = $products_result->fetch_assoc()): ?>
-                                                                <option value="<?php echo $product['urun_kodu']; ?>" 
-                                                                    <?php echo $product['urun_kodu'] == $item['urun_kodu'] ? 'selected' : ''; ?>>
-                                                                    <?php echo $product['urun_kodu']; ?> - <?php echo htmlspecialchars($product['urun_ismi']); ?> (Stok: <?php echo $product['stok_miktari']; ?>)
-                                                                </option>
-                                                            <?php endwhile; ?>
-                                                        </select>
-                                                    </div>
-                                                    <div class="form-group">
-                                                        <label for="adet_<?php echo $item['kalem_id']; ?>">Adet:</label>
-                                                        <input type="number" class="form-control" id="adet_<?php echo $item['kalem_id']; ?>" name="adet" value="<?php echo $item['adet']; ?>" min="1" required>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-success">
-                                                        <i class="fas fa-sync-alt"></i> Güncelle
-                                                    </button>
-                                                    <button type="button" class="btn btn-secondary" onclick="hideUpdateForm(<?php echo $item['kalem_id']; ?>)">
-                                                        <i class="fas fa-times"></i> İptal
+                            <?php if ($items_result && $items_result->num_rows > 0): ?>
+                                <?php
+                                $items_result->data_seek(0);
+                                $item_index = 0;
+                                while ($item = $items_result->fetch_assoc()):
+                                    $item_index++;
+                                    $item_dom_id = $kalem_id_kullanilabilir
+                                        ? (string) ((int) ($item['kalem_id'] ?? 0))
+                                        : ((string) ((int) ($item['urun_kodu'] ?? 0)) . '-' . $item_index);
+                                    $item_kalem_id = (int) ($item['kalem_id'] ?? 0);
+                                ?>
+                                    <tr id="order-item-<?php echo $item_dom_id; ?>">
+                                        <td><?php echo $item['urun_kodu']; ?></td>
+                                        <td><?php echo htmlspecialchars($item['urun_ismi']); ?></td>
+                                        <td><?php echo $item['adet']; ?></td>
+                                        <td><?php echo htmlspecialchars($item['birim']); ?></td>
+                                        <?php
+                                        $symbol = '₺';
+                                        if (isset($item['para_birimi'])) {
+                                            if ($item['para_birimi'] == 'USD') {
+                                                $symbol = '$';
+                                            } elseif ($item['para_birimi'] == 'EUR') {
+                                                $symbol = '€';
+                                            }
+                                        }
+                                        ?>
+                                        <td><?php echo number_format($item['birim_fiyat'], 2); ?> <?php echo $symbol; ?></td>
+                                        <td><?php echo number_format($item['toplam_tutar'], 2); ?> <?php echo $symbol; ?></td>
+                                        <td class="actions">
+                                            <?php if ($can_edit_order_items && $item_kalem_id > 0): ?>
+                                                <a href="#update-form-<?php echo $item_dom_id; ?>" class="btn btn-primary btn-sm">
+                                                    <i class="fas fa-edit"></i> Düzenle
+                                                </a>
+                                                <form style="display: inline;" class="d-inline">
+                                                    <input type="hidden" name="item_id" value="<?php echo $item_kalem_id; ?>">
+                                                    <button type="button" class="btn btn-danger btn-sm delete-item-btn">
+                                                        <i class="fas fa-trash"></i> Sil
                                                     </button>
                                                 </form>
-                                            </div>
-                                        </div>
-                                    </td>
+                                            <?php elseif ($pending_without_kalem_id): ?>
+                                                <span class="text-muted">Kalem ID eksik oldugu icin duzenleme kapali</span>
+                                            <?php elseif ($order['durum'] === 'beklemede'): ?>
+                                                <span class="text-muted">Düzenleme yetkiniz yok</span>
+                                            <?php else: ?>
+                                                <span class="text-muted">İşlem yok</span>
+                                            <?php endif; ?>
+                                        </td>
+                                    </tr>
+                                    <?php if ($can_edit_order_items && $item_kalem_id > 0): ?>
+                                        <tr id="update-form-<?php echo $item_dom_id; ?>" style="display:none;">
+                                            <td colspan="7">
+                                                <div class="card mt-3">
+                                                    <div class="card-body">
+                                                        <h5 class="card-title">Sipariş Kalemi Güncelle</h5>
+                                                        <form class="update-item-form">
+                                                            <input type="hidden" name="item_id" value="<?php echo $item_kalem_id; ?>">
+                                                            <div class="form-group">
+                                                                <label for="urun_kodu_<?php echo $item_dom_id; ?>">Ürün:</label>
+                                                                <select class="form-control" id="urun_kodu_<?php echo $item_dom_id; ?>" name="urun_kodu" required>
+                                                                    <option value="">Ürün Seçin</option>
+                                                                    <?php if ($products_result): ?>
+                                                                        <?php
+                                                                        $products_result->data_seek(0);
+                                                                        while ($product = $products_result->fetch_assoc()):
+                                                                        ?>
+                                                                            <option value="<?php echo $product['urun_kodu']; ?>"
+                                                                                <?php echo $product['urun_kodu'] == $item['urun_kodu'] ? 'selected' : ''; ?>>
+                                                                                <?php echo $product['urun_kodu']; ?> - <?php echo htmlspecialchars($product['urun_ismi']); ?> (Stok: <?php echo $product['stok_miktari']; ?>)
+                                                                            </option>
+                                                                        <?php endwhile; ?>
+                                                                    <?php endif; ?>
+                                                                </select>
+                                                            </div>
+                                                            <div class="form-group">
+                                                                <label for="adet_<?php echo $item_dom_id; ?>">Adet:</label>
+                                                                <input type="number" class="form-control" id="adet_<?php echo $item_dom_id; ?>" name="adet" value="<?php echo $item['adet']; ?>" min="1" required>
+                                                            </div>
+                                                            <button type="submit" class="btn btn-success">
+                                                                <i class="fas fa-sync-alt"></i> Güncelle
+                                                            </button>
+                                                            <button type="button" class="btn btn-secondary" onclick="hideUpdateForm('<?php echo $item_dom_id; ?>')">
+                                                                <i class="fas fa-times"></i> İptal
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    <?php endif; ?>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <tr>
+                                    <td colspan="7" class="text-center text-muted">Bu sipariste kalem bulunmuyor.</td>
                                 </tr>
-                                <?php endif; ?>
-                            <?php endwhile; ?>
+                            <?php endif; ?>
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
         
-        <?php if ($order['durum'] === 'beklemede' && yetkisi_var('action:musteri_siparisleri:edit')): ?>
+        <?php if ($can_edit_order_items): ?>
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h2><i class="fas fa-plus-circle"></i> Yeni Sipariş Kalemi Ekle</h2>
@@ -643,13 +718,15 @@ $products_result = $connection->query($products_query);
                         <label for="urun_kodu">Ürün:</label>
                         <select class="form-control" id="urun_kodu" name="urun_kodu" required>
                             <option value="">Ürün Seçin</option>
-                            <?php 
-                            $products_result->data_seek(0);
-                            while($product = $products_result->fetch_assoc()): ?>
-                                <option value="<?php echo $product['urun_kodu']; ?>" data-urun-ismi="<?php echo htmlspecialchars($product['urun_ismi']); ?>" data-birim="<?php echo htmlspecialchars($product['birim']); ?>" data-satis-fiyati="<?php echo $product['satis_fiyati']; ?>">
-                                    <?php echo $product['urun_kodu']; ?> - <?php echo htmlspecialchars($product['urun_ismi']); ?> (Stok: <?php echo $product['stok_miktari']; ?>)
-                                </option>
-                            <?php endwhile; ?>
+                            <?php if ($products_result): ?>
+                                <?php
+                                $products_result->data_seek(0);
+                                while($product = $products_result->fetch_assoc()): ?>
+                                    <option value="<?php echo $product['urun_kodu']; ?>" data-urun-ismi="<?php echo htmlspecialchars($product['urun_ismi']); ?>" data-birim="<?php echo htmlspecialchars($product['birim']); ?>" data-satis-fiyati="<?php echo $product['satis_fiyati']; ?>">
+                                        <?php echo $product['urun_kodu']; ?> - <?php echo htmlspecialchars($product['urun_ismi']); ?> (Stok: <?php echo $product['stok_miktari']; ?>)
+                                    </option>
+                                <?php endwhile; ?>
+                            <?php endif; ?>
                         </select>
                     </div>
                     
@@ -676,6 +753,8 @@ $products_result = $connection->query($products_query);
             <div class="card-body">
                 <?php if ($order['durum'] !== 'beklemede'): ?>
                     <p>Sipariş durumu "<?php echo $order['durum'] === 'onaylandi' ? 'Onaylandı' : ($order['durum'] === 'tamamlandi' ? 'Tamamlandı' : 'İptal Edildi'); ?>" olduğu için sipariş kalemleri üzerinde değişiklik yapamazsınız.</p>
+                <?php elseif ($pending_without_kalem_id): ?>
+                    <p>Siparis kalemi tablosunda kalem ID alani eksik oldugu icin duzenleme islemleri gecici olarak kapatildi.</p>
                 <?php else: ?>
                     <p>Bu sipariş üzerinde değişiklik yapma yetkiniz yok.</p>
                 <?php endif; ?>
@@ -733,7 +812,7 @@ $products_result = $connection->query($products_query);
         document.getElementById('update-form-' + itemId).style.display = 'none';
     }
     
-    <?php if ($order['durum'] === 'beklemede'): ?>
+    <?php if ($can_edit_order_items): ?>
     // Handle edit buttons, including rows added after page load.
     $(document).on('click', 'a[href^="#update-form-"]', function(e) {
         e.preventDefault();
@@ -764,7 +843,7 @@ $products_result = $connection->query($products_query);
         }
     }
     
-    <?php if ($order['durum'] === 'beklemede'): ?>
+    <?php if ($can_edit_order_items): ?>
     // AJAX form submission for adding new order item
     $('#add-item-form').on('submit', function(e) {
         e.preventDefault(); // Prevent default form submission
@@ -1075,6 +1154,6 @@ $products_result = $connection->query($products_query);
             }
         });
     }
-    </script>
+</script>
 </body>
 </html>

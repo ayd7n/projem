@@ -8,6 +8,41 @@ if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+function ensure_order_item_identity_column($connection)
+{
+    try {
+        $check_result = $connection->query("SHOW COLUMNS FROM siparis_kalemleri LIKE 'kalem_id'");
+        if ($check_result && $check_result->num_rows > 0) {
+            return true;
+        }
+
+        $alter_query = "
+            ALTER TABLE siparis_kalemleri
+            ADD COLUMN kalem_id INT(11) NOT NULL AUTO_INCREMENT FIRST,
+            ADD UNIQUE KEY uniq_siparis_kalemleri_kalem_id (kalem_id)
+        ";
+
+        if (!$connection->query($alter_query)) {
+            error_log('order_item_operations kalem_id eklenemedi: ' . $connection->error);
+            return false;
+        }
+
+        $verify_result = $connection->query("SHOW COLUMNS FROM siparis_kalemleri LIKE 'kalem_id'");
+        return $verify_result && $verify_result->num_rows > 0;
+    } catch (Throwable $e) {
+        error_log('order_item_operations kalem_id kontrol hatasi: ' . $e->getMessage());
+        return false;
+    }
+}
+
+if (!ensure_order_item_identity_column($connection)) {
+    echo json_encode([
+        'status' => 'error',
+        'message' => 'Siparis kalemi tablosu guncellenemedi. Lutfen yonetici ile iletisime gecin.',
+    ]);
+    exit;
+}
+
 function require_pending_order($connection, $siparis_id)
 {
     $stmt = $connection->prepare("SELECT durum FROM siparisler WHERE siparis_id = ?");
