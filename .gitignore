@@ -31,6 +31,7 @@ config-local.php
 *~
 *.bak
 *.backup
+yedekler/
 
 # XAMPP specific
 xampp/debug_data.php

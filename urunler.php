@@ -1064,6 +1064,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <th>Alış Fiyatı</th>
                                     <th>Maliyet</th>
+                                    <th>Stok x Maliyet</th>
 
                                 <?php endif; ?>
                                 <th><i class="fas fa-warehouse"></i> Depo</th>
@@ -1073,11 +1074,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 13 : 11; ?>" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 14 : 11; ?>" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="products.length === 0">
-                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 13 : 11; ?>" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 14 : 11; ?>" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu" :class="stockRowClass(product)">
                                 <td class="actions">
@@ -1125,6 +1126,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                             !
                                         </span>
                                     </td>
+                                    <td>{{ formatStockCost(product) }}</td>
 
                                 <?php endif; ?>
                                 <td>{{ product.depo }}</td>
@@ -2846,6 +2848,14 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         ) || 0;
                         const currency = product.cost_display_currency || product.satis_fiyati_para_birimi || 'TRY';
                         return this.formatCurrency(teorikMaliyet, currency);
+                    },
+                    formatStockCost(product) {
+                        const teorikMaliyet = parseFloat(
+                            product.teorik_maliyet_display !== undefined ? product.teorik_maliyet_display : product.teorik_maliyet
+                        ) || 0;
+                        const stokMiktari = parseFloat(product.stok_miktari) || 0;
+                        const currency = product.cost_display_currency || product.satis_fiyati_para_birimi || 'TRY';
+                        return this.formatCurrency(teorikMaliyet * stokMiktari, currency);
                     },
                     formatAlisFiyati(product) {
                         // Backend tarafinda alis fiyati satis para birimine normalize edilir.

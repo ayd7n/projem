@@ -1301,6 +1301,7 @@ if (isset($_GET['action'])) {
         $urun_kodu = (int) $_POST['urun_kodu'];
         $miktar = (float) $_POST['miktar'];
         $birim_fiyat = (float) $_POST['birim_fiyat'];
+        $birim = trim((string) ($_POST['birim'] ?? ''));
         $para_birimi_raw = $_POST['para_birimi'] ?? 'TRY';
         $para_birimi = $connection->real_escape_string($para_birimi_raw);
         $para_birimi_norm = normalize_currency_code($para_birimi_raw);
@@ -1315,13 +1316,19 @@ if (isset($_GET['action'])) {
         $connection->begin_transaction();
         try {
             // 1. Ürün Bilgilerini Al (Mevcut stok ve fiyat dahil)
-            $u_query = "SELECT urun_ismi, urun_tipi, stok_miktari, alis_fiyati, alis_fiyati_para_birimi, satis_fiyati_para_birimi FROM urunler WHERE urun_kodu = $urun_kodu";
+            $u_query = "SELECT urun_ismi, urun_tipi, stok_miktari, alis_fiyati, alis_fiyati_para_birimi, satis_fiyati_para_birimi, birim FROM urunler WHERE urun_kodu = $urun_kodu";
             $u_res = $connection->query($u_query);
             $urun = $u_res->fetch_assoc();
             if (!$urun) {
                 throw new Exception('Ürün bulunamadı.');
             }
             $urun_ismi = $urun['urun_ismi'];
+            if ($birim === '') {
+                $birim = trim((string) ($urun['birim'] ?? ''));
+            }
+            if ($birim === '') {
+                $birim = 'adet';
+            }
             $rates = get_exchange_rates($connection);
             
             // Ağırlıklı Ortalama Maliyet Hesabı
@@ -1371,13 +1378,13 @@ if (isset($_GET['action'])) {
             $s_stmt->close();
 
             // 5. Genel Stok Hareketi Kaydı (ÖNCE BU YAPILMALI - FK İÇİN)
-            $log_sql = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, miktar, yon, hareket_turu, aciklama, kaydeden_personel_id, tedarikci_id, tedarikci_ismi) VALUES (?, ?, ?, ?, 'giris', 'mal_kabul', ?, ?, ?, ?)";
+            $log_sql = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, aciklama, kaydeden_personel_id, tedarikci_id, tedarikci_ismi) VALUES (?, ?, ?, ?, ?, 'giris', 'mal_kabul', ?, ?, ?, ?)";
             $log_stmt = $connection->prepare($log_sql);
             $log_aciklama = "Hızlı Satın Alma (Spot) [Sözleşme ID: $sozlesme_id] - " . $aciklama;
             $user_id = $_SESSION['user_id'];
             $stok_turu = 'urun';
             // Düzeltildi: sssdsiss (8 parametre)
-            $log_stmt->bind_param("sssdsiss", $stok_turu, $urun_kodu, $urun_ismi, $miktar, $log_aciklama, $user_id, $tedarikci_id, $tedarikci_adi);
+            $log_stmt->bind_param("sissdsiis", $stok_turu, $urun_kodu, $urun_ismi, $birim, $miktar, $log_aciklama, $user_id, $tedarikci_id, $tedarikci_adi);
             $log_stmt->execute();
             $hareket_id = $connection->insert_id; // FK için ID alındı
             $log_stmt->close();
