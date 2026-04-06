@@ -176,11 +176,19 @@ if (!function_exists('telegram_gonder')) {
                     'header' => "Content-Type: application/json\r\n",
                     'method' => "POST",
                     'content' => json_encode($data),
+                    'timeout' => 5,
+                    'ignore_errors' => true,
                 ),
             );
 
             $context = stream_context_create($options);
-            $result = file_get_contents($telegram_url, false, $context);
+            $telegram_response = @file_get_contents($telegram_url, false, $context);
+            if ($telegram_response === false) {
+                $last_error = error_get_last();
+                if (!empty($last_error['message'])) {
+                    error_log('Telegram gonderim hatasi: ' . $last_error['message']);
+                }
+            }
         }
 
         // Hata durumunda sadece pas geç

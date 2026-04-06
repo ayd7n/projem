@@ -67,7 +67,7 @@ $onaylanan_siparis_miktari = (float) $siparis_miktarlari['onaylanan_siparis_mikt
 // Montaj üretimindeki miktar
 $stmt = $connection->prepare("
     SELECT 
-        COALESCE(SUM(CASE WHEN durum = 'uretimde' THEN planlanan_miktar ELSE 0 END), 0) AS montaj_uretimindeki_miktar
+        COALESCE(SUM(CASE WHEN durum IN ('uretimde', 'onay_bekliyor') THEN planlanan_miktar ELSE 0 END), 0) AS montaj_uretimindeki_miktar
     FROM 
         montaj_is_emirleri
     WHERE 

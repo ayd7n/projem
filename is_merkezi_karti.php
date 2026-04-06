@@ -60,7 +60,7 @@ if ($bitis_tarihi) {
 // 1. Summary Statistics
 $stats_query = "SELECT 
     COUNT(*) as total_orders,
-    SUM(CASE WHEN durum = 'uretimde' THEN 1 ELSE 0 END) as active_orders,
+    SUM(CASE WHEN durum IN ('uretimde', 'onay_bekliyor') THEN 1 ELSE 0 END) as active_orders,
     SUM(CASE WHEN durum = 'tamamlandi' THEN 1 ELSE 0 END) as completed_orders,
     SUM(CASE WHEN durum = 'iptal' THEN 1 ELSE 0 END) as cancelled_orders,
     COALESCE(SUM(tamamlanan_miktar), 0) as total_produced_qty
@@ -259,6 +259,11 @@ $orders_result = $orders_stmt->get_result();
         .badge-uretimde {
             background: #fef3c7;
             color: #d97706;
+        }
+
+        .badge-onay_bekliyor {
+            background: #dbeafe;
+            color: #2563eb;
         }
 
         .badge-tamamlandi {
@@ -536,6 +541,7 @@ $orders_result = $orders_stmt->get_result();
                                                     $durumlar = [
                                                         'olusturuldu' => 'Oluşturuldu',
                                                         'uretimde' => 'Üretimde',
+                                                        'onay_bekliyor' => 'Onay Bekliyor',
                                                         'tamamlandi' => 'Tamamlandı',
                                                         'iptal' => 'İptal'
                                                     ];
@@ -543,6 +549,7 @@ $orders_result = $orders_stmt->get_result();
                                                     $statusIcons = [
                                                         'olusturuldu' => '<i class="fas fa-plus-circle mr-1"></i>',
                                                         'uretimde' => '<i class="fas fa-cog fa-spin mr-1"></i>',
+                                                        'onay_bekliyor' => '<i class="fas fa-hourglass-half mr-1"></i>',
                                                         'tamamlandi' => '<i class="fas fa-check-circle mr-1"></i>',
                                                         'iptal' => '<i class="fas fa-times-circle mr-1"></i>'
                                                     ];

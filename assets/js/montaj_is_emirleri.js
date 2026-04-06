@@ -991,6 +991,7 @@ app = new Vue({
             const statusMap = {
               olusturuldu: "Oluşturuldu",
               uretimde: "Üretimde",
+              onay_bekliyor: "Onay Bekliyor",
               tamamlandi: "Tamamlandı",
               iptal: "İptal",
             };

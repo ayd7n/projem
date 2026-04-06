@@ -38,7 +38,7 @@ $stok = floatval($urun['stok_miktari']);
 $kritik = floatval($urun['kritik_stok_seviyesi']);
 
 // Üretimdeki Miktar
-$uretim_query = "SELECT SUM(planlanan_miktar) as toplam FROM montaj_is_emirleri WHERE urun_kodu = ? AND durum IN ('baslatildi', 'uretimde')";
+$uretim_query = "SELECT SUM(planlanan_miktar) as toplam FROM montaj_is_emirleri WHERE urun_kodu = ? AND durum IN ('baslatildi', 'uretimde', 'onay_bekliyor')";
 $stmt = $connection->prepare($uretim_query);
 $stmt->bind_param('i', $urun_kodu);
 $stmt->execute();

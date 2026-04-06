@@ -293,9 +293,9 @@ function getSupplyChainData($connection) {
             u.kritik_stok_seviyesi,
             u.birim,
             u.urun_tipi,
-            COALESCE(SUM(CASE WHEN mie.durum IN ('baslatildi', 'uretimde') THEN mie.planlanan_miktar ELSE 0 END), 0) AS uretimde_miktar
+            COALESCE(SUM(CASE WHEN mie.durum IN ('baslatildi', 'uretimde', 'onay_bekliyor') THEN mie.planlanan_miktar ELSE 0 END), 0) AS uretimde_miktar
         FROM urunler u
-        LEFT JOIN montaj_is_emirleri mie ON u.urun_kodu = mie.urun_kodu AND mie.durum IN ('baslatildi', 'uretimde')
+        LEFT JOIN montaj_is_emirleri mie ON u.urun_kodu = mie.urun_kodu AND mie.durum IN ('baslatildi', 'uretimde', 'onay_bekliyor')
         GROUP BY u.urun_kodu
         ORDER BY u.urun_ismi
     ";
@@ -770,7 +770,7 @@ function getSupplyChainData($connection) {
     $urun_emirleri_query = "SELECT mi.is_emri_numarasi, mi.urun_kodu, u.urun_ismi, mi.planlanan_miktar, mi.durum
                             FROM montaj_is_emirleri mi
                             JOIN urunler u ON mi.urun_kodu = u.urun_kodu
-                            WHERE mi.durum IN ('baslatildi', 'uretimde')";
+                            WHERE mi.durum IN ('baslatildi', 'uretimde', 'onay_bekliyor')";
     $urun_emirleri_result = $connection->query($urun_emirleri_query);
     while ($emir = $urun_emirleri_result->fetch_assoc()) {
         $aktif_urun_emirleri[] = [

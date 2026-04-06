@@ -25,7 +25,7 @@ $result['lokasyon_sayisi'] = $connection->query("SELECT COUNT(*) as count FROM l
 $result['stok_hareket_sayisi'] = $connection->query("SELECT COUNT(*) as count FROM stok_hareket_kayitlari")->fetch_assoc()['count'];
 
 // Yoldaki İş Emirleri
-$result['yoldaki_montaj_is_emri'] = $connection->query("SELECT COUNT(*) as count FROM montaj_is_emirleri WHERE durum = 'uretimde'")->fetch_assoc()['count'];
+$result['yoldaki_montaj_is_emri'] = $connection->query("SELECT COUNT(*) as count FROM montaj_is_emirleri WHERE durum IN ('uretimde', 'onay_bekliyor')")->fetch_assoc()['count'];
 $result['yoldaki_esans_is_emri'] = $connection->query("SELECT COUNT(*) as count FROM esans_is_emirleri WHERE durum = 'uretimde'")->fetch_assoc()['count'];
 
 // Ürün Ağacı Bilgileri

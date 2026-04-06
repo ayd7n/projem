@@ -830,6 +830,55 @@ switch ($action) {
         }
         break;
 
+    case 'get_whatsapp_data':
+        $siparis_id = (int) ($_GET['siparis_id'] ?? $_POST['siparis_id'] ?? 0);
+        if (!$siparis_id) {
+            echo json_encode(['status' => 'error', 'message' => 'Siparis ID belirtilmedi.']);
+            break;
+        }
+
+        $order_result = $connection->query("SELECT s.*, t.telefon, t.telefon_2
+            FROM satinalma_siparisler s
+            LEFT JOIN tedarikciler t ON s.tedarikci_id = t.tedarikci_id
+            WHERE s.siparis_id = $siparis_id
+            LIMIT 1");
+
+        if (!$order_result || $order_result->num_rows === 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Siparis bulunamadi.']);
+            break;
+        }
+
+        $order = $order_result->fetch_assoc();
+        $whatsapp_phone = pick_whatsapp_phone($order['telefon'] ?? '', $order['telefon_2'] ?? '');
+
+        if ($whatsapp_phone === '') {
+            echo json_encode([
+                'status' => 'error',
+                'message' => 'Tedarikci icin gecerli bir cep telefonu bulunamadi. Lutfen tedarikci kartini kontrol edin.'
+            ]);
+            break;
+        }
+
+        $whatsapp_message = build_whatsapp_order_message($connection, $siparis_id, $order);
+        $whatsapp_url = 'https://web.whatsapp.com/send?phone=' . rawurlencode($whatsapp_phone) . '&text=' . rawurlencode($whatsapp_message);
+
+        log_islem(
+            $connection,
+            $_SESSION['kullanici_adi'] ?? 'Sistem',
+            "{$order['siparis_no']} no'lu siparis icin WhatsApp gonderim linki olusturuldu ({$whatsapp_phone})",
+            'WHATSAPP'
+        );
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => [
+                'siparis_id' => $siparis_id,
+                'siparis_no' => $order['siparis_no'],
+                'telefon' => $whatsapp_phone,
+                'whatsapp_url' => $whatsapp_url
+            ]
+        ]);
+        break;
     default:
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
         break;
@@ -920,5 +969,120 @@ function generateOrderPDFContent($connection, $siparis_id)
     $content .= "Tarih: " . date('d/m/Y H:i') . "\n";
 
     return $content;
+}
+function normalize_whatsapp_phone($phone)
+{
+    $digits = preg_replace('/\D+/', '', (string) $phone);
+    if ($digits === '') {
+        return '';
+    }
+
+    if (strpos($digits, '00') === 0) {
+        $digits = substr($digits, 2);
+    }
+
+    if (strlen($digits) === 10) {
+        $digits = '90' . $digits;
+    } elseif (strpos($digits, '0') === 0 && strlen($digits) === 11) {
+        $digits = '90' . substr($digits, 1);
+    }
+
+    if (strlen($digits) < 10) {
+        return '';
+    }
+
+    return $digits;
+}
+
+function pick_whatsapp_phone($primary_phone, $secondary_phone)
+{
+    $candidates = [];
+
+    $normalized_primary = normalize_whatsapp_phone($primary_phone);
+    if ($normalized_primary !== '') {
+        $candidates[] = $normalized_primary;
+    }
+
+    $normalized_secondary = normalize_whatsapp_phone($secondary_phone);
+    if ($normalized_secondary !== '') {
+        $candidates[] = $normalized_secondary;
+    }
+
+    if (empty($candidates)) {
+        return '';
+    }
+
+    foreach ($candidates as $candidate) {
+        if (preg_match('/^905\d{9}$/', $candidate)) {
+            return $candidate;
+        }
+    }
+
+    return $candidates[0];
+}
+
+function build_whatsapp_order_message($connection, $siparis_id, $order)
+{
+    $items_result = $connection->query("SELECT * FROM satinalma_siparis_kalemleri WHERE siparis_id = $siparis_id ORDER BY kalem_id ASC");
+    $items = [];
+    if ($items_result) {
+        while ($item = $items_result->fetch_assoc()) {
+            $items[] = $item;
+        }
+    }
+
+    $formatCurrency = function ($value, $currency = 'TRY') {
+        $num = floatval($value);
+        $symbols = ['TRY' => 'TL', 'TL' => 'TL', 'USD' => 'USD', 'EUR' => 'EUR'];
+        return number_format($num, 2, ',', '.') . ' ' . ($symbols[$currency] ?? $currency);
+    };
+
+    $formatDate = function ($dateString) {
+        if (empty($dateString)) {
+            return '-';
+        }
+
+        $timestamp = strtotime($dateString);
+        if ($timestamp === false) {
+            return '-';
+        }
+
+        return date('d.m.Y', $timestamp);
+    };
+
+    $message_lines = [];
+    $message_lines[] = '🧾 SATINALMA SIPARISI';
+    $message_lines[] = '';
+    $message_lines[] = '📌 Siparis Ozeti';
+    $message_lines[] = '• Siparis No: ' . ($order['siparis_no'] ?? ('#' . $siparis_id));
+    $message_lines[] = '• Siparis Tarihi: ' . $formatDate($order['siparis_tarihi'] ?? '');
+    $message_lines[] = '• Istenen Teslim Tarihi: ' . $formatDate($order['istenen_teslim_tarihi'] ?? '');
+    $message_lines[] = '• Toplam Tutar: ' . $formatCurrency($order['toplam_tutar'] ?? 0, $order['para_birimi'] ?? 'TRY');
+    $message_lines[] = '';
+    $message_lines[] = '📦 Siparis Kalemleri';
+
+    if (empty($items)) {
+        $message_lines[] = '• Kalem bulunamadi.';
+    }
+
+    foreach ($items as $index => $item) {
+        $message_lines[] = ($index + 1) . ') ' . ($item['malzeme_adi'] ?? '-');
+        $message_lines[] = '   • Miktar: ' . ($item['miktar'] ?? 0) . ' ' . ($item['birim'] ?? '');
+        $message_lines[] = '   • Birim Fiyat: ' . $formatCurrency($item['birim_fiyat'] ?? 0, $item['para_birimi'] ?? ($order['para_birimi'] ?? 'TRY'));
+        $message_lines[] = '   • Kalem Toplami: ' . $formatCurrency($item['toplam_fiyat'] ?? 0, $item['para_birimi'] ?? ($order['para_birimi'] ?? 'TRY'));
+
+        if (!empty($item['aciklama'])) {
+            $message_lines[] = '   • Not: ' . trim((string) $item['aciklama']);
+        }
+
+        $message_lines[] = '';
+    }
+
+    if (!empty($order['aciklama'])) {
+        $message_lines[] = '🗒️ Genel Not';
+        $message_lines[] = '• ' . trim((string) $order['aciklama']);
+    }
+
+    return implode("\n", $message_lines);
 }
 ?>

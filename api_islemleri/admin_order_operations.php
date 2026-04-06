@@ -74,11 +74,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
 
         // Insert order items
         foreach ($items as $item) {
-            $urun_kodu = intval($item['id']);
-            $adet = floatval($item['quantity']);
+            if (!is_array($item)) {
+                throw new Exception('Sepette gecersiz urun verisi bulundu.');
+            }
 
-            if ($adet <= 0)
-                continue;
+            $urun_kodu = isset($item['id']) ? intval($item['id']) : 0;
+            $adet = isset($item['quantity']) ? intval($item['quantity']) : 0;
+
+            if ($urun_kodu <= 0) {
+                throw new Exception('Sepette gecersiz urun bulundu.');
+            }
+
+            if ($adet <= 0) {
+                throw new Exception('Sepette gecersiz urun adedi bulundu.');
+            }
 
             // Get product details for current price and unit
             $urun_query = "SELECT urun_ismi, birim, satis_fiyati, satis_fiyati_para_birimi FROM urunler WHERE urun_kodu = ?";
@@ -87,6 +96,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             $urun_stmt->execute();
             $urun_result = $urun_stmt->get_result();
             $urun = $urun_result->fetch_assoc();
+            $urun_stmt->close();
 
             if ($urun) {
                 $urun_ismi = $urun['urun_ismi'];
@@ -116,7 +126,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 }
 
                 $toplam_adet += $adet;
+            } else {
+                throw new Exception("Urun bulunamadi: $urun_kodu");
             }
+        }
+
+        if ($toplam_adet <= 0) {
+            throw new Exception('Sipariste en az bir gecerli kalem bulunmalidir.');
         }
 
         // Update total quantity and currency in order

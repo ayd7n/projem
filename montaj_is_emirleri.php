@@ -13,6 +13,11 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
+// Page-level permission check
+if (!yetkisi_var('page:view:montaj_is_emirleri')) {
+    die('Bu sayfayi goruntuleme yetkiniz yok.');
+}
+
 // Fetch all assembly work orders
 $work_orders_query = "SELECT * FROM montaj_is_emirleri ORDER BY is_emri_numarasi DESC";
 $work_orders_result = $connection->query($work_orders_query);
@@ -232,9 +237,16 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                             </tr>
                                                             <tr>
                                                                 <td><span
-                                                                        class="status-badge badge-success">Tamamlandı</span>
+                                                                        class="status-badge badge-info">Onay Bekliyor</span>
                                                                 </td>
-                                                                <td>İş emri başarıyla tamamlandı</td>
+                                                                <td>Is emri uretimden cikip onay kuyruguna alindi, stok
+                                                                    girisi henuz yapilmadi</td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td><span
+                                                                        class="status-badge badge-success">Tamamlandi</span>
+                                                                </td>
+                                                                <td>Is emri onaylandi ve stok girisi tamamlandi</td>
                                                             </tr>
                                                             <tr>
                                                                 <td><span class="status-badge badge-danger">İptal</span>
@@ -328,22 +340,21 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     <div class="col-md-4 mb-3">
                                         <div class="card h-100 border-success">
                                             <div class="card-header bg-success text-white">
-                                                <h6 class="card-title m-0"><i class="fas fa-check-square"></i> Is Emrini
-                                                    Tamamla</h6>
+                                                <h6 class="card-title m-0"><i class="fas fa-paper-plane"></i> Is Emrini
+                                                    Onaya Gonder</h6>
                                             </div>
                                             <div class="card-body">
                                                 <p class="card-text"><small class="text-muted">Sadece "uretimde"
-                                                        durumunda olan iş emirleri için görünür</small></p>
+                                                        durumunda olan is emirleri icin gorunur</small></p>
                                                 <div class="alert alert-info p-2">
-                                                    <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabanı
+                                                    <h6 class="alert-heading"><i class="fas fa-database"></i> Veritabani
                                                         Etkisi:</h6>
                                                     <ul class="mb-0">
-                                                        <li><code>durum</code> alanı "tamamlandi" olarak güncellenir
-                                                        </li>
-                                                        <li><code>tamamlanan_miktar</code> alanı doldurulur</li>
-                                                        <li><code>gerceklesen_bitis_tarihi</code> alanı doldurulur</li>
-                                                        <li>Ürün stoğu artırılır</li>
-                                                        <li>"Üretimden Giriş" stok hareket kaydı oluşturulur</li>
+                                                        <li><code>durum</code> alani "onay_bekliyor" olarak guncellenir</li>
+                                                        <li><code>tamamlanan_miktar</code> alani doldurulur</li>
+                                                        <li><code>gerceklesen_bitis_tarihi</code> alani doldurulur</li>
+                                                        <li>Urun stogu bu adimda artirilmaz</li>
+                                                        <li><code>montaj_is_emri_onay_loglari</code> tablosuna "onaya_gonderildi" kaydi atilir</li>
                                                     </ul>
                                                 </div>
                                             </div>
@@ -504,19 +515,27 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                     <div class="col-md-6">
                                         <ul class="list-unstyled">
                                             <li><i class="fas fa-cog text-info"></i> <code>calculate_components</code>:
-                                                Ürün bileşenlerini hesaplar</li>
-                                            <li><i class="fas fa-cog text-info"></i> <code>start_work_order</code>: İş
-                                                emrini başlatır, malzeme stoklarını düşer</li>
+                                                Urun bilesenlerini hesaplar</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>start_work_order</code>: Is
+                                                emrini baslatir, malzeme stoklarini duser</li>
                                             <li><i class="fas fa-cog text-info"></i> <code>complete_work_order</code>:
-                                                İş emrini tamamlar, ürün stoğunu artırır</li>
+                                                Is emrini onay bekliyor durumuna alir, stok girisi yapmaz</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>approve_work_order</code>:
+                                                Tekli onayla stok girisi yapar</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>reject_work_order</code>: Tekli
+                                                red ile is emrini uretime dondurur</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
                                         <ul class="list-unstyled">
-                                            <li><i class="fas fa-cog text-info"></i> <code>revert_work_order</code>: İş
-                                                emrini geri alır, malzeme stoğunu iade eder</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>bulk_approve_work_orders</code>:
+                                                Toplu onay islemlerini satir bazli sonuclarla calistirir</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>bulk_reject_work_orders</code>:
+                                                Toplu red islemlerini satir bazli sonuclarla calistirir</li>
+                                            <li><i class="fas fa-cog text-info"></i> <code>revert_work_order</code>: Is
+                                                emrini geri alir, malzeme stogunu iade eder</li>
                                             <li><i class="fas fa-cog text-info"></i> <code>revert_completion</code>:
-                                                Tamamlamayı geri alır, ürün stoğunu düşer</li>
+                                                Tamamlamayi geri alir, urun stogunu duser</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -540,8 +559,8 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                         <h6 class="card-title m-0"><i
                                                                 class="fas fa-arrow-up text-success"></i> Üretimden
                                                             Giriş</h6>
-                                                        <p class="card-text mb-1"><small>İş emri tamamlanınca üretilen
-                                                                ürün stoğa eklenir</small></p>
+                                                        <p class="card-text mb-1"><small>Is emri onaylandiginda uretilen
+                                                                urun stoga eklenir</small></p>
                                                         <span class="badge badge-success">Giriş</span>
                                                     </div>
                                                 </div>
@@ -613,9 +632,12 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                             <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri
                                                     Başlatma:</strong> <code>stok_hareket_kayitlari</code> tablosuna
                                                 "Üretime Çıkış" kaydı</li>
-                                            <li><i class="fas fa-arrow-right text-info"></i> <strong>İş Emri
-                                                    Tamamlama:</strong> <code>stok_hareket_kayitlari</code> tablosuna
-                                                "Üretimden Giriş" kaydı</li>
+                                            <li><i class="fas fa-arrow-right text-info"></i> <strong>Is Emrini Onaya
+                                                    Gonderme:</strong> <code>montaj_is_emri_onay_loglari</code> tablosuna
+                                                "onaya_gonderildi" audit kaydi</li>
+                                            <li><i class="fas fa-arrow-right text-info"></i> <strong>Is Emri
+                                                    Onaylama:</strong> <code>stok_hareket_kayitlari</code> tablosuna
+                                                "Uretimden Giris" kaydi</li>
                                         </ul>
                                     </div>
                                     <div class="col-md-6">
@@ -754,14 +776,14 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     <?php if (yetkisi_var('action:montaj_is_emirleri:complete')): ?>
                                                         <button v-if="workOrder && workOrder.durum === 'uretimde'"
                                                             @click="openCompleteModal(workOrder.is_emri_numarasi)"
-                                                            class="dropdown-item" title="Is Emrini Tamamla">
-                                                            <i class="fas fa-check-square text-success"></i> Is Emrini
-                                                            Tamamla
+                                                            class="dropdown-item" title="Is Emrini Onaya Gonder">
+                                                            <i class="fas fa-paper-plane text-success"></i> Is Emrini
+                                                            Onaya Gonder
                                                         </button>
                                                     <?php endif; ?>
                                                     <?php if (yetkisi_var('action:montaj_is_emirleri:edit')): ?>
                                                         <button @click="openEditModal(workOrder.is_emri_numarasi)"
-                                                            v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal'"
+                                                            v-if="workOrder && workOrder.durum !== 'tamamlandi' && workOrder.durum !== 'iptal' && workOrder.durum !== 'onay_bekliyor'"
                                                             class="dropdown-item" title="Duzenle">
                                                             <i class="fas fa-edit text-primary"></i> Duzenle
                                                         </button>
@@ -783,7 +805,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                     <?php endif; ?>
                                                     <?php if (yetkisi_var('action:montaj_is_emirleri:delete')): ?>
                                                         <button @click="deleteWorkOrder(workOrder.is_emri_numarasi)"
-                                                            v-if="workOrder && workOrder.durum !== 'tamamlandi'"
+                                                            v-if="workOrder && (workOrder.durum === 'olusturuldu' || workOrder.durum === 'uretimde')"
                                                             class="dropdown-item text-danger" title="Sil">
                                                             <i class="fas fa-trash"></i> Sil
                                                         </button>
@@ -794,10 +816,11 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                         <td><strong>{{ workOrder.is_emri_numarasi }}</strong></td>
                                         <td>
                                             <span
-                                                :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger'))}`">
+                                                :class="`status-badge badge-${workOrder.durum === 'olusturuldu' ? 'secondary' : (workOrder.durum === 'uretimde' ? 'warning' : (workOrder.durum === 'onay_bekliyor' ? 'info' : (workOrder.durum === 'tamamlandi' ? 'success' : 'danger')))}`">
                                                 {{ workOrder.durum === 'olusturuldu' ? 'Olusturuldu' : (workOrder.durum
-                                                === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'tamamlandi' ?
-                                                'Tamamlandi' : 'Iptal')) }}
+                                                === 'uretimde' ? 'Uretimde' : (workOrder.durum === 'onay_bekliyor' ?
+                                                'Onay Bekliyor' : (workOrder.durum === 'tamamlandi' ? 'Tamamlandi' :
+                                                'Iptal'))) }}
                                             </span>
                                         </td>
                                         <td><strong>{{ workOrder.urun_kodu }} - {{ workOrder.urun_ismi }}</strong></td>
@@ -975,6 +998,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                 <select class="form-control" v-model="selectedWorkOrder.durum" disabled>
                                                     <option value="olusturuldu">Olusturuldu</option>
                                                     <option value="uretimde">Uretimde</option>
+                                                    <option value="onay_bekliyor">Onay Bekliyor</option>
                                                     <option value="tamamlandi">Tamamlandi</option>
                                                     <option value="iptal">Iptal</option>
                                                 </select>
@@ -1122,7 +1146,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                 <div class="modal-dialog" @click.stop>
                     <div class="modal-content">
                         <div class="modal-header bg-success text-white">
-                            <h5 class="modal-title"><i class="fas fa-check-square"></i> Is Emrini Tamamla</h5>
+                            <h5 class="modal-title"><i class="fas fa-paper-plane"></i> Is Emrini Onaya Gonder</h5>
                             <button type="button" class="close text-white" @click="showCompleteModal = false"
                                 aria-label="Close">
                                 <span aria-hidden="true">&times;</span>
@@ -1159,7 +1183,7 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                             <button type="button" class="btn btn-secondary" @click="showCompleteModal = false"><i
                                     class="fas fa-times"></i> Iptal</button>
                             <button type="button" class="btn btn-success" @click="completeWorkOrder"><i
-                                    class="fas fa-save"></i> Uretimi Tamamla ve Stoklari Guncelle</button>
+                                    class="fas fa-paper-plane"></i> Onaya Gonder</button>
                         </div>
                     </div>
                 </div>

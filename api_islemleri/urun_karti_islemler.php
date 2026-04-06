@@ -401,7 +401,7 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
                                 COUNT(*) as is_emri_sayisi, 
                                 COALESCE(SUM(planlanan_miktar), 0) as uretimdeki_toplam_planlanan_miktar
                                 FROM montaj_is_emirleri 
-                                WHERE urun_kodu = ? AND durum = 'uretimde'";
+                                WHERE urun_kodu = ? AND durum IN ('uretimde', 'onay_bekliyor')";
 
             $stmt = $connection->prepare($production_query);
             if (!$stmt) {

@@ -22,6 +22,7 @@ function get_all_permissions()
             'page:view:musteri_siparisleri' => 'Müşteri Siparişleri Sayfası',
             'page:view:esans_is_emirleri' => 'Esans İş Emirleri Sayfası',
             'page:view:montaj_is_emirleri' => 'Montaj İş Emirleri Sayfası',
+            'page:view:montaj_onay_ekrani' => 'Montaj Onay Ekrani Sayfasi',
             'page:view:manuel_stok_hareket' => 'Manuel Stok Hareketi Sayfası',
             'page:view:lokasyonlar' => 'Lokasyonlar Sayfası',
             'page:view:tanklar' => 'Tanklar Sayfası',
@@ -103,6 +104,7 @@ function get_all_permissions()
             'action:montaj_is_emirleri:delete' => 'Montaj İş Emri Silme',
             'action:montaj_is_emirleri:start' => 'Montaj İş Emrine Başlama',
             'action:montaj_is_emirleri:complete' => 'Montaj İş Emrini Tamamlama',
+            'action:montaj_is_emirleri:approve' => 'Montaj Is Emri Onaylama/Red',
         ],
         'Manuel Stok Hareketi' => [
             'action:manuel_stok_hareket:sayim_fazlasi' => 'Sayım Fazlası Ekleme',

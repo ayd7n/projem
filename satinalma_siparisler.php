@@ -1323,10 +1323,13 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                 },
 
                 updateStatus(siparisId) {
+                    const currentStatus = this.viewData.durum;
+                    const nextStatus = this.getRealStatusFromMapped(this.newStatus, currentStatus);
+
                     const formData = new FormData();
                     formData.append('action', 'update_status');
                     formData.append('siparis_id', siparisId);
-                    formData.append('durum', this.getRealStatusFromMapped(this.newStatus, this.viewData.durum));
+                    formData.append('durum', nextStatus);
 
                     fetch('api_islemleri/satinalma_siparisler_islemler.php', {
                         method: 'POST',
@@ -1336,12 +1339,68 @@ if (!yetkisi_var('page:view:satinalma_siparisler')) {
                         .then(data => {
                             if (data.status === 'success') {
                                 this.showAlert(data.message, 'success');
-                                this.viewData.durum = this.getRealStatusFromMapped(this.newStatus, this.viewData.durum);
+                                this.viewData.durum = nextStatus;
                                 this.loadOrders(this.currentPage);
                                 this.loadStats();
+
+                                const wasSentToSupplier = this.getMappedStatus(currentStatus) === 'yollandi';
+                                const isNowSentToSupplier = this.getMappedStatus(nextStatus) === 'yollandi';
+                                if (!wasSentToSupplier && isNowSentToSupplier) {
+                                    this.offerWhatsAppSend(siparisId);
+                                }
                             } else {
                                 this.showAlert(data.message || 'Hata oluştu', 'danger');
                             }
+                        });
+                },
+                offerWhatsAppSend(siparisId) {
+                    Swal.fire({
+                        title: 'WhatsApp üzerinden de gönderilsin mi?',
+                        text: 'Onay verirseniz sipariş detayları Web WhatsApp ile tedarikçinin cep telefonuna hazır mesaj olarak açılacak.',
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Evet, gönder',
+                        cancelButtonText: 'Hayır'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            this.sendOrderToWhatsApp(siparisId);
+                        }
+                    });
+                },
+                sendOrderToWhatsApp(siparisId) {
+                    fetch(`api_islemleri/satinalma_siparisler_islemler.php?action=get_whatsapp_data&siparis_id=${siparisId}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            if (data.status !== 'success' || !data.data || !data.data.whatsapp_url) {
+                                const supplierName = this.viewData && this.viewData.tedarikci_adi ? this.viewData.tedarikci_adi : 'Seçili tedarikçi';
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'WhatsApp gönderimi yapılamadı',
+                                    html: `<b>${supplierName}</b> için geçerli telefon numarası bulunamadı.<br><br>${data.message || 'Lütfen tedarikçi kartına cep telefonu ekleyin.'}`
+                                });
+                                return;
+                            }
+
+                            const whatsappUrl = data.data.whatsapp_url;
+                            const openedWindow = window.open(whatsappUrl, '_blank', 'noopener,noreferrer');
+
+                            if (!openedWindow) {
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Popup engellendi',
+                                    html: `Web WhatsApp sekmesi açılamadı. <a href="${whatsappUrl}" target="_blank" rel="noopener noreferrer">Buraya tıklayın</a>.`
+                                });
+                                return;
+                            }
+
+                            this.showAlert('Web WhatsApp sekmesi açıldı. Mesajı göndermeniz yeterli.', 'success');
+                        })
+                        .catch(() => {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'WhatsApp gönderimi başarısız',
+                                text: 'WhatsApp bağlantısı hazırlanırken hata oluştu.'
+                            });
                         });
                 },
                 deleteOrder(id) {

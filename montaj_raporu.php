@@ -38,7 +38,7 @@ function getMontajReportData() {
         $kpi_sql = "
             SELECT
                 COUNT(*) AS total_orders,
-                SUM(CASE WHEN durum = 'uretimde' THEN 1 ELSE 0 END) AS active_orders,
+                SUM(CASE WHEN durum IN ('uretimde', 'onay_bekliyor') THEN 1 ELSE 0 END) AS active_orders,
                 SUM(planlanan_miktar) AS total_planned,
                 SUM(tamamlanan_miktar) AS total_completed,
                 (
@@ -65,7 +65,7 @@ function getMontajReportData() {
                 (
                     SELECT COUNT(*) 
                     FROM montaj_is_emirleri 
-                    WHERE planlanan_bitis_tarihi < CURDATE() AND durum NOT IN ('tamamlandi', 'iptal')
+                    WHERE planlanan_bitis_tarihi < CURDATE() AND durum NOT IN ('tamamlandi', 'iptal', 'onay_bekliyor')
                 ) AS delayed_orders
             FROM montaj_is_emirleri
         ";
@@ -176,7 +176,7 @@ function getMontajReportData() {
             FROM montaj_is_emirleri mie
             LEFT JOIN urunler u ON mie.urun_kodu = u.urun_kodu
             LEFT JOIN is_merkezleri im ON mie.is_merkezi_id = im.is_merkezi_id
-            WHERE mie.durum NOT IN ('tamamlandi', 'iptal') AND mie.planlanan_bitis_tarihi < CURDATE()
+            WHERE mie.durum NOT IN ('tamamlandi', 'iptal', 'onay_bekliyor') AND mie.planlanan_bitis_tarihi < CURDATE()
             ORDER BY mie.planlanan_bitis_tarihi ASC
         ";
         $delayed_res = $connection->query($delayed_sql);
@@ -581,12 +581,14 @@ $reportData = getMontajReportData();
         const statusNames = {
             'olusturuldu': 'Oluşturuldu',
             'uretimde': 'Üretimde',
+            'onay_bekliyor': 'Onay Bekliyor',
             'tamamlandi': 'Tamamlandı',
             'iptal': 'İptal'
         };
         const statusColors = {
             'olusturuldu': '#54a0ff', // Canlı Mavi
             'uretimde': '#feca57',    // Sıcak Sarı
+            'onay_bekliyor': '#60a5fa', // Açık Mavi
             'tamamlandi': '#1dd1a1',  // Canlı Yeşil
             'iptal': '#ff6b6b'        // Pastel Kırmızı
         };

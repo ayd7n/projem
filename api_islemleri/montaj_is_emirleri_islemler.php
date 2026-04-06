@@ -58,14 +58,307 @@ function getComponentStockQuantity($connection, $materialType, $componentCode) {
     return 0;
 }
 
+function getRequestPayload() {
+    $input = json_decode(file_get_contents('php://input'), true);
+    if (!$input || !is_array($input)) {
+        $input = $_POST;
+    }
+
+    return $input;
+}
+
+function ensureMontajApprovalPermission() {
+    if (!yetkisi_var('action:montaj_is_emirleri:approve')) {
+        echo json_encode(['status' => 'error', 'message' => 'Bu islem icin yetkiniz yok.']);
+        exit;
+    }
+}
+
+function tableExists($connection, $tableName) {
+    $tableName = $connection->real_escape_string($tableName);
+    $result = $connection->query("SHOW TABLES LIKE '{$tableName}'");
+    return $result && $result->num_rows > 0;
+}
+
+function columnExists($connection, $tableName, $columnName) {
+    $tableName = $connection->real_escape_string($tableName);
+    $columnName = $connection->real_escape_string($columnName);
+    $result = $connection->query("SHOW COLUMNS FROM `{$tableName}` LIKE '{$columnName}'");
+    return $result && $result->num_rows > 0;
+}
+
+function ensureMontajApprovalSchemaReady($connection) {
+    static $checked = false;
+
+    if ($checked) {
+        return;
+    }
+
+    $missing = [];
+
+    if (!tableExists($connection, 'montaj_is_emri_onay_loglari')) {
+        $missing[] = 'montaj_is_emri_onay_loglari tablosu';
+    }
+
+    $requiredColumns = [
+        'onaya_gonderen_personel_id',
+        'onaya_gonderen_personel_adi',
+        'onaya_gonderme_tarihi',
+        'onaylayan_personel_id',
+        'onaylayan_personel_adi',
+        'onay_tarihi',
+        'son_onay_notu'
+    ];
+
+    foreach ($requiredColumns as $columnName) {
+        if (!columnExists($connection, 'montaj_is_emirleri', $columnName)) {
+            $missing[] = "montaj_is_emirleri.{$columnName} kolonu";
+        }
+    }
+
+    if (!empty($missing)) {
+        $missingText = implode(', ', $missing);
+        echo json_encode([
+            'status' => 'error',
+            'message' => "Montaj onay yapisi hazir degil ({$missingText}). Lutfen migrations/2026-04-05_add_montaj_approval_queue.sql dosyasini calistirin."
+        ]);
+        exit;
+    }
+
+    $checked = true;
+}
+
+function getMontajCurrentUser() {
+    return [
+        'id' => $_SESSION['user_id'] ?? null,
+        'adi' => $_SESSION['kullanici_adi'] ?? 'Sistem'
+    ];
+}
+
+function insertMontajApprovalAuditLog($connection, $isEmriNumarasi, $aksiyon, $oncekiDurum, $yeniDurum, $oncekiMiktar, $yeniMiktar, $notMetni, $personelId, $personelAdi) {
+    $query = "INSERT INTO montaj_is_emri_onay_loglari (
+                is_emri_numarasi,
+                aksiyon,
+                onceki_durum,
+                yeni_durum,
+                onceki_tamamlanan_miktar,
+                yeni_tamamlanan_miktar,
+                not_metni,
+                yapan_personel_id,
+                yapan_personel_adi
+              ) VALUES (
+                '" . $connection->real_escape_string($isEmriNumarasi) . "',
+                '" . $connection->real_escape_string($aksiyon) . "',
+                " . ($oncekiDurum === null ? "NULL" : "'" . $connection->real_escape_string($oncekiDurum) . "'") . ",
+                " . ($yeniDurum === null ? "NULL" : "'" . $connection->real_escape_string($yeniDurum) . "'") . ",
+                " . ($oncekiMiktar === null ? "NULL" : "'" . $connection->real_escape_string($oncekiMiktar) . "'") . ",
+                " . ($yeniMiktar === null ? "NULL" : "'" . $connection->real_escape_string($yeniMiktar) . "'") . ",
+                " . ($notMetni === null || $notMetni === '' ? "NULL" : "'" . $connection->real_escape_string($notMetni) . "'") . ",
+                " . ($personelId === null ? "NULL" : "'" . $connection->real_escape_string($personelId) . "'") . ",
+                " . ($personelAdi === null || $personelAdi === '' ? "NULL" : "'" . $connection->real_escape_string($personelAdi) . "'") . "
+              )";
+
+    if (!$connection->query($query)) {
+        throw new Exception('Montaj onay audit kaydi olusturulamadi: ' . $connection->error);
+    }
+}
+
+function approveWorkOrderInternal($connection, $isEmriNumarasi, $tamamlananMiktarOverride = null, $onayNotu = '') {
+    $connection->begin_transaction();
+
+    try {
+        $escapedId = $connection->real_escape_string($isEmriNumarasi);
+        $workOrderQuery = "SELECT * FROM montaj_is_emirleri
+                           WHERE is_emri_numarasi = '{$escapedId}'
+                           AND durum = 'onay_bekliyor'
+                           FOR UPDATE";
+        $workOrderResult = $connection->query($workOrderQuery);
+        if (!$workOrderResult || $workOrderResult->num_rows === 0) {
+            throw new Exception('Is emri bulunamadi veya durumu "Onay Bekliyor" degil.');
+        }
+
+        $workOrder = $workOrderResult->fetch_assoc();
+        $oncekiTamamlanan = floatval($workOrder['tamamlanan_miktar']);
+        $yeniTamamlanan = $tamamlananMiktarOverride === null ? $oncekiTamamlanan : floatval($tamamlananMiktarOverride);
+        if ($yeniTamamlanan < 0) {
+            throw new Exception('Tamamlanan miktar negatif olamaz.');
+        }
+
+        $planlananMiktar = floatval($workOrder['planlanan_miktar']);
+        $eksikMiktar = max(0, $planlananMiktar - $yeniTamamlanan);
+        $user = getMontajCurrentUser();
+        $onayNotu = trim((string) $onayNotu);
+        $today = date('Y-m-d');
+
+        $aciklamaUpdateSql = '';
+        if ($onayNotu !== '') {
+            $aciklamaUpdateSql = ", aciklama = TRIM(CONCAT(COALESCE(aciklama, ''), ' " . $connection->real_escape_string($onayNotu) . "'))";
+        }
+
+        $updateQuery = "UPDATE montaj_is_emirleri SET
+                            durum = 'tamamlandi',
+                            tamamlanan_miktar = '" . $connection->real_escape_string($yeniTamamlanan) . "',
+                            eksik_miktar_toplami = '" . $connection->real_escape_string($eksikMiktar) . "',
+                            gerceklesen_bitis_tarihi = COALESCE(gerceklesen_bitis_tarihi, '{$today}'),
+                            onaylayan_personel_id = " . ($user['id'] === null ? "NULL" : "'" . $connection->real_escape_string($user['id']) . "'") . ",
+                            onaylayan_personel_adi = " . ($user['adi'] === null || $user['adi'] === '' ? "NULL" : "'" . $connection->real_escape_string($user['adi']) . "'") . ",
+                            onay_tarihi = NOW(),
+                            son_onay_notu = " . ($onayNotu === '' ? "NULL" : "'" . $connection->real_escape_string($onayNotu) . "'") . "
+                            {$aciklamaUpdateSql}
+                        WHERE is_emri_numarasi = '{$escapedId}'
+                        AND durum = 'onay_bekliyor'";
+        if (!$connection->query($updateQuery)) {
+            throw new Exception('Is emri onaylanirken hata olustu: ' . $connection->error);
+        }
+        if ($connection->affected_rows === 0) {
+            throw new Exception('Is emri onaylanamadi.');
+        }
+
+        $stockInQuery = "INSERT INTO stok_hareket_kayitlari
+                            (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
+                         VALUES
+                            ('Urun',
+                             '" . $connection->real_escape_string($workOrder['urun_kodu']) . "',
+                             '" . $connection->real_escape_string($workOrder['urun_ismi']) . "',
+                             '" . $connection->real_escape_string($workOrder['birim']) . "',
+                             '" . $connection->real_escape_string($yeniTamamlanan) . "',
+                             'Giris',
+                             'Uretimden Giris',
+                             '{$escapedId}',
+                             'Montaj onayi ile stok girisi',
+                             " . ($user['id'] === null ? "NULL" : "'" . $connection->real_escape_string($user['id']) . "'") . ",
+                             " . ($user['adi'] === null || $user['adi'] === '' ? "NULL" : "'" . $connection->real_escape_string($user['adi']) . "'") . ")";
+        if (!$connection->query($stockInQuery)) {
+            throw new Exception('Urun stok giris kaydi olusturulamadi: ' . $connection->error);
+        }
+
+        $updateStockQuery = "UPDATE urunler
+                             SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($yeniTamamlanan) . "'
+                             WHERE urun_kodu = '" . $connection->real_escape_string($workOrder['urun_kodu']) . "'";
+        if (!$connection->query($updateStockQuery)) {
+            throw new Exception('Urun stok miktari guncellenemedi: ' . $connection->error);
+        }
+
+        insertMontajApprovalAuditLog(
+            $connection,
+            $isEmriNumarasi,
+            'onaylandi',
+            'onay_bekliyor',
+            'tamamlandi',
+            $oncekiTamamlanan,
+            $yeniTamamlanan,
+            $onayNotu,
+            $user['id'],
+            $user['adi']
+        );
+
+        $connection->commit();
+
+        return [
+            'status' => 'success',
+            'message' => 'Is emri onaylandi ve urun stoga eklendi.',
+            'is_emri_numarasi' => $isEmriNumarasi,
+            'tamamlanan_miktar' => $yeniTamamlanan
+        ];
+    } catch (Exception $e) {
+        $connection->rollback();
+
+        return [
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'is_emri_numarasi' => $isEmriNumarasi
+        ];
+    }
+}
+
+function rejectWorkOrderInternal($connection, $isEmriNumarasi, $redNotu = '') {
+    $connection->begin_transaction();
+
+    try {
+        $escapedId = $connection->real_escape_string($isEmriNumarasi);
+        $workOrderQuery = "SELECT * FROM montaj_is_emirleri
+                           WHERE is_emri_numarasi = '{$escapedId}'
+                           AND durum = 'onay_bekliyor'
+                           FOR UPDATE";
+        $workOrderResult = $connection->query($workOrderQuery);
+        if (!$workOrderResult || $workOrderResult->num_rows === 0) {
+            throw new Exception('Is emri bulunamadi veya durumu "Onay Bekliyor" degil.');
+        }
+
+        $workOrder = $workOrderResult->fetch_assoc();
+        $user = getMontajCurrentUser();
+        $redNotu = trim((string) $redNotu);
+        $aciklamaUpdateSql = '';
+        if ($redNotu !== '') {
+            $aciklamaUpdateSql = ", aciklama = TRIM(CONCAT(COALESCE(aciklama, ''), ' " . $connection->real_escape_string($redNotu) . "'))";
+        }
+
+        $updateQuery = "UPDATE montaj_is_emirleri SET
+                            durum = 'uretimde',
+                            onaylayan_personel_id = NULL,
+                            onaylayan_personel_adi = NULL,
+                            onay_tarihi = NULL,
+                            son_onay_notu = " . ($redNotu === '' ? "NULL" : "'" . $connection->real_escape_string($redNotu) . "'") . ",
+                            gerceklesen_bitis_tarihi = NULL
+                            {$aciklamaUpdateSql}
+                        WHERE is_emri_numarasi = '{$escapedId}'
+                        AND durum = 'onay_bekliyor'";
+        if (!$connection->query($updateQuery)) {
+            throw new Exception('Is emri reddedilirken hata olustu: ' . $connection->error);
+        }
+        if ($connection->affected_rows === 0) {
+            throw new Exception('Is emri reddedilemedi.');
+        }
+
+        insertMontajApprovalAuditLog(
+            $connection,
+            $isEmriNumarasi,
+            'reddedildi',
+            'onay_bekliyor',
+            'uretimde',
+            floatval($workOrder['tamamlanan_miktar']),
+            floatval($workOrder['tamamlanan_miktar']),
+            $redNotu,
+            $user['id'],
+            $user['adi']
+        );
+
+        $connection->commit();
+
+        return [
+            'status' => 'success',
+            'message' => 'Is emri reddedildi ve tekrar uretime alindi.',
+            'is_emri_numarasi' => $isEmriNumarasi
+        ];
+    } catch (Exception $e) {
+        $connection->rollback();
+
+        return [
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'is_emri_numarasi' => $isEmriNumarasi
+        ];
+    }
+}
+
 // Get the action from the request (handle both form data and JSON)
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 if (!$action) {
-    // If action not in GET/POST, check in JSON body
-    $input = json_decode(file_get_contents('php://input'), true);
+    // If action not in GET/POST, check in request payload
+    $input = getRequestPayload();
     if ($input && isset($input['action'])) {
         $action = $input['action'];
     }
+}
+
+$approvalActions = ['approve_work_order', 'reject_work_order', 'bulk_approve_work_orders', 'bulk_reject_work_orders'];
+if (in_array($action, $approvalActions, true)) {
+    ensureMontajApprovalPermission();
+}
+
+$approvalSchemaActions = ['complete_work_order', 'approve_work_order', 'reject_work_order', 'bulk_approve_work_orders', 'bulk_reject_work_orders', 'revert_completion'];
+if (in_array($action, $approvalSchemaActions, true)) {
+    ensureMontajApprovalSchemaReady($connection);
 }
 
 // Handle different actions
@@ -106,6 +399,18 @@ switch ($action) {
     case 'complete_work_order':
         completeWorkOrder();
         break;
+    case 'approve_work_order':
+        approveWorkOrder();
+        break;
+    case 'reject_work_order':
+        rejectWorkOrder();
+        break;
+    case 'bulk_approve_work_orders':
+        bulkApproveWorkOrders();
+        break;
+    case 'bulk_reject_work_orders':
+        bulkRejectWorkOrders();
+        break;
     case 'calculate_components':
         calculateComponents();
         break;
@@ -128,10 +433,24 @@ function getWorkOrders() {
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
         $offset = ($page - 1) * $limit;
+        $statusFilter = trim((string)($_GET['durum'] ?? ''));
+        $allowedStatuses = ['olusturuldu', 'uretimde', 'onay_bekliyor', 'tamamlandi', 'iptal'];
+        $whereClause = '';
+
+        if ($statusFilter !== '') {
+            if (!in_array($statusFilter, $allowedStatuses, true)) {
+                throw new Exception('Gecersiz durum filtresi.');
+            }
+            if ($statusFilter === 'onay_bekliyor' && !yetkisi_var('action:montaj_is_emirleri:approve')) {
+                throw new Exception('Onay bekleyen is emirlerini goruntuleme yetkiniz yok.');
+            }
+            $whereClause = "WHERE durum = '" . $connection->real_escape_string($statusFilter) . "'";
+        }
         
         // Count total records for the last 1000 by work order number
         $count_query = "SELECT COUNT(*) as total FROM (
             SELECT is_emri_numarasi FROM montaj_is_emirleri
+            {$whereClause}
             ORDER BY is_emri_numarasi DESC
             LIMIT 1000
         ) AS subquery";
@@ -145,6 +464,7 @@ function getWorkOrders() {
                          COALESCE(im.isim, '') as montaj_alani_kodu
                   FROM (
                       SELECT * FROM montaj_is_emirleri
+                      {$whereClause}
                       ORDER BY is_emri_numarasi DESC
                       LIMIT 1000
                   ) AS m
@@ -312,7 +632,7 @@ function createWorkOrder() {
         $work_order['birim'] = $work_order['birim'] ?? 'adet';
         
         // Validate status
-        $valid_statuses = ['olusturuldu', 'uretimde', 'tamamlandi', 'iptal'];
+        $valid_statuses = ['olusturuldu', 'uretimde', 'onay_bekliyor', 'tamamlandi', 'iptal'];
         if (!in_array($work_order['durum'], $valid_statuses)) {
             throw new Exception('Geçersiz durum değeri. Geçerli durumlar: ' . implode(', ', $valid_statuses));
         }
@@ -842,75 +1162,80 @@ function revertWorkOrder() {
 function completeWorkOrder() {
     global $connection;
 
-    $input = json_decode(file_get_contents('php://input'), true);
+    $input = getRequestPayload();
 
     $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
     $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
     $eksik_miktar_toplami = $input['eksik_miktar_toplami'] ?? 0;
-    $aciklama = $input['aciklama'] ?? '';
+    $aciklama = trim((string) ($input['aciklama'] ?? ''));
 
     if (!$is_emri_numarasi || $tamamlanan_miktar < 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Geçersiz veri. İş emri numarası ve tamamlanan miktar gereklidir.']);
+        echo json_encode(['status' => 'error', 'message' => 'Gecersiz veri. Is emri numarasi ve tamamlanan miktar gereklidir.']);
         return;
     }
 
     try {
-        // Begin transaction
         $connection->begin_transaction();
 
-        // 1. Get work order details
-        $work_order_query = "SELECT * FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "' AND durum = 'uretimde' FOR UPDATE";
+        $work_order_query = "SELECT * FROM montaj_is_emirleri
+                             WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'
+                             AND durum = 'uretimde'
+                             FOR UPDATE";
         $work_order_result = $connection->query($work_order_query);
         if (!$work_order_result || $work_order_result->num_rows == 0) {
-            throw new Exception('İş emri bulunamadı veya durumu "Üretimde" değil.');
+            throw new Exception('Is emri bulunamadi veya durumu "Uretimde" degil.');
         }
         $work_order = $work_order_result->fetch_assoc();
 
-        // 2. Update work order status - calculate eksik_miktar_toplami if not provided
         $today = date('Y-m-d');
         if ($eksik_miktar_toplami === null || $eksik_miktar_toplami < 0) {
             $eksik_miktar_toplami = max(0, floatval($work_order['planlanan_miktar']) - floatval($tamamlanan_miktar));
         }
+
+        $user = getMontajCurrentUser();
+        $aciklamaUpdateSql = '';
+        if ($aciklama !== '') {
+            $aciklamaUpdateSql = ", aciklama = TRIM(CONCAT(COALESCE(aciklama, ''), ' " . $connection->real_escape_string($aciklama) . "'))";
+        }
+
         $update_wo_query = "UPDATE montaj_is_emirleri SET
-                            durum = 'tamamlandi',
+                            durum = 'onay_bekliyor',
                             tamamlanan_miktar = '" . $connection->real_escape_string($tamamlanan_miktar) . "',
                             eksik_miktar_toplami = '" . $connection->real_escape_string($eksik_miktar_toplami) . "',
-                            gerceklesen_bitis_tarihi = '$today',
-                            aciklama = CONCAT(aciklama, ' " . $connection->real_escape_string($aciklama) . "')
-                          WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
+                            gerceklesen_bitis_tarihi = '{$today}',
+                            onaya_gonderen_personel_id = " . ($user['id'] === null ? "NULL" : "'" . $connection->real_escape_string($user['id']) . "'") . ",
+                            onaya_gonderen_personel_adi = " . ($user['adi'] === null || $user['adi'] === '' ? "NULL" : "'" . $connection->real_escape_string($user['adi']) . "'") . ",
+                            onaya_gonderme_tarihi = NOW(),
+                            onaylayan_personel_id = NULL,
+                            onaylayan_personel_adi = NULL,
+                            onay_tarihi = NULL,
+                            son_onay_notu = NULL
+                            {$aciklamaUpdateSql}
+                          WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'
+                          AND durum = 'uretimde'";
         if (!$connection->query($update_wo_query)) {
-            throw new Exception('İş emri güncellenirken hata oluştu: ' . $connection->error);
+            throw new Exception('Is emri onaya gonderilirken hata olustu: ' . $connection->error);
+        }
+        if ($connection->affected_rows === 0) {
+            throw new Exception('Is emri onaya gonderilemedi.');
         }
 
-        // 3. Increase stock for the produced product (LOG)
-        $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
-        $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
+        insertMontajApprovalAuditLog(
+            $connection,
+            $is_emri_numarasi,
+            'onaya_gonderildi',
+            'uretimde',
+            'onay_bekliyor',
+            floatval($work_order['tamamlanan_miktar']),
+            floatval($tamamlanan_miktar),
+            $aciklama,
+            $user['id'],
+            $user['adi']
+        );
 
-        $stock_in_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
-                           VALUES ('Ürün', 
-                                   '" . $connection->real_escape_string($work_order['urun_kodu']) . "', 
-                                   '" . $connection->real_escape_string($work_order['urun_ismi']) . "', 
-                                   '" . $connection->real_escape_string($work_order['birim']) . "', 
-                                   '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
-                                   'Giriş', 
-                                   'Üretimden Giriş', 
-                                   '" . $connection->real_escape_string($is_emri_numarasi) . "', 
-                                   'İş emri tamamlama', 
-                                   '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
-                                   '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
-        if (!$connection->query($stock_in_query)) {
-            throw new Exception('Ürün stok girişi yapılamadı: ' . $connection->error);
-        }
-
-        // 4. UPDATE product stock quantity
-        $update_product_stock_query = "UPDATE urunler SET stok_miktari = stok_miktari + '" . $connection->real_escape_string($tamamlanan_miktar) . "' WHERE urun_kodu = '" . $connection->real_escape_string($work_order['urun_kodu']) . "'";
-        if (!$connection->query($update_product_stock_query)) {
-            throw new Exception('Ürün stok miktarı güncellenemedi: ' . $connection->error);
-        }
-
-        // Commit transaction
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'İş emri başarıyla tamamlandı ve üretilen ürün stoğa eklendi.']);
+        log_islem($connection, $_SESSION['kullanici_adi'], $work_order['urun_ismi'] . ' urunu icin montaj is emri onaya gonderildi.', 'UPDATE');
+        echo json_encode(['status' => 'success', 'message' => 'Is emri onaya gonderildi. Stok girisi onaydan sonra yapilacak.']);
 
     } catch (Exception $e) {
         $connection->rollback();
@@ -918,86 +1243,221 @@ function completeWorkOrder() {
     }
 }
 
+function approveWorkOrder() {
+    global $connection;
+
+    $input = getRequestPayload();
+    $isEmriNumarasi = $input['is_emri_numarasi'] ?? ($input['id'] ?? null);
+    $tamamlananMiktar = array_key_exists('tamamlanan_miktar', $input) && $input['tamamlanan_miktar'] !== '' ? $input['tamamlanan_miktar'] : null;
+    $onayNotu = $input['onay_notu'] ?? ($input['not'] ?? '');
+
+    if (!$isEmriNumarasi) {
+        echo json_encode(['status' => 'error', 'message' => 'Is emri numarasi gerekli.']);
+        return;
+    }
+
+    $result = approveWorkOrderInternal($connection, $isEmriNumarasi, $tamamlananMiktar, $onayNotu);
+    if (($result['status'] ?? 'error') === 'success') {
+        log_islem($connection, $_SESSION['kullanici_adi'], "Montaj is emri {$isEmriNumarasi} onaylandi.", 'UPDATE');
+    }
+
+    echo json_encode($result);
+}
+
+function rejectWorkOrder() {
+    global $connection;
+
+    $input = getRequestPayload();
+    $isEmriNumarasi = $input['is_emri_numarasi'] ?? ($input['id'] ?? null);
+    $redNotu = $input['red_notu'] ?? ($input['not'] ?? '');
+
+    if (!$isEmriNumarasi) {
+        echo json_encode(['status' => 'error', 'message' => 'Is emri numarasi gerekli.']);
+        return;
+    }
+
+    $result = rejectWorkOrderInternal($connection, $isEmriNumarasi, $redNotu);
+    if (($result['status'] ?? 'error') === 'success') {
+        log_islem($connection, $_SESSION['kullanici_adi'], "Montaj is emri {$isEmriNumarasi} reddedildi.", 'UPDATE');
+    }
+
+    echo json_encode($result);
+}
+
+function bulkApproveWorkOrders() {
+    global $connection;
+
+    $input = getRequestPayload();
+    $isEmriNumaralari = $input['is_emri_numaralari'] ?? ($input['ids'] ?? []);
+    $onayNotu = $input['onay_notu'] ?? ($input['not'] ?? '');
+
+    if (!is_array($isEmriNumaralari) || empty($isEmriNumaralari)) {
+        echo json_encode(['status' => 'error', 'message' => 'Onaylanacak is emri listesi bos olamaz.']);
+        return;
+    }
+
+    $results = [];
+    $successCount = 0;
+    $errorCount = 0;
+
+    foreach ($isEmriNumaralari as $isEmriNumarasi) {
+        $isEmriNumarasi = trim((string) $isEmriNumarasi);
+        if ($isEmriNumarasi === '') {
+            continue;
+        }
+
+        $result = approveWorkOrderInternal($connection, $isEmriNumarasi, null, $onayNotu);
+        $results[] = $result;
+        if (($result['status'] ?? 'error') === 'success') {
+            $successCount++;
+        } else {
+            $errorCount++;
+        }
+    }
+
+    if ($successCount > 0) {
+        log_islem($connection, $_SESSION['kullanici_adi'], "{$successCount} adet montaj is emri toplu onaylandi.", 'UPDATE');
+    }
+
+    echo json_encode([
+        'status' => $errorCount === 0 ? 'success' : ($successCount > 0 ? 'partial' : 'error'),
+        'message' => "{$successCount} basarili, {$errorCount} basarisiz.",
+        'results' => $results
+    ]);
+}
+
+function bulkRejectWorkOrders() {
+    global $connection;
+
+    $input = getRequestPayload();
+    $isEmriNumaralari = $input['is_emri_numaralari'] ?? ($input['ids'] ?? []);
+    $redNotu = $input['red_notu'] ?? ($input['not'] ?? '');
+
+    if (!is_array($isEmriNumaralari) || empty($isEmriNumaralari)) {
+        echo json_encode(['status' => 'error', 'message' => 'Reddedilecek is emri listesi bos olamaz.']);
+        return;
+    }
+
+    $results = [];
+    $successCount = 0;
+    $errorCount = 0;
+
+    foreach ($isEmriNumaralari as $isEmriNumarasi) {
+        $isEmriNumarasi = trim((string) $isEmriNumarasi);
+        if ($isEmriNumarasi === '') {
+            continue;
+        }
+
+        $result = rejectWorkOrderInternal($connection, $isEmriNumarasi, $redNotu);
+        $results[] = $result;
+        if (($result['status'] ?? 'error') === 'success') {
+            $successCount++;
+        } else {
+            $errorCount++;
+        }
+    }
+
+    if ($successCount > 0) {
+        log_islem($connection, $_SESSION['kullanici_adi'], "{$successCount} adet montaj is emri toplu reddedildi.", 'UPDATE');
+    }
+
+    echo json_encode([
+        'status' => $errorCount === 0 ? 'success' : ($successCount > 0 ? 'partial' : 'error'),
+        'message' => "{$successCount} basarili, {$errorCount} basarisiz.",
+        'results' => $results
+    ]);
+}
+
 function revertCompletion() {
     global $connection;
 
-    $input = json_decode(file_get_contents('php://input'), true);
-    if (!$input) {
-        $input = $_POST;
-    }
-    
-    $is_emri_numarasi = $input['id'] ?? null;
+    $input = getRequestPayload();
+    $is_emri_numarasi = $input['id'] ?? ($input['is_emri_numarasi'] ?? null);
 
     if (!$is_emri_numarasi) {
-        echo json_encode(['status' => 'error', 'message' => 'İş emri numarası gerekli.']);
+        echo json_encode(['status' => 'error', 'message' => 'Is emri numarasi gerekli.']);
         return;
     }
 
     try {
-        // Begin transaction
         $connection->begin_transaction();
 
-        // 1. Get work order details, must be 'tamamlandi'
         $work_order_query = "SELECT * FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "' AND durum = 'tamamlandi' FOR UPDATE";
         $work_order_result = $connection->query($work_order_query);
         if (!$work_order_result || $work_order_result->num_rows == 0) {
-            throw new Exception('İş emri bulunamadı veya durumu "Tamamlandı" değil.');
+            throw new Exception('Is emri bulunamadi veya durumu "Tamamlandi" degil.');
         }
         $work_order = $work_order_result->fetch_assoc();
         $tamamlanan_miktar = floatval($work_order['tamamlanan_miktar']);
 
         if ($tamamlanan_miktar <= 0) {
-            throw new Exception('Geri alınacak bir üretim miktarı bulunmuyor.');
+            throw new Exception('Geri alinacak bir uretim miktari bulunmuyor.');
         }
 
         $kaydeden_personel_id = $_SESSION['user_id'] ?? null;
         $kaydeden_personel_adi = $_SESSION['kullanici_adi'] ?? 'Sistem';
 
-        // 2. Decrease stock for the produced product
         $escaped_tamamlanan_miktar = $connection->real_escape_string($tamamlanan_miktar);
         $escaped_urun_kodu = $connection->real_escape_string($work_order['urun_kodu']);
-        $update_product_stock_query = "UPDATE urunler 
-                                       SET stok_miktari = stok_miktari - '" . $escaped_tamamlanan_miktar . "' 
-                                       WHERE urun_kodu = '" . $escaped_urun_kodu . "' 
+        $update_product_stock_query = "UPDATE urunler
+                                       SET stok_miktari = stok_miktari - '" . $escaped_tamamlanan_miktar . "'
+                                       WHERE urun_kodu = '" . $escaped_urun_kodu . "'
                                        AND stok_miktari >= '" . $escaped_tamamlanan_miktar . "'";
         if (!$connection->query($update_product_stock_query)) {
-            throw new Exception('Ürün stok miktarı güncellenirken hata oluştu: ' . $connection->error);
+            throw new Exception('Urun stok miktari guncellenirken hata olustu: ' . $connection->error);
         }
         if ($connection->affected_rows === 0) {
-            throw new Exception('Yetersiz stok: üretilen ürün stoğu geri alma işlemi için yeterli değil.');
+            throw new Exception('Yetersiz stok: uretilen urun stogu geri alma islemi icin yeterli degil.');
         }
 
-        // 3. Log the stock reversal for the product
-        $stock_out_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi) 
-                            VALUES ('Ürün', 
-                                    '" . $connection->real_escape_string($work_order['urun_kodu']) . "', 
-                                    '" . $connection->real_escape_string($work_order['urun_ismi']) . "', 
-                                    '" . $connection->real_escape_string($work_order['birim']) . "', 
-                                    '" . $connection->real_escape_string($tamamlanan_miktar) . "', 
-                                    'Çıkış', 
-                                    'Üretim İptal', 
-                                    '" . $connection->real_escape_string($is_emri_numarasi) . "', 
-                                    'Tamamlanan iş emri geri alındı', 
-                                    '" . $connection->real_escape_string($kaydeden_personel_id) . "', 
-                                    '" . $connection->real_escape_string($kaydeden_personel_adi) . "')";
+        $stock_out_query = "INSERT INTO stok_hareket_kayitlari (stok_turu, kod, isim, birim, miktar, yon, hareket_turu, is_emri_numarasi, aciklama, kaydeden_personel_id, kaydeden_personel_adi)
+                            VALUES ('Urun',
+                                    '" . $connection->real_escape_string($work_order['urun_kodu']) . "',
+                                    '" . $connection->real_escape_string($work_order['urun_ismi']) . "',
+                                    '" . $connection->real_escape_string($work_order['birim']) . "',
+                                    '" . $connection->real_escape_string($tamamlanan_miktar) . "',
+                                    'Cikis',
+                                    'Uretim Iptal',
+                                    '" . $connection->real_escape_string($is_emri_numarasi) . "',
+                                    'Tamamlanan is emri geri alindi',
+                                    " . ($kaydeden_personel_id === null ? "NULL" : "'" . $connection->real_escape_string($kaydeden_personel_id) . "'") . ",
+                                    " . ($kaydeden_personel_adi === null || $kaydeden_personel_adi === '' ? "NULL" : "'" . $connection->real_escape_string($kaydeden_personel_adi) . "'") . ")";
         if (!$connection->query($stock_out_query)) {
-            throw new Exception('Ürün stok iade (çıkış) kaydı oluşturulamadı: ' . $connection->error);
+            throw new Exception('Urun stok iade (cikis) kaydi olusturulamadi: ' . $connection->error);
         }
 
-        // 4. Update work order status
         $update_wo_query = "UPDATE montaj_is_emirleri SET
                             durum = 'uretimde',
                             tamamlanan_miktar = 0,
                             eksik_miktar_toplami = '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "',
-                            gerceklesen_bitis_tarihi = NULL
+                            gerceklesen_bitis_tarihi = NULL,
+                            onaya_gonderen_personel_id = NULL,
+                            onaya_gonderen_personel_adi = NULL,
+                            onaya_gonderme_tarihi = NULL,
+                            onaylayan_personel_id = NULL,
+                            onaylayan_personel_adi = NULL,
+                            onay_tarihi = NULL,
+                            son_onay_notu = NULL
                           WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
         if (!$connection->query($update_wo_query)) {
-            throw new Exception('İş emri durumu geri alınırken hata oluştu: ' . $connection->error);
+            throw new Exception('Is emri durumu geri alinirken hata olustu: ' . $connection->error);
         }
 
-        // Commit transaction
+        insertMontajApprovalAuditLog(
+            $connection,
+            $is_emri_numarasi,
+            'tamamlandidan_uretime_alindi',
+            'tamamlandi',
+            'uretimde',
+            $tamamlanan_miktar,
+            0,
+            'Tamamlanan is emri geri alindi',
+            $kaydeden_personel_id,
+            $kaydeden_personel_adi
+        );
+
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'İş emri tamamlama durumu başarıyla geri alındı. Üretilen ürün stoktan düşüldü.']);
+        echo json_encode(['status' => 'success', 'message' => 'Is emri tamamlama durumu basariyla geri alindi. Uretilen urun stoktan dusuldu.']);
 
     } catch (Exception $e) {
         $connection->rollback();

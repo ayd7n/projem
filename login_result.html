@@ -1,32 +1,3 @@
-<?php
-include 'config.php';
-
-// --- Maintenance Mode Check ---
-// This must be after config.php is included and before any other output.
-$maintenance_mode = get_setting($connection, 'maintenance_mode');
-// Use the email from session for a reliable admin check
-$is_admin = isset($_SESSION['email']) && ($_SESSION['email'] === 'admin@parfum.com' || $_SESSION['email'] === 'admin2@parfum.com');
-$current_page = basename($_SERVER['PHP_SELF']);
-
-if ($maintenance_mode === 'on' && !$is_admin && $current_page !== 'maintenance.php' && $current_page !== 'login.php') {
-    header('Location: maintenance.php');
-    exit;
-}
-// --- End Maintenance Mode Check ---
-
-if (!isset($_SESSION['user_id'])) {
-    header('Location: login.php');
-    exit;
-}
-
-$should_refresh_rates_after_login = !empty($_SESSION['admin_login_refresh_rates']) && $is_admin;
-if ($should_refresh_rates_after_login) {
-    unset($_SESSION['admin_login_refresh_rates']);
-}
-
-$kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION['kullanici_adi']) : 'Kullanıcı';
-
-?>
 <!DOCTYPE html>
 <html lang="tr">
 
@@ -839,7 +810,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                 <i class="fas fa-bars"></i>
             </button>
             <nav class="user-controls">
-                <span class="user-info">Hoş geldin, <strong><?php echo $kullanici_adi; ?></strong></span>
+                <span class="user-info">Hoş geldin, <strong>Admin User</strong></span>
                 <a href="change_password.php" title="Şifre Değiştir"><i class="fas fa-key fa-fw"></i><span
                         class="link-text">Şifre Değiştir</span></a>
                 <a href="logout.php" title="Çıkış Yap"><i class="fas fa-sign-out-alt fa-fw"></i><span
@@ -970,16 +941,14 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Montaj ve dolum iş emirlerini yönetin.</p>
                             </div>
                         </a>
-                        <?php if (yetkisi_var('page:view:montaj_onay_ekrani')): ?>
-                            <a href="montaj_onay_ekrani.php" class="module-card">
+                                                    <a href="montaj_onay_ekrani.php" class="module-card">
                                 <div class="icon"><i class="fas fa-clipboard-check"></i></div>
                                 <div class="card-content">
                                     <span class="title">Montaj Onay Ekrani</span>
                                     <p class="description">Onay bekleyen montaj is emirlerini onaylayin veya reddedin.</p>
                                 </div>
                             </a>
-                        <?php endif; ?>
-                        <a href="manuel_stok_hareket.php" class="module-card">
+                                                <a href="manuel_stok_hareket.php" class="module-card">
                             <div class="icon"><i class="fas fa-exchange-alt"></i></div>
                             <div class="card-content">
                                 <span class="title">Stok Hareketleri</span>
@@ -1042,41 +1011,35 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
                                 <p class="description">Şirket giderlerini takip edin ve raporlayın.</p>
                             </div>
                         </a>
-                        <?php if (yetkisi_var('page:view:gider_yonetimi')): ?>
-                            <a href="kasa_yonetimi.php" class="module-card">
+                                                    <a href="kasa_yonetimi.php" class="module-card">
                                 <div class="icon"><i class="fas fa-wallet"></i></div>
                                 <div class="card-content">
                                     <span class="title">Kasa Yönetimi</span>
                                     <p class="description">Çoklu para birimi, çek kasası ve tüm finansal hareketleri yönetin.</p>
                                 </div>
                             </a>
-                        <?php endif; ?>
-                        <a href="cerceve_sozlesmeler.php" class="module-card">
+                                                <a href="cerceve_sozlesmeler.php" class="module-card">
                             <div class="icon"><i class="fas fa-file-contract"></i></div>
                             <div class="card-content">
                                 <span class="title">Sözleşmeler</span>
                                 <p class="description">Müşteri ve tedarikçi sözleşmelerini yönetin.</p>
                             </div>
                         </a>
-                        <?php if (yetkisi_var('page:view:personel_bordro')): ?>
-                            <a href="personel_bordro.php" class="module-card">
+                                                    <a href="personel_bordro.php" class="module-card">
                                 <div class="icon"><i class="fas fa-money-check-alt"></i></div>
                                 <div class="card-content">
                                     <span class="title">Personel Bordro</span>
                                     <p class="description">Maaş ödemelerini ve avansları yönetin.</p>
                                 </div>
                             </a>
-                        <?php endif; ?>
-                        <?php if (yetkisi_var('page:view:tekrarli_odemeler')): ?>
-                            <a href="tekrarli_odemeler.php" class="module-card">
+                                                                            <a href="tekrarli_odemeler.php" class="module-card">
                                 <div class="icon"><i class="fas fa-calendar-check"></i></div>
                                 <div class="card-content">
                                     <span class="title">Tekrarlı Ödemeler</span>
                                     <p class="description">Kira, fatura ve aylık ödemeleri takip edin.</p>
                                 </div>
                             </a>
-                        <?php endif; ?>
-                    </div>
+                                            </div>
                 </div>
 
 
@@ -1113,13 +1076,12 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
     </div>
 
     <footer>
-        IDO KOZMETIK © <?php echo date('Y'); ?> - Yönetim Paneli
+        IDO KOZMETIK © 2026 - Yönetim Paneli
     </footer>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            <?php if ($should_refresh_rates_after_login): ?>
-            fetch('api_islemleri/admin_login_doviz_guncelle.php', {
+                        fetch('api_islemleri/admin_login_doviz_guncelle.php', {
                 method: 'POST',
                 keepalive: true,
                 headers: {
@@ -1128,8 +1090,7 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
             }).catch(() => {
                 // Silent fail: this task runs in background and should not block admin login.
             });
-            <?php endif; ?>
-
+            
             const hamburger = document.querySelector('.hamburger-menu');
             const userControls = document.querySelector('.user-controls');
             const navItems = document.querySelectorAll('.nav-item');
