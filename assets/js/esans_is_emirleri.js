@@ -47,9 +47,21 @@ app = new Vue({
         showContent: false
     },
     computed: {
-        kritikBilesenTurleri() {
-            // Esans recetesinde ana bilesenler genelde "malzeme" turunde gelir.
-            return ['malzeme', 'esans', 'kutu', 'takim', 'takm'];
+        isCreateMode() {
+            return !this.selectedWorkOrder.is_emri_numarasi;
+        },
+        selectableEssences() {
+            if (!Array.isArray(this.essences)) {
+                return [];
+            }
+
+            if (!this.isCreateMode) {
+                return this.essences;
+            }
+
+            return this.essences.filter(
+                (essence) => (parseInt(essence.max_uretilebilir_adet, 10) || 0) > 0
+            );
         },
         maxProducibleQuantity() {
             if (!this.calculatedComponents || this.calculatedComponents.length === 0) {
@@ -57,14 +69,8 @@ app = new Vue({
             }
 
             let maxProducible = Infinity;
-            const kritikTurler = this.kritikBilesenTurleri;
 
             for (const component of this.calculatedComponents) {
-                const malzemeTuru = (component.malzeme_turu || '').toLowerCase();
-                if (!kritikTurler.includes(malzemeTuru)) {
-                    continue;
-                }
-
                 const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
                 const stokMiktari = parseFloat(component.stok_miktari) || 0;
                 if (bilesimOrani > 0) {
@@ -82,14 +88,8 @@ app = new Vue({
 
             let minProducible = Infinity;
             let limitingName = null;
-            const kritikTurler = this.kritikBilesenTurleri;
 
             for (const component of this.calculatedComponents) {
-                const malzemeTuru = (component.malzeme_turu || '').toLowerCase();
-                if (!kritikTurler.includes(malzemeTuru)) {
-                    continue;
-                }
-
                 const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
                 const stokMiktari = parseFloat(component.stok_miktari) || 0;
                 if (bilesimOrani > 0) {
@@ -171,7 +171,13 @@ app = new Vue({
             try {
                 const response = await axios.get('api_islemleri/esans_is_emirleri_islemler.php?action=get_essences');
                 if (response.data.status === 'success') {
-                    this.essences = response.data.data || [];
+                    this.essences = (response.data.data || []).map((essence) => ({
+                        ...essence,
+                        max_uretilebilir_adet: Math.max(
+                            0,
+                            parseInt(essence.max_uretilebilir_adet, 10) || 0
+                        )
+                    }));
                 } else {
                     Swal.fire({
                         title: 'Hata!',

@@ -260,7 +260,7 @@ function updateDashboard(data) {
   $("#kasaEUR").text(formatMoney(data.kasalar.EUR) + " €");
   $("#kasaCek").text(data.cek_kasasi.adet + " adet");
   $("#cekTLKarsiligi").text(
-    "(~" + formatMoney(data.cek_kasasi.toplam * (data.kurlar.TL || 1)) + " ₺)"
+    "(~" + formatMoney(data.cek_kasasi.tl_karsiligi || 0) + " ₺)"
   );
 
   // Tedarikçi borçları

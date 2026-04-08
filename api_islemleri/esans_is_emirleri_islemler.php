@@ -7,6 +7,72 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
+function normalizeMaterialType($materialType) {
+    return strtolower(trim((string) ($materialType ?? '')));
+}
+
+function getStockSourceConfig($materialType) {
+    if (normalizeMaterialType($materialType) === 'esans') {
+        return [
+            'table' => 'esanslar',
+            'code_column' => 'esans_kodu'
+        ];
+    }
+
+    return [
+        'table' => 'malzemeler',
+        'code_column' => 'malzeme_kodu'
+    ];
+}
+
+function getComponentStockQuantity($connection, $materialType, $componentCode) {
+    $stockSource = getStockSourceConfig($materialType);
+    $escapedComponentCode = $connection->real_escape_string((string) $componentCode);
+    $stockQuery = "SELECT stok_miktari FROM {$stockSource['table']} WHERE {$stockSource['code_column']} = '{$escapedComponentCode}'";
+    $stockResult = $connection->query($stockQuery);
+
+    if ($stockResult && $stockRow = $stockResult->fetch_assoc()) {
+        return floatval($stockRow['stok_miktari']);
+    }
+
+    return 0;
+}
+
+function calculateMaxProducibleQuantity($connection, $agacTuru, $urunKodu) {
+    $escapedAgacTuru = $connection->real_escape_string((string) $agacTuru);
+    $escapedUrunKodu = $connection->real_escape_string((string) $urunKodu);
+    $recipeQuery = "SELECT bilesen_kodu, bilesenin_malzeme_turu, bilesen_miktari
+                    FROM urun_agaci
+                    WHERE urun_kodu = '{$escapedUrunKodu}'
+                      AND agac_turu = '{$escapedAgacTuru}'";
+    $recipeResult = $connection->query($recipeQuery);
+
+    if (!$recipeResult || $recipeResult->num_rows === 0) {
+        return 0;
+    }
+
+    $maxProducible = null;
+    while ($recipeRow = $recipeResult->fetch_assoc()) {
+        $ratio = floatval($recipeRow['bilesen_miktari']);
+        if ($ratio <= 0) {
+            return 0;
+        }
+
+        $stockQty = getComponentStockQuantity(
+            $connection,
+            $recipeRow['bilesenin_malzeme_turu'] ?? '',
+            $recipeRow['bilesen_kodu']
+        );
+        $producibleForComponent = max(0, (int) floor($stockQty / $ratio));
+
+        if ($maxProducible === null || $producibleForComponent < $maxProducible) {
+            $maxProducible = $producibleForComponent;
+        }
+    }
+
+    return $maxProducible === null ? 0 : $maxProducible;
+}
+
 // Get the action from the request (handle both form data and JSON)
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 if (!$action) {
@@ -149,7 +215,7 @@ function getEssences() {
     try {
         // Sadece urun_agaci tablosunda agac_turu = "esans" olarak tanımlı esansları getir
         // urun_agaci.urun_kodu = esanslar.esans_id eşleşmesi
-        $query = "SELECT DISTINCT e.esans_kodu, e.esans_ismi, e.birim, e.demlenme_suresi_gun 
+        $query = "SELECT DISTINCT e.esans_kodu, e.esans_ismi, e.birim, e.demlenme_suresi_gun, e.esans_id as urun_agaci_kodu 
                   FROM esanslar e 
                   INNER JOIN urun_agaci ua ON e.esans_id = ua.urun_kodu 
                   WHERE ua.agac_turu = 'esans' 
@@ -159,6 +225,12 @@ function getEssences() {
         $essences = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
+                $row['max_uretilebilir_adet'] = calculateMaxProducibleQuantity(
+                    $connection,
+                    'esans',
+                    $row['urun_agaci_kodu']
+                );
+                unset($row['urun_agaci_kodu']);
                 $essences[] = $row;
             }
         }

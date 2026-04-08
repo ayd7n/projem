@@ -226,16 +226,16 @@ function getCustomers()
         }
     }
 
-    // Recalculate Global Total Balance (Approximate TRY) - Keeping logic simple for stats
-    // Note: This is an approximation for the stat card.
-    // Ideally, we should sum per currency globally too, but for now let's keep the existing logic 
-    // but just fix the query to not fail.
-    // Actually, let's just return 0 or calculate properly if needed.
-    // The previous logic summed everything as raw numbers.
-    $total_balance = 0; // Placeholder, calculating global multicurrency balance is expensive and complex for UI
-    
     // Convert associative array back to indexed array
     $customers_list = array_values($customers);
+
+    // Top cards should reflect the currently listed customers.
+    $total_balance = 0;
+    $total_unpaid_orders = 0;
+    foreach ($customers_list as $customer_row) {
+        $total_balance += floatval($customer_row['kalan_bakiye'] ?? 0);
+        $total_unpaid_orders += intval($customer_row['odenmemis_siparis'] ?? 0);
+    }
 
     $response = [
         'status' => 'success',
@@ -244,8 +244,8 @@ function getCustomers()
             'current_page' => $page,
             'total_pages' => $total_pages,
             'total_customers' => $total_customers,
-            'total_balance' => $total_balance, // Disabled for now to avoid confusion
-            'total_unpaid_orders' => 0, // Disabled for performance
+            'total_balance' => round($total_balance, 2),
+            'total_unpaid_orders' => $total_unpaid_orders,
             'limit' => $limit
         ]
     ];

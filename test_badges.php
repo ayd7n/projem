@@ -1,5 +1,10 @@
 <?php
-include 'config.php';
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+require_once __DIR__ . '/config.php';
 
 // Function to count records in a table
 function get_record_count($connection, $table_name, $condition = '') {

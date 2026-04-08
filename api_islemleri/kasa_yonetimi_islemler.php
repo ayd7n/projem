@@ -95,7 +95,7 @@ function getKasaBakiyeleri() {
             COUNT(*) as adet,
             SUM(cek_tutari) as toplam
         FROM cek_kasasi 
-        WHERE cek_tipi = 'alacak' AND cek_durumu IN ('alindi', 'tahsilde')
+        WHERE cek_tipi = 'alacak' AND cek_durumu IN ('alindi', 'tahsilde', 'kullanildi')
         GROUP BY cek_para_birimi
     ");
     
@@ -696,11 +696,22 @@ function getDashboardSummary() {
     
     // Çek kasası
     $cekResult = $connection->query("
-        SELECT COUNT(*) as adet, SUM(cek_tutari) as toplam
-        FROM cek_kasasi 
+        SELECT cek_para_birimi, COUNT(*) as adet, SUM(cek_tutari) as toplam
+        FROM cek_kasasi
         WHERE cek_tipi = 'alacak' AND cek_durumu IN ('alindi', 'tahsilde')
+        GROUP BY cek_para_birimi
     ");
-    $cekOzet = $cekResult->fetch_assoc();
+    $cekOzet = ['adet' => 0, 'TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0, 'toplam' => 0.0, 'tl_karsiligi' => 0.0];
+    if ($cekResult) {
+        while ($row = $cekResult->fetch_assoc()) {
+            $pb = in_array($row['cek_para_birimi'], ['TL', 'USD', 'EUR']) ? $row['cek_para_birimi'] : 'TL';
+            $tutar = floatval($row['toplam'] ?? 0);
+            $cekOzet['adet'] += intval($row['adet'] ?? 0);
+            $cekOzet[$pb] += $tutar;
+        }
+    }
+    $cekOzet['tl_karsiligi'] = $cekOzet['TL'] + ($cekOzet['USD'] * $rates['USD']) + ($cekOzet['EUR'] * $rates['EUR']);
+    $cekOzet['toplam'] = $cekOzet['tl_karsiligi'];
     
     // Stok değerleri
     $urunDeger = $connection->query("
@@ -852,7 +863,11 @@ function getDashboardSummary() {
             'kasalar' => $kasalar,
             'cek_kasasi' => [
                 'adet' => intval($cekOzet['adet'] ?? 0),
-                'toplam' => floatval($cekOzet['toplam'] ?? 0)
+                'TL' => round(floatval($cekOzet['TL'] ?? 0), 2),
+                'USD' => round(floatval($cekOzet['USD'] ?? 0), 2),
+                'EUR' => round(floatval($cekOzet['EUR'] ?? 0), 2),
+                'toplam' => round(floatval($cekOzet['toplam'] ?? 0), 2),
+                'tl_karsiligi' => round(floatval($cekOzet['tl_karsiligi'] ?? 0), 2)
             ],
             'stok_degerleri' => [
                 'urunler' => round(floatval($urunDeger), 2),

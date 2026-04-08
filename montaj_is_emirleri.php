@@ -930,9 +930,9 @@ $is_merkezleri_result = $connection->query($is_merkezleri_query);
                                                 <select class="form-control" v-model="selectedWorkOrder.urun_kodu"
                                                     @change="updateProductDetails" required>
                                                     <option value="">Ürün Secin</option>
-                                                    <option v-for="product in products" :value="product.urun_kodu"
+                                                    <option v-for="product in selectableProducts" :value="product.urun_kodu"
                                                         :key="product.urun_kodu">
-                                                        {{ product.urun_kodu }} - {{ product.urun_ismi }}
+                                                        {{ product.urun_kodu }} - {{ product.urun_ismi }} (Max: {{ product.max_uretilebilir_adet || 0 }})
                                                     </option>
                                                 </select>
                                                 <small class="form-text text-muted"><i class="fas fa-info-circle"></i>

@@ -1,6 +1,13 @@
 <?php
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 // Mock session
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 $_SESSION['user_id'] = 1;
 $_SESSION['taraf'] = 'personel';
 $_SESSION['kullanici_adi'] = 'Test User';
@@ -10,7 +17,7 @@ $_GET['action'] = 'get_report_data';
 
 // Capture output
 ob_start();
-include 'api_islemleri/musteri_satis_raporu_islemler.php';
+require_once __DIR__ . '/musteri_satis_raporu_islemler.php';
 $output = ob_get_clean();
 
 echo $output;

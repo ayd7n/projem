@@ -892,8 +892,8 @@ $tanks_result = $connection->query($tanks_query);
                                         <label for="esans_kodu">Esans *</label>
                                         <select class="form-control" v-model="selectedWorkOrder.esans_kodu" @change="updateEssenceDetails" required>
                                             <option value="">Esans Secin</option>
-                                            <option v-for="essence in essences" :value="essence.esans_kodu" :key="essence.esans_kodu">
-                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }}
+                                            <option v-for="essence in selectableEssences" :value="essence.esans_kodu" :key="essence.esans_kodu">
+                                                {{ essence.esans_kodu }} - {{ essence.esans_ismi }} (Max: {{ essence.max_uretilebilir_adet || 0 }})
                                             </option>
                                         </select>
                                         <small class="form-text text-muted"><i class="fas fa-info-circle"></i> Sadece ürün ağacında tanımlı esanslar gösterilmektedir</small>

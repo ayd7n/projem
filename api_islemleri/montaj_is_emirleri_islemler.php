@@ -58,6 +58,41 @@ function getComponentStockQuantity($connection, $materialType, $componentCode) {
     return 0;
 }
 
+function calculateMaxProducibleQuantity($connection, $agacTuru, $urunKodu) {
+    $escapedAgacTuru = $connection->real_escape_string((string) $agacTuru);
+    $escapedUrunKodu = $connection->real_escape_string((string) $urunKodu);
+    $recipeQuery = "SELECT bilesen_kodu, bilesenin_malzeme_turu, bilesen_miktari
+                    FROM urun_agaci
+                    WHERE urun_kodu = '{$escapedUrunKodu}'
+                      AND agac_turu = '{$escapedAgacTuru}'";
+    $recipeResult = $connection->query($recipeQuery);
+
+    if (!$recipeResult || $recipeResult->num_rows === 0) {
+        return 0;
+    }
+
+    $maxProducible = null;
+    while ($recipeRow = $recipeResult->fetch_assoc()) {
+        $ratio = floatval($recipeRow['bilesen_miktari']);
+        if ($ratio <= 0) {
+            return 0;
+        }
+
+        $stockQty = getComponentStockQuantity(
+            $connection,
+            $recipeRow['bilesenin_malzeme_turu'] ?? '',
+            $recipeRow['bilesen_kodu']
+        );
+        $producibleForComponent = max(0, (int) floor($stockQty / $ratio));
+
+        if ($maxProducible === null || $producibleForComponent < $maxProducible) {
+            $maxProducible = $producibleForComponent;
+        }
+    }
+
+    return $maxProducible === null ? 0 : $maxProducible;
+}
+
 function getRequestPayload() {
     $input = json_decode(file_get_contents('php://input'), true);
     if (!$input || !is_array($input)) {
@@ -539,6 +574,11 @@ function getProducts() {
         $products = [];
         if ($result) {
             while ($row = $result->fetch_assoc()) {
+                $row['max_uretilebilir_adet'] = calculateMaxProducibleQuantity(
+                    $connection,
+                    'urun',
+                    $row['urun_kodu']
+                );
                 $products[] = $row;
             }
         }

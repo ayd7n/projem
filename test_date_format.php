@@ -1,6 +1,11 @@
 <?php
 // Test script to debug date format issues
-include 'config.php';
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+require_once __DIR__ . '/config.php';
 
 echo "<h2>Date Format Test</h2>";
 

@@ -1,5 +1,10 @@
 <?php
-include 'config.php';
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+require_once __DIR__ . '/config.php';
 $query = "SELECT TABLE_NAME, COLUMN_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_NAME, REFERENCED_COLUMN_NAME
 FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
 WHERE REFERENCED_TABLE_SCHEMA = 'projem' AND TABLE_NAME = 'gelir_yonetimi'";

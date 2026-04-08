@@ -1,5 +1,10 @@
 <?php
-include 'config.php';
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
+require_once __DIR__ . '/config.php';
 
 echo "--- Siparisler Dump ---\n";
 $query = "SELECT siparis_id, durum, odeme_durumu, odenen_tutar, musteri_adi FROM siparisler ORDER BY siparis_id DESC LIMIT 10";

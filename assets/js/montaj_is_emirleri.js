@@ -48,8 +48,21 @@ app = new Vue({
   },
   computed: {
     // Kritik bileşen türleri: kutu, takim, esans
-    kritikBilesenTurleri() {
-      return ["kutu", "takim", "esans"];
+    isCreateMode() {
+      return !this.selectedWorkOrder.is_emri_numarasi;
+    },
+    selectableProducts() {
+      if (!Array.isArray(this.products)) {
+        return [];
+      }
+
+      if (!this.isCreateMode) {
+        return this.products;
+      }
+
+      return this.products.filter(
+        (product) => (parseInt(product.max_uretilebilir_adet, 10) || 0) > 0
+      );
     },
     // Eldeki kritik bileşen stoklarına göre maksimum üretilebilir miktar hesaplama
     maxProducibleQuantity() {
@@ -61,15 +74,9 @@ app = new Vue({
       }
 
       let maxProducible = Infinity;
-      const kritikTurler = this.kritikBilesenTurleri;
 
       for (const component of this.calculatedComponents) {
         // Sadece kritik bileşen türlerini kontrol et
-        const malzemeTuru = this.normalizeMalzemeTuru(component.malzeme_turu);
-        if (!kritikTurler.includes(malzemeTuru)) {
-          continue;
-        }
-
         const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
         const stokMiktari = parseFloat(component.stok_miktari) || 0;
 
@@ -95,15 +102,9 @@ app = new Vue({
 
       let minProducible = Infinity;
       let limitingName = null;
-      const kritikTurler = this.kritikBilesenTurleri;
 
       for (const component of this.calculatedComponents) {
         // Sadece kritik bileşen türlerini kontrol et
-        const malzemeTuru = this.normalizeMalzemeTuru(component.malzeme_turu);
-        if (!kritikTurler.includes(malzemeTuru)) {
-          continue;
-        }
-
         const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
         const stokMiktari = parseFloat(component.stok_miktari) || 0;
 
@@ -123,25 +124,6 @@ app = new Vue({
     },
   },
   methods: {
-    normalizeMalzemeTuru(malzemeTuru) {
-      const normalized = (malzemeTuru || "")
-        .toString()
-        .trim()
-        .toLowerCase()
-        .replace(/\u0131/g, "i")
-        .replace(/\u015f/g, "s")
-        .replace(/\u011f/g, "g")
-        .replace(/\u00fc/g, "u")
-        .replace(/\u00f6/g, "o")
-        .replace(/\u00e7/g, "c");
-
-      // Some records store "takim" as "takm".
-      if (normalized === "takm") {
-        return "takim";
-      }
-
-      return normalized;
-    },
     // Her bileşen için üretilebilir adet hesaplama
     getProducibleForComponent(component) {
       const bilesimOrani = parseFloat(component.bilesim_orani) || 0;
@@ -211,7 +193,13 @@ app = new Vue({
           "api_islemleri/montaj_is_emirleri_islemler.php?action=get_products"
         );
         if (response.data.status === "success") {
-          this.products = response.data.data || [];
+          this.products = (response.data.data || []).map((product) => ({
+            ...product,
+            max_uretilebilir_adet: Math.max(
+              0,
+              parseInt(product.max_uretilebilir_adet, 10) || 0
+            ),
+          }));
         } else {
           Swal.fire({
             title: "Hata!",

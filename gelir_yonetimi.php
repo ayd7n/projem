@@ -774,6 +774,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         </div>
                         <!-- Para Birimi (Otomatik - Gizli) -->
                         <input type="hidden" id="para_birimi" name="para_birimi" value="TL">
+                        <input type="hidden" id="cek_secimi" name="cek_secimi" value="">
 
                         <!-- Müşteri Adı -->
                         <div class="form-group mb-2">
@@ -1281,6 +1282,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 $('#incomeForm')[0].reset();
                 $('#action').val('add_income');
                 $('#gelir_id').val('');
+                $('#cek_secimi').val('');
                 $('#modalTitle').html('<i class="fas fa-plus"></i> Yeni Tahsilat Ekle');
                 $('#tarih').val(new Date().toISOString().split('T')[0]);
                 $('#para_birimi').val('TL'); // Set default currency
@@ -1315,6 +1317,19 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                         $('#odeme_tipi').val(data.odeme_tipi);
                         $('#musteri_adi').val(data.musteri_adi);
                         $('#aciklama').val(data.aciklama);
+                        $('#kasa_secimi').val(data.kasa_secimi || 'TL');
+                        $('#cek_secimi').val(data.cek_secimi || '');
+                        if ((data.kasa_secimi || 'TL') === 'cek_kasasi') {
+                            $('#cekBilgileriDiv').show();
+                            $('#cek_no').attr('required', false);
+                            $('#cek_sahibi').attr('required', false);
+                            $('#cek_vade').attr('required', false);
+                        } else {
+                            $('#cekBilgileriDiv').hide();
+                            $('#cek_no').attr('required', false);
+                            $('#cek_sahibi').attr('required', false);
+                            $('#cek_vade').attr('required', false);
+                        }
                         $('#modalTitle').html('<i class="fas fa-edit"></i> Tahsilat Düzenle');
                         $('#incomeModal').modal('show');
                     }

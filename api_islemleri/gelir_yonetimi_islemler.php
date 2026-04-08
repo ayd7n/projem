@@ -195,93 +195,177 @@ function getTotalIncome()
     }
 }
 
+function getIncomeRates()
+{
+    global $connection;
+    $rates = ['TL' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($rate_query) {
+        while ($row = $rate_query->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, floatval($row['ayar_deger']));
+            }
+            if ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, floatval($row['ayar_deger']));
+            }
+        }
+    }
+    return $rates;
+}
+
+function incomeNormalizeCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    return in_array($currency, ['TL', 'USD', 'EUR']) ? $currency : 'TL';
+}
+
+function incomeConvertCurrency($amount, $from, $to, $rates)
+{
+    $amount = floatval($amount);
+    $from = incomeNormalizeCurrency($from);
+    $to = incomeNormalizeCurrency($to);
+    if ($from === $to) {
+        return $amount;
+    }
+    $fromRate = floatval($rates[$from] ?? 0);
+    $toRate = floatval($rates[$to] ?? 0);
+    if ($fromRate <= 0 || $toRate <= 0) {
+        throw new Exception("Kur bilgisi gecersiz.");
+    }
+    $tl = $amount * $fromRate;
+    return $tl / $toRate;
+}
+
+function incomeEnsureCashRow($currency)
+{
+    global $connection;
+    $currency = incomeNormalizeCurrency($currency);
+    $currencyEsc = $connection->real_escape_string($currency);
+    $check = $connection->query("SELECT para_birimi FROM sirket_kasasi WHERE para_birimi = '$currencyEsc'");
+    if (!$check || $check->num_rows === 0) {
+        if (!$connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$currencyEsc', 0)")) {
+            throw new Exception("Kasa satiri olusturulamadi: " . $connection->error);
+        }
+    }
+}
+
+function incomeAdjustCash($currency, $delta)
+{
+    global $connection;
+    $currency = incomeNormalizeCurrency($currency);
+    incomeEnsureCashRow($currency);
+    $currencyEsc = $connection->real_escape_string($currency);
+    $delta = floatval($delta);
+    if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + ($delta) WHERE para_birimi = '$currencyEsc'")) {
+        throw new Exception("Kasa bakiyesi guncellenemedi: " . $connection->error);
+    }
+}
+
+function incomeGetLinkedMovement($gelir_id)
+{
+    global $connection;
+    $gelir_id = (int) $gelir_id;
+    $q = "SELECT * FROM kasa_hareketleri WHERE kaynak_tablo = 'gelir_yonetimi' AND kaynak_id = $gelir_id ORDER BY hareket_id DESC LIMIT 1";
+    $r = $connection->query($q);
+    return ($r && $r->num_rows > 0) ? $r->fetch_assoc() : null;
+}
+
+function incomeDeleteLinkedMovements($gelir_id)
+{
+    global $connection;
+    $gelir_id = (int) $gelir_id;
+    if (!$connection->query("DELETE FROM kasa_hareketleri WHERE kaynak_tablo = 'gelir_yonetimi' AND kaynak_id = $gelir_id")) {
+        throw new Exception("Eski kasa hareketleri temizlenemedi: " . $connection->error);
+    }
+}
+
+function incomeCheckUsedInExpense($cek_id)
+{
+    global $connection;
+    $cek_id = (int) $cek_id;
+    if ($cek_id <= 0)
+        return false;
+    $res = $connection->query("SELECT COUNT(*) AS c FROM gider_yonetimi WHERE cek_secimi = $cek_id");
+    $cnt = ($res && $res->num_rows > 0) ? (int) ($res->fetch_assoc()['c'] ?? 0) : 0;
+    return $cnt > 0;
+}
+
 function addIncome()
 {
     global $connection;
 
     $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
     $tutar = floatval($_POST['tutar'] ?? 0);
-    $para_birimi = $connection->real_escape_string($_POST['para_birimi'] ?? 'TL');
+    $para_birimi = incomeNormalizeCurrency($_POST['para_birimi'] ?? 'TL');
     $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
     $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
-    $kasa_secimi = $connection->real_escape_string($_POST['kasa_secimi'] ?? 'TL');
+    $kasa_raw = $_POST['kasa_secimi'] ?? 'TL';
+    $kasa_secimi = ($kasa_raw === 'cek_kasasi') ? 'cek_kasasi' : incomeNormalizeCurrency($kasa_raw);
 
     $personel_id = $_SESSION['user_id'];
     $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
 
-    // Optional: Link to order if provided
     $siparis_id = !empty($_POST['siparis_id']) ? (int) $_POST['siparis_id'] : 'NULL';
     $musteri_id = !empty($_POST['musteri_id']) ? (int) $_POST['musteri_id'] : 'NULL';
 
-    // Çek bilgileri
     $cek_no = $connection->real_escape_string($_POST['cek_no'] ?? '');
     $cek_sahibi = $connection->real_escape_string($_POST['cek_sahibi'] ?? '');
     $cek_vade = $connection->real_escape_string($_POST['cek_vade'] ?? '');
 
-    if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
-        echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, açıklama ve ödeme tipi alanları zorunludur.']);
+    if (empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi) || !in_array($kasa_secimi, ['TL', 'USD', 'EUR', 'cek_kasasi'])) {
+        echo json_encode(['status' => 'error', 'message' => 'Tarih, tutar, kategori, aciklama ve odeme tipi alanlari zorunludur.']);
         return;
     }
 
     $connection->begin_transaction();
     try {
+        $rates = getIncomeRates();
         $cek_secimi = 'NULL';
-        
-        // Çek kasası seçildiyse çek kasasına kayıt ekle
+        $kasa_adi = $kasa_secimi;
+        $hareket_tutar = $tutar;
+        $hareket_para_birimi = $para_birimi;
+        $tl_karsiligi = incomeConvertCurrency($tutar, $para_birimi, 'TL', $rates);
+
         if ($kasa_secimi === 'cek_kasasi') {
+            if (empty($cek_no) || empty($cek_sahibi) || empty($cek_vade)) {
+                throw new Exception('Cek numarasi, cek sahibi ve vade zorunludur.');
+            }
             $cek_insert = "INSERT INTO cek_kasasi (cek_no, cek_tutari, cek_para_birimi, cek_sahibi, vade_tarihi, cek_tipi, cek_durumu, aciklama, kaydeden_personel)
                 VALUES ('$cek_no', $tutar, '$para_birimi', '$cek_sahibi', '$cek_vade', 'alacak', 'alindi', '$aciklama', '$personel_adi')";
-            if (!$connection->query($cek_insert)) throw new Exception("Çek kaydedilemedi.");
+            if (!$connection->query($cek_insert))
+                throw new Exception('Cek kaydedilemedi.');
             $cek_secimi = $connection->insert_id;
-            $odeme_tipi = 'Çek';
+            $odeme_tipi = 'Cek';
         } else {
-            // Nakit kasalara bakiye ekle
-            if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
-                $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
-                if ($bakiye_check->num_rows > 0) {
-                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$kasa_secimi'");
-                } else {
-                    $connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$kasa_secimi', $tutar)");
-                }
-            }
+            $hareket_tutar = incomeConvertCurrency($tutar, $para_birimi, $kasa_secimi, $rates);
+            $hareket_para_birimi = $kasa_secimi;
+            incomeAdjustCash($kasa_secimi, $hareket_tutar);
         }
 
-        // Gelir kaydı ekle
         $cek_col = ($cek_secimi !== 'NULL') ? ", cek_secimi" : "";
         $cek_val = ($cek_secimi !== 'NULL') ? ", $cek_secimi" : "";
         $query = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, siparis_id, odeme_tipi, musteri_id, musteri_adi, kasa_secimi $cek_col)
               VALUES ('$tarih', $tutar, '$para_birimi', '$kategori', '$aciklama', $personel_id, '$personel_adi', $siparis_id, '$odeme_tipi', $musteri_id, '$musteri_adi', '$kasa_secimi' $cek_val)";
 
-        if (!$connection->query($query)) throw new Exception("Gelir eklenemedi: " . $connection->error);
+        if (!$connection->query($query))
+            throw new Exception('Gelir eklenemedi: ' . $connection->error);
         $gelir_id = $connection->insert_id;
 
-        // Kasa hareketi kaydet
-        $kasa_adi = ($kasa_secimi === 'cek_kasasi') ? 'cek_kasasi' : $kasa_secimi;
         $cek_id_col = ($cek_secimi !== 'NULL') ? $cek_secimi : "NULL";
-
-        // Döviz kurlarını çek
-        $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
-        $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
-        while ($row = $rate_query->fetch_assoc()) {
-            if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
-            if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
-        }
-        
-        $tl_karsiligi = $tutar * ($rates[$para_birimi] ?? 1);
-        
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, cek_id, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_musteri, odeme_tipi)
-            VALUES ('$tarih', 'gelir_girisi', '$kasa_adi', $cek_id_col, $tutar, '$para_birimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$aciklama', '$personel_adi', '$musteri_adi', '$odeme_tipi')";
-        $connection->query($hareket_sql);
+            VALUES ('$tarih', 'gelir_girisi', '$kasa_adi', $cek_id_col, $hareket_tutar, '$hareket_para_birimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$aciklama', '$personel_adi', '$musteri_adi', '$odeme_tipi')";
+        if (!$connection->query($hareket_sql))
+            throw new Exception('Kasa hareketi kaydedilemedi: ' . $connection->error);
 
         if ($siparis_id > 0) {
             updateOrderPaymentStatus($siparis_id);
         }
 
         $connection->commit();
-        log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar $para_birimi tutarında gelir eklendi", 'CREATE');
-        echo json_encode(['status' => 'success', 'message' => 'Gelir başarıyla eklendi.']);
+        log_islem($connection, $_SESSION['kullanici_adi'], "$kategori kategorisinde $tutar $para_birimi tutarinda gelir eklendi", 'CREATE');
+        echo json_encode(['status' => 'success', 'message' => 'Gelir basariyla eklendi.']);
     } catch (Exception $e) {
         $connection->rollback();
         echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
@@ -295,38 +379,118 @@ function updateIncome()
     $gelir_id = (int) ($_POST['gelir_id'] ?? 0);
     $tarih = $connection->real_escape_string($_POST['tarih'] ?? '');
     $tutar = floatval($_POST['tutar'] ?? 0);
-    $para_birimi = $connection->real_escape_string($_POST['para_birimi'] ?? 'TL');
+    $para_birimi = incomeNormalizeCurrency($_POST['para_birimi'] ?? 'TL');
     $kategori = $connection->real_escape_string($_POST['kategori'] ?? '');
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? '');
     $musteri_adi = $connection->real_escape_string($_POST['musteri_adi'] ?? '');
+    $kasa_raw = $_POST['kasa_secimi'] ?? 'TL';
+    $kasa_secimi = ($kasa_raw === 'cek_kasasi') ? 'cek_kasasi' : incomeNormalizeCurrency($kasa_raw);
+    $cek_no = $connection->real_escape_string($_POST['cek_no'] ?? '');
+    $cek_sahibi = $connection->real_escape_string($_POST['cek_sahibi'] ?? '');
+    $cek_vade = $connection->real_escape_string($_POST['cek_vade'] ?? '');
 
-    $siparis_check = $connection->query("SELECT siparis_id FROM gelir_yonetimi WHERE gelir_id = $gelir_id");
-    $siparis_row = $siparis_check->fetch_assoc();
-    $siparis_id = $siparis_row['siparis_id'] ?? 0;
-
-    if (empty($gelir_id) || empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi)) {
-        echo json_encode(['status' => 'error', 'message' => 'Tüm alanlar zorunludur.']);
+    if (empty($gelir_id) || empty($tarih) || $tutar <= 0 || empty($kategori) || empty($aciklama) || empty($odeme_tipi) || !in_array($kasa_secimi, ['TL', 'USD', 'EUR', 'cek_kasasi'])) {
+        echo json_encode(['status' => 'error', 'message' => 'Tum alanlar zorunludur.']);
         return;
     }
 
-    $old_query = "SELECT kategori, tutar, para_birimi FROM gelir_yonetimi WHERE gelir_id = $gelir_id";
-    $old_res = $connection->query($old_query);
+    $old_res = $connection->query("SELECT * FROM gelir_yonetimi WHERE gelir_id = $gelir_id");
+    if (!$old_res || $old_res->num_rows === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Gelir kaydi bulunamadi.']);
+        return;
+    }
+
     $old_rec = $old_res->fetch_assoc();
     $old_cat = $old_rec['kategori'] ?? '';
-    $old_amt = $old_rec['tutar'] ?? 0;
+    $old_amt = floatval($old_rec['tutar'] ?? 0);
     $old_currency = $old_rec['para_birimi'] ?? 'TL';
+    $old_kasa = $old_rec['kasa_secimi'] ?? 'TL';
+    $old_cek_id = !empty($old_rec['cek_secimi']) ? (int) $old_rec['cek_secimi'] : 0;
+    $siparis_id = (int) ($old_rec['siparis_id'] ?? 0);
 
-    $query = "UPDATE gelir_yonetimi SET tarih = '$tarih', tutar = $tutar, para_birimi = '$para_birimi', kategori = '$kategori', aciklama = '$aciklama', odeme_tipi = '$odeme_tipi', musteri_adi = '$musteri_adi' WHERE gelir_id = $gelir_id";
+    $connection->begin_transaction();
+    try {
+        $rates = getIncomeRates();
+        $old_movement = incomeGetLinkedMovement($gelir_id);
 
-    if ($connection->query($query)) {
+        if ($old_kasa !== 'cek_kasasi' && in_array($old_kasa, ['TL', 'USD', 'EUR'])) {
+            if ($old_movement && ($old_movement['islem_tipi'] ?? '') === 'gelir_girisi' && in_array($old_movement['kasa_adi'] ?? '', ['TL', 'USD', 'EUR'])) {
+                incomeAdjustCash($old_movement['kasa_adi'], -floatval($old_movement['tutar']));
+            } else {
+                $old_delta = incomeConvertCurrency(floatval($old_rec['tutar']), incomeNormalizeCurrency($old_rec['para_birimi'] ?? 'TL'), $old_kasa, $rates);
+                incomeAdjustCash($old_kasa, -$old_delta);
+            }
+        }
+
+        if ($old_kasa === 'cek_kasasi' && $old_cek_id > 0 && incomeCheckUsedInExpense($old_cek_id)) {
+            throw new Exception('Bu gelir kaydina bagli cek giderde kullanildigi icin guncellenemez.');
+        }
+
+        $new_cek_id = 0;
+        $kasa_adi = $kasa_secimi;
+        $hareket_tutar = $tutar;
+        $hareket_para_birimi = $para_birimi;
+        $tl_karsiligi = incomeConvertCurrency($tutar, $para_birimi, 'TL', $rates);
+
+        if ($kasa_secimi === 'cek_kasasi') {
+            if ($old_kasa === 'cek_kasasi' && $old_cek_id > 0) {
+                $new_cek_id = $old_cek_id;
+                $cek_no_final = $cek_no !== '' ? $cek_no : ($connection->query("SELECT cek_no FROM cek_kasasi WHERE cek_id = $new_cek_id")->fetch_assoc()['cek_no'] ?? '');
+                $cek_sahibi_final = $cek_sahibi !== '' ? $cek_sahibi : ($connection->query("SELECT cek_sahibi FROM cek_kasasi WHERE cek_id = $new_cek_id")->fetch_assoc()['cek_sahibi'] ?? '');
+                $cek_vade_final = $cek_vade !== '' ? $cek_vade : ($connection->query("SELECT vade_tarihi FROM cek_kasasi WHERE cek_id = $new_cek_id")->fetch_assoc()['vade_tarihi'] ?? '');
+                if ($cek_no_final === '' || $cek_sahibi_final === '' || $cek_vade_final === '') {
+                    throw new Exception('Cek bilgileri eksik.');
+                }
+                $upd_cek = "UPDATE cek_kasasi
+                            SET cek_no = '$cek_no_final', cek_tutari = $tutar, cek_para_birimi = '$para_birimi', cek_sahibi = '$cek_sahibi_final', vade_tarihi = '$cek_vade_final', aciklama = '$aciklama', cek_durumu = 'alindi', cek_kullanim_tarihi = NULL, cek_son_durum_tarihi = NOW()
+                            WHERE cek_id = $new_cek_id";
+                if (!$connection->query($upd_cek))
+                    throw new Exception('Cek guncellenemedi: ' . $connection->error);
+            } else {
+                if (empty($cek_no) || empty($cek_sahibi) || empty($cek_vade)) {
+                    throw new Exception('Cek numarasi, cek sahibi ve vade zorunludur.');
+                }
+                $ins_cek = "INSERT INTO cek_kasasi (cek_no, cek_tutari, cek_para_birimi, cek_sahibi, vade_tarihi, cek_tipi, cek_durumu, aciklama, kaydeden_personel)
+                            VALUES ('$cek_no', $tutar, '$para_birimi', '$cek_sahibi', '$cek_vade', 'alacak', 'alindi', '$aciklama', '{$_SESSION['kullanici_adi']}')";
+                if (!$connection->query($ins_cek))
+                    throw new Exception('Cek kaydedilemedi: ' . $connection->error);
+                $new_cek_id = (int) $connection->insert_id;
+            }
+            $odeme_tipi = 'Cek';
+        } else {
+            if ($old_kasa === 'cek_kasasi' && $old_cek_id > 0) {
+                $connection->query("UPDATE cek_kasasi SET cek_durumu = 'iptal', cek_son_durum_tarihi = NOW() WHERE cek_id = $old_cek_id");
+            }
+            $hareket_tutar = incomeConvertCurrency($tutar, $para_birimi, $kasa_secimi, $rates);
+            $hareket_para_birimi = $kasa_secimi;
+            incomeAdjustCash($kasa_secimi, $hareket_tutar);
+        }
+
+        $cek_sql = $new_cek_id > 0 ? $new_cek_id : 'NULL';
+        $upd = "UPDATE gelir_yonetimi
+                SET tarih = '$tarih', tutar = $tutar, para_birimi = '$para_birimi', kategori = '$kategori', aciklama = '$aciklama', odeme_tipi = '$odeme_tipi', musteri_adi = '$musteri_adi', kasa_secimi = '$kasa_secimi', cek_secimi = $cek_sql
+                WHERE gelir_id = $gelir_id";
+        if (!$connection->query($upd))
+            throw new Exception('Gelir guncellenemedi: ' . $connection->error);
+
+        incomeDeleteLinkedMovements($gelir_id);
+        $hareket_cek = $new_cek_id > 0 ? $new_cek_id : "NULL";
+        $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, cek_id, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_musteri, odeme_tipi)
+                        VALUES ('$tarih', 'gelir_girisi', '$kasa_adi', $hareket_cek, $hareket_tutar, '$hareket_para_birimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$aciklama', '{$_SESSION['kullanici_adi']}', '$musteri_adi', '$odeme_tipi')";
+        if (!$connection->query($hareket_sql))
+            throw new Exception('Kasa hareketi kaydedilemedi: ' . $connection->error);
+
         if ($siparis_id > 0) {
             updateOrderPaymentStatus($siparis_id);
         }
-        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt $old_currency tutarlı gelir güncellendi", 'UPDATE');
-        echo json_encode(['status' => 'success', 'message' => 'Gelir başarıyla güncellendi.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gelir güncellenirken hata oluştu: ' . $connection->error]);
+
+        $connection->commit();
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt $old_currency tutarli gelir guncellendi", 'UPDATE');
+        echo json_encode(['status' => 'success', 'message' => 'Gelir basariyla guncellendi.']);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 
@@ -340,62 +504,82 @@ function deleteIncome()
         return;
     }
 
-    $old_query = "SELECT kategori, tutar, siparis_id, taksit_id FROM gelir_yonetimi WHERE gelir_id = $gelir_id";
-    $old_res = $connection->query($old_query);
+    $old_res = $connection->query("SELECT * FROM gelir_yonetimi WHERE gelir_id = $gelir_id");
+    if (!$old_res || $old_res->num_rows === 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Gelir kaydi bulunamadi.']);
+        return;
+    }
+
     $old_rec = $old_res->fetch_assoc();
     $old_cat = $old_rec['kategori'] ?? '';
-    $old_amt = $old_rec['tutar'] ?? 0;
-    $siparis_id = $old_rec['siparis_id'] ?? 0;
-    $taksit_id = $old_rec['taksit_id'] ?? 0;
+    $old_amt = floatval($old_rec['tutar'] ?? 0);
+    $old_kasa = $old_rec['kasa_secimi'] ?? 'TL';
+    $old_cek_id = !empty($old_rec['cek_secimi']) ? (int) $old_rec['cek_secimi'] : 0;
+    $siparis_id = (int) ($old_rec['siparis_id'] ?? 0);
+    $taksit_id = (int) ($old_rec['taksit_id'] ?? 0);
 
-    $query = "DELETE FROM gelir_yonetimi WHERE gelir_id = $gelir_id";
+    $connection->begin_transaction();
+    try {
+        $rates = getIncomeRates();
+        $old_movement = incomeGetLinkedMovement($gelir_id);
 
-    if ($connection->query($query)) {
-        $extra_msg = "";
-        if ($siparis_id > 0) {
-            updateOrderPaymentStatus($siparis_id);
-
-            $check_order = $connection->query("SELECT siparis_id, odeme_durumu FROM siparisler WHERE siparis_id = $siparis_id");
-            if ($check_order->num_rows > 0) {
-                $ord = $check_order->fetch_assoc();
-                $extra_msg = " Bağlı Sipariş Durumu: " . $ord['odeme_durumu'] . " olarak güncellendi.";
+        if ($old_kasa !== 'cek_kasasi' && in_array($old_kasa, ['TL', 'USD', 'EUR'])) {
+            if ($old_movement && ($old_movement['islem_tipi'] ?? '') === 'gelir_girisi' && in_array($old_movement['kasa_adi'] ?? '', ['TL', 'USD', 'EUR'])) {
+                incomeAdjustCash($old_movement['kasa_adi'], -floatval($old_movement['tutar']));
             } else {
-                $extra_msg = " DiKKAT: Bağlı sipariş bulunamadı!";
+                $old_delta = incomeConvertCurrency(floatval($old_rec['tutar']), incomeNormalizeCurrency($old_rec['para_birimi'] ?? 'TL'), $old_kasa, $rates);
+                incomeAdjustCash($old_kasa, -$old_delta);
             }
         }
 
-        // Handle linked Installment (Taksit)
+        if ($old_kasa === 'cek_kasasi' && $old_cek_id > 0) {
+            if (incomeCheckUsedInExpense($old_cek_id)) {
+                throw new Exception('Bu gelir kaydina bagli cek giderde kullanildigi icin silinemez.');
+            }
+            $connection->query("UPDATE cek_kasasi SET cek_durumu = 'iptal', cek_son_durum_tarihi = NOW() WHERE cek_id = $old_cek_id");
+        }
+
+        incomeDeleteLinkedMovements($gelir_id);
+        if (!$connection->query("DELETE FROM gelir_yonetimi WHERE gelir_id = $gelir_id")) {
+            throw new Exception('Gelir silinirken hata olustu: ' . $connection->error);
+        }
+
+        $extra_msg = "";
+        if ($siparis_id > 0) {
+            updateOrderPaymentStatus($siparis_id);
+            $check_order = $connection->query("SELECT siparis_id, odeme_durumu FROM siparisler WHERE siparis_id = $siparis_id");
+            if ($check_order->num_rows > 0) {
+                $ord = $check_order->fetch_assoc();
+                $extra_msg = " Bagli Siparis Durumu: " . $ord['odeme_durumu'] . " olarak guncellendi.";
+            }
+        }
+
         if ($taksit_id > 0) {
-            // Revert installment status
             $revert_inst = "UPDATE taksit_detaylari SET durum = 'bekliyor', odenen_tutar = 0, kalan_tutar = tutar, odeme_tarihi = NULL WHERE taksit_id = $taksit_id";
             $connection->query($revert_inst);
-
-            // Check plan status
             $plan_q = $connection->query("SELECT plan_id FROM taksit_detaylari WHERE taksit_id = $taksit_id");
             $plan_id = $plan_q->fetch_assoc()['plan_id'] ?? 0;
-            
             if ($plan_id > 0) {
                 $plan_check = $connection->query("SELECT durum FROM taksit_planlari WHERE plan_id = $plan_id");
                 $plan_status = $plan_check->fetch_assoc()['durum'] ?? '';
-                
                 if ($plan_status === 'tamamlandi') {
                     $connection->query("UPDATE taksit_planlari SET durum = 'aktif' WHERE plan_id = $plan_id");
-                    
-                    // Also revert orders linked to this plan to pending
                     $linked_orders = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = $plan_id");
                     while ($lo = $linked_orders->fetch_assoc()) {
                         $lsid = $lo['siparis_id'];
                         $connection->query("UPDATE siparisler SET odeme_durumu = 'kismi_odendi' WHERE siparis_id = $lsid");
                     }
                 }
-                $extra_msg .= " Taksit ödenmemiş olarak işaretlendi.";
+                $extra_msg .= " Taksit odenmemis olarak isaretlendi.";
             }
         }
 
-        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt TL tutarlı gelir silindi", 'DELETE');
-        echo json_encode(['status' => 'success', 'message' => 'Gelir başarıyla silindi.' . $extra_msg]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gelir silinirken hata oluştu: ' . $connection->error]);
+        $connection->commit();
+        log_islem($connection, $_SESSION['kullanici_adi'], "$old_cat kategorisindeki $old_amt TL tutarli gelir silindi", 'DELETE');
+        echo json_encode(['status' => 'success', 'message' => 'Gelir basariyla silindi.' . $extra_msg]);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 
@@ -719,33 +903,63 @@ function getPlanDetails() {
 
 function payInstallment() {
     global $connection;
-    $taksit_id = (int)$_POST['taksit_id'];
+    $taksit_id = (int) ($_POST['taksit_id'] ?? 0);
     $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Nakit');
-    
-    $td = $connection->query("SELECT * FROM taksit_detaylari WHERE taksit_id = $taksit_id")->fetch_assoc();
-    if(!$td || $td['kalan_tutar'] <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Taksit bulunamadı veya zaten ödenmiş.']);
+
+    if ($taksit_id <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Gecersiz taksit ID.']);
         return;
     }
 
-    $plan = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = {$td['plan_id']}")->fetch_assoc();
-    
-    $amount_to_pay = $td['kalan_tutar'];
-    $tarih = date('Y-m-d');
-    
-    $upd = "UPDATE taksit_detaylari SET odenen_tutar = odenen_tutar + $amount_to_pay, kalan_tutar = 0, durum = 'odendi', odeme_tarihi = NOW() WHERE taksit_id = $taksit_id";
-    
-    if($connection->query($upd)) {
-        $desc = "Taksit Ödemesi - Taksit {$td['sira_no']}/{$plan['taksit_sayisi']} - {$plan['musteri_adi']}";
+    $connection->begin_transaction();
+    try {
+        $td = $connection->query("SELECT * FROM taksit_detaylari WHERE taksit_id = $taksit_id FOR UPDATE")->fetch_assoc();
+        if (!$td || floatval($td['kalan_tutar']) <= 0) {
+            throw new Exception('Taksit bulunamadi veya zaten odenmis.');
+        }
+
+        $plan = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = {$td['plan_id']} FOR UPDATE")->fetch_assoc();
+        if (!$plan) {
+            throw new Exception('Taksit plani bulunamadi.');
+        }
+
+        $amount_to_pay = floatval($td['kalan_tutar']);
+        $plan_currency = incomeNormalizeCurrency($plan['para_birimi'] ?? 'TL');
+        $kasa_secimi = incomeNormalizeCurrency($_POST['kasa_secimi'] ?? $plan_currency);
+        if (!in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
+            $kasa_secimi = 'TL';
+        }
+        $tarih = date('Y-m-d');
+
+        $upd = "UPDATE taksit_detaylari SET odenen_tutar = odenen_tutar + $amount_to_pay, kalan_tutar = 0, durum = 'odendi', odeme_tarihi = NOW() WHERE taksit_id = $taksit_id";
+        if (!$connection->query($upd)) {
+            throw new Exception('Taksit guncellenemedi: ' . $connection->error);
+        }
+
+        $desc = "Taksit Odemesi - Taksit {$td['sira_no']}/{$plan['taksit_sayisi']} - {$plan['musteri_adi']}";
         $personel_id = $_SESSION['user_id'];
         $personel_adi = $_SESSION['kullanici_adi'];
         
-        $ins_inc = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, musteri_id, musteri_adi, taksit_id)
-                    VALUES ('$tarih', $amount_to_pay, '{$plan['para_birimi']}', 'Sipariş Ödemesi', '$desc', $personel_id, '$personel_adi', '$odeme_tipi', {$plan['musteri_id']}, '{$plan['musteri_adi']}', $taksit_id)";
-        $connection->query($ins_inc);
+        $ins_inc = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, musteri_id, musteri_adi, taksit_id, kasa_secimi)
+                    VALUES ('$tarih', $amount_to_pay, '$plan_currency', 'Siparis Odemesi', '$desc', $personel_id, '$personel_adi', '$odeme_tipi', {$plan['musteri_id']}, '{$plan['musteri_adi']}', $taksit_id, '$kasa_secimi')";
+        if (!$connection->query($ins_inc)) {
+            throw new Exception('Gelir kaydi olusturulamadi: ' . $connection->error);
+        }
+        $gelir_id = (int) $connection->insert_id;
+
+        $rates = getIncomeRates();
+        $hareket_tutar = incomeConvertCurrency($amount_to_pay, $plan_currency, $kasa_secimi, $rates);
+        $tl_karsiligi = incomeConvertCurrency($amount_to_pay, $plan_currency, 'TL', $rates);
+        incomeAdjustCash($kasa_secimi, $hareket_tutar);
+
+        $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_musteri, odeme_tipi)
+                        VALUES ('$tarih', 'gelir_girisi', '$kasa_secimi', $hareket_tutar, '$kasa_secimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$desc', '$personel_adi', '{$plan['musteri_adi']}', '$odeme_tipi')";
+        if (!$connection->query($hareket_sql)) {
+            throw new Exception('Kasa hareketi kaydedilemedi: ' . $connection->error);
+        }
         
         $check = $connection->query("SELECT COUNT(*) as rem FROM taksit_detaylari WHERE plan_id = {$plan['plan_id']} AND durum != 'odendi'")->fetch_assoc();
-        if($check['rem'] == 0) {
+        if ($check['rem'] == 0) {
             $connection->query("UPDATE taksit_planlari SET durum = 'tamamlandi' WHERE plan_id = {$plan['plan_id']}");
             
              $linked = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = {$plan['plan_id']}");
@@ -755,9 +969,11 @@ function payInstallment() {
              }
         }
         
-        echo json_encode(['status' => 'success', 'message' => 'Taksit ödendi ve gelir kaydedildi.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Hata: ' . $connection->error]);
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'Taksit odendi, gelir ve kasa kayitlari olusturuldu.']);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 
