@@ -48,13 +48,207 @@ $musteri_result = $musteri_stmt->get_result();
 $musteri = $musteri_result->fetch_assoc();
 $musteri_adi = $musteri ? $musteri['musteri_adi'] : 'Müşteri';
 
+function ensure_product_brand_and_box_columns_for_customer($connection)
+{
+    static $ensured = false;
+    if ($ensured) {
+        return;
+    }
+    $ensured = true;
+
+    try {
+        $column_result = $connection->query("SHOW COLUMNS FROM urunler");
+        if (!$column_result) {
+            return;
+        }
+
+        $columns = [];
+        while ($column = $column_result->fetch_assoc()) {
+            $columns[$column['Field']] = true;
+        }
+
+        if (!isset($columns['marka'])) {
+            $connection->query("ALTER TABLE urunler ADD COLUMN marka VARCHAR(255) NOT NULL DEFAULT 'Belirtilmedi' AFTER urun_ismi");
+        }
+
+        if (!isset($columns['koli_ici_adet'])) {
+            $connection->query("ALTER TABLE urunler ADD COLUMN koli_ici_adet INT UNSIGNED NOT NULL DEFAULT 1 AFTER birim");
+        }
+
+        $connection->query("UPDATE urunler SET marka = 'Belirtilmedi' WHERE marka IS NULL OR TRIM(marka) = ''");
+        $connection->query("UPDATE urunler SET koli_ici_adet = 1 WHERE koli_ici_adet IS NULL OR koli_ici_adet < 1");
+    } catch (Throwable $e) {
+        // no-op
+    }
+}
+
+function customer_parse_positive_int($value)
+{
+    if (is_string($value)) {
+        $value = trim($value);
+    }
+
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    $parsed = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($parsed === false) {
+        return null;
+    }
+
+    return (int) $parsed;
+}
+
+function customer_normalize_cart_unit($value)
+{
+    $unit = strtolower(trim((string) $value));
+    return $unit === 'koli' ? 'koli' : 'adet';
+}
+
+function customer_validate_cart_unit_input($value)
+{
+    if (!is_string($value)) {
+        return null;
+    }
+
+    $unit = strtolower(trim($value));
+    if ($unit === 'adet' || $unit === 'koli') {
+        return $unit;
+    }
+
+    return null;
+}
+
+function customer_get_product_snapshot($connection, $urun_kodu)
+{
+    $query = "SELECT urun_kodu, urun_ismi, stok_miktari,
+                     COALESCE(NULLIF(TRIM(marka), ''), 'Belirtilmedi') AS marka,
+                     COALESCE(koli_ici_adet, 1) AS koli_ici_adet
+              FROM urunler
+              WHERE urun_kodu = ?";
+    $stmt = $connection->prepare($query);
+    if (!$stmt) {
+        return null;
+    }
+
+    $stmt->bind_param('i', $urun_kodu);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $product = $result ? $result->fetch_assoc() : null;
+    $stmt->close();
+
+    return $product ?: null;
+}
+
+function customer_build_cart_item_from_entry($urun_kodu, $entry, $product)
+{
+    $urun_kodu = (int) $urun_kodu;
+    if ($urun_kodu <= 0 || !$product) {
+        return null;
+    }
+
+    $koli_ici_adet = max(1, (int) ($product['koli_ici_adet'] ?? 1));
+    $siparis_birimi = 'adet';
+    $siparis_miktari = null;
+
+    if (is_array($entry)) {
+        $siparis_birimi = customer_normalize_cart_unit($entry['siparis_birimi'] ?? 'adet');
+        $siparis_miktari = customer_parse_positive_int($entry['siparis_miktari'] ?? null);
+
+        if ($siparis_miktari === null) {
+            $legacy_adet = customer_parse_positive_int($entry['adet'] ?? null);
+            if ($legacy_adet !== null) {
+                $siparis_miktari = $legacy_adet;
+                $siparis_birimi = 'adet';
+            }
+        }
+
+        if ($siparis_miktari === null) {
+            $existing_gercek_adet = customer_parse_positive_int($entry['gercek_adet'] ?? null);
+            if ($existing_gercek_adet !== null) {
+                if ($siparis_birimi === 'koli') {
+                    $siparis_miktari = max(1, (int) ceil($existing_gercek_adet / $koli_ici_adet));
+                } else {
+                    $siparis_miktari = $existing_gercek_adet;
+                }
+            }
+        }
+    } else {
+        $siparis_miktari = customer_parse_positive_int($entry);
+        $siparis_birimi = 'adet';
+    }
+
+    if ($siparis_miktari === null) {
+        return null;
+    }
+
+    $gercek_adet = $siparis_birimi === 'koli'
+        ? $siparis_miktari * $koli_ici_adet
+        : $siparis_miktari;
+
+    return [
+        'urun_kodu' => $urun_kodu,
+        'urun_ismi' => (string) ($product['urun_ismi'] ?? 'Bilinmeyen Urun'),
+        'marka' => (string) ($product['marka'] ?? 'Belirtilmedi'),
+        'koli_ici_adet' => $koli_ici_adet,
+        'siparis_miktari' => $siparis_miktari,
+        'siparis_birimi' => $siparis_birimi,
+        'gercek_adet' => $gercek_adet
+    ];
+}
+
+function customer_cart_item_quantity_label($item)
+{
+    $siparis_miktari = (int) ($item['siparis_miktari'] ?? 0);
+    $gercek_adet = (int) ($item['gercek_adet'] ?? 0);
+    $siparis_birimi = customer_normalize_cart_unit($item['siparis_birimi'] ?? 'adet');
+
+    if ($siparis_birimi === 'koli') {
+        return $siparis_miktari . ' koli (' . $gercek_adet . ' adet)';
+    }
+
+    return $siparis_miktari . ' adet';
+}
+
+function customer_normalize_cart($connection, $raw_cart)
+{
+    $normalized_cart = [];
+    if (!is_array($raw_cart)) {
+        return $normalized_cart;
+    }
+
+    foreach ($raw_cart as $urun_kodu => $entry) {
+        $urun_kodu = (int) $urun_kodu;
+        if ($urun_kodu <= 0) {
+            continue;
+        }
+
+        $product = customer_get_product_snapshot($connection, $urun_kodu);
+        if (!$product) {
+            continue;
+        }
+
+        $normalized_item = customer_build_cart_item_from_entry($urun_kodu, $entry, $product);
+        if ($normalized_item === null) {
+            continue;
+        }
+
+        $normalized_cart[$urun_kodu] = $normalized_item;
+    }
+
+    return $normalized_cart;
+}
+
+ensure_product_brand_and_box_columns_for_customer($connection);
+
 // Get all available products (stock > 0) with their primary photo
 // Include stock quantity if customer has permission to see it
 $stok_goruntuleme_yetkisi = $_SESSION['stok_goruntuleme_yetkisi'] ?? 0;
 if ($stok_goruntuleme_yetkisi == 1) {
     // Customer has permission to see stock quantities
     $products_query = "
-        SELECT u.urun_kodu, u.urun_ismi, u.stok_miktari,
+        SELECT u.urun_kodu, u.urun_ismi, u.marka, u.koli_ici_adet, u.stok_miktari,
                uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
                uf.ana_fotograf
         FROM urunler u
@@ -64,7 +258,7 @@ if ($stok_goruntuleme_yetkisi == 1) {
 } else {
     // Customer does not have permission to see stock quantities
     $products_query = "
-        SELECT u.urun_kodu, u.urun_ismi,
+        SELECT u.urun_kodu, u.urun_ismi, u.marka, u.koli_ici_adet,
                uf.fotograf_id, uf.dosya_yolu, uf.dosya_adi,
                uf.ana_fotograf
         FROM urunler u
@@ -79,72 +273,44 @@ $products_count_query = "SELECT COUNT(*) as count FROM urunler WHERE stok_miktar
 $products_count_result = $connection->query($products_count_query);
 $products_count = $products_count_result->fetch_assoc()['count'];
 
-// Handle adding to cart
-$cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
+// Normalize cart for backward compatibility (old: urun_kodu => adet)
+$raw_cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
+$cart = customer_normalize_cart($connection, $raw_cart);
+$_SESSION['cart'] = $cart;
 
-/*
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
-    $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
-    $adet = (int) ($_POST['adet'] ?? 0);
-
-    if ($urun_kodu <= 0 || $adet <= 0) {
-        $error = "Lutfen gecerli bir urun ve pozitif adet girin.";
-    } else {
-        $check_query = "SELECT urun_ismi, stok_miktari FROM urunler WHERE urun_kodu = ?";
-        $check_stmt = $connection->prepare($check_query);
-        $check_stmt->bind_param('i', $urun_kodu);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
-
-        if ($check_result->num_rows > 0) {
-            $product_row = $check_result->fetch_assoc();
-            $stok_miktari = (int) ($product_row['stok_miktari'] ?? 0);
-            $mevcut_adet = isset($cart[$urun_kodu]) ? (int) $cart[$urun_kodu] : 0;
-            $yeni_toplam_adet = $mevcut_adet + $adet;
-            if ($stok_miktari <= 0) {
-                $error = "Bu urun stokta kalmamis.";
-            } elseif ($yeni_toplam_adet > $stok_miktari) {
-        $message = "Ürün sepete eklendi!";
-    } else {
-        $error = "Ürün bulunamadı!";
-    }
-}
-
-*/
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     $urun_kodu = (int) ($_POST['urun_kodu'] ?? 0);
-    $adet = (int) ($_POST['adet'] ?? 0);
+    $siparis_miktari = customer_parse_positive_int($_POST['siparis_miktari'] ?? null);
+    $siparis_birimi = customer_validate_cart_unit_input($_POST['siparis_birimi'] ?? null);
 
-    if ($urun_kodu <= 0 || $adet <= 0) {
-        $error = "Lutfen gecerli bir urun ve pozitif adet girin.";
+    if ($urun_kodu <= 0 || $siparis_miktari === null || $siparis_birimi === null) {
+        $error = "Lutfen gecerli bir urun, pozitif miktar ve birim secin.";
     } else {
-        $check_query = "SELECT urun_ismi, stok_miktari FROM urunler WHERE urun_kodu = ?";
-        $check_stmt = $connection->prepare($check_query);
-        $check_stmt->bind_param('i', $urun_kodu);
-        $check_stmt->execute();
-        $check_result = $check_stmt->get_result();
+        $product_row = customer_get_product_snapshot($connection, $urun_kodu);
 
-        if ($check_result->num_rows > 0) {
-            $product_row = $check_result->fetch_assoc();
+        if ($product_row) {
+            $new_cart_item = customer_build_cart_item_from_entry($urun_kodu, [
+                'siparis_miktari' => $siparis_miktari,
+                'siparis_birimi' => $siparis_birimi
+            ], $product_row);
+
             $stok_miktari = (int) ($product_row['stok_miktari'] ?? 0);
-            $mevcut_adet = isset($cart[$urun_kodu]) ? (int) $cart[$urun_kodu] : 0;
-            $yeni_toplam_adet = $mevcut_adet + $adet;
+            $gercek_adet = (int) ($new_cart_item['gercek_adet'] ?? 0);
 
             if ($stok_miktari <= 0) {
                 $error = "Bu urun stokta kalmamis.";
-            } elseif ($yeni_toplam_adet > $stok_miktari) {
-                $error = "Istenen adet mevcut stogu asiyor.";
+            } elseif ($gercek_adet > $stok_miktari) {
+                $error = "Istenen miktar mevcut stogu asiyor.";
             } else {
-                $cart[$urun_kodu] = $yeni_toplam_adet;
+                // Ezme davranisi: ayni urun yeniden eklenirse onceki satir replace edilir
+                $cart[$urun_kodu] = $new_cart_item;
                 $_SESSION['cart'] = $cart;
                 $message = "Urun sepete eklendi!";
             }
         } else {
             $error = "Urun bulunamadi!";
         }
-
-        $check_stmt->close();
     }
 }
 
@@ -211,12 +377,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             padding: 15px;
         }
 
+        .navbar {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.16);
+            padding-top: 0.18rem;
+            padding-bottom: 0.18rem;
+        }
+
+        .navbar-brand.brand-title {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--accent, #d4af37) !important;
+            font-weight: 700;
+            letter-spacing: 0.25px;
+            font-size: 0.96rem;
+            line-height: 1.1;
+            padding-top: 0.1rem !important;
+            padding-bottom: 0.1rem !important;
+        }
+
+        .navbar-brand.brand-title i {
+            font-size: 0.92rem;
+        }
+
+        .brand-subtitle {
+            font-size: 0.62rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.78);
+            border-left: 1px solid rgba(255, 255, 255, 0.35);
+            padding-left: 6px;
+            margin-left: 2px;
+            letter-spacing: 0.12px;
+        }
+
+        .navbar-nav .nav-link {
+            font-size: 0.79rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.9) !important;
+            border-radius: 7px;
+            padding: 0.34rem 0.56rem !important;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+
+        .navbar-nav .nav-item.active .nav-link,
+        .navbar-nav .nav-link:hover {
+            color: #fff !important;
+            background: rgba(255, 255, 255, 0.14);
+        }
+
+        .user-nav-name {
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
         .page-header {
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             background: linear-gradient(135deg, rgba(74, 14, 99, 0.05) 0%, rgba(212, 175, 55, 0.05) 100%);
-            padding: 20px;
+            padding: 12px 14px;
             border-radius: 12px;
-            border-left: 4px solid var(--primary);
+            border-left: 3px solid var(--primary);
             box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04);
             animation: fadeInDown 0.6s ease-out;
             position: relative;
@@ -236,9 +455,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .page-header h1 {
-            font-size: 1.5rem;
+            font-size: 1.2rem;
             font-weight: 700;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -247,19 +466,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             z-index: 1;
         }
 
+        .page-header-kicker {
+            font-size: 0.62rem;
+            font-weight: 700;
+            color: var(--secondary);
+            letter-spacing: 0.38px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
         .page-header h1 i {
             color: var(--accent);
             -webkit-text-fill-color: var(--accent);
-            margin-right: 8px;
-            font-size: 1.3rem;
+            margin-right: 6px;
+            font-size: 1.06rem;
         }
 
         .page-header p {
             color: var(--text-secondary);
-            font-size: 0.9rem;
+            font-size: 0.8rem;
             position: relative;
             z-index: 1;
-            line-height: 1.5;
+            line-height: 1.35;
             margin: 0;
         }
 
@@ -299,12 +529,87 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             }
         }
 
+        @keyframes fxSuccessPulse {
+            0% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+
+            35% {
+                transform: scale(1.06);
+                filter: brightness(1.08);
+            }
+
+            100% {
+                transform: scale(1);
+                filter: brightness(1);
+            }
+        }
+
+        @keyframes fxCardGlow {
+            0% {
+                box-shadow: 0 0 0 rgba(74, 14, 99, 0);
+            }
+
+            35% {
+                box-shadow: 0 0 0 4px rgba(74, 14, 99, 0.14), 0 8px 22px rgba(74, 14, 99, 0.16);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(74, 14, 99, 0);
+            }
+        }
+
+        @keyframes fxOrderGlow {
+            0% {
+                box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+            }
+
+            30% {
+                box-shadow: 0 0 0 6px rgba(212, 175, 55, 0.16), 0 12px 28px rgba(74, 14, 99, 0.2);
+            }
+
+            100% {
+                box-shadow: 0 0 0 rgba(212, 175, 55, 0);
+            }
+        }
+
+        .fx-success-pulse {
+            animation: fxSuccessPulse 540ms ease-out;
+        }
+
+        .fx-card-glow {
+            animation: fxCardGlow 820ms ease-out;
+        }
+
+        .fx-order-glow {
+            animation: fxOrderGlow 1100ms ease-out;
+        }
+
+        .fx-celebration-flash {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0;
+            z-index: 3000;
+            transition: opacity 180ms ease-out;
+            background: radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0) 65%);
+        }
+
+        .fx-celebration-flash.is-active {
+            opacity: 1;
+        }
+
+        .fx-celebration-flash.order {
+            background: radial-gradient(circle at 50% 35%, rgba(212, 175, 55, 0.18) 0%, rgba(124, 42, 153, 0.08) 35%, rgba(255, 255, 255, 0) 70%);
+        }
+
         .card {
             background: var(--card-bg);
             border-radius: 12px;
             box-shadow: 0 3px 15px rgba(0, 0, 0, 0.06);
             border: 1px solid var(--border-color);
-            margin-bottom: 20px;
+            margin-bottom: 12px;
             overflow: hidden;
             transition: all 0.3s ease;
             animation: fadeIn 0.6s ease-out;
@@ -327,7 +632,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .card-header {
-            padding: 15px 20px;
+            padding: 9px 12px;
             background: linear-gradient(135deg, rgba(74, 14, 99, 0.02) 0%, rgba(212, 175, 55, 0.02) 100%);
             border-bottom: 1px solid var(--border-color);
             display: flex;
@@ -336,24 +641,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .card-header h2 {
-            font-size: 1.05rem;
+            font-size: 0.94rem;
             font-weight: 700;
             margin: 0;
             color: var(--primary);
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+        }
+
+        .section-title-group {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .section-title-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+        }
+
+        .section-subtitle {
+            font-size: 0.64rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            letter-spacing: 0.08px;
+            line-height: 1.2;
+        }
+
+        .product-count-badge {
+            font-size: 0.66rem !important;
+            font-weight: 700;
+            letter-spacing: 0.06px;
+            padding: 3px 8px !important;
         }
 
         .card-header h2 i {
             color: var(--accent);
-            font-size: 1rem;
+            font-size: 0.9rem;
         }
 
         .card-header .badge {
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-            padding: 4px 10px;
-            font-size: 0.85rem;
+            padding: 3px 8px;
+            font-size: 0.75rem;
             border-radius: 15px;
         }
 
@@ -470,15 +803,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .product-item {
-            background: white;
-            border-radius: 10px;
-            padding: 12px 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid transparent;
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06);
+            transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+            border: 1px solid var(--border-color);
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 100%;
         }
 
         .product-item::before {
@@ -486,40 +822,126 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             position: absolute;
             top: 0;
             left: 0;
-            width: 3px;
-            height: 100%;
-            background: linear-gradient(180deg, var(--primary) 0%, var(--accent) 100%);
-            transform: scaleY(0);
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary) 0%, var(--accent) 100%);
+            transform: scaleX(0);
+            transform-origin: left;
             transition: transform 0.3s ease;
         }
 
         .product-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(74, 14, 99, 0.12);
+            transform: translateY(-4px);
+            box-shadow: 0 10px 24px rgba(74, 14, 99, 0.14);
             border-color: var(--primary);
         }
 
         .product-item:hover::before {
-            transform: scaleY(1);
+            transform: scaleX(1);
         }
 
-        .product-item:last-child {
-            margin-bottom: 0;
-        }
-
-        .product-item-wrapper {
+        .product-card-header {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 8px 10px;
+            background: rgba(74, 14, 99, 0.02);
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .product-name-line {
+            display: flex;
             align-items: center;
-            width: 100%;
+            justify-content: space-between;
+            gap: 8px;
+            min-width: 0;
         }
 
         .product-name {
-            font-weight: 600;
-            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 700;
+            font-size: 0.9rem;
             color: var(--text-primary);
-            margin-left: 8px;
+            margin: 0;
             transition: color 0.3s ease;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-name-brand,
+        .product-name-model {
+            min-width: 0;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .product-name-brand::after {
+            content: ' /';
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .product-stock-badge {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--primary);
+            background: rgba(74, 14, 99, 0.1);
+            border-radius: 999px;
+            padding: 3px 8px;
+            white-space: nowrap;
+        }
+
+        .product-box-info {
+            font-size: 0.76rem;
+            color: var(--text-secondary);
+            background: rgba(74, 14, 99, 0.06);
+            border-radius: 999px;
+            padding: 2px 8px;
+            line-height: 1.3;
+            width: fit-content;
+        }
+
+        .product-photo-area {
+            min-height: 180px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            overflow: hidden;
+            background: linear-gradient(180deg, #faf8ff 0%, #f2edf9 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .product-photo-area.has-photo {
+            cursor: pointer;
+        }
+
+        .product-photo-image {
+            width: 100%;
+            height: 100%;
+            min-height: 180px;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .product-photo-area.has-photo:hover .product-photo-image {
+            transform: scale(1.04);
+        }
+
+        .product-photo-placeholder {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 0 12px;
         }
 
         .product-item:hover .product-name {
@@ -528,17 +950,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
         .add-to-cart-form {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 8px;
+        }
+
+        .product-order-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .add-to-cart-form.product-order-row {
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 7px 8px;
+            background: #fff;
+        }
+
+        .order-row-label {
+            min-width: 38px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            letter-spacing: 0.2px;
+            text-transform: uppercase;
         }
 
         .quantity-input {
-            width: 80px;
-            padding: 0.5rem 0.75rem;
+            width: 72px;
+            padding: 0.45rem 0.55rem;
             border: 2px solid var(--border-color);
             border-radius: 6px;
             font-size: 0.9rem;
-            font-weight: 600;
+            font-weight: 700;
             text-align: center;
             transition: all 0.3s ease;
             background: var(--bg-color);
@@ -549,6 +994,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             border-color: var(--primary);
             box-shadow: 0 0 0 4px rgba(74, 14, 99, 0.1);
             background: white;
+        }
+
+        .add-to-cart-form.product-order-row .quantity-input {
+            flex: 1 1 auto;
+            width: auto;
+            min-width: 0;
+        }
+
+        .add-to-cart-form.product-order-row .add-btn {
+            margin-left: 0;
+            flex: 0 0 34px;
+            width: 34px;
+            min-width: 34px;
+            max-width: 34px;
+            height: 34px;
+            min-height: 34px;
+            max-height: 34px;
+            border-radius: 50%;
         }
 
         .cart-item {
@@ -616,6 +1079,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             display: inline-block;
             align-self: flex-start;
             /* Başlangıca hizala */
+        }
+
+        .item-brand {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-bottom: 4px;
         }
 
         .remove-from-cart-btn {
@@ -974,31 +1443,125 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         .product-item.visible {
-            display: flex;
+            display: block;
         }
 
         .products-container {
-            max-height: 500px;
-            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
             padding: 8px;
         }
 
-        .products-container::-webkit-scrollbar {
-            width: 8px;
+        @media (min-width: 768px) {
+            .products-container {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
         }
 
-        .products-container::-webkit-scrollbar-track {
-            background: var(--bg-color);
-            border-radius: 10px;
-        }
+        @media (min-width: 1200px) {
+            .products-container {
+                grid-template-columns: repeat(6, minmax(0, 1fr));
+            }
 
-        .products-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--primary) 0%, var(--secondary) 100%);
-            border-radius: 10px;
-        }
+            .page-header>div {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: nowrap;
+            }
 
-        .products-container::-webkit-scrollbar-thumb:hover {
-            background: linear-gradient(180deg, var(--secondary) 0%, var(--primary) 100%);
+            .page-header-kicker {
+                margin-bottom: 0;
+                white-space: nowrap;
+                border-right: 1px solid rgba(74, 14, 99, 0.2);
+                padding-right: 8px;
+            }
+
+            .page-header h1 {
+                margin-bottom: 0;
+                white-space: nowrap;
+                font-size: 1.08rem;
+            }
+
+            .page-header p {
+                margin-left: auto;
+                text-align: right;
+                max-width: 56ch;
+                font-size: 0.74rem;
+                line-height: 1.25;
+            }
+
+            .section-title-group {
+                flex-direction: row;
+                align-items: baseline;
+                gap: 8px;
+                min-width: 0;
+            }
+
+            .section-subtitle {
+                white-space: nowrap;
+                margin: 0;
+            }
+
+            .product-order-actions {
+                gap: 4px;
+            }
+
+            .add-to-cart-form.product-order-row {
+                padding: 4px 5px;
+                gap: 4px;
+            }
+
+            .order-row-label {
+                min-width: 30px;
+                font-size: 0.64rem;
+                letter-spacing: 0.1px;
+            }
+
+            .add-to-cart-form.product-order-row .quantity-input {
+                padding: 0.26rem 0.32rem;
+                font-size: 0.78rem;
+            }
+
+            .add-to-cart-form.product-order-row .add-btn {
+                flex: 0 0 26px;
+                width: 26px;
+                min-width: 26px;
+                max-width: 26px;
+                height: 26px;
+                min-height: 26px;
+                max-height: 26px;
+            }
+
+            .add-to-cart-form.product-order-row .add-btn i {
+                font-size: 0.66rem;
+            }
+
+            .main-content {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            .navbar .container-fluid {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            #product-list-container .card-body {
+                padding-left: 8px;
+                padding-right: 8px;
+            }
+
+            .product-photo-area {
+                aspect-ratio: 1 / 1;
+                min-height: 0;
+            }
+
+            .product-photo-image {
+                min-height: 0;
+                height: 100%;
+            }
         }
 
         html {
@@ -1056,10 +1619,195 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         }
 
         @media (max-width: 768px) {
+            .navbar-brand.brand-title {
+                font-size: 0.92rem;
+                gap: 6px;
+            }
+
+            .brand-subtitle {
+                display: none !important;
+            }
+
+            .navbar-nav .nav-link {
+                font-size: 0.8rem;
+                padding: 0.38rem 0.55rem !important;
+            }
+
             .main-content {
-                padding: 15px;
+                padding: 6px 4px;
                 padding-bottom: 80px;
                 /* Space for bottom nav */
+            }
+
+            .navbar .container-fluid {
+                padding-left: 6px;
+                padding-right: 6px;
+            }
+
+            #product-list-container .card {
+                margin-bottom: 10px;
+            }
+
+            #product-list-container .card-body {
+                padding: 8px 6px;
+            }
+
+            .products-container {
+                gap: 8px;
+                padding: 2px;
+            }
+
+            .page-header {
+                padding: 10px 12px;
+                margin-bottom: 12px;
+            }
+
+            .page-header h1 {
+                font-size: 1.15rem;
+            }
+
+            .page-header-kicker {
+                font-size: 0.62rem;
+                margin-bottom: 3px;
+                letter-spacing: 0.4px;
+            }
+
+            .page-header p {
+                font-size: 0.78rem;
+                line-height: 1.35;
+            }
+
+            .card-header {
+                padding: 10px;
+            }
+
+            .card-header h2 {
+                font-size: 0.9rem;
+                line-height: 1.2;
+            }
+
+            .section-subtitle {
+                font-size: 0.66rem;
+                line-height: 1.2;
+            }
+
+            .product-count-badge {
+                font-size: 0.68rem !important;
+                padding: 4px 8px !important;
+            }
+
+            .search-input {
+                font-size: 0.86rem !important;
+                padding-top: 10px !important;
+                padding-bottom: 10px !important;
+            }
+
+            .product-item {
+                padding: 8px;
+                gap: 8px;
+            }
+
+            .product-card-header {
+                padding: 6px 7px;
+                gap: 4px;
+            }
+
+            .product-name-line {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 4px;
+            }
+
+            .product-name {
+                font-size: 0.74rem;
+                line-height: 1.25;
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1px;
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+            }
+
+            .product-name-brand::after {
+                content: '';
+            }
+
+            .product-name-brand,
+            .product-name-model {
+                white-space: normal;
+                overflow: visible;
+                text-overflow: clip;
+                line-height: 1.15;
+            }
+
+            .product-name-brand {
+                font-size: 0.64rem;
+                font-weight: 700;
+                color: var(--text-secondary);
+            }
+
+            .product-name-model {
+                font-size: 0.74rem;
+                font-weight: 700;
+            }
+
+            .product-stock-badge {
+                font-size: 0.62rem;
+                padding: 2px 6px;
+            }
+
+            .product-box-info {
+                font-size: 0.65rem;
+                padding: 2px 6px;
+            }
+
+            .product-photo-area {
+                min-height: 120px;
+            }
+
+            .product-photo-placeholder {
+                font-size: 0.72rem;
+            }
+
+            .add-to-cart-form.product-order-row {
+                display: flex;
+                align-items: center;
+                flex-wrap: nowrap;
+                padding: 4px 5px;
+                gap: 4px;
+            }
+
+            .order-row-label {
+                min-width: 28px;
+                font-size: 0.58rem;
+                letter-spacing: 0.1px;
+            }
+
+            .add-to-cart-form.product-order-row .quantity-input {
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                font-size: 0.72rem;
+                padding: 0.2rem 0.2rem;
+                border-width: 1.5px;
+            }
+
+            .add-to-cart-form.product-order-row .add-btn {
+                margin-left: 0;
+                flex: 0 0 24px;
+                width: 24px;
+                min-width: 24px;
+                max-width: 24px;
+                height: 24px;
+                min-height: 24px;
+                max-height: 24px;
+                border-radius: 50%;
+            }
+
+            .add-to-cart-form.product-order-row .add-btn i {
+                font-size: 0.62rem;
             }
 
             .mobile-bottom-nav {
@@ -1118,8 +1866,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top"
         style="background: linear-gradient(45deg, #4a0e63, #7c2a99);">
         <div class="container-fluid">
-            <a class="navbar-brand" style="color: var(--accent, #d4af37); font-weight: 700;"
-                href="customer_panel.php"><i class="fas fa-spa"></i> IDO KOZMETIK</a>
+            <a class="navbar-brand brand-title" href="customer_panel.php">
+                <i class="fas fa-spa"></i>
+                <span>IDO KOZMETIK</span>
+                <span class="brand-subtitle d-none d-xl-inline">Musteri Siparis Platformu</span>
+            </a>
 
             <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNavDropdown"
                 aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
@@ -1129,18 +1880,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
             <div class="collapse navbar-collapse" id="navbarNavDropdown">
                 <ul class="navbar-nav ml-auto align-items-center">
                     <li class="nav-item active">
-                        <a class="nav-link" href="customer_panel.php">Sipariş Paneli</a>
+                        <a class="nav-link" href="customer_panel.php">Sipariş Merkezi</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="customer_orders.php">Geçmiş Siparişlerim</a>
+                        <a class="nav-link" href="customer_orders.php">Sipariş Geçmişi</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="change_password.php">Parolamı Değiştir</a>
+                        <a class="nav-link" href="change_password.php">Hesap Güvenliği</a>
                     </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownMenuLink" role="button"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            <i class="fas fa-user-circle"></i> <?php echo htmlspecialchars($musteri_adi); ?>
+                            <i class="fas fa-user-circle"></i> <span
+                                class="user-nav-name"><?php echo htmlspecialchars($musteri_adi); ?></span>
                         </a>
                         <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdownMenuLink">
                             <a class="dropdown-item" href="logout.php"><i class="fas fa-sign-out-alt"></i> Çıkış Yap</a>
@@ -1163,9 +1915,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 
         <div class="page-header">
             <div>
-                <h1><i class="fas fa-store"></i> Müşteri Paneli</h1>
-                <p>Hoş geldiniz! Buradan stoktaki ürünlerimizi inceleyebilir, sepetinize ekleyebilir ve siparişinizi
-                    kolayca oluşturabilirsiniz.</p>
+                <div class="page-header-kicker">Müşteri Alanı</div>
+                <h1><i class="fas fa-store"></i> Sipariş ve Stok Ekranı</h1>
+                <p>Stoktaki ürünleri hızlıca görüntüleyebilir, sepetinizi düzenleyerek siparişinizi güvenli şekilde
+                    oluşturabilirsiniz.</p>
             </div>
         </div>
 
@@ -1201,9 +1954,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <div id="product-list-container">
             <div class="card">
                 <div class="card-header">
-                    <h2><i class="fas fa-box-open"></i> Stoktaki Ürünler <span
-                            class="badge badge-primary ml-2"><?php echo $products_count; ?></span>
-                    </h2>
+                    <div class="section-title-group">
+                        <div class="section-title-row">
+                            <h2><i class="fas fa-box-open"></i> Stoktaki Ürünler</h2>
+                            <span class="badge badge-primary product-count-badge"><?php echo $products_count; ?> ürün</span>
+                        </div>
+                        <div class="section-subtitle">Satışa açık güncel ürün listesi</div>
+                    </div>
                 </div>
                 <div class="card-body">
                     <div class="input-group mb-3" style="position: relative;">
@@ -1222,35 +1979,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         <?php if ($products_result->num_rows > 0): ?>
                             <?php while ($product = $products_result->fetch_assoc()): ?>
                                 <div class="product-item"
-                                    data-name="<?php echo strtolower(htmlspecialchars($product['urun_ismi'])); ?>">
-                                    <div class="product-item-wrapper">
-                                        <div class="d-flex align-items-center flex-grow-1">
-                                            <?php if ($product['fotograf_id']): ?>
-                                                <!-- Product Photo Thumbnail -->
-                                                <div class="product-photo" style="cursor: pointer;"
-                                                    onclick="openProductGallery(<?php echo $product['urun_kodu']; ?>)">
-                                                    <img src="<?php echo htmlspecialchars($product['dosya_yolu']); ?>"
-                                                        alt="<?php echo htmlspecialchars($product['urun_ismi']); ?>"
-                                                        style="width: 55px; height: 55px; object-fit: cover; border-radius: 8px; border: 2px solid var(--border-color); transition: transform 0.3s, box-shadow 0.3s;"
-                                                        onmouseover="this.style.transform='scale(1.08)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.15)';"
-                                                        onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                                                </div>
-                                            <?php endif; ?>
-
-                                            <div class="product-name"><?php
-                                                echo htmlspecialchars($product['urun_ismi']);
-                                                // Show stock quantity if customer has permission
-                                                if (isset($_SESSION['stok_goruntuleme_yetkisi']) && $_SESSION['stok_goruntuleme_yetkisi'] == 1) {
-                                                    echo ' (' . $product['stok_miktari'] . ' adet)';
-                                                }
-                                            ?>
+                                    data-name="<?php echo strtolower(htmlspecialchars(($product['urun_ismi'] ?? '') . ' ' . ($product['marka'] ?? ''))); ?>">
+                                    <div class="product-card-header">
+                                        <div class="product-name-line">
+                                            <div class="product-name">
+                                                <span class="product-name-brand"><?php echo htmlspecialchars($product['marka'] ?? 'Belirtilmedi'); ?></span>
+                                                <span class="product-name-model"><?php echo htmlspecialchars($product['urun_ismi'] ?? 'Bilinmeyen Urun'); ?></span>
                                             </div>
+                                            <?php if (isset($_SESSION['stok_goruntuleme_yetkisi']) && $_SESSION['stok_goruntuleme_yetkisi'] == 1): ?>
+                                                <span class="product-stock-badge"><?php echo (int) ($product['stok_miktari'] ?? 0); ?> adet</span>
+                                            <?php endif; ?>
                                         </div>
-                                        <form method="POST" class="add-to-cart-form">
+                                        <span class="product-box-info">1 koli = <?php echo max(1, (int) ($product['koli_ici_adet'] ?? 1)); ?> adet</span>
+                                    </div>
+
+                                    <?php if (!empty($product['fotograf_id']) && !empty($product['dosya_yolu'])): ?>
+                                        <div class="product-photo-area has-photo"
+                                            onclick="openProductGallery(<?php echo $product['urun_kodu']; ?>)">
+                                            <img class="product-photo-image"
+                                                src="<?php echo htmlspecialchars($product['dosya_yolu']); ?>"
+                                                alt="<?php echo htmlspecialchars($product['urun_ismi'] ?? 'Urun'); ?>">
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="product-photo-area">
+                                            <div class="product-photo-placeholder">Fotograf yok</div>
+                                        </div>
+                                    <?php endif; ?>
+
+                                    <div class="product-order-actions">
+                                        <form method="POST" class="add-to-cart-form product-order-row">
+                                            <span class="order-row-label">Koli</span>
                                             <input type="hidden" name="urun_kodu" value="<?php echo $product['urun_kodu']; ?>">
-                                            <input type="number" class="quantity-input" name="adet" min="1" value="1" required>
+                                            <input type="hidden" name="siparis_birimi" value="koli">
+                                            <input type="number" class="quantity-input" name="siparis_miktari" min="1" step="1" value="1" required>
                                             <button type="submit" class="btn btn-primary add-btn" name="add_to_cart"
-                                                title="Sepete Ekle">
+                                                title="Koli Ekle">
+                                                <i class="fas fa-plus"></i>
+                                            </button>
+                                        </form>
+
+                                        <form method="POST" class="add-to-cart-form product-order-row">
+                                            <span class="order-row-label">Adet</span>
+                                            <input type="hidden" name="urun_kodu" value="<?php echo $product['urun_kodu']; ?>">
+                                            <input type="hidden" name="siparis_birimi" value="adet">
+                                            <input type="number" class="quantity-input" name="siparis_miktari" min="1" step="1" value="1" required>
+                                            <button type="submit" class="btn btn-primary add-btn" name="add_to_cart"
+                                                title="Adet Ekle">
                                                 <i class="fas fa-plus"></i>
                                             </button>
                                         </form>
@@ -1292,7 +2066,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                 <?php if (!empty($cart)):
                     // Calculate total different products and total quantity
                     $total_different_products = count($cart);
-                    $total_quantity = array_sum($cart);
+                    $total_quantity = 0;
+                    foreach ($cart as $cart_item_summary) {
+                        $total_quantity += (int) ($cart_item_summary['gercek_adet'] ?? 0);
+                    }
                     ?>
                     <div class="cart-items-container">
                         <div class="cart-summary">
@@ -1301,20 +2078,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                         </div>
                         <div class="cart-items-container-inner">
                             <?php
-                            foreach ($cart as $urun_kodu => $adet):
-                                $product_query_cart = "SELECT urun_ismi FROM urunler WHERE urun_kodu = ?";
-                                $product_stmt_cart = $connection->prepare($product_query_cart);
-                                $product_stmt_cart->bind_param('i', $urun_kodu);
-                                $product_stmt_cart->execute();
-                                $product_result_cart = $product_stmt_cart->get_result();
-                                $product_cart = $product_result_cart->fetch_assoc();
-
-                                if ($product_cart) {
+                            foreach ($cart as $urun_kodu => $cart_item) {
+                                if (!is_array($cart_item)) {
+                                    continue;
+                                }
                                     ?>
                                     <div class="cart-item">
                                         <div class="cart-item-content">
-                                            <h4 class="mb-1"><?php echo htmlspecialchars($product_cart['urun_ismi']); ?></h4>
-                                            <div class="item-quantity"><?php echo $adet; ?> adet</div>
+                                            <h4 class="mb-1"><?php echo htmlspecialchars($cart_item['urun_ismi'] ?? 'Bilinmeyen Urun'); ?></h4>
+                                            <div class="item-brand">Marka: <?php echo htmlspecialchars($cart_item['marka'] ?? 'Belirtilmedi'); ?></div>
+                                            <div class="item-quantity"><?php echo htmlspecialchars(customer_cart_item_quantity_label($cart_item)); ?></div>
                                         </div>
                                         <a href="#" class="btn btn-outline-danger remove-from-cart-btn"
                                             data-urun-kodu="<?php echo $urun_kodu; ?>" title="Sil">
@@ -1322,8 +2095,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                         </a>
                                     </div>
                                     <?php
-                                }
-                            endforeach;
+                            }
                             ?>
                         </div>
                     </div>
@@ -1458,6 +2230,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
         <!-- SweetAlert2 JS -->
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
+        <!-- Canvas Confetti -->
+        <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
         <script>
             // Product pagination variables - declared globally so they can be accessed from window.load event
             // Pagination has been removed to show all products at once
@@ -1490,6 +2264,227 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     }
                 });
 
+                function escapeHtml(value) {
+                    return $('<div>').text(value || '').html();
+                }
+
+                function formatCartItemQuantity(item) {
+                    const siparisBirimi = ((item && item.siparis_birimi) ? item.siparis_birimi : 'adet').toString().toLowerCase() === 'koli' ? 'koli' : 'adet';
+                    const siparisMiktari = parseInt(item && item.siparis_miktari, 10);
+                    const gercekAdet = parseInt(item && (item.gercek_adet ?? item.adet), 10);
+
+                    const safeSiparisMiktari = Number.isInteger(siparisMiktari) && siparisMiktari > 0 ? siparisMiktari : 0;
+                    const safeGercekAdet = Number.isInteger(gercekAdet) && gercekAdet > 0 ? gercekAdet : 0;
+
+                    if (siparisBirimi === 'koli') {
+                        return `${safeSiparisMiktari} koli (${safeGercekAdet} adet)`;
+                    }
+
+                    return `${safeSiparisMiktari || safeGercekAdet} adet`;
+                }
+
+                const celebrationFx = (() => {
+                    const addToCartCooldownMs = 450;
+                    const orderSuccessCooldownMs = 1200;
+                    let lastAddToCartFxAt = 0;
+                    let lastOrderFxAt = 0;
+
+                    function isMobileProfile() {
+                        if (window.matchMedia) {
+                            return window.matchMedia('(max-width: 991.98px)').matches;
+                        }
+                        return window.innerWidth < 992;
+                    }
+
+                    function prefersReducedMotion() {
+                        if (window.matchMedia) {
+                            return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        }
+                        return false;
+                    }
+
+                    function pulseElement(element, className, durationMs) {
+                        if (!(element instanceof HTMLElement) || !className) {
+                            return;
+                        }
+                        element.classList.remove(className);
+                        void element.offsetWidth;
+                        element.classList.add(className);
+                        setTimeout(() => {
+                            element.classList.remove(className);
+                        }, durationMs || 800);
+                    }
+
+                    function flashOverlay(type) {
+                        const flash = document.createElement('div');
+                        flash.className = 'fx-celebration-flash' + (type === 'order' ? ' order' : '');
+                        document.body.appendChild(flash);
+
+                        requestAnimationFrame(() => {
+                            flash.classList.add('is-active');
+                        });
+
+                        setTimeout(() => {
+                            flash.classList.remove('is-active');
+                            setTimeout(() => {
+                                if (flash.parentNode) {
+                                    flash.parentNode.removeChild(flash);
+                                }
+                            }, 250);
+                        }, 220);
+                    }
+
+                    function getOriginFromElement(element, fallbackY) {
+                        if (element && typeof element.getBoundingClientRect === 'function') {
+                            const rect = element.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0) {
+                                return {
+                                    x: Math.min(0.98, Math.max(0.02, (rect.left + rect.width / 2) / window.innerWidth)),
+                                    y: Math.min(0.96, Math.max(0.04, (rect.top + rect.height / 2) / window.innerHeight))
+                                };
+                            }
+                        }
+                        return { x: 0.5, y: fallbackY };
+                    }
+
+                    function runCartConfetti(anchorElement) {
+                        if (typeof window.confetti !== 'function') {
+                            return;
+                        }
+
+                        const mobile = isMobileProfile();
+                        const origin = getOriginFromElement(anchorElement, mobile ? 0.76 : 0.64);
+                        const base = {
+                            particleCount: mobile ? 34 : 58,
+                            spread: mobile ? 54 : 72,
+                            startVelocity: mobile ? 24 : 32,
+                            ticks: mobile ? 110 : 145,
+                            scalar: mobile ? 0.82 : 0.95,
+                            gravity: 1.06,
+                            zIndex: 4000
+                        };
+
+                        window.confetti({
+                            ...base,
+                            angle: 90,
+                            origin
+                        });
+
+                        setTimeout(() => {
+                            window.confetti({
+                                ...base,
+                                particleCount: mobile ? 22 : 38,
+                                spread: mobile ? 66 : 90,
+                                startVelocity: mobile ? 20 : 27,
+                                decay: 0.92,
+                                origin: {
+                                    x: Math.min(0.96, origin.x + 0.02),
+                                    y: Math.max(0.04, origin.y - 0.02)
+                                }
+                            });
+                        }, 100);
+                    }
+
+                    function runOrderConfetti(anchorElement) {
+                        if (typeof window.confetti !== 'function') {
+                            return;
+                        }
+
+                        const mobile = isMobileProfile();
+                        const origin = getOriginFromElement(anchorElement, mobile ? 0.72 : 0.6);
+                        const base = {
+                            spread: mobile ? 80 : 102,
+                            startVelocity: mobile ? 30 : 40,
+                            ticks: mobile ? 135 : 180,
+                            scalar: mobile ? 0.9 : 1,
+                            gravity: 1.04,
+                            zIndex: 4000
+                        };
+
+                        window.confetti({
+                            ...base,
+                            particleCount: mobile ? 52 : 94,
+                            angle: 90,
+                            origin
+                        });
+
+                        setTimeout(() => {
+                            window.confetti({
+                                ...base,
+                                particleCount: mobile ? 26 : 48,
+                                angle: 60,
+                                origin: { x: 0.18, y: mobile ? 0.22 : 0.16 }
+                            });
+                        }, 90);
+
+                        setTimeout(() => {
+                            window.confetti({
+                                ...base,
+                                particleCount: mobile ? 26 : 48,
+                                angle: 120,
+                                origin: { x: 0.82, y: mobile ? 0.22 : 0.16 }
+                            });
+                        }, 170);
+
+                        setTimeout(() => {
+                            window.confetti({
+                                ...base,
+                                particleCount: mobile ? 30 : 54,
+                                spread: mobile ? 74 : 94,
+                                startVelocity: mobile ? 26 : 34,
+                                origin: { x: 0.5, y: mobile ? 0.28 : 0.24 }
+                            });
+                        }, 280);
+                    }
+
+                    function addToCartSuccess(anchorElement) {
+                        const now = Date.now();
+                        if (now - lastAddToCartFxAt < addToCartCooldownMs) {
+                            return;
+                        }
+                        lastAddToCartFxAt = now;
+
+                        const anchor = anchorElement instanceof HTMLElement ? anchorElement : null;
+                        const card = anchor ? anchor.closest('.product-item') : null;
+
+                        pulseElement(anchor, 'fx-success-pulse', 620);
+                        pulseElement(card, 'fx-card-glow', 880);
+
+                        if (prefersReducedMotion()) {
+                            return;
+                        }
+
+                        flashOverlay('cart');
+                        runCartConfetti(anchor);
+                    }
+
+                    function orderSuccess(anchorElement) {
+                        const now = Date.now();
+                        if (now - lastOrderFxAt < orderSuccessCooldownMs) {
+                            return;
+                        }
+                        lastOrderFxAt = now;
+
+                        const anchor = anchorElement instanceof HTMLElement ? anchorElement : null;
+                        const cartPanel = document.getElementById('sepet');
+
+                        pulseElement(anchor, 'fx-success-pulse', 700);
+                        pulseElement(cartPanel, 'fx-order-glow', 1180);
+
+                        if (prefersReducedMotion()) {
+                            return;
+                        }
+
+                        flashOverlay('order');
+                        runOrderConfetti(anchor);
+                    }
+
+                    return {
+                        addToCartSuccess,
+                        orderSuccess
+                    };
+                })();
+
                 // AJAX for adding to cart
                 $(document).on('submit', 'form.add-to-cart-form', function (e) {
                     e.preventDefault();
@@ -1521,6 +2516,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                 }
 
                                 // Show SweetAlert with the number of different products
+                                celebrationFx.addToCartSuccess(button.get(0));
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Ürün Sepete Eklendi!',
@@ -1603,6 +2599,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                             console.log('Order submission response:', response);
                             if (response.status === 'success') {
                                 // Show a success message with SweetAlert
+                                celebrationFx.orderSuccess(button.get(0));
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Siparişiniz Alındı!',
@@ -1693,7 +2690,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                     var totalDifferentProducts = response.cart_items.length;
                                     var totalQuantity = 0;
                                     $.each(response.cart_items, function (index, item) {
-                                        totalQuantity += item.adet;
+                                        totalQuantity += parseInt(item.gercek_adet || item.adet || 0, 10) || 0;
                                     });
 
                                     cartHtml += `<div class="cart-items-container">
@@ -1707,8 +2704,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                         cartHtml += `
                                     <div class="cart-item">
                                         <div class="cart-item-content">
-                                            <h4 class="mb-1">${item.urun_ismi}</h4>
-                                            <div class="item-quantity">${item.adet} adet</div>
+                                            <h4 class="mb-1">${escapeHtml(item.urun_ismi)}</h4>
+                                            <div class="item-brand">Marka: ${escapeHtml(item.marka || 'Belirtilmedi')}</div>
+                                            <div class="item-quantity">${formatCartItemQuantity(item)}</div>
                                         </div>
                                         <a href="#" class="btn btn-outline-danger remove-from-cart-btn" data-urun-kodu="${item.urun_kodu}" title="Sil">
                                             <i class="fas fa-trash-alt"></i>
@@ -1777,15 +2775,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                             dataType: 'json',
                                             success: function (response) {
                                                 if (response.status === 'success') {
-                                                    // Update cart count by getting the current count and adding the quantity
-                                                    var quantityAdded = parseInt(form.find('input[name="adet"]').val()) || 1;
-                                                    // Find all cart toggle buttons and update their badge
-                                                    $('.cart-toggle-btn .badge').each(function () {
-                                                        var currentText = $(this).text();
-                                                        var currentCount = parseInt(currentText) || 0;
-                                                        $(this).text(currentCount + quantityAdded);
-                                                    });
-
                                                     // Count number of different products in cart
                                                     var differentProductsCount = response.total_different_products || 0;
                                                     if (differentProductsCount === 0) {
@@ -1798,6 +2787,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                                                     }
 
                                                     // Show SweetAlert with the number of different products
+                                                    celebrationFx.addToCartSuccess(button.get(0));
                                                     Swal.fire({
                                                         icon: 'success',
                                                         title: 'Ürün Sepete Eklendi!',
@@ -2509,3 +3499,4 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
 </body>
 
 </html>
+

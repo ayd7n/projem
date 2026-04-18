@@ -43,6 +43,59 @@ if (isset($_REQUEST['action'])) {
     echo json_encode($response);
 }
 
+function normalizeRecurringCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TRY' || $currency === '') {
+        $currency = 'TL';
+    }
+    return in_array($currency, ['TL', 'USD', 'EUR'], true) ? $currency : 'TL';
+}
+
+function getRecurringRates($connection)
+{
+    $rates = ['TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($rate_query) {
+        while ($row = $rate_query->fetch_assoc()) {
+            if (($row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) ($row['ayar_deger'] ?? 0));
+            }
+            if (($row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) ($row['ayar_deger'] ?? 0));
+            }
+        }
+    }
+    return $rates;
+}
+
+function convertRecurringTlToCashCurrency($amountTl, $currency, $rates)
+{
+    $currency = normalizeRecurringCurrency($currency);
+    $amountTl = (float) $amountTl;
+    if ($currency === 'TL') {
+        return $amountTl;
+    }
+
+    $rate = (float) ($rates[$currency] ?? 0);
+    if ($rate <= 0) {
+        throw new Exception($currency . ' kuru tanimli degil veya 0.');
+    }
+    return $amountTl / $rate;
+}
+
+function ensureRecurringCashRow($connection, $currency)
+{
+    $currency = normalizeRecurringCurrency($currency);
+    $exists = $connection->query("SELECT para_birimi FROM sirket_kasasi WHERE para_birimi = '$currency' LIMIT 1");
+    if ($exists && $exists->num_rows > 0) {
+        return;
+    }
+    if (!$connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$currency', 0)")) {
+        throw new Exception('Sirket kasasi satiri olusturulamadi: ' . $connection->error);
+    }
+}
+
 function getTekrarliOdemeler()
 {
     global $connection;
@@ -287,7 +340,8 @@ function kaydetOdeme()
     $donem_ay = (int) ($_POST['donem_ay'] ?? date('n'));
     $odeme_tarihi = $connection->real_escape_string($_POST['odeme_tarihi'] ?? date('Y-m-d'));
     $odeme_yontemi = $connection->real_escape_string($_POST['odeme_yontemi'] ?? 'Havale');
-    $kasa_secimi = $connection->real_escape_string($_POST['kasa_secimi'] ?? 'TL');
+    $kasa_secimi = normalizeRecurringCurrency($_POST['kasa_secimi'] ?? 'TL');
+    $kasa_secimi_esc = $connection->real_escape_string($kasa_secimi);
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $kaydeden_personel_id = $_SESSION['user_id'];
     $kaydeden_personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
@@ -342,34 +396,35 @@ function kaydetOdeme()
             throw new Exception('Ödeme geçmişi kaydı oluşturulamadı: ' . $connection->error);
         }
 
-        // Döviz kurlarını çek
-        $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
-        $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
-        while ($row = $rate_query->fetch_assoc()) {
-            if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
-            if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
+        $gecmis_id = (int) $connection->insert_id;
+
+        // Döviz kurları ve kasadan düşülecek tutar
+        $rates = getRecurringRates($connection);
+        $dusulecek_miktar = convertRecurringTlToCashCurrency($tutar, $kasa_secimi, $rates);
+
+        // 3. Kasa bakiyesini düşür (yetersiz bakiye kontrolü ile)
+        ensureRecurringCashRow($connection, $kasa_secimi);
+        $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc' LIMIT 1");
+        if (!$bakiye_check || $bakiye_check->num_rows === 0) {
+            throw new Exception('Secilen kasa bulunamadi.');
         }
 
-        // Ödenecek tutar TL (tutar). Seçilen kasa döviz ise, kasadan düşülecek miktarı hesapla.
-        $dusulecek_miktar = $tutar;
-        if ($kasa_secimi === 'USD') {
-            $dusulecek_miktar = $tutar / $rates['USD'];
-        } elseif ($kasa_secimi === 'EUR') {
-            $dusulecek_miktar = $tutar / $rates['EUR'];
+        $kasa_row = $bakiye_check->fetch_assoc();
+        $mevcut_bakiye = (float) ($kasa_row['bakiye'] ?? 0);
+        if ($mevcut_bakiye + 0.00001 < $dusulecek_miktar) {
+            throw new Exception('Kasada yeterli bakiye yok.');
         }
 
-        // 3. Kasa bakiyesini düşür
-        if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
-            $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi'");
-            if ($bakiye_check->num_rows > 0) {
-                $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_miktar WHERE para_birimi = '$kasa_secimi'");
-            }
+        if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_miktar WHERE para_birimi = '$kasa_secimi_esc'")) {
+            throw new Exception('Kasa bakiyesi guncellenemedi: ' . $connection->error);
         }
 
-        // 4. Kasa hareketi kaydet
+        // 4. Kasa hareketi kaydet (kaynak_id period kaydıyla eşleşmeli)
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
-            VALUES ('$odeme_tarihi', 'gider_cikisi', '$kasa_secimi', $dusulecek_miktar, '$kasa_secimi', $tutar, 'tekrarli_odeme_gecmisi', $odeme_id, '$gider_aciklama', '$kaydeden_personel_adi', '$alici_firma', '$odeme_yontemi')";
-        $connection->query($hareket_sql);
+            VALUES ('$odeme_tarihi', 'gider_cikisi', '$kasa_secimi_esc', $dusulecek_miktar, '$kasa_secimi_esc', $tutar, 'tekrarli_odeme_gecmisi', $gecmis_id, '$gider_aciklama', '$kaydeden_personel_adi', '$alici_firma', '$odeme_yontemi')";
+        if (!$connection->query($hareket_sql)) {
+            throw new Exception('Kasa hareketi kaydedilemedi: ' . $connection->error);
+        }
 
         $connection->commit();
 

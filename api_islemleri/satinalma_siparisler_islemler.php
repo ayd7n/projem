@@ -62,6 +62,15 @@ switch ($action) {
     case 'get_all_orders':
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        if ($page < 1) {
+            $page = 1;
+        }
+        if ($limit < 1) {
+            $limit = 10;
+        }
+        if ($limit > 200) {
+            $limit = 200;
+        }
         $search = $_GET['search'] ?? '';
         $durum_filter = $_GET['durum'] ?? '';
         $tedarikci_filter = $_GET['tedarikci_id'] ?? '';
@@ -89,7 +98,7 @@ switch ($action) {
 
         // Get paginated orders
         $query = "SELECT s.*, 
-                  (SELECT (SUM(teslim_edilen_miktar) / SUM(miktar)) * 100 
+                  (SELECT COALESCE((SUM(teslim_edilen_miktar) / NULLIF(SUM(miktar), 0)) * 100, 0) 
                    FROM satinalma_siparis_kalemleri 
                    WHERE siparis_id = s.siparis_id) as teslimat_yuzdesi
                   FROM satinalma_siparisler s 
@@ -638,10 +647,57 @@ switch ($action) {
         $stats_result = $connection->query("SELECT 
             COUNT(*) as toplam_siparis,
             SUM(CASE WHEN durum NOT IN ('tamamlandi', 'iptal') THEN 1 ELSE 0 END) as bekleyen_siparis,
-            SUM(CASE WHEN durum = 'tamamlandi' THEN 1 ELSE 0 END) as tamamlanan_siparis,
-            SUM(toplam_tutar) as toplam_tutar
+            SUM(CASE WHEN durum = 'tamamlandi' THEN 1 ELSE 0 END) as tamamlanan_siparis
             FROM satinalma_siparisler WHERE tedarikci_id = $tedarikci_id");
         $stats = $stats_result ? $stats_result->fetch_assoc() : [];
+
+        $rates = ['USD' => 0.0, 'EUR' => 0.0];
+        $rate_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+        if ($rate_result) {
+            while ($rate_row = $rate_result->fetch_assoc()) {
+                if (($rate_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                    $rates['USD'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+                } elseif (($rate_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                    $rates['EUR'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+                }
+            }
+        }
+
+        $stats['toplam_tutar'] = 0.0;
+        $stats['toplam_tutar_detay'] = ['TRY' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
+        $total_by_currency_result = $connection->query("SELECT para_birimi, SUM(toplam_tutar) as toplam_tutar FROM satinalma_siparisler WHERE tedarikci_id = $tedarikci_id GROUP BY para_birimi");
+        if ($total_by_currency_result) {
+            while ($total_row = $total_by_currency_result->fetch_assoc()) {
+                $currency = strtoupper(trim((string) ($total_row['para_birimi'] ?? 'TRY')));
+                if ($currency === 'TL' || $currency === '') {
+                    $currency = 'TRY';
+                }
+                if (!in_array($currency, ['TRY', 'USD', 'EUR'], true)) {
+                    $currency = 'TRY';
+                }
+
+                $amount = (float) ($total_row['toplam_tutar'] ?? 0);
+                $stats['toplam_tutar_detay'][$currency] += $amount;
+
+                if ($currency === 'USD') {
+                    $usdRate = (float) ($rates['USD'] ?? 0);
+                    if ($usdRate <= 0) {
+                        echo json_encode(['status' => 'error', 'message' => 'USD kuru tanimli degil veya 0.']);
+                        exit;
+                    }
+                    $stats['toplam_tutar'] += $amount * $usdRate;
+                } elseif ($currency === 'EUR') {
+                    $eurRate = (float) ($rates['EUR'] ?? 0);
+                    if ($eurRate <= 0) {
+                        echo json_encode(['status' => 'error', 'message' => 'EUR kuru tanimli degil veya 0.']);
+                        exit;
+                    }
+                    $stats['toplam_tutar'] += $amount * $eurRate;
+                } else {
+                    $stats['toplam_tutar'] += $amount;
+                }
+            }
+        }
 
         echo json_encode([
             'status' => 'success',

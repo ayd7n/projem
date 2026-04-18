@@ -1056,10 +1056,12 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 <th><i class="fas fa-cogs"></i> Islemler</th>
                                 <th><i class="fas fa-barcode"></i> Urun Kodu</th>
                                 <th><i class="fas fa-tag"></i> Urun Ismi</th>
+                                <th><i class="fas fa-industry"></i> Marka</th>
                                 <th><i class="fas fa-image"></i> Fotograf</th>
                                 <th><i class="fas fa-warehouse"></i> Stok</th>
                                 <th><i class="fas fa-exclamation-triangle"></i> Kritik Stok</th>
                                 <th><i class="fas fa-ruler"></i> Birim</th>
+                                <th><i class="fas fa-boxes"></i> Koli Ici Adet</th>
                                 <th><i class="fas fa-money-bill-wave"></i> Satis Fiyati</th>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <th>Alış Fiyatı</th>
@@ -1074,11 +1076,11 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         </thead>
                         <tbody>
                             <tr v-if="loading">
-                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 14 : 11; ?>" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 16 : 13; ?>" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i>
                                     Yükleniyor...</td>
                             </tr>
                             <tr v-else-if="products.length === 0">
-                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 14 : 11; ?>" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
+                                <td colspan="<?php echo yetkisi_var('action:urunler:view_cost') ? 16 : 13; ?>" class="text-center p-4">Henuz kayitli urun bulunmuyor.</td>
                             </tr>
                             <tr v-for="product in products" :key="product.urun_kodu" :class="stockRowClass(product)">
                                 <td class="actions">
@@ -1093,6 +1095,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 </td>
                                 <td>{{ product.urun_kodu }}</td>
                                 <td><strong>{{ product.urun_ismi }}</strong></td>
+                                <td>{{ product.marka || 'Belirtilmedi' }}</td>
                                 <td class="text-center">
                                     <span v-if="product.foto_sayisi > 0" style="color: #28a745; font-size: 1.2rem;"
                                         :title="product.foto_sayisi + ' fotograf'">
@@ -1109,6 +1112,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                 </td>
                                 <td>{{ product.kritik_stok_seviyesi }}</td>
                                 <td>{{ product.birim }}</td>
+                                <td>{{ product.koli_ici_adet }}</td>
                                 <td>{{ formatPriceWithCurrency(product) }}</td>
                                 <?php if (yetkisi_var('action:urunler:view_cost')): ?>
                                     <td>{{ formatAlisFiyati(product) }}</td>
@@ -1285,6 +1289,20 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                                                     <div class="form-group mb-2">
                                                         <label>Stok Miktari</label>
                                                         <input type="number" class="form-control" v-model="modal.data.stok_miktari" min="0">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Marka *</label>
+                                                        <input type="text" class="form-control" v-model="modal.data.marka" required>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-6">
+                                                    <div class="form-group mb-2">
+                                                        <label>Koli Ici Adet *</label>
+                                                        <input type="number" class="form-control" v-model="modal.data.koli_ici_adet" min="1" step="1" required>
                                                     </div>
                                                 </div>
                                             </div>
@@ -2577,6 +2595,9 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         if (product) {
                             this.modal.title = 'Urunu Duzenle';
                             this.modal.data = { ...product };
+                            this.modal.data.marka = (this.modal.data.marka || '').toString().trim() || 'Belirtilmedi';
+                            const parsedKoliIciAdet = parseInt(this.modal.data.koli_ici_adet, 10);
+                            this.modal.data.koli_ici_adet = Number.isInteger(parsedKoliIciAdet) && parsedKoliIciAdet > 0 ? parsedKoliIciAdet : 1;
                             if (product.depo) {
                                 this.loadRafList(product.depo, product.raf);
                             }
@@ -2584,7 +2605,7 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                             this.loadPhotos();
                         } else {
                             this.modal.title = 'Yeni Urun Ekle';
-                            this.modal.data = { birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
+                            this.modal.data = { marka: '', koli_ici_adet: 1, birim: 'adet', urun_tipi: 'uretilen', satis_fiyati: 0.0, satis_fiyati_para_birimi: 'TRY', alis_fiyati: 0.0, alis_fiyati_para_birimi: 'TRY', depo: '', raf: '' };
                             this.loadMalzemeTurleri(); // Türleri yükle
                         }
 
@@ -2599,6 +2620,28 @@ $above_critical_percentage = $total_products > 0 ? round(($above_critical_produc
                         }
                     },
                     saveProduct() {
+                        this.modal.data.marka = (this.modal.data.marka || '').toString().trim();
+                        if (!this.modal.data.marka) {
+                            Swal.fire({
+                                title: 'Eksik Bilgi!',
+                                text: 'Marka bilgisi zorunludur.',
+                                icon: 'warning',
+                                confirmButtonText: 'Tamam'
+                            });
+                            return;
+                        }
+
+                        const parsedKoliIciAdet = parseInt(this.modal.data.koli_ici_adet, 10);
+                        if (!Number.isInteger(parsedKoliIciAdet) || parsedKoliIciAdet < 1) {
+                            Swal.fire({
+                                title: 'Gecersiz Deger!',
+                                text: 'Koli ici adet bilgisi tam sayi ve 1 veya daha buyuk olmalidir.',
+                                icon: 'warning',
+                                confirmButtonText: 'Tamam'
+                            });
+                            return;
+                        }
+                        this.modal.data.koli_ici_adet = parsedKoliIciAdet;
                         // Hazır alınan ürünler için alış fiyatı kontrolü
                         if (this.modal.data.urun_tipi === 'hazir_alinan') {
                             const alisFiyati = parseFloat(this.modal.data.alis_fiyati) || 0;

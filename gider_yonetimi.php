@@ -21,7 +21,7 @@ if (!yetkisi_var('page:view:gider_yonetimi')) {
 // Calculate total expenses for current month
 $current_month_start = date('Y-m-01');
 $current_month_end = date('Y-m-t');
-$total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
+$total_result = $connection->query("SELECT SUM(tutar) as total FROM gider_yonetimi WHERE DATE(tarih) BETWEEN '$current_month_start' AND '$current_month_end'");
 $total_expenses = $total_result->fetch_assoc()['total'] ?? 0;
 
 ?>

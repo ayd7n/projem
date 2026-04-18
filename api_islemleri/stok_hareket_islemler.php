@@ -110,7 +110,7 @@ if (!function_exists('get_stock_exchange_rates')) {
             return $cached_rates;
         }
 
-        $cached_rates = ['TRY' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+        $cached_rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
         $query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
         $result = $connection->query($query);
         if ($result) {
@@ -143,8 +143,8 @@ if (!function_exists('convert_stock_currency_amount')) {
             return $amount;
         }
 
-        $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 1.0;
-        $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 1.0;
+        $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 0.0;
+        $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 0.0;
 
         if ($from_rate <= 0 || $to_rate <= 0) {
             return $amount;

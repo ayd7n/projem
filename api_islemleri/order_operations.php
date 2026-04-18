@@ -1,10 +1,46 @@
 <?php
 include '../config.php';
 
+header('Content-Type: application/json; charset=utf-8');
+
 // Check if user is logged in as customer
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'musteri') {
     echo json_encode(['status' => 'error', 'message' => 'Yetkisiz erisim!']);
     exit;
+}
+
+function ensure_product_brand_and_box_columns_for_customer($connection)
+{
+    static $ensured = false;
+    if ($ensured) {
+        return;
+    }
+    $ensured = true;
+
+    try {
+        $column_result = $connection->query("SHOW COLUMNS FROM urunler");
+        if (!$column_result) {
+            return;
+        }
+
+        $columns = [];
+        while ($column = $column_result->fetch_assoc()) {
+            $columns[$column['Field']] = true;
+        }
+
+        if (!isset($columns['marka'])) {
+            $connection->query("ALTER TABLE urunler ADD COLUMN marka VARCHAR(255) NOT NULL DEFAULT 'Belirtilmedi' AFTER urun_ismi");
+        }
+
+        if (!isset($columns['koli_ici_adet'])) {
+            $connection->query("ALTER TABLE urunler ADD COLUMN koli_ici_adet INT UNSIGNED NOT NULL DEFAULT 1 AFTER birim");
+        }
+
+        $connection->query("UPDATE urunler SET marka = 'Belirtilmedi' WHERE marka IS NULL OR TRIM(marka) = ''");
+        $connection->query("UPDATE urunler SET koli_ici_adet = 1 WHERE koli_ici_adet IS NULL OR koli_ici_adet < 1");
+    } catch (Throwable $e) {
+        // no-op
+    }
 }
 
 function normalize_order_currency_code($currency)
@@ -17,6 +53,30 @@ function normalize_order_currency_code($currency)
     return $currency;
 }
 
+function normalize_cart_unit($value)
+{
+    $unit = strtolower(trim((string) $value));
+    return $unit === 'koli' ? 'koli' : 'adet';
+}
+
+function parse_positive_int($value)
+{
+    if (is_string($value)) {
+        $value = trim($value);
+    }
+
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    $parsed = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($parsed === false) {
+        return null;
+    }
+
+    return (int) $parsed;
+}
+
 function prepare_or_throw($connection, $query, $error_message)
 {
     $stmt = $connection->prepare($query);
@@ -27,30 +87,81 @@ function prepare_or_throw($connection, $query, $error_message)
     return $stmt;
 }
 
+function normalize_cart_entry($urun_kodu, $entry)
+{
+    $siparis_birimi = 'adet';
+    $siparis_miktari = null;
+    $koli_ici_adet = 1;
+
+    if (is_array($entry)) {
+        $siparis_birimi = normalize_cart_unit($entry['siparis_birimi'] ?? 'adet');
+        $siparis_miktari = parse_positive_int($entry['siparis_miktari'] ?? null);
+        $koli_ici_adet = max(1, (int) ($entry['koli_ici_adet'] ?? 1));
+
+        if ($siparis_miktari === null) {
+            $legacy_adet = parse_positive_int($entry['adet'] ?? null);
+            if ($legacy_adet !== null) {
+                $siparis_miktari = $legacy_adet;
+                $siparis_birimi = 'adet';
+            }
+        }
+
+        if ($siparis_miktari === null) {
+            $gercek_adet = parse_positive_int($entry['gercek_adet'] ?? null);
+            if ($gercek_adet !== null) {
+                if ($siparis_birimi === 'koli') {
+                    $siparis_miktari = max(1, (int) ceil($gercek_adet / $koli_ici_adet));
+                } else {
+                    $siparis_miktari = $gercek_adet;
+                }
+            }
+        }
+    } else {
+        $siparis_miktari = parse_positive_int($entry);
+        $siparis_birimi = 'adet';
+    }
+
+    if ((int) $urun_kodu <= 0 || $siparis_miktari === null) {
+        return null;
+    }
+
+    $gercek_adet = $siparis_birimi === 'koli'
+        ? $siparis_miktari * $koli_ici_adet
+        : $siparis_miktari;
+
+    return [
+        'urun_kodu' => (int) $urun_kodu,
+        'siparis_birimi' => $siparis_birimi,
+        'siparis_miktari' => $siparis_miktari,
+        'gercek_adet' => $gercek_adet,
+        'koli_ici_adet' => $koli_ici_adet
+    ];
+}
+
+ensure_product_brand_and_box_columns_for_customer($connection);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['action'] === 'submit_order') {
-    $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : array();
+    $cart = isset($_SESSION['cart']) && is_array($_SESSION['cart']) ? $_SESSION['cart'] : [];
     if (empty($cart)) {
         echo json_encode(['status' => 'error', 'message' => 'Sepetiniz bos!']);
         exit;
     }
 
     $validated_cart = [];
-    foreach ($cart as $urun_kodu => $adet) {
-        $urun_kodu = (int) $urun_kodu;
-        $adet = (int) $adet;
-
-        if ($urun_kodu <= 0 || $adet <= 0) {
+    foreach ($cart as $urun_kodu => $entry) {
+        $normalized_entry = normalize_cart_entry($urun_kodu, $entry);
+        if ($normalized_entry === null || (int) $normalized_entry['gercek_adet'] <= 0) {
             echo json_encode([
                 'status' => 'error',
-                'message' => 'Sepette gecersiz urun veya adet bulundu. Lutfen sepetinizi yeniden olusturun.'
+                'message' => 'Sepette gecersiz urun veya miktar bulundu. Lutfen sepetinizi yeniden olusturun.'
             ]);
             exit;
         }
 
-        $validated_cart[$urun_kodu] = $adet;
+        $validated_cart[(int) $urun_kodu] = $normalized_entry;
     }
 
-    $musteri_id = (int) ($_SESSION['id'] ?? 0);
+    $musteri_id = (int) ($_SESSION['id'] ?? ($_SESSION['user_id'] ?? 0));
     $musteri_adi = (string) ($_SESSION['kullanici_adi'] ?? '');
     $aciklama = isset($_POST['order_description']) ? trim((string) $_POST['order_description']) : '';
 
@@ -72,10 +183,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $toplam_adet = 0;
         $siparis_para_birimi = 'TRY';
         $is_currency_set = false;
+        $telegram_lines = [];
 
         $product_stmt = prepare_or_throw(
             $connection,
-            "SELECT urun_ismi, birim, satis_fiyati, satis_fiyati_para_birimi, stok_miktari FROM urunler WHERE urun_kodu = ?",
+            "SELECT urun_ismi, birim, satis_fiyati, satis_fiyati_para_birimi, stok_miktari, COALESCE(koli_ici_adet, 1) AS koli_ici_adet
+             FROM urunler WHERE urun_kodu = ?",
             'Urun sorgusu hazirlanamadi'
         );
         $item_stmt = prepare_or_throw(
@@ -84,7 +197,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
             'Siparis kalemi sorgusu hazirlanamadi'
         );
 
-        foreach ($validated_cart as $urun_kodu => $adet) {
+        foreach ($validated_cart as $urun_kodu => $cart_item) {
             $product_stmt->bind_param('i', $urun_kodu);
             if (!$product_stmt->execute()) {
                 throw new Exception('Urun bilgisi alinamadi: ' . $product_stmt->error);
@@ -96,8 +209,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 throw new Exception("Urun bulunamadi: {$urun_kodu}");
             }
 
+            $siparis_birimi = normalize_cart_unit($cart_item['siparis_birimi'] ?? 'adet');
+            $siparis_miktari = parse_positive_int($cart_item['siparis_miktari'] ?? null);
+            if ($siparis_miktari === null) {
+                throw new Exception('Sepette gecersiz miktar bulundu.');
+            }
+
+            $koli_ici_adet = max(1, (int) ($urun['koli_ici_adet'] ?? 1));
+            $gercek_adet = $siparis_birimi === 'koli'
+                ? $siparis_miktari * $koli_ici_adet
+                : $siparis_miktari;
+
             $stok_miktari = (int) ($urun['stok_miktari'] ?? 0);
-            if ($stok_miktari <= 0 || $adet > $stok_miktari) {
+            if ($stok_miktari <= 0 || $gercek_adet > $stok_miktari) {
                 throw new Exception("{$urun['urun_ismi']} icin yeterli stok bulunmuyor.");
             }
 
@@ -113,14 +237,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 throw new Exception('Ayni sipariste farkli para birimlerine sahip urunler kullanilamaz.');
             }
 
-            $toplam_tutar = $adet * $satis_fiyati;
+            $toplam_tutar = $gercek_adet * $satis_fiyati;
 
             $item_stmt->bind_param(
                 'iisisdds',
                 $siparis_id,
                 $urun_kodu,
                 $urun_ismi,
-                $adet,
+                $gercek_adet,
                 $urun_birimi,
                 $satis_fiyati,
                 $toplam_tutar,
@@ -131,7 +255,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
                 throw new Exception('Siparis kalemi kaydedilemedi: ' . $item_stmt->error);
             }
 
-            $toplam_adet += $adet;
+            $toplam_adet += $gercek_adet;
+
+            if ($siparis_birimi === 'koli') {
+                $telegram_lines[] = "- {$urun_ismi} ({$siparis_miktari} koli = {$gercek_adet} adet)";
+            } else {
+                $telegram_lines[] = "- {$urun_ismi} ({$siparis_miktari} adet)";
+            }
         }
 
         $product_stmt->close();
@@ -168,20 +298,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
         $connection->commit();
         unset($_SESSION['cart']);
 
-        $order_items_stmt = prepare_or_throw(
-            $connection,
-            "SELECT urun_ismi, adet, birim FROM siparis_kalemleri WHERE siparis_id = ?",
-            'Siparis kalemleri sorgusu hazirlanamadi'
-        );
-        $order_items_stmt->bind_param('i', $siparis_id);
-        $order_items_stmt->execute();
-        $order_items_result = $order_items_stmt->get_result();
-
         $order_items_text = "SIPARIS KALEMLERI:\n";
-        while ($item = $order_items_result->fetch_assoc()) {
-            $order_items_text .= "- {$item['urun_ismi']} ({$item['adet']} {$item['birim']})\n";
+        foreach ($telegram_lines as $line) {
+            $order_items_text .= $line . "\n";
         }
-        $order_items_stmt->close();
 
         $telegram_message = "YENI MUSTERI SIPARISI\n\n";
         $telegram_message .= "Siparis No: #$siparis_id\n";

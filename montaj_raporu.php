@@ -128,7 +128,7 @@ function getMontajReportData() {
         $wc_eff_sql = "
             SELECT
                 im.isim as work_center,
-                (SUM(mie.tamamlanan_miktar) / SUM(mie.planlanan_miktar)) * 100 as efficiency
+                COALESCE((SUM(mie.tamamlanan_miktar) / NULLIF(SUM(mie.planlanan_miktar), 0)) * 100, 0) as efficiency
             FROM montaj_is_emirleri mie
             JOIN is_merkezleri im ON mie.is_merkezi_id = im.is_merkezi_id
             WHERE mie.durum = 'tamamlandi' AND mie.planlanan_miktar > 0

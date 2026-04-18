@@ -576,7 +576,7 @@ $onerilen = ($acik > 0) ? min($acik, $uretilebilir_limit) : 0;
                     <div class="card-body">
                         <?php foreach($esans_bilgileri as $esans): 
                              // Net Esans İhtiyacı Hesabı (Main Page Logic Mirror)
-                             $toplam_gereken_esans = ceil($onerilen * ($esans['isim']  ? 1 : 1)); // Basitleştirilmiş, aslında reçeteden gelmeli ama burada satır bazlı gidiyoruz
+                             $toplam_gereken_esans = ceil($onerilen); // Placeholder: detaylı reçete katsayısı burada kullanılmıyor
                              // Not: Reçete miktarını yukarıda $bilesenler döngüsünde alabilirdik ama basit tutuyorum.
                              // Main logic'tekine sadık kalalım:
                         ?>

@@ -467,6 +467,15 @@ function getWorkOrders() {
         // Get pagination parameters
         $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 25;
+        if ($page < 1) {
+            $page = 1;
+        }
+        if ($limit < 1) {
+            $limit = 25;
+        }
+        if ($limit > 200) {
+            $limit = 200;
+        }
         $offset = ($page - 1) * $limit;
         $statusFilter = trim((string)($_GET['durum'] ?? ''));
         $allowedStatuses = ['olusturuldu', 'uretimde', 'onay_bekliyor', 'tamamlandi', 'iptal'];

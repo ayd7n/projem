@@ -1,7 +1,7 @@
 <?php
 /**
- * Kasa Yönetimi API İşlemleri
- * Kasa bakiyeleri, çek işlemleri, kasa hareketleri ve istatistikler
+ * Kasa YÃ¶netimi API Ä°ÅŸlemleri
+ * Kasa bakiyeleri, Ã§ek iÅŸlemleri, kasa hareketleri ve istatistikler
  */
 
 error_reporting(E_ALL);
@@ -12,9 +12,9 @@ include '../config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 
-// Giriş ve yetki kontrolü
+// GiriÅŸ ve yetki kontrolÃ¼
 if (!isset($_SESSION['user_id']) || $_SESSION['taraf'] !== 'personel') {
-    echo json_encode(['status' => 'error', 'message' => 'Yetki yok veya oturum kapalı.']);
+    echo json_encode(['status' => 'error', 'message' => 'Yetki yok veya oturum kapalÄ±.']);
     exit;
 }
 
@@ -27,19 +27,19 @@ if (!$action) {
 
 try {
     switch ($action) {
-        // Kasa İşlemleri
+        // Kasa Ä°ÅŸlemleri
         case 'get_kasa_bakiyeleri': getKasaBakiyeleri(); break;
         case 'get_kasa_hareketleri': getKasaHareketleri(); break;
         case 'add_kasa_islemi': addKasaIslemi(); break;
         case 'delete_kasa_islemi': deleteKasaIslemi(); break;
         
-        // Çek İşlemleri
+        // Ã‡ek Ä°ÅŸlemleri
         case 'get_cekler': getCekler(); break;
         case 'add_cek': addCek(); break;
         case 'update_cek_durumu': updateCekDurumu(); break;
         case 'delete_cek': deleteCek(); break;
         
-        // İstatistikler
+        // Ä°statistikler
         case 'get_stok_degerleri': getStokDegerleri(); break;
         case 'get_aylik_kasa_hareketleri': getAylikKasaHareketleri(); break;
         case 'get_tedarikci_odemeleri': getTedarikciOdemeleri(); break;
@@ -47,28 +47,94 @@ try {
         case 'get_doviz_kurlari': getDovizKurlari(); break;
         case 'get_dashboard_summary': getDashboardSummary(); break;
         
-        default: throw new Exception('Geçersiz action: ' . $action);
+        default: throw new Exception('GeÃ§ersiz action: ' . $action);
     }
 } catch (Exception $e) {
     echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 }
 
 /**
- * Döviz kurlarını ayarlar tablosundan al
+ * DÃ¶viz kurlarÄ±nÄ± ayarlar tablosundan al
  */
 function getExchangeRates() {
     global $connection;
     $result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
-    $rates = ['TL' => 1, 'USD' => 1, 'EUR' => 1];
-    while ($row = $result->fetch_assoc()) {
-        if ($row['ayar_anahtar'] === 'dolar_kuru') $rates['USD'] = floatval($row['ayar_deger']);
-        if ($row['ayar_anahtar'] === 'euro_kuru') $rates['EUR'] = floatval($row['ayar_deger']);
+    $rates = ['TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
+            }
+            if ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
+            }
+        }
     }
     return $rates;
 }
 
+function normalizeKasaCurrency($currency) {
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TRY' || $currency === '') {
+        $currency = 'TL';
+    }
+    return in_array($currency, ['TL', 'USD', 'EUR'], true) ? $currency : 'TL';
+}
+
+function getKasaRateOrFail($rates, $currency) {
+    $currency = normalizeKasaCurrency($currency);
+    if ($currency === 'TL') {
+        return 1.0;
+    }
+
+    $rate = (float) ($rates[$currency] ?? 0);
+    if ($rate <= 0) {
+        throw new Exception($currency . ' kuru tanimli degil veya 0.');
+    }
+
+    return $rate;
+}
+
+function convertKasaCurrencyAmount($amount, $fromCurrency, $toCurrency, $rates) {
+    $amount = (float) $amount;
+    if ($amount == 0.0) {
+        return 0.0;
+    }
+
+    $from = normalizeKasaCurrency($fromCurrency);
+    $to = normalizeKasaCurrency($toCurrency);
+    if ($from === $to) {
+        return $amount;
+    }
+
+    if ($from === 'TL') {
+        $tlAmount = $amount;
+    } else {
+        $tlAmount = $amount * getKasaRateOrFail($rates, $from);
+    }
+
+    if ($to === 'TL') {
+        return $tlAmount;
+    }
+    return $tlAmount / getKasaRateOrFail($rates, $to);
+}
+
+function fetchKasaSingleFloatOrFail($connection, $query, $field = 'toplam') {
+    $result = $connection->query($query);
+    if (!$result) {
+        throw new Exception('Sorgu basarisiz: ' . $connection->error);
+    }
+
+    $row = $result->fetch_assoc();
+    if (!$row) {
+        return 0.0;
+    }
+
+    return (float) ($row[$field] ?? 0);
+}
+
 /**
- * Döviz kurlarını JSON olarak döndür
+ * DÃ¶viz kurlarÄ±nÄ± JSON olarak dÃ¶ndÃ¼r
  */
 function getDovizKurlari() {
     $rates = getExchangeRates();
@@ -76,7 +142,7 @@ function getDovizKurlari() {
 }
 
 /**
- * Kasa bakiyelerini getir (TL, USD, EUR + Çek Kasası özeti)
+ * Kasa bakiyelerini getir (TL, USD, EUR + Ã‡ek KasasÄ± Ã¶zeti)
  */
 function getKasaBakiyeleri() {
     global $connection;
@@ -84,11 +150,16 @@ function getKasaBakiyeleri() {
     // Sirket kasasi bakiyeleri
     $result = $connection->query("SELECT para_birimi, bakiye FROM sirket_kasasi");
     $bakiyeler = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    while ($row = $result->fetch_assoc()) {
-        $bakiyeler[$row['para_birimi']] = floatval($row['bakiye']);
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['para_birimi'] ?? 'TL');
+            $bakiyeler[$pb] = floatval($row['bakiye']);
+        }
+    } else {
+        throw new Exception('Kasa bakiyeleri alinamadi: ' . $connection->error);
     }
     
-    // Çek kasası özeti (sadece alindi ve tahsilde durumundaki çekler)
+    // Ã‡ek kasasÄ± Ã¶zeti (sadece alindi ve tahsilde durumundaki Ã§ekler)
     $cekResult = $connection->query("
         SELECT 
             cek_para_birimi,
@@ -100,17 +171,22 @@ function getKasaBakiyeleri() {
     ");
     
     $cekOzeti = ['adet' => 0, 'TL' => 0, 'USD' => 0, 'EUR' => 0];
-    while ($row = $cekResult->fetch_assoc()) {
-        $cekOzeti[$row['cek_para_birimi']] = floatval($row['toplam']);
-        $cekOzeti['adet'] += intval($row['adet']);
+    if ($cekResult) {
+        while ($row = $cekResult->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['cek_para_birimi'] ?? 'TL');
+            $cekOzeti[$pb] += floatval($row['toplam']);
+            $cekOzeti['adet'] += intval($row['adet']);
+        }
+    } else {
+        throw new Exception('Cek ozeti alinamadi: ' . $connection->error);
     }
     
-    // TL karşılığı hesapla
+    // TL karÅŸÄ±lÄ±ÄŸÄ± hesapla
     $rates = getExchangeRates();
-    $cekOzeti['tl_karsiligi'] = 
-        $cekOzeti['TL'] + 
-        ($cekOzeti['USD'] * $rates['USD']) + 
-        ($cekOzeti['EUR'] * $rates['EUR']);
+    $cekOzeti['tl_karsiligi'] =
+        $cekOzeti['TL']
+        + convertKasaCurrencyAmount($cekOzeti['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($cekOzeti['EUR'], 'EUR', 'TL', $rates);
     
     echo json_encode([
         'status' => 'success',
@@ -179,7 +255,7 @@ function getKasaHareketleri() {
     
     $whereClause = implode(" AND ", $where);
     
-    // Toplam sayı
+    // Toplam sayÄ±
     $countSql = "SELECT COUNT(*) as total FROM kasa_hareketleri WHERE $whereClause";
     $countStmt = $connection->prepare($countSql);
     if ($types) $countStmt->bind_param($types, ...$params);
@@ -212,7 +288,7 @@ function getKasaHareketleri() {
 }
 
 /**
- * Kasa işlemi ekle (TL/USD/EUR kasasına ekleme veya çıkarma)
+ * Kasa iÅŸlemi ekle (TL/USD/EUR kasasÄ±na ekleme veya Ã§Ä±karma)
  */
 function addKasaIslemi() {
     global $connection;
@@ -222,36 +298,46 @@ function addKasaIslemi() {
     if (strlen($tarih) == 16) $tarih .= ':00';
     
     $islemTipi = $_POST['islem_tipi'] ?? ''; // kasa_ekle, kasa_cikar
-    $kasaAdi = $_POST['kasa_adi'] ?? 'TL';   // TL, USD, EUR
+    $kasaAdi = normalizeKasaCurrency($_POST['kasa_adi'] ?? 'TL'); // TL, USD, EUR
     $tutar = floatval($_POST['tutar'] ?? 0);
     $aciklama = $_POST['aciklama'] ?? '';
-    // Formdaki name="odeme_tipi_detay" ama db'de "odeme_tipi" olarak saklayacağız
+    // Formdaki name="odeme_tipi_detay" ama db'de "odeme_tipi" olarak saklayacaÄŸÄ±z
     $odemeTipi = $_POST['odeme_tipi_detay'] ?? 'Nakit'; 
     $personel = $_SESSION['kullanici_adi'] ?? 'Sistem';
     
-    if ($tutar <= 0) throw new Exception('Geçersiz tutar.');
-    if (!in_array($kasaAdi, ['TL', 'USD', 'EUR'])) throw new Exception('Geçersiz kasa.');
-    if (!in_array($islemTipi, ['kasa_ekle', 'kasa_cikar'])) throw new Exception('Geçersiz işlem tipi.');
+    if ($tutar <= 0) throw new Exception('GeÃ§ersiz tutar.');
+    if (!in_array($kasaAdi, ['TL', 'USD', 'EUR'], true)) throw new Exception('GeÃ§ersiz kasa.');
+    if (!in_array($islemTipi, ['kasa_ekle', 'kasa_cikar'])) throw new Exception('GeÃ§ersiz iÅŸlem tipi.');
     
     $rates = getExchangeRates();
-    $tlKarsiligi = $tutar * $rates[$kasaAdi];
+    $dovizKuru = getKasaRateOrFail($rates, $kasaAdi);
+    $tlKarsiligi = $tutar * $dovizKuru;
     
     $connection->begin_transaction();
     try {
-        // Kasa bakiyesini kontrol et ve güncelle
-        $check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasaAdi'");
+        // Kasa bakiyesini kontrol et ve gÃ¼ncelle
+        $check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasaAdi' LIMIT 1");
+        if (!$check) {
+            throw new Exception('Kasa sorgusu basarisiz: ' . $connection->error);
+        }
         if ($check->num_rows == 0) {
-            $connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$kasaAdi', 0)");
+            if (!$connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$kasaAdi', 0)")) {
+                throw new Exception('Kasa satiri olusturulamadi: ' . $connection->error);
+            }
             $bakiye = 0;
         } else {
             $bakiye = floatval($check->fetch_assoc()['bakiye']);
         }
         
         if ($islemTipi === 'kasa_ekle') {
-            $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$kasaAdi'");
+            if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$kasaAdi'")) {
+                throw new Exception('Kasa bakiyesi guncellenemedi: ' . $connection->error);
+            }
         } else {
             if ($bakiye < $tutar) throw new Exception("Kasada yeterli bakiye yok! Mevcut: $bakiye $kasaAdi");
-            $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $tutar WHERE para_birimi = '$kasaAdi'");
+            if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $tutar WHERE para_birimi = '$kasaAdi'")) {
+                throw new Exception('Kasa bakiyesi guncellenemedi: ' . $connection->error);
+            }
         }
         
         // Kasa hareketleri tablosuna kaydet
@@ -259,12 +345,17 @@ function addKasaIslemi() {
             INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, doviz_kuru, tl_karsiligi, aciklama, kaydeden_personel, odeme_tipi)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ");
-        $dovizKuru = $rates[$kasaAdi];
+        if (!$stmt) {
+            throw new Exception('Kasa hareketi hazirlanamadi: ' . $connection->error);
+        }
         $stmt->bind_param("sssdsddsss", $tarih, $islemTipi, $kasaAdi, $tutar, $kasaAdi, $dovizKuru, $tlKarsiligi, $aciklama, $personel, $odemeTipi);
-        $stmt->execute();
+        if (!$stmt->execute()) {
+            throw new Exception('Kasa hareketi kaydedilemedi: ' . $stmt->error);
+        }
+        $stmt->close();
         
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'Kasa işlemi başarıyla kaydedildi.']);
+        echo json_encode(['status' => 'success', 'message' => 'Kasa iÅŸlemi baÅŸarÄ±yla kaydedildi.']);
     } catch (Exception $e) {
         $connection->rollback();
         throw $e;
@@ -272,42 +363,60 @@ function addKasaIslemi() {
 }
 
 /**
- * Kasa işlemini sil ve bakiyeyi geri al
+ * Kasa iÅŸlemini sil ve bakiyeyi geri al
  */
 function deleteKasaIslemi() {
     global $connection;
     
     $hareketId = intval($_POST['hareket_id'] ?? 0);
-    if ($hareketId <= 0) throw new Exception('Geçersiz hareket ID.');
+    if ($hareketId <= 0) throw new Exception('GeÃ§ersiz hareket ID.');
     
     $connection->begin_transaction();
     try {
-        // İşlemi bul
-        $result = $connection->query("SELECT * FROM kasa_hareketleri WHERE hareket_id = $hareketId");
-        if ($result->num_rows == 0) throw new Exception('İşlem bulunamadı.');
+        // Ä°ÅŸlemi bul
+        $result = $connection->query("SELECT * FROM kasa_hareketleri WHERE hareket_id = $hareketId LIMIT 1");
+        if (!$result) {
+            throw new Exception('Islem bilgisi alinamadi: ' . $connection->error);
+        }
+        if ($result->num_rows == 0) throw new Exception('Ä°ÅŸlem bulunamadÄ±.');
         
         $row = $result->fetch_assoc();
         $tutar = floatval($row['tutar']);
-        $kasaAdi = $row['kasa_adi'];
+        $kasaAdi = normalizeKasaCurrency($row['kasa_adi'] ?? 'TL');
         $islemTipi = $row['islem_tipi'];
         
-        // Sadece manuel kasa işlemlerini silebilir
+        // Sadece manuel kasa iÅŸlemlerini silebilir
         if (!in_array($islemTipi, ['kasa_ekle', 'kasa_cikar'])) {
-            throw new Exception('Bu işlem türü silinemez. İlgili kaynak üzerinden işlem yapın.');
+            throw new Exception('Bu iÅŸlem tÃ¼rÃ¼ silinemez. Ä°lgili kaynak Ã¼zerinden iÅŸlem yapÄ±n.');
         }
         
-        // Ters işlem yap
+        // Ters iÅŸlem yap
+        $kasaSonuc = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasaAdi' LIMIT 1");
+        if (!$kasaSonuc || $kasaSonuc->num_rows === 0) {
+            throw new Exception('Kasa bulunamadi.');
+        }
+        $mevcutBakiye = (float) ($kasaSonuc->fetch_assoc()['bakiye'] ?? 0);
+
         if ($islemTipi === 'kasa_ekle') {
-            $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $tutar WHERE para_birimi = '$kasaAdi'");
+            if ($mevcutBakiye + 0.00001 < $tutar) {
+                throw new Exception('Islem geri alininca kasa eksiye dusecek.');
+            }
+            if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $tutar WHERE para_birimi = '$kasaAdi'")) {
+                throw new Exception('Kasa bakiyesi guncellenemedi: ' . $connection->error);
+            }
         } else {
-            $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$kasaAdi'");
+            if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$kasaAdi'")) {
+                throw new Exception('Kasa bakiyesi guncellenemedi: ' . $connection->error);
+            }
         }
         
-        // Kaydı sil
-        $connection->query("DELETE FROM kasa_hareketleri WHERE hareket_id = $hareketId");
+        // KaydÄ± sil
+        if (!$connection->query("DELETE FROM kasa_hareketleri WHERE hareket_id = $hareketId")) {
+            throw new Exception('Kasa hareketi silinemedi: ' . $connection->error);
+        }
         
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'İşlem geri alındı ve silindi.']);
+        echo json_encode(['status' => 'success', 'message' => 'Ä°ÅŸlem geri alÄ±ndÄ± ve silindi.']);
     } catch (Exception $e) {
         $connection->rollback();
         throw $e;
@@ -315,7 +424,7 @@ function deleteKasaIslemi() {
 }
 
 /**
- * Çekleri listele
+ * Ã‡ekleri listele
  */
 function getCekler() {
     global $connection;
@@ -335,7 +444,8 @@ function getCekler() {
     }
     
     if (!empty($_GET['cek_para_birimi'])) {
-        $where[] = "cek_para_birimi = '" . $connection->real_escape_string($_GET['cek_para_birimi']) . "'";
+        $cekPara = normalizeKasaCurrency($_GET['cek_para_birimi']);
+        $where[] = "cek_para_birimi = '" . $connection->real_escape_string($cekPara) . "'";
     }
     
     if (!empty($_GET['search'])) {
@@ -363,14 +473,14 @@ function getCekler() {
 }
 
 /**
- * Yeni çek ekle
+ * Yeni Ã§ek ekle
  */
 function addCek() {
     global $connection;
     
     $cekNo = $connection->real_escape_string($_POST['cek_no'] ?? '');
     $cekTutari = floatval($_POST['cek_tutari'] ?? 0);
-    $cekParaBirimi = $connection->real_escape_string($_POST['cek_para_birimi'] ?? 'TL');
+    $cekParaBirimi = normalizeKasaCurrency($_POST['cek_para_birimi'] ?? 'TL');
     $cekSahibi = $connection->real_escape_string($_POST['cek_sahibi'] ?? '');
     $cekBankaAdi = $connection->real_escape_string($_POST['cek_banka_adi'] ?? '');
     $cekSubesi = $connection->real_escape_string($_POST['cek_subesi'] ?? '');
@@ -379,9 +489,10 @@ function addCek() {
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
     $personel = $_SESSION['kullanici_adi'] ?? 'Sistem';
     
-    if (empty($cekNo)) throw new Exception('Çek numarası zorunludur.');
-    if ($cekTutari <= 0) throw new Exception('Geçersiz tutar.');
-    if (empty($cekSahibi)) throw new Exception('Çek sahibi zorunludur.');
+    if (empty($cekNo)) throw new Exception('Ã‡ek numarasÄ± zorunludur.');
+    if ($cekTutari <= 0) throw new Exception('GeÃ§ersiz tutar.');
+    if (empty($cekSahibi)) throw new Exception('Ã‡ek sahibi zorunludur.');
+    if (!in_array($cekParaBirimi, ['TL', 'USD', 'EUR'], true)) throw new Exception('GeÃ§ersiz Ã§ek para birimi.');
     
     $connection->begin_transaction();
     try {
@@ -395,7 +506,7 @@ function addCek() {
         
         // Kasa hareketlerine kaydet
         $rates = getExchangeRates();
-        $tlKarsiligi = $cekTutari * $rates[$cekParaBirimi];
+        $tlKarsiligi = $cekTutari * getKasaRateOrFail($rates, $cekParaBirimi);
         $islemTipi = $cekTipi === 'alacak' ? 'cek_alma' : 'cek_odeme';
         
         $stmt2 = $connection->prepare("
@@ -406,7 +517,7 @@ function addCek() {
         $stmt2->execute();
         
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'Çek başarıyla eklendi.', 'cek_id' => $cekId]);
+        echo json_encode(['status' => 'success', 'message' => 'Ã‡ek baÅŸarÄ±yla eklendi.', 'cek_id' => $cekId]);
     } catch (Exception $e) {
         $connection->rollback();
         throw $e;
@@ -414,7 +525,7 @@ function addCek() {
 }
 
 /**
- * Çek durumunu güncelle
+ * Ã‡ek durumunu gÃ¼ncelle
  */
 function updateCekDurumu() {
     global $connection;
@@ -423,21 +534,21 @@ function updateCekDurumu() {
     $yeniDurum = $connection->real_escape_string($_POST['yeni_durum'] ?? '');
     $personel = $_SESSION['kullanici_adi'] ?? 'Sistem';
     
-    if ($cekId <= 0) throw new Exception('Geçersiz çek ID.');
+    if ($cekId <= 0) throw new Exception('GeÃ§ersiz Ã§ek ID.');
     
     $validDurumlar = ['alindi', 'kullanildi', 'iptal', 'geri_odendi', 'teminat_verildi', 'tahsilde'];
-    if (!in_array($yeniDurum, $validDurumlar)) throw new Exception('Geçersiz durum.');
+    if (!in_array($yeniDurum, $validDurumlar)) throw new Exception('GeÃ§ersiz durum.');
     
     $connection->begin_transaction();
     try {
-        // Çeki bul
+        // Ã‡eki bul
         $result = $connection->query("SELECT * FROM cek_kasasi WHERE cek_id = $cekId");
-        if ($result->num_rows == 0) throw new Exception('Çek bulunamadı.');
+        if ($result->num_rows == 0) throw new Exception('Ã‡ek bulunamadÄ±.');
         
         $cek = $result->fetch_assoc();
         $eskiDurum = $cek['cek_durumu'];
         
-        // Durumu güncelle
+        // Durumu gÃ¼ncelle
         $kullanilmaTarihi = ($yeniDurum === 'kullanildi') ? ", cek_kullanim_tarihi = NOW()" : "";
         $connection->query("
             UPDATE cek_kasasi 
@@ -445,25 +556,26 @@ function updateCekDurumu() {
             WHERE cek_id = $cekId
         ");
         
-        // Çek tahsil edildiyse ilgili kasaya ekle
+        // Ã‡ek tahsil edildiyse ilgili kasaya ekle
         if ($yeniDurum === 'geri_odendi' && $eskiDurum === 'tahsilde') {
-            $paraBirimi = $cek['cek_para_birimi'];
+            $paraBirimi = normalizeKasaCurrency($cek['cek_para_birimi'] ?? 'TL');
             $tutar = $cek['cek_tutari'];
+            $connection->query("INSERT IGNORE INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$paraBirimi', 0)");
             $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye + $tutar WHERE para_birimi = '$paraBirimi'");
             
             // Kasa hareketine kaydet
             $rates = getExchangeRates();
-            $tlKarsiligi = $tutar * $rates[$paraBirimi];
+            $tlKarsiligi = $tutar * getKasaRateOrFail($rates, $paraBirimi);
             $stmt = $connection->prepare("
                 INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, cek_id, tutar, para_birimi, tl_karsiligi, aciklama, kaydeden_personel)
-                VALUES (NOW(), 'cek_tahsildi', ?, ?, ?, ?, ?, 'Çek tahsil edildi', ?)
+                VALUES (NOW(), 'cek_tahsildi', ?, ?, ?, ?, ?, 'Ã‡ek tahsil edildi', ?)
             ");
             $stmt->bind_param("sidsds", $paraBirimi, $cekId, $tutar, $paraBirimi, $tlKarsiligi, $personel);
             $stmt->execute();
         }
         
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'Çek durumu güncellendi.']);
+        echo json_encode(['status' => 'success', 'message' => 'Ã‡ek durumu gÃ¼ncellendi.']);
     } catch (Exception $e) {
         $connection->rollback();
         throw $e;
@@ -471,33 +583,33 @@ function updateCekDurumu() {
 }
 
 /**
- * Çek sil
+ * Ã‡ek sil
  */
 function deleteCek() {
     global $connection;
     
     $cekId = intval($_POST['cek_id'] ?? 0);
-    if ($cekId <= 0) throw new Exception('Geçersiz çek ID.');
+    if ($cekId <= 0) throw new Exception('GeÃ§ersiz Ã§ek ID.');
     
     $connection->begin_transaction();
     try {
-        // Çek kullanılmış mı kontrol et
+        // Ã‡ek kullanÄ±lmÄ±ÅŸ mÄ± kontrol et
         $result = $connection->query("SELECT * FROM cek_kasasi WHERE cek_id = $cekId");
-        if ($result->num_rows == 0) throw new Exception('Çek bulunamadı.');
+        if ($result->num_rows == 0) throw new Exception('Ã‡ek bulunamadÄ±.');
         
         $cek = $result->fetch_assoc();
         if ($cek['cek_durumu'] === 'kullanildi') {
-            throw new Exception('Kullanılmış çek silinemez.');
+            throw new Exception('KullanÄ±lmÄ±ÅŸ Ã§ek silinemez.');
         }
         
-        // İlgili kasa hareketlerini sil
+        // Ä°lgili kasa hareketlerini sil
         $connection->query("DELETE FROM kasa_hareketleri WHERE cek_id = $cekId");
         
-        // Çeki sil
+        // Ã‡eki sil
         $connection->query("DELETE FROM cek_kasasi WHERE cek_id = $cekId");
         
         $connection->commit();
-        echo json_encode(['status' => 'success', 'message' => 'Çek silindi.']);
+        echo json_encode(['status' => 'success', 'message' => 'Ã‡ek silindi.']);
     } catch (Exception $e) {
         $connection->rollback();
         throw $e;
@@ -505,50 +617,49 @@ function deleteCek() {
 }
 
 /**
- * Stok değerlerini hesapla (Ürünler, Malzemeler, Esanslar)
+ * Stok deÄŸerlerini hesapla (ÃœrÃ¼nler, Malzemeler, Esanslar)
  */
 function getStokDegerleri() {
     global $connection;
     
     $rates = getExchangeRates();
+    $usdRate = getKasaRateOrFail($rates, 'USD');
+    $eurRate = getKasaRateOrFail($rates, 'EUR');
     
-    // Ürünlerin toplam değeri (adet * satış fiyatı, TL'ye çevrilmiş)
-    $urunResult = $connection->query("
+    // ÃœrÃ¼nlerin toplam deÄŸeri (adet * satÄ±ÅŸ fiyatÄ±, TL'ye Ã§evrilmiÅŸ)
+    $urunDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT 
             SUM(stok_miktari * satis_fiyati * 
                 CASE satis_fiyati_para_birimi 
-                    WHEN 'USD' THEN {$rates['USD']}
-                    WHEN 'EUR' THEN {$rates['EUR']}
+                    WHEN 'USD' THEN {$usdRate}
+                    WHEN 'EUR' THEN {$eurRate}
                     ELSE 1 
                 END
             ) as toplam
         FROM urunler WHERE stok_miktari > 0
     ");
-    $urunDeger = floatval($urunResult->fetch_assoc()['toplam'] ?? 0);
     
-    // Malzemelerin toplam değeri (adet * alış fiyatı, TL'ye çevrilmiş)
-    $malzemeResult = $connection->query("
+    // Malzemelerin toplam deÄŸeri (adet * alÄ±ÅŸ fiyatÄ±, TL'ye Ã§evrilmiÅŸ)
+    $malzemeDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT 
             SUM(stok_miktari * alis_fiyati * 
                 CASE para_birimi 
-                    WHEN 'USD' THEN {$rates['USD']}
-                    WHEN 'EUR' THEN {$rates['EUR']}
+                    WHEN 'USD' THEN {$usdRate}
+                    WHEN 'EUR' THEN {$eurRate}
                     ELSE 1 
                 END
             ) as toplam
         FROM malzemeler WHERE stok_miktari > 0
     ");
-    $malzemeDeger = floatval($malzemeResult->fetch_assoc()['toplam'] ?? 0);
     
-    // Esansların toplam değeri (stok * v_esans_maliyetleri)
-    $esansResult = $connection->query("
+    // EsanslarÄ±n toplam deÄŸeri (stok * v_esans_maliyetleri)
+    $esansDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT 
             SUM(e.stok_miktari * COALESCE(vem.toplam_maliyet, 0)) as toplam
         FROM esanslar e
         LEFT JOIN v_esans_maliyetleri vem ON e.esans_kodu = vem.esans_kodu
         WHERE e.stok_miktari > 0
     ");
-    $esansDeger = floatval($esansResult->fetch_assoc()['toplam'] ?? 0);
     
     $toplamDeger = $urunDeger + $malzemeDeger + $esansDeger;
     
@@ -564,7 +675,7 @@ function getStokDegerleri() {
 }
 
 /**
- * Aylık kasa hareketlerini getir
+ * AylÄ±k kasa hareketlerini getir
  */
 function getAylikKasaHareketleri() {
     global $connection;
@@ -575,7 +686,7 @@ function getAylikKasaHareketleri() {
     $baslangic = "$yil-" . str_pad($ay, 2, '0', STR_PAD_LEFT) . "-01";
     $bitis = date('Y-m-t', strtotime($baslangic));
     
-    // Gelirler (para birimine göre)
+    // Gelirler (para birimine gÃ¶re)
     $gelirResult = $connection->query("
         SELECT 
             para_birimi,
@@ -585,34 +696,48 @@ function getAylikKasaHareketleri() {
         GROUP BY para_birimi
     ");
     $gelirler = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    while ($row = $gelirResult->fetch_assoc()) {
-        $gelirler[$row['para_birimi']] = floatval($row['toplam']);
+    if ($gelirResult) {
+        while ($row = $gelirResult->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['para_birimi'] ?? 'TL');
+            $gelirler[$pb] += floatval($row['toplam']);
+        }
+    } else {
+        throw new Exception('Aylik gelirler alinamadi: ' . $connection->error);
     }
     
     // Giderler (TL olarak)
-    $giderResult = $connection->query("
+    $giderler = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(tutar) as toplam
         FROM gider_yonetimi 
         WHERE DATE(tarih) BETWEEN '$baslangic' AND '$bitis'
     ");
-    $giderler = floatval($giderResult->fetch_assoc()['toplam'] ?? 0);
     
-    // Çek işlemleri
-    $cekGiris = $connection->query("
+    // Ã‡ek iÅŸlemleri
+    $cekGirisResult = $connection->query("
         SELECT COUNT(*) as adet, SUM(cek_tutari) as toplam
         FROM cek_kasasi 
         WHERE cek_tipi = 'alacak' AND DATE(cek_alim_tarihi) BETWEEN '$baslangic' AND '$bitis'
-    ")->fetch_assoc();
+    ");
+    if (!$cekGirisResult) {
+        throw new Exception('Aylik cek girisleri alinamadi: ' . $connection->error);
+    }
+    $cekGiris = $cekGirisResult->fetch_assoc() ?: ['adet' => 0, 'toplam' => 0];
     
-    $cekCikis = $connection->query("
+    $cekCikisResult = $connection->query("
         SELECT COUNT(*) as adet, SUM(cek_tutari) as toplam
         FROM cek_kasasi 
         WHERE cek_tipi = 'verilen' AND DATE(cek_alim_tarihi) BETWEEN '$baslangic' AND '$bitis'
-    ")->fetch_assoc();
+    ");
+    if (!$cekCikisResult) {
+        throw new Exception('Aylik cek cikislari alinamadi: ' . $connection->error);
+    }
+    $cekCikis = $cekCikisResult->fetch_assoc() ?: ['adet' => 0, 'toplam' => 0];
     
-    // TL karşılıklarını hesapla
+    // TL karÅŸÄ±lÄ±klarÄ±nÄ± hesapla
     $rates = getExchangeRates();
-    $gelirTL = $gelirler['TL'] + ($gelirler['USD'] * $rates['USD']) + ($gelirler['EUR'] * $rates['EUR']);
+    $gelirTL = $gelirler['TL']
+        + convertKasaCurrencyAmount($gelirler['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($gelirler['EUR'], 'EUR', 'TL', $rates);
     $netDurum = $gelirTL - $giderler;
     
     echo json_encode([
@@ -630,12 +755,12 @@ function getAylikKasaHareketleri() {
 }
 
 /**
- * Tedarikçilere yapılacak ödemeleri hesapla (Çerçeve sözleşmelerden)
+ * TedarikÃ§ilere yapÄ±lacak Ã¶demeleri hesapla (Ã‡erÃ§eve sÃ¶zleÅŸmelerden)
  */
 function getTedarikciOdemeleri() {
     global $connection;
     
-    // Çerçeve sözleşmelerdeki ödenmemiş tutarları hesapla
+    // Ã‡erÃ§eve sÃ¶zleÅŸmelerdeki Ã¶denmemiÅŸ tutarlarÄ± hesapla
     $result = $connection->query("
         SELECT 
             cs.para_birimi,
@@ -657,17 +782,23 @@ function getTedarikciOdemeleri() {
     
     $detaylar = [];
     $toplamlar = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    
-    while ($row = $result->fetch_assoc()) {
-        $pb = $row['para_birimi'];
-        $tutar = floatval($row['odenmemis_tutar']);
-        $toplamlar[$pb] = ($toplamlar[$pb] ?? 0) + $tutar;
-        $detaylar[] = $row;
+
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['para_birimi'] ?? 'TL');
+            $tutar = floatval($row['odenmemis_tutar']);
+            $toplamlar[$pb] = ($toplamlar[$pb] ?? 0) + $tutar;
+            $detaylar[] = $row;
+        }
+    } else {
+        throw new Exception('Tedarikci odemeleri alinamadi: ' . $connection->error);
     }
     
-    // TL karşılığını hesapla
+    // TL karÅŸÄ±lÄ±ÄŸÄ±nÄ± hesapla
     $rates = getExchangeRates();
-    $tlToplam = $toplamlar['TL'] + ($toplamlar['USD'] * $rates['USD']) + ($toplamlar['EUR'] * $rates['EUR']);
+    $tlToplam = $toplamlar['TL']
+        + convertKasaCurrencyAmount($toplamlar['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($toplamlar['EUR'], 'EUR', 'TL', $rates);
     
     echo json_encode([
         'status' => 'success',
@@ -680,89 +811,96 @@ function getTedarikciOdemeleri() {
 }
 
 /**
- * Dashboard için özet bilgileri getir (tek seferde tüm veriler)
+ * Dashboard iÃ§in Ã¶zet bilgileri getir (tek seferde tÃ¼m veriler)
  */
 function getDashboardSummary() {
     global $connection;
     
     $rates = getExchangeRates();
+    $usdRate = getKasaRateOrFail($rates, 'USD');
+    $eurRate = getKasaRateOrFail($rates, 'EUR');
     
     // Kasa bakiyeleri
     $kasaResult = $connection->query("SELECT para_birimi, bakiye FROM sirket_kasasi");
     $kasalar = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    while ($row = $kasaResult->fetch_assoc()) {
-        $kasalar[$row['para_birimi']] = floatval($row['bakiye']);
+    if ($kasaResult) {
+        while ($row = $kasaResult->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['para_birimi'] ?? 'TL');
+            $kasalar[$pb] += floatval($row['bakiye']);
+        }
     }
     
-    // Çek kasası
+    // Ã‡ek kasasÄ±
     $cekResult = $connection->query("
         SELECT cek_para_birimi, COUNT(*) as adet, SUM(cek_tutari) as toplam
         FROM cek_kasasi
-        WHERE cek_tipi = 'alacak' AND cek_durumu IN ('alindi', 'tahsilde')
+        WHERE cek_tipi = 'alacak' AND cek_durumu IN ('alindi', 'tahsilde', 'kullanildi')
         GROUP BY cek_para_birimi
     ");
     $cekOzet = ['adet' => 0, 'TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0, 'toplam' => 0.0, 'tl_karsiligi' => 0.0];
     if ($cekResult) {
         while ($row = $cekResult->fetch_assoc()) {
-            $pb = in_array($row['cek_para_birimi'], ['TL', 'USD', 'EUR']) ? $row['cek_para_birimi'] : 'TL';
+            $pb = normalizeKasaCurrency($row['cek_para_birimi'] ?? 'TL');
             $tutar = floatval($row['toplam'] ?? 0);
             $cekOzet['adet'] += intval($row['adet'] ?? 0);
             $cekOzet[$pb] += $tutar;
         }
     }
-    $cekOzet['tl_karsiligi'] = $cekOzet['TL'] + ($cekOzet['USD'] * $rates['USD']) + ($cekOzet['EUR'] * $rates['EUR']);
+    $cekOzet['tl_karsiligi'] = $cekOzet['TL']
+        + convertKasaCurrencyAmount($cekOzet['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($cekOzet['EUR'], 'EUR', 'TL', $rates);
     $cekOzet['toplam'] = $cekOzet['tl_karsiligi'];
     
-    // Stok değerleri
-    $urunDeger = $connection->query("
+    // Stok deÄŸerleri
+    $urunDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(stok_miktari * satis_fiyati * 
             CASE satis_fiyati_para_birimi 
-                WHEN 'USD' THEN {$rates['USD']}
-                WHEN 'EUR' THEN {$rates['EUR']}
+                WHEN 'USD' THEN {$usdRate}
+                WHEN 'EUR' THEN {$eurRate}
                 ELSE 1 
             END) as toplam
         FROM urunler WHERE stok_miktari > 0
-    ")->fetch_assoc()['toplam'] ?? 0;
+    ");
     
-    $malzemeDeger = $connection->query("
+    $malzemeDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(stok_miktari * alis_fiyati * 
             CASE para_birimi 
-                WHEN 'USD' THEN {$rates['USD']}
-                WHEN 'EUR' THEN {$rates['EUR']}
+                WHEN 'USD' THEN {$usdRate}
+                WHEN 'EUR' THEN {$eurRate}
                 ELSE 1 
             END) as toplam
         FROM malzemeler WHERE stok_miktari > 0
-    ")->fetch_assoc()['toplam'] ?? 0;
+    ");
     
-    $esansDeger = $connection->query("
+    $esansDeger = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(e.stok_miktari * COALESCE(vem.toplam_maliyet, 0)) as toplam
         FROM esanslar e
         LEFT JOIN v_esans_maliyetleri vem ON e.esans_kodu = vem.esans_kodu
         WHERE e.stok_miktari > 0
-    ")->fetch_assoc()['toplam'] ?? 0;
+    ");
     
     // Bu ayki gelir/gider
     $baslangic = date('Y-m-01');
     $bitis = date('Y-m-t');
     
-    $aylikGelir = $connection->query("
+    $aylikGelir = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(tutar * 
             CASE para_birimi 
-                WHEN 'USD' THEN {$rates['USD']}
-                WHEN 'EUR' THEN {$rates['EUR']}
+                WHEN 'USD' THEN {$usdRate}
+                WHEN 'EUR' THEN {$eurRate}
                 ELSE 1 
             END) as toplam
         FROM gelir_yonetimi 
         WHERE DATE(tarih) BETWEEN '$baslangic' AND '$bitis'
-    ")->fetch_assoc()['toplam'] ?? 0;
+    ");
     
-    $aylikGider = $connection->query("
+    $aylikGider = fetchKasaSingleFloatOrFail($connection, "
         SELECT SUM(tutar) as toplam
         FROM gider_yonetimi 
         WHERE DATE(tarih) BETWEEN '$baslangic' AND '$bitis'
-    ")->fetch_assoc()['toplam'] ?? 0;
+    ");
     
-    // Tedarikçi borçları
+    // TedarikÃ§i borÃ§larÄ±
     $borcResult = $connection->query("
         SELECT 
             cs.para_birimi,
@@ -777,20 +915,25 @@ function getDashboardSummary() {
         GROUP BY cs.para_birimi
     ");
     $borclar = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    while ($row = $borcResult->fetch_assoc()) {
-        $borclar[$row['para_birimi']] = floatval($row['toplam']);
+    if ($borcResult) {
+        while ($row = $borcResult->fetch_assoc()) {
+            $pb = normalizeKasaCurrency($row['para_birimi'] ?? 'TL');
+            $borclar[$pb] += floatval($row['toplam']);
+        }
     }
-    $borcTL = $borclar['TL'] + ($borclar['USD'] * $rates['USD']) + ($borclar['EUR'] * $rates['EUR']);
+    $borcTL = $borclar['TL']
+        + convertKasaCurrencyAmount($borclar['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($borclar['EUR'], 'EUR', 'TL', $rates);
     
-    // Bekleyen Personel Ödemeleri (Bu Ay)
+    // Bekleyen Personel Ã–demeleri (Bu Ay)
     $yil = date('Y');
     $ay = date('n');
     
-    // Bekleyen Personel Ödemeleri Hesaplama ve Detay Alma
+    // Bekleyen Personel Ã–demeleri Hesaplama ve Detay Alma
     $bekleyenPersonelListesi = [];
     $bekleyenPersonelOdeme = 0;
     
-    // Tüm bordrolu personeli çek
+    // TÃ¼m bordrolu personeli Ã§ek
     $personelQuery = "SELECT 
                         p.personel_id, p.ad_soyad, p.aylik_brut_ucret 
                       FROM personeller p 
@@ -798,36 +941,40 @@ function getDashboardSummary() {
                       ORDER BY p.ad_soyad";
     $personelResult = $connection->query($personelQuery);
     
-    while ($p = $personelResult->fetch_assoc()) {
-        $pId = $p['personel_id'];
-        $brutUcret = floatval($p['aylik_brut_ucret']);
-        
-        // Bu personelin bu ay ödenmiş maaşı var mı?
-        $mOdeme = $connection->query("SELECT SUM(net_odenen) as toplam FROM personel_maas_odemeleri WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay")->fetch_assoc();
-        $odenenMaas = floatval($mOdeme['toplam'] ?? 0);
-        
-        // Bu personelin bu ay aldığı tüm avanslar (kullanılmış olsun olmasın)
-        $kAvans = $connection->query("SELECT SUM(avans_tutari) as toplam FROM personel_avanslar WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay")->fetch_assoc();
-        $toplamAvans = floatval($kAvans['toplam'] ?? 0);
-        
-        // Kalan ödenecek tahmini tutar
-        $kalanOdeme = $brutUcret - ($odenenMaas + $toplamAvans);
-        
-        // Eğer kalan ödeme 0'dan büyükse listeye ekle
-        if ($kalanOdeme > 0.01) {
-            $bekleyenPersonelListesi[] = [
-                'ad_soyad' => $p['ad_soyad'],
-                'brut_ucret' => $brutUcret,
-                'avans' => $toplamAvans,
-                'odenen' => $odenenMaas,
-                'kalan_odeme' => round($kalanOdeme, 2)
-            ];
-            $bekleyenPersonelOdeme += $kalanOdeme;
+    if ($personelResult) {
+        while ($p = $personelResult->fetch_assoc()) {
+            $pId = $p['personel_id'];
+            $brutUcret = floatval($p['aylik_brut_ucret']);
+            
+            // Bu personelin bu ay Ã¶denmiÅŸ maaÅŸÄ± var mÄ±?
+            $mOdemeResult = $connection->query("SELECT SUM(net_odenen) as toplam FROM personel_maas_odemeleri WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay");
+            $mOdeme = $mOdemeResult ? $mOdemeResult->fetch_assoc() : null;
+            $odenenMaas = floatval($mOdeme['toplam'] ?? 0);
+            
+            // Bu personelin bu ay aldÄ±ÄŸÄ± tÃ¼m avanslar (kullanÄ±lmÄ±ÅŸ olsun olmasÄ±n)
+            $kAvansResult = $connection->query("SELECT SUM(avans_tutari) as toplam FROM personel_avanslar WHERE personel_id = $pId AND donem_yil = $yil AND donem_ay = $ay");
+            $kAvans = $kAvansResult ? $kAvansResult->fetch_assoc() : null;
+            $toplamAvans = floatval($kAvans['toplam'] ?? 0);
+            
+            // Kalan Ã¶denecek tahmini tutar
+            $kalanOdeme = $brutUcret - ($odenenMaas + $toplamAvans);
+            
+            // EÄŸer kalan Ã¶deme 0'dan bÃ¼yÃ¼kse listeye ekle
+            if ($kalanOdeme > 0.01) {
+                $bekleyenPersonelListesi[] = [
+                    'ad_soyad' => $p['ad_soyad'],
+                    'brut_ucret' => $brutUcret,
+                    'avans' => $toplamAvans,
+                    'odenen' => $odenenMaas,
+                    'kalan_odeme' => round($kalanOdeme, 2)
+                ];
+                $bekleyenPersonelOdeme += $kalanOdeme;
+            }
         }
     }
     
     
-    // Bekleyen Tekrarlı Ödemeler Hesaplama ve Detay Alma
+    // Bekleyen TekrarlÄ± Ã–demeler Hesaplama ve Detay Alma
     $bugunGun = date('d');
     $bekleyenTekrarliListesi = [];
     
@@ -844,16 +991,18 @@ function getDashboardSummary() {
     $tekrarliResult = $connection->query($tekrarliQuery);
     
     $bekleyenTekrarliOdeme = 0;
-    while ($row = $tekrarliResult->fetch_assoc()) {
-        $tutar = floatval($row['tutar']);
-        $bekleyenTekrarliOdeme += $tutar;
-        
-        $bekleyenTekrarliListesi[] = [
-            'odeme_adi' => $row['odeme_adi'],
-            'alici_firma' => $row['alici_firma'],
-            'odeme_gunu' => $row['odeme_gunu'],
-            'tutar' => $tutar
-        ];
+    if ($tekrarliResult) {
+        while ($row = $tekrarliResult->fetch_assoc()) {
+            $tutar = floatval($row['tutar']);
+            $bekleyenTekrarliOdeme += $tutar;
+            
+            $bekleyenTekrarliListesi[] = [
+                'odeme_adi' => $row['odeme_adi'],
+                'alici_firma' => $row['alici_firma'],
+                'odeme_gunu' => $row['odeme_gunu'],
+                'tutar' => $tutar
+            ];
+        }
     }
     
     echo json_encode([
@@ -894,7 +1043,7 @@ function getDashboardSummary() {
 }
 
 /**
- * Müşterilerden alınacak ödemeleri hesapla
+ * MÃ¼ÅŸterilerden alÄ±nacak Ã¶demeleri hesapla
  */
 function getMusteriAlacaklari() {
     global $connection;
@@ -906,51 +1055,99 @@ function getMusteriAlacaklari() {
 }
 
 /**
- * Müşteri alacakları verilerini hesapla (dahili fonksiyon)
+ * MÃ¼ÅŸteri alacaklarÄ± verilerini hesapla (dahili fonksiyon)
  */
 function getMusteriAlacaklariData($connection, $rates) {
-    // Siparişlerden kalan alacaklar - siparis_kalemleri ile toplam hesapla
+    // Siparis basligini ve kalem toplamlarini ayri hesapla.
+    // Bu sayede odenen_tutar siparis basina tek kez ve dogru para biriminde dusulur.
     $siparisResult = $connection->query("
         SELECT 
             s.siparis_id,
             s.musteri_adi,
-            COALESCE(sk.para_birimi, 'TL') as para_birimi,
             s.tarih,
-            COALESCE(sk.toplam, 0) as siparis_tutari,
-            COALESCE(s.odenen_tutar, 0) as odenen_tutar,
-            (COALESCE(sk.toplam, 0) - COALESCE(s.odenen_tutar, 0)) as kalan
+            COALESCE(s.para_birimi, 'TL') as para_birimi,
+            COALESCE(s.odenen_tutar, 0) as odenen_tutar
         FROM siparisler s
-        LEFT JOIN (
-            SELECT siparis_id, para_birimi, SUM(adet * birim_fiyat) as toplam
-            FROM siparis_kalemleri
-            GROUP BY siparis_id
-        ) sk ON s.siparis_id = sk.siparis_id
         WHERE s.durum IN ('onaylandi', 'tamamlandi')
-        AND (COALESCE(sk.toplam, 0) - COALESCE(s.odenen_tutar, 0)) > 0.01
-        ORDER BY s.tarih DESC
+        ORDER BY s.tarih DESC, s.siparis_id DESC
     ");
-    
-    $toplamlar = ['TL' => 0, 'USD' => 0, 'EUR' => 0];
-    $detaylar = [];
-    
-    if ($siparisResult) {
-        while ($row = $siparisResult->fetch_assoc()) {
-            $pb = $row['para_birimi'] ?? 'TL';
-            $kalan = floatval($row['kalan']);
-            $toplamlar[$pb] = ($toplamlar[$pb] ?? 0) + $kalan;
-            $detaylar[] = $row;
+
+    $kalemResult = $connection->query("
+        SELECT
+            siparis_id,
+            COALESCE(para_birimi, 'TL') as para_birimi,
+            SUM(COALESCE(toplam_tutar, adet * birim_fiyat)) as toplam
+        FROM siparis_kalemleri
+        GROUP BY siparis_id, para_birimi
+    ");
+
+    $kalemToplamlari = [];
+    if ($kalemResult) {
+        while ($kalem = $kalemResult->fetch_assoc()) {
+            $siparisId = (int) ($kalem['siparis_id'] ?? 0);
+            if ($siparisId <= 0) {
+                continue;
+            }
+
+            $kalemPB = normalizeKasaCurrency($kalem['para_birimi'] ?? 'TL');
+            if (!isset($kalemToplamlari[$siparisId])) {
+                $kalemToplamlari[$siparisId] = [];
+            }
+            if (!isset($kalemToplamlari[$siparisId][$kalemPB])) {
+                $kalemToplamlari[$siparisId][$kalemPB] = 0.0;
+            }
+            $kalemToplamlari[$siparisId][$kalemPB] += (float) ($kalem['toplam'] ?? 0);
         }
     }
-    
-    // TL karşılığını hesapla
-    $tlToplam = $toplamlar['TL'] + ($toplamlar['USD'] * $rates['USD']) + ($toplamlar['EUR'] * $rates['EUR']);
-    
+
+    $toplamlar = ['TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $detaylar = [];
+
+    if ($siparisResult) {
+        while ($siparis = $siparisResult->fetch_assoc()) {
+            $siparisId = (int) ($siparis['siparis_id'] ?? 0);
+            $siparisPB = normalizeKasaCurrency($siparis['para_birimi'] ?? 'TL');
+            $odenen = max(0.0, (float) ($siparis['odenen_tutar'] ?? 0));
+
+            $siparisTutari = 0.0;
+            if (isset($kalemToplamlari[$siparisId])) {
+                foreach ($kalemToplamlari[$siparisId] as $kalemPB => $kalemToplam) {
+                    $siparisTutari += convertKasaCurrencyAmount($kalemToplam, $kalemPB, $siparisPB, $rates);
+                }
+            }
+
+            $kalan = max(0.0, $siparisTutari - $odenen);
+            if ($kalan <= 0.01) {
+                continue;
+            }
+
+            $toplamlar[$siparisPB] += $kalan;
+            $detaylar[] = [
+                'siparis_id' => $siparisId,
+                'musteri_adi' => $siparis['musteri_adi'] ?? '',
+                'para_birimi' => $siparisPB,
+                'tarih' => $siparis['tarih'] ?? null,
+                'siparis_tutari' => round($siparisTutari, 2),
+                'odenen_tutar' => round($odenen, 2),
+                'kalan' => round($kalan, 2)
+            ];
+        }
+    }
+
+    // TL karsiligini hesapla
+    $tlToplam = $toplamlar['TL']
+        + convertKasaCurrencyAmount($toplamlar['USD'], 'USD', 'TL', $rates)
+        + convertKasaCurrencyAmount($toplamlar['EUR'], 'EUR', 'TL', $rates);
+
     return [
-        'detay' => $toplamlar,
+        'detay' => [
+            'TL' => round($toplamlar['TL'], 2),
+            'USD' => round($toplamlar['USD'], 2),
+            'EUR' => round($toplamlar['EUR'], 2)
+        ],
         'tl_toplam' => round($tlToplam, 2),
         'siparis_sayisi' => count($detaylar),
         'liste' => $detaylar
     ];
 }
-
 ?>

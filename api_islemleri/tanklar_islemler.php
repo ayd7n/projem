@@ -149,32 +149,30 @@ function updateTank() {
     $not_bilgisi = $connection->real_escape_string($_POST['not_bilgisi'] ?? '');
 
     if (empty($tank_id) || empty($tank_kodu) || empty($tank_ismi) || $kapasite < 0) {
-        echo json_encode(['status' => 'error', 'message' => 'Tank ID, tank kodu, tank ismi ve kapasite alanları zorunludur.']);
+        echo json_encode(['status' => 'error', 'message' => 'Tank ID, tank kodu, tank ismi ve kapasite alanlari zorunludur.']);
         return;
     }
 
     try {
+        // Eski tank bilgilerini guncellemeden once al
+        $old_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
+        $old_tank_result = $connection->query($old_tank_query);
+        $old_tank = $old_tank_result ? $old_tank_result->fetch_assoc() : null;
+        $old_name = $old_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
+
         $query = "UPDATE tanklar SET tank_kodu = '$tank_kodu', tank_ismi = '$tank_ismi', kapasite = $kapasite, not_bilgisi = '$not_bilgisi' WHERE tank_id = $tank_id";
         $result = $connection->query($query);
 
-        // Eski tank bilgilerini al
-        $old_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
-        $old_tank_result = $connection->query($old_tank_query);
-        $old_tank = $old_tank_result->fetch_assoc();
-        $old_name = $old_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
-
         if ($result) {
-            // Log ekleme
             log_islem($connection, $_SESSION['kullanici_adi'], "$old_name adlı tank $tank_ismi olarak güncellendi", 'UPDATE');
             echo json_encode(['status' => 'success', 'message' => 'Tank başarıyla güncellendi.']);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Tank güncellenirken hata oluştu: ' . $connection->error]);
         }
     } catch (mysqli_sql_exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
+        echo json_encode(['status' => 'error', 'message' => 'Veritabani hatasi: ' . $e->getMessage()]);
     }
 }
-
 function deleteTank() {
     global $connection;
 
@@ -185,27 +183,25 @@ function deleteTank() {
     }
 
     try {
+        // Silmeden once tank adini al
+        $deleted_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
+        $deleted_tank_result = $connection->query($deleted_tank_query);
+        $deleted_tank = $deleted_tank_result ? $deleted_tank_result->fetch_assoc() : null;
+        $deleted_name = $deleted_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
+
         $query = "DELETE FROM tanklar WHERE tank_id = $tank_id";
         $result = $connection->query($query);
 
-        // Silinen tank bilgilerini al
-        $deleted_tank_query = "SELECT tank_ismi FROM tanklar WHERE tank_id = $tank_id";
-        $deleted_tank_result = $connection->query($deleted_tank_query);
-        $deleted_tank = $deleted_tank_result->fetch_assoc();
-        $deleted_name = $deleted_tank['tank_ismi'] ?? 'Bilinmeyen Tank';
-
         if ($result) {
-            // Log ekleme
-            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name adlı tank silindi", 'DELETE');
-            echo json_encode(['status' => 'success', 'message' => 'Tank başarıyla silindi.']);
+            log_islem($connection, $_SESSION['kullanici_adi'], "$deleted_name adli tank silindi", 'DELETE');
+            echo json_encode(['status' => 'success', 'message' => 'Tank basariyla silindi.']);
         } else {
-            echo json_encode(['status' => 'error', 'message' => 'Tank silinirken hata oluştu: ' . $connection->error]);
+            echo json_encode(['status' => 'error', 'message' => 'Tank silinirken hata olustu: ' . $connection->error]);
         }
     } catch (mysqli_sql_exception $e) {
-        echo json_encode(['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()]);
+        echo json_encode(['status' => 'error', 'message' => 'Veritabani hatasi: ' . $e->getMessage()]);
     }
 }
-
 function getTanksPaginated() {
     global $connection;
     

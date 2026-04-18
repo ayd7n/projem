@@ -32,7 +32,7 @@ function get_exchange_rates($connection)
         return $cached_rates;
     }
 
-    $rates = ['TRY' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
     $query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
     $result = $connection->query($query);
     if ($result) {
@@ -63,10 +63,10 @@ function convert_currency_amount($amount, $from_currency, $to_currency, $rates)
         return $amount;
     }
 
-    $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 1.0;
-    $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 1.0;
+    $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 0.0;
+    $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 0.0;
     if ($from_rate <= 0 || $to_rate <= 0) {
-        return $amount;
+        throw new Exception('Kur bilgisi eksik veya gecersiz.');
     }
 
     $amount_try = ($from_currency === 'TRY') ? $amount : ($amount * $from_rate);
@@ -95,6 +95,72 @@ function enrich_cost_display_fields(&$row, $can_view_cost, $rates)
         }
         $row['teorik_maliyet_display'] = round(convert_currency_amount($teorik_maliyet_try, 'TRY', $display_currency, $rates), 6);
     }
+}
+
+function ensure_product_brand_and_box_columns($connection)
+{
+    static $ensured = false;
+    if ($ensured) {
+        return;
+    }
+    $ensured = true;
+
+    try {
+        $column_result = $connection->query("SHOW COLUMNS FROM urunler");
+        if (!$column_result) {
+            error_log('urunler kolonlari okunamadi: ' . $connection->error);
+            return;
+        }
+
+        $columns = [];
+        while ($column = $column_result->fetch_assoc()) {
+            $columns[$column['Field']] = true;
+        }
+
+        if (!isset($columns['marka'])) {
+            $add_brand_column_query = "ALTER TABLE urunler ADD COLUMN marka VARCHAR(255) NOT NULL DEFAULT 'Belirtilmedi' AFTER urun_ismi";
+            if (!$connection->query($add_brand_column_query)) {
+                error_log('urunler.marka kolonu eklenemedi: ' . $connection->error);
+                return;
+            }
+        }
+
+        if (!isset($columns['koli_ici_adet'])) {
+            $add_box_count_column_query = "ALTER TABLE urunler ADD COLUMN koli_ici_adet INT UNSIGNED NOT NULL DEFAULT 1 AFTER birim";
+            if (!$connection->query($add_box_count_column_query)) {
+                error_log('urunler.koli_ici_adet kolonu eklenemedi: ' . $connection->error);
+                return;
+            }
+        }
+
+        if (!$connection->query("UPDATE urunler SET marka = 'Belirtilmedi' WHERE marka IS NULL OR TRIM(marka) = ''")) {
+            error_log('urunler.marka varsayilan guncellemesi basarisiz: ' . $connection->error);
+        }
+
+        if (!$connection->query("UPDATE urunler SET koli_ici_adet = 1 WHERE koli_ici_adet IS NULL OR koli_ici_adet < 1")) {
+            error_log('urunler.koli_ici_adet varsayilan guncellemesi basarisiz: ' . $connection->error);
+        }
+    } catch (Throwable $e) {
+        error_log('urunler kolon guvence hatasi: ' . $e->getMessage());
+    }
+}
+
+function parse_positive_integer_value($value)
+{
+    if (is_string($value)) {
+        $value = trim($value);
+    }
+
+    if ($value === null || $value === '') {
+        return null;
+    }
+
+    $parsed = filter_var($value, FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+    if ($parsed === false) {
+        return null;
+    }
+
+    return (int) $parsed;
 }
 
 function get_recent_contract_usage_for_material($connection, $material_code, $rates, $limit = 5)
@@ -505,6 +571,8 @@ function get_product_cost_breakdown_data($connection, $urun_kodu, $rates)
     ];
 }
 
+ensure_product_brand_and_box_columns($connection);
+
 if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
@@ -516,6 +584,15 @@ if (isset($_GET['action'])) {
         try {
             $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+            if ($page < 1) {
+                $page = 1;
+            }
+            if ($limit < 1) {
+                $limit = 10;
+            }
+            if ($limit > 200) {
+                $limit = 200;
+            }
             $search = isset($_GET['search']) ? $_GET['search'] : '';
             $filter = isset($_GET['filter']) ? $_GET['filter'] : '';
             $urun_tipi = isset($_GET['urun_tipi']) ? $_GET['urun_tipi'] : '';
@@ -530,10 +607,11 @@ if (isset($_GET['action'])) {
             $param_types = '';
 
             if (!empty($search)) {
-                $where_conditions[] = "(u.urun_ismi LIKE ? OR u.urun_kodu LIKE ?)";
+                $where_conditions[] = "(u.urun_ismi LIKE ? OR u.urun_kodu LIKE ? OR u.marka LIKE ?)";
                 $params[] = $search_term;
                 $params[] = $search_term;
-                $param_types .= 'ss';
+                $params[] = $search_term;
+                $param_types .= 'sss';
             }
 
             if ($filter === 'critical') {
@@ -681,7 +759,8 @@ if (isset($_GET['action'])) {
             if (!empty($search)) {
                 $critical_params[] = $search_term;
                 $critical_params[] = $search_term;
-                $critical_param_types .= 'ss';
+                $critical_params[] = $search_term;
+                $critical_param_types .= 'sss';
             }
             if (!empty($urun_tipi)) {
                 $critical_params[] = $urun_tipi;
@@ -896,6 +975,8 @@ if (isset($_GET['action'])) {
     $kritik_stok_seviyesi = isset($_POST['kritik_stok_seviyesi']) ? (int) $_POST['kritik_stok_seviyesi'] : 0;
     $depo = $_POST['depo'] ?? '';
     $raf = $_POST['raf'] ?? '';
+    $marka = trim((string) ($_POST['marka'] ?? ''));
+    $koli_ici_adet = parse_positive_integer_value($_POST['koli_ici_adet'] ?? 1);
     $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
     $urun_tipi = $_POST['urun_tipi'] ?? 'uretilen';
     $selected_material_types = isset($_POST['selected_material_types']) ? json_decode($_POST['selected_material_types'], true) : [];
@@ -906,6 +987,16 @@ if (isset($_GET['action'])) {
         $stock_validation_error = validate_non_negative_stock_value($stok_miktari);
         if ($stock_validation_error !== null) {
             echo json_encode(['status' => 'error', 'message' => $stock_validation_error]);
+            exit;
+        }
+
+        if ($marka === '') {
+            echo json_encode(['status' => 'error', 'message' => 'Marka bilgisi bos olamaz.']);
+            exit;
+        }
+
+        if ($koli_ici_adet === null) {
+            echo json_encode(['status' => 'error', 'message' => 'Koli ici adet bilgisi tam sayi ve 1 veya daha buyuk olmalidir.']);
             exit;
         }
     }
@@ -975,7 +1066,7 @@ if (isset($_GET['action'])) {
                     $alis_fiyati_para_birimi = $target_currency_store;
                 }
 
-                $query = "INSERT INTO urunler (urun_ismi, not_bilgisi, stok_miktari, birim, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES ('" . $connection->real_escape_string($urun_ismi) . "', '" . $connection->real_escape_string($not_bilgisi) . "', " . (int)$stok_miktari . ", '" . $connection->real_escape_string($birim) . "', " . (float)$satis_fiyati . ", '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', " . (float)$alis_fiyati . ", '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', " . (int)$kritik_stok_seviyesi . ", " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", '" . $connection->real_escape_string($urun_tipi) . "')";
+                $query = "INSERT INTO urunler (urun_ismi, marka, not_bilgisi, stok_miktari, birim, koli_ici_adet, satis_fiyati, satis_fiyati_para_birimi, alis_fiyati, alis_fiyati_para_birimi, kritik_stok_seviyesi, depo, raf, urun_tipi) VALUES ('" . $connection->real_escape_string($urun_ismi) . "', '" . $connection->real_escape_string($marka) . "', '" . $connection->real_escape_string($not_bilgisi) . "', " . (int)$stok_miktari . ", '" . $connection->real_escape_string($birim) . "', " . (int)$koli_ici_adet . ", " . (float)$satis_fiyati . ", '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', " . (float)$alis_fiyati . ", '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', " . (int)$kritik_stok_seviyesi . ", " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", '" . $connection->real_escape_string($urun_tipi) . "')";
 
                 if ($connection->query($query)) {
                     $product_inserted = true;
@@ -1194,7 +1285,7 @@ if (isset($_GET['action'])) {
                     exit;
                 }
 
-                $query = "UPDATE urunler SET urun_ismi = '" . $connection->real_escape_string($urun_ismi) . "', not_bilgisi = '" . $connection->real_escape_string($not_bilgisi) . "', stok_miktari = " . (int)$stok_miktari . ", birim = '" . $connection->real_escape_string($birim) . "', satis_fiyati = " . (float)$satis_fiyati . ", satis_fiyati_para_birimi = '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', alis_fiyati = " . (float)$alis_fiyati . ", alis_fiyati_para_birimi = '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', kritik_stok_seviyesi = " . (int)$kritik_stok_seviyesi . ", depo = " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", raf = " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", urun_tipi = '" . $connection->real_escape_string($urun_tipi) . "' WHERE urun_kodu = " . (int)$urun_kodu;
+                $query = "UPDATE urunler SET urun_ismi = '" . $connection->real_escape_string($urun_ismi) . "', marka = '" . $connection->real_escape_string($marka) . "', not_bilgisi = '" . $connection->real_escape_string($not_bilgisi) . "', stok_miktari = " . (int)$stok_miktari . ", birim = '" . $connection->real_escape_string($birim) . "', koli_ici_adet = " . (int)$koli_ici_adet . ", satis_fiyati = " . (float)$satis_fiyati . ", satis_fiyati_para_birimi = '" . $connection->real_escape_string($satis_fiyati_para_birimi) . "', alis_fiyati = " . (float)$alis_fiyati . ", alis_fiyati_para_birimi = '" . $connection->real_escape_string($alis_fiyati_para_birimi) . "', kritik_stok_seviyesi = " . (int)$kritik_stok_seviyesi . ", depo = " . ($depo ? "'" . $connection->real_escape_string($depo) . "'" : "NULL") . ", raf = " . ($raf ? "'" . $connection->real_escape_string($raf) . "'" : "NULL") . ", urun_tipi = '" . $connection->real_escape_string($urun_tipi) . "' WHERE urun_kodu = " . (int)$urun_kodu;
 
                 if ($connection->query($query)) {
                     // Log ekleme

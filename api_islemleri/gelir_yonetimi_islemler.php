@@ -3,13 +3,13 @@ include '../config.php';
 
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
-    echo json_encode(['status' => 'error', 'message' => 'Oturum açmanız gerekiyor.']);
+    echo json_encode(['status' => 'error', 'message' => 'Oturum aÃ§manÄ±z gerekiyor.']);
     exit;
 }
 
 // Only staff can access this page
 if ($_SESSION['taraf'] !== 'personel') {
-    echo json_encode(['status' => 'error', 'message' => 'Bu işlem için yetkiniz yok.']);
+    echo json_encode(['status' => 'error', 'message' => 'Bu iÅŸlem iÃ§in yetkiniz yok.']);
     exit;
 }
 
@@ -63,7 +63,7 @@ switch ($action) {
         cancelInstallmentPlan();
         break;
     default:
-        echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
+        echo json_encode(['status' => 'error', 'message' => 'GeÃ§ersiz iÅŸlem.']);
 }
 
 function getIncomes()
@@ -101,7 +101,7 @@ function getIncomes()
     $countQuery = "SELECT COUNT(*) AS total FROM gelir_yonetimi" . $whereClause;
     $countResult = $connection->query($countQuery);
     if (!$countResult) {
-        echo json_encode(['status' => 'error', 'message' => 'Toplam kayıt sayısı alınamadı: ' . $connection->error]);
+        echo json_encode(['status' => 'error', 'message' => 'Toplam kayÄ±t sayÄ±sÄ± alÄ±namadÄ±: ' . $connection->error]);
         return;
     }
 
@@ -109,12 +109,35 @@ function getIncomes()
     $total = isset($totalRow['total']) ? (int) $totalRow['total'] : 0;
     $countResult->free();
 
-    $sumQuery = "SELECT IFNULL(SUM(tutar), 0) AS total_sum FROM gelir_yonetimi" . $whereClause;
+    $rates = getIncomeRates();
+    $sumQuery = "SELECT para_birimi, IFNULL(SUM(tutar), 0) AS total_sum FROM gelir_yonetimi" . $whereClause . " GROUP BY para_birimi";
     $sumResult = $connection->query($sumQuery);
     $filteredSum = 0.0;
+    $filteredSumByCurrency = ['TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
     if ($sumResult) {
-        $sumRow = $sumResult->fetch_assoc();
-        $filteredSum = isset($sumRow['total_sum']) ? (float) $sumRow['total_sum'] : 0.0;
+        while ($sumRow = $sumResult->fetch_assoc()) {
+            $currency = incomeNormalizeCurrency($sumRow['para_birimi'] ?? 'TL');
+            $amount = isset($sumRow['total_sum']) ? (float) $sumRow['total_sum'] : 0.0;
+            $filteredSumByCurrency[$currency] += $amount;
+
+            if ($currency === 'USD') {
+                $usdRate = (float) ($rates['USD'] ?? 0);
+                if ($usdRate <= 0) {
+                    echo json_encode(['status' => 'error', 'message' => 'USD kuru tanimli degil veya 0.']);
+                    return;
+                }
+                $filteredSum += $amount * $usdRate;
+            } elseif ($currency === 'EUR') {
+                $eurRate = (float) ($rates['EUR'] ?? 0);
+                if ($eurRate <= 0) {
+                    echo json_encode(['status' => 'error', 'message' => 'EUR kuru tanimli degil veya 0.']);
+                    return;
+                }
+                $filteredSum += $amount * $eurRate;
+            } else {
+                $filteredSum += $amount;
+            }
+        }
         $sumResult->free();
     }
 
@@ -142,12 +165,15 @@ function getIncomes()
 
     $current_month_start = date('Y-m-01');
     $current_month_end = date('Y-m-t');
-    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum, para_birimi FROM gelir_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end' GROUP BY para_birimi");
+    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum, para_birimi FROM gelir_yonetimi WHERE DATE(tarih) BETWEEN '$current_month_start' AND '$current_month_end' GROUP BY para_birimi");
     $overallSums = [];
     if ($overallResult) {
         while ($row = $overallResult->fetch_assoc()) {
-            $currency = $row['para_birimi'] ?: 'TL';
-            $overallSums[$currency] = (float) $row['overall_sum'];
+            $currency = incomeNormalizeCurrency($row['para_birimi'] ?? 'TL');
+            if (!isset($overallSums[$currency])) {
+                $overallSums[$currency] = 0.0;
+            }
+            $overallSums[$currency] += (float) $row['overall_sum'];
         }
     }
 
@@ -157,8 +183,13 @@ function getIncomes()
         'total' => $total,
         'page' => $page,
         'per_page' => $per_page,
-        'total_sum' => $filteredSum,
-        'overall_sum' => $overallSums 
+        'total_sum' => round($filteredSum, 2),
+        'total_sum_by_currency' => array_map(function ($value) {
+            return round((float) $value, 2);
+        }, $filteredSumByCurrency),
+        'overall_sum' => array_map(function ($value) {
+            return round((float) $value, 2);
+        }, $overallSums)
     ]);
 }
 
@@ -179,26 +210,61 @@ function getIncome()
         $income = $result->fetch_assoc();
         echo json_encode(['status' => 'success', 'data' => $income]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Gelir bulunamadı.']);
+        echo json_encode(['status' => 'error', 'message' => 'Gelir bulunamadÄ±.']);
     }
 }
 
 function getTotalIncome()
 {
     global $connection;
-    $query = "SELECT IFNULL(SUM(tutar), 0) AS total FROM gelir_yonetimi";
+
+    $rates = getIncomeRates();
+    $query = "SELECT para_birimi, IFNULL(SUM(tutar), 0) AS total FROM gelir_yonetimi GROUP BY para_birimi";
     $result = $connection->query($query);
-    if ($result && $row = $result->fetch_assoc()) {
-        echo json_encode(['status' => 'success', 'data' => (float) $row['total']]);
+    if ($result) {
+        $byCurrency = ['TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
+        $totalTl = 0.0;
+
+        while ($row = $result->fetch_assoc()) {
+            $currency = incomeNormalizeCurrency($row['para_birimi'] ?? 'TL');
+            $amount = (float) ($row['total'] ?? 0);
+            $byCurrency[$currency] += $amount;
+
+            if ($currency === 'USD') {
+                $usdRate = (float) ($rates['USD'] ?? 0);
+                if ($usdRate <= 0) {
+                    echo json_encode(['status' => 'error', 'message' => 'USD kuru tanimli degil veya 0.']);
+                    return;
+                }
+                $totalTl += $amount * $usdRate;
+            } elseif ($currency === 'EUR') {
+                $eurRate = (float) ($rates['EUR'] ?? 0);
+                if ($eurRate <= 0) {
+                    echo json_encode(['status' => 'error', 'message' => 'EUR kuru tanimli degil veya 0.']);
+                    return;
+                }
+                $totalTl += $amount * $eurRate;
+            } else {
+                $totalTl += $amount;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'data' => round($totalTl, 2),
+            'by_currency' => array_map(function ($value) {
+                return round((float) $value, 2);
+            }, $byCurrency)
+        ]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Toplam gelir alınırken hata oluştu.']);
+        echo json_encode(['status' => 'error', 'message' => 'Toplam gelir alÄ±nÄ±rken hata oluÅŸtu.']);
     }
 }
 
 function getIncomeRates()
 {
     global $connection;
-    $rates = ['TL' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $rates = ['TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
     $rate_query = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
     if ($rate_query) {
         while ($row = $rate_query->fetch_assoc()) {
@@ -216,6 +282,9 @@ function getIncomeRates()
 function incomeNormalizeCurrency($currency)
 {
     $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TRY') {
+        $currency = 'TL';
+    }
     return in_array($currency, ['TL', 'USD', 'EUR']) ? $currency : 'TL';
 }
 
@@ -234,6 +303,102 @@ function incomeConvertCurrency($amount, $from, $to, $rates)
     }
     $tl = $amount * $fromRate;
     return $tl / $toRate;
+}
+
+function incomeGetOrderCurrency($siparis_id)
+{
+    global $connection;
+    $siparis_id = (int) $siparis_id;
+    if ($siparis_id <= 0) {
+        return 'TL';
+    }
+
+    $result = $connection->query("SELECT para_birimi FROM siparisler WHERE siparis_id = $siparis_id");
+    $row = ($result && $result->num_rows > 0) ? $result->fetch_assoc() : null;
+    return incomeNormalizeCurrency($row['para_birimi'] ?? 'TL');
+}
+
+function incomeGetOrderTotalInCurrency($siparis_id, $target_currency, $rates, $fallback_currency = 'TL')
+{
+    global $connection;
+    $siparis_id = (int) $siparis_id;
+    if ($siparis_id <= 0) {
+        return 0.0;
+    }
+
+    $target_currency = incomeNormalizeCurrency($target_currency);
+    $fallback_currency = incomeNormalizeCurrency($fallback_currency);
+    $query = "SELECT para_birimi, IFNULL(SUM(COALESCE(toplam_tutar, birim_fiyat * adet)), 0) AS total
+              FROM siparis_kalemleri
+              WHERE siparis_id = $siparis_id
+              GROUP BY para_birimi";
+    $result = $connection->query($query);
+
+    $order_total = 0.0;
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $line_currency = incomeNormalizeCurrency($row['para_birimi'] ?: $fallback_currency);
+            $line_total = (float) ($row['total'] ?? 0);
+            if ($line_total == 0.0) {
+                continue;
+            }
+            $order_total += incomeConvertCurrency($line_total, $line_currency, $target_currency, $rates);
+        }
+    }
+
+    return $order_total;
+}
+
+function incomeGetPaidTotalInCurrency($siparis_id, $target_currency, $rates, $fallback_currency = 'TL')
+{
+    global $connection;
+    $siparis_id = (int) $siparis_id;
+    if ($siparis_id <= 0) {
+        return 0.0;
+    }
+
+    $target_currency = incomeNormalizeCurrency($target_currency);
+    $fallback_currency = incomeNormalizeCurrency($fallback_currency);
+    $query = "SELECT para_birimi, IFNULL(SUM(tutar), 0) AS total
+              FROM gelir_yonetimi
+              WHERE siparis_id = $siparis_id
+              GROUP BY para_birimi";
+    $result = $connection->query($query);
+
+    $total_paid = 0.0;
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            $line_currency = incomeNormalizeCurrency($row['para_birimi'] ?: $fallback_currency);
+            $line_total = (float) ($row['total'] ?? 0);
+            if ($line_total == 0.0) {
+                continue;
+            }
+            $total_paid += incomeConvertCurrency($line_total, $line_currency, $target_currency, $rates);
+        }
+    }
+
+    return $total_paid;
+}
+
+function incomeGetOrderFinancialSummary($siparis_id, $rates, $target_currency = null)
+{
+    $order_currency = incomeGetOrderCurrency($siparis_id);
+    $display_currency = $target_currency !== null ? incomeNormalizeCurrency($target_currency) : $order_currency;
+
+    $order_total = incomeGetOrderTotalInCurrency($siparis_id, $display_currency, $rates, $order_currency);
+    $total_paid = incomeGetPaidTotalInCurrency($siparis_id, $display_currency, $rates, $order_currency);
+    $remaining = $order_total - $total_paid;
+    if ($remaining < 0) {
+        $remaining = 0.0;
+    }
+
+    return [
+        'currency' => $display_currency,
+        'order_currency' => $order_currency,
+        'order_total' => $order_total,
+        'total_paid' => $total_paid,
+        'remaining' => $remaining
+    ];
 }
 
 function incomeEnsureCashRow($currency)
@@ -586,31 +751,34 @@ function deleteIncome()
 function getPendingOrders()
 {
     global $connection;
+    try {
+        $rates = getIncomeRates();
+        $query = "SELECT s.siparis_id, s.musteri_id, s.musteri_adi, s.tarih, s.odeme_durumu
+                  FROM siparisler s
+                  WHERE s.durum IN ('onaylandi', 'tamamlandi')
+                  AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+                  AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
+                  ORDER BY s.siparis_id DESC";
 
-    $query = "SELECT s.siparis_id, s.musteri_id, s.musteri_adi, s.tarih, s.odeme_durumu, s.odenen_tutar, s.para_birimi,
-              (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam_tutar
-              FROM siparisler s
-              WHERE s.durum IN ('onaylandi', 'tamamlandi')
-              AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
-              AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
-              ORDER BY s.siparis_id DESC";
-
-    $result = $connection->query($query);
-    $orders = [];
-    if ($result) {
-        while ($row = $result->fetch_assoc()) {
-            $total = floatval($row['toplam_tutar'] ?? 0);
-            $paid = floatval($row['odenen_tutar'] ?? 0);
-            $remaining = $total - $paid;
-
-            if ($remaining > 0.01) {
-                $row['kalan_tutar'] = $remaining;
-                $row['toplam_tutar'] = $total;
-                $orders[] = $row;
+        $result = $connection->query($query);
+        $orders = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $summary = incomeGetOrderFinancialSummary((int) $row['siparis_id'], $rates);
+                if ((float) $summary['remaining'] > 0.01) {
+                    $row['para_birimi'] = $summary['currency'];
+                    $row['toplam_tutar'] = round((float) $summary['order_total'], 2);
+                    $row['odenen_tutar'] = round((float) $summary['total_paid'], 2);
+                    $row['kalan_tutar'] = round((float) $summary['remaining'], 2);
+                    $orders[] = $row;
+                }
             }
         }
+
+        echo json_encode(['status' => 'success', 'data' => $orders]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
-    echo json_encode(['status' => 'success', 'data' => $orders]);
 }
 
 function updateOrderPaymentStatus($siparis_id)
@@ -620,16 +788,12 @@ function updateOrderPaymentStatus($siparis_id)
     if (empty($siparis_id))
         return;
 
-    $income_query = "SELECT SUM(tutar) as total_paid FROM gelir_yonetimi WHERE siparis_id = $siparis_id";
-    $income_curr = $connection->query($income_query)->fetch_assoc();
-    $total_paid = floatval($income_curr['total_paid'] ?? 0);
-
-    $order_total_query = "SELECT SUM(sk.birim_fiyat * sk.adet) as order_total, s.musteri_adi FROM siparis_kalemleri sk 
-                          JOIN siparisler s ON s.siparis_id = sk.siparis_id 
-                          WHERE sk.siparis_id = $siparis_id";
-    $order_total_res = $connection->query($order_total_query);
-    $order_total_row = $order_total_res->fetch_assoc();
-    $order_total = floatval($order_total_row['order_total'] ?? 0);
+    $siparis_id = (int) $siparis_id;
+    $rates = getIncomeRates();
+    $summary = incomeGetOrderFinancialSummary($siparis_id, $rates);
+    $total_paid = (float) $summary['total_paid'];
+    $order_total = (float) $summary['order_total'];
+    $order_currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
 
     $new_status = 'bekliyor';
     if ($total_paid >= $order_total - 0.01) {
@@ -638,87 +802,93 @@ function updateOrderPaymentStatus($siparis_id)
         $new_status = 'kismi_odendi';
     }
 
-    $update = "UPDATE siparisler SET odeme_durumu = '$new_status', odenen_tutar = $total_paid WHERE siparis_id = $siparis_id";
+    $status_esc = $connection->real_escape_string($new_status);
+    $currency_esc = $connection->real_escape_string($order_currency);
+    $update = "UPDATE siparisler SET odeme_durumu = '$status_esc', odenen_tutar = $total_paid, para_birimi = '$currency_esc' WHERE siparis_id = $siparis_id";
     $connection->query($update);
 }
 
 function getPendingStats()
 {
     global $connection;
+    try {
+        $rates = getIncomeRates();
 
-    // 1. Pending Orders (Standard) - Excludes installments
-    $queryOrders = "SELECT 
-                COUNT(*) as count,
-                SUM(
-                    (SELECT IFNULL(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) - IFNULL(s.odenen_tutar, 0)
-                ) as total_remaining,
-                s.para_birimi
-              FROM siparisler s 
-              WHERE s.durum IN ('onaylandi', 'tamamlandi') 
-              AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
-              AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
-              GROUP BY s.para_birimi";
+        // 1. Pending Orders (Standard) - Excludes installments
+        $queryOrders = "SELECT s.siparis_id
+                        FROM siparisler s
+                        WHERE s.durum IN ('onaylandi', 'tamamlandi')
+                        AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+                        AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')";
+        $resultOrders = $connection->query($queryOrders);
+        $totals = [];
+        $orderCount = 0;
 
-    $resultOrders = $connection->query($queryOrders);
-    $totals = [];
-    $orderCount = 0;
-
-    if ($resultOrders) {
-        while ($row = $resultOrders->fetch_assoc()) {
-            $orderCount += (int) $row['count'];
-            $currency = $row['para_birimi'] ?: 'TL';
-            if (!isset($totals[$currency])) $totals[$currency] = 0;
-            $totals[$currency] += (float) $row['total_remaining'];
+        if ($resultOrders) {
+            while ($row = $resultOrders->fetch_assoc()) {
+                $summary = incomeGetOrderFinancialSummary((int) $row['siparis_id'], $rates);
+                $remaining = (float) $summary['remaining'];
+                if ($remaining > 0.01) {
+                    $orderCount++;
+                    $currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
+                    if (!isset($totals[$currency])) {
+                        $totals[$currency] = 0.0;
+                    }
+                    $totals[$currency] += $remaining;
+                }
+            }
         }
-    }
 
-    // 2. Unpaid Installments (Active Plans) - Add to totals
-    $queryInstallments = "SELECT 
-                            SUM(td.kalan_tutar) as total_remaining,
-                            tp.para_birimi
-                          FROM taksit_detaylari td
-                          JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
-                          WHERE tp.durum = 'aktif' AND td.durum != 'odendi'
-                          GROUP BY tp.para_birimi";
-    
-    $resultInst = $connection->query($queryInstallments);
-    if ($resultInst) {
-        while ($row = $resultInst->fetch_assoc()) {
-            $currency = $row['para_birimi'] ?: 'TL';
-            if (!isset($totals[$currency])) $totals[$currency] = 0;
-            $totals[$currency] += (float) $row['total_remaining'];
+        // 2. Unpaid Installments (Active Plans) - Add to totals
+        $queryInstallments = "SELECT 
+                                SUM(td.kalan_tutar) as total_remaining,
+                                tp.para_birimi
+                              FROM taksit_detaylari td
+                              JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
+                              WHERE tp.durum = 'aktif' AND td.durum != 'odendi'
+                              GROUP BY tp.para_birimi";
+        $resultInst = $connection->query($queryInstallments);
+        if ($resultInst) {
+            while ($row = $resultInst->fetch_assoc()) {
+                $currency = incomeNormalizeCurrency($row['para_birimi'] ?? 'TL');
+                if (!isset($totals[$currency])) {
+                    $totals[$currency] = 0.0;
+                }
+                $totals[$currency] += (float) $row['total_remaining'];
+            }
         }
-    }
 
-    // 3. New Stats: Active Plans Count
-    $activePlansCount = $connection->query("SELECT COUNT(*) as c FROM taksit_planlari WHERE durum = 'aktif'")->fetch_assoc()['c'];
+        // 3. New Stats: Active Plans Count
+        $activePlansCount = $connection->query("SELECT COUNT(*) as c FROM taksit_planlari WHERE durum = 'aktif'")->fetch_assoc()['c'];
 
-    // 4. New Stats: Overdue Installments
-    $overdueQuery = "SELECT COUNT(*) as count, SUM(td.kalan_tutar) as total, tp.para_birimi
-                     FROM taksit_detaylari td
-                     JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
-                     WHERE tp.durum = 'aktif' AND td.durum != 'odendi' AND td.vade_tarihi < CURDATE()
-                     GROUP BY tp.para_birimi";
-    
-    $overdueStats = ['count' => 0, 'totals' => []];
-    $resOverdue = $connection->query($overdueQuery);
-    if($resOverdue) {
-        while($row = $resOverdue->fetch_assoc()) {
-            $overdueStats['count'] += $row['count'];
-            $currency = $row['para_birimi'] ?: 'TL';
-            $overdueStats['totals'][$currency] = (float)$row['total'];
+        // 4. New Stats: Overdue Installments
+        $overdueQuery = "SELECT COUNT(*) as count, SUM(td.kalan_tutar) as total, tp.para_birimi
+                         FROM taksit_detaylari td
+                         JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
+                         WHERE tp.durum = 'aktif' AND td.durum != 'odendi' AND td.vade_tarihi < CURDATE()
+                         GROUP BY tp.para_birimi";
+        $overdueStats = ['count' => 0, 'totals' => []];
+        $resOverdue = $connection->query($overdueQuery);
+        if ($resOverdue) {
+            while ($row = $resOverdue->fetch_assoc()) {
+                $overdueStats['count'] += (int) $row['count'];
+                $currency = incomeNormalizeCurrency($row['para_birimi'] ?? 'TL');
+                $overdueStats['totals'][$currency] = (float) $row['total'];
+            }
         }
-    }
 
-    echo json_encode([
-        'status' => 'success', 
-        'data' => [
-            'pending_orders_count' => $orderCount,
-            'total_receivables' => $totals, // Combined Orders + Installments
-            'active_plans_count' => $activePlansCount,
-            'overdue_installments' => $overdueStats
-        ]
-    ]);
+        echo json_encode([
+            'status' => 'success',
+            'data' => [
+                'pending_orders_count' => $orderCount,
+                'total_receivables' => $totals,
+                'active_plans_count' => $activePlansCount,
+                'overdue_installments' => $overdueStats
+            ]
+        ]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
 }
 
 function getCustomersWithDebt() {
@@ -746,36 +916,38 @@ function getCustomerOrdersForPlan() {
     $musteri_id = (int)($_GET['musteri_id'] ?? 0);
     
     if(!$musteri_id) {
-        echo json_encode(['status' => 'error', 'message' => 'Müşteri seçilmeli']);
+        echo json_encode(['status' => 'error', 'message' => 'MÃ¼ÅŸteri seÃ§ilmeli']);
         return;
     }
 
-    $query = "SELECT s.siparis_id, s.tarih, s.para_birimi,
-              (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam_tutar,
-              s.odenen_tutar
-              FROM siparisler s
-              WHERE s.musteri_id = $musteri_id
-              AND s.durum IN ('onaylandi', 'tamamlandi')
-              AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
-              AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
-              ORDER BY s.tarih DESC";
+    try {
+        $rates = getIncomeRates();
+        $query = "SELECT s.siparis_id, s.tarih
+                  FROM siparisler s
+                  WHERE s.musteri_id = $musteri_id
+                  AND s.durum IN ('onaylandi', 'tamamlandi')
+                  AND (s.odeme_durumu IS NULL OR s.odeme_durumu != 'odendi')
+                  AND s.siparis_id NOT IN (SELECT tsb.siparis_id FROM taksit_siparis_baglantisi tsb JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id WHERE tp.durum != 'iptal')
+                  ORDER BY s.tarih DESC";
 
-    $result = $connection->query($query);
-    $orders = [];
-    if($result) {
-        while($row = $result->fetch_assoc()) {
-            $total = floatval($row['toplam_tutar'] ?? 0);
-            $paid = floatval($row['odenen_tutar'] ?? 0);
-            $remaining = $total - $paid;
-            
-            if($remaining > 0.01) {
-                $row['kalan_tutar'] = $remaining;
-                $row['toplam_tutar'] = $total;
-                $orders[] = $row;
+        $result = $connection->query($query);
+        $orders = [];
+        if ($result) {
+            while ($row = $result->fetch_assoc()) {
+                $summary = incomeGetOrderFinancialSummary((int) $row['siparis_id'], $rates);
+                if ((float) $summary['remaining'] > 0.01) {
+                    $row['para_birimi'] = $summary['currency'];
+                    $row['toplam_tutar'] = round((float) $summary['order_total'], 2);
+                    $row['odenen_tutar'] = round((float) $summary['total_paid'], 2);
+                    $row['kalan_tutar'] = round((float) $summary['remaining'], 2);
+                    $orders[] = $row;
+                }
             }
         }
+        echo json_encode(['status' => 'success', 'data' => $orders]);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
-    echo json_encode(['status' => 'success', 'data' => $orders]);
 }
 
 function createInstallmentPlan() {
@@ -794,29 +966,31 @@ function createInstallmentPlan() {
         return;
     }
 
+    $rates = getIncomeRates();
     $total_principal = 0;
     $order_contributions = [];
     $first_order_curr = '';
     
     foreach($siparis_ids as $sid) {
         $sid = (int)$sid;
-        $q = "SELECT s.para_birimi, 
-              (SELECT SUM(sk.birim_fiyat * sk.adet) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) as toplam,
-              s.odenen_tutar
-              FROM siparisler s WHERE s.siparis_id = $sid";
-        $res = $connection->query($q)->fetch_assoc();
+        $summary = incomeGetOrderFinancialSummary($sid, $rates);
+        $order_currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
         
-        if(!$first_order_curr) $first_order_curr = $res['para_birimi'] ?: 'TL';
-        if(($res['para_birimi'] ?: 'TL') !== $first_order_curr) {
-             echo json_encode(['status' => 'error', 'message' => 'Seçilen siparişlerin para birimleri aynı olmalıdır.']);
+        if(!$first_order_curr) $first_order_curr = $order_currency;
+        if($order_currency !== $first_order_curr) {
+             echo json_encode(['status' => 'error', 'message' => 'SeÃ§ilen sipariÅŸlerin para birimleri aynÄ± olmalÄ±dÄ±r.']);
              return;
         }
         
-        $rem = floatval($res['toplam']) - floatval($res['odenen_tutar']);
+        $rem = floatval($summary['remaining']);
         if($rem > 0) {
             $total_principal += $rem;
             $order_contributions[$sid] = $rem;
         }
+    }
+    if ($total_principal <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'SeÃ§ilen sipariÅŸlerde taksitlendirilecek kalan tutar bulunamadÄ±.']);
+        return;
     }
     $currency = $first_order_curr;
 
@@ -853,9 +1027,9 @@ function createInstallmentPlan() {
             $current_date->modify('+1 month');
         }
 
-        echo json_encode(['status' => 'success', 'message' => 'Taksit planı başarıyla oluşturuldu.', 'plan_id' => $plan_id]);
+        echo json_encode(['status' => 'success', 'message' => 'Taksit planÄ± baÅŸarÄ±yla oluÅŸturuldu.', 'plan_id' => $plan_id]);
     } else {
-        echo json_encode(['status' => 'error', 'message' => 'Plan oluşturulamadı: ' . $connection->error]);
+        echo json_encode(['status' => 'error', 'message' => 'Plan oluÅŸturulamadÄ±: ' . $connection->error]);
     }
 }
 
@@ -964,8 +1138,8 @@ function payInstallment() {
             
              $linked = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = {$plan['plan_id']}");
              while($l = $linked->fetch_assoc()) {
-                 $sid = $l['siparis_id'];
-                 $connection->query("UPDATE siparisler SET odeme_durumu = 'odendi', odenen_tutar = (SELECT SUM(birim_fiyat*adet) FROM siparis_kalemleri WHERE siparis_id=$sid) WHERE siparis_id = $sid");
+                 $sid = (int) $l['siparis_id'];
+                 updateOrderPaymentStatus($sid);
              }
         }
         
@@ -988,8 +1162,8 @@ function cancelInstallmentPlan() {
 
     $upd = "UPDATE taksit_planlari SET durum = 'iptal' WHERE plan_id = $plan_id";
     if($connection->query($upd)) {
-        log_islem($connection, $_SESSION['kullanici_adi'], "Taksit Planı #$plan_id iptal edildi.", 'UPDATE');
-        echo json_encode(['status' => 'success', 'message' => 'Plan iptal edildi. Siparişler tekrar tahsilat listesine düşecektir.']);
+        log_islem($connection, $_SESSION['kullanici_adi'], "Taksit PlanÄ± #$plan_id iptal edildi.", 'UPDATE');
+        echo json_encode(['status' => 'success', 'message' => 'Plan iptal edildi. SipariÅŸler tekrar tahsilat listesine dÃ¼ÅŸecektir.']);
     } else {
         echo json_encode(['status' => 'error', 'message' => 'Hata: ' . $connection->error]);
     }

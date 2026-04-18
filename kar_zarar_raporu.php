@@ -22,29 +22,109 @@ if (!yetkisi_var('page:view:kar_zarar_raporu')) {
 $baslangic_tarihi = isset($_GET['baslangic']) ? $_GET['baslangic'] : date('Y-m-01');
 $bitis_tarihi = isset($_GET['bitis']) ? $_GET['bitis'] : date('Y-m-t');
 
-// Gelir hesaplaması - tamamlanan siparişlerin toplam tutarı (iptal_edilmemiş siparişler)
-$gelir_query = "SELECT SUM(sk.toplam_tutar) AS toplam_gelir FROM siparis_kalemleri sk JOIN siparisler s ON sk.siparis_id = s.siparis_id WHERE s.durum != 'iptal_edildi'";
-$gelir_result = mysqli_query($connection, $gelir_query);
-$gelir_row = mysqli_fetch_assoc($gelir_result);
-$toplam_gelir = $gelir_row['toplam_gelir'] ?? 0;
+function normalizeReportCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+    return in_array($currency, ['TRY', 'USD', 'EUR'], true) ? $currency : 'TRY';
+}
 
-// Gider hesaplaması - seçilen tarih aralığındaki giderler
-$gider_query = "SELECT SUM(tutar) AS toplam_gider FROM gider_yonetimi WHERE tarih BETWEEN ? AND ?";
-$gider_stmt = mysqli_prepare($connection, $gider_query);
-mysqli_stmt_bind_param($gider_stmt, 'ss', $baslangic_tarihi, $bitis_tarihi);
+function getReportRates($connection)
+{
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
+            } elseif ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
+            }
+        }
+    }
+    return $rates;
+}
+
+function reportTableHasColumn($connection, $table, $column)
+{
+    $tableEsc = $connection->real_escape_string($table);
+    $columnEsc = $connection->real_escape_string($column);
+    $result = $connection->query("SHOW COLUMNS FROM `$tableEsc` LIKE '$columnEsc'");
+    return $result && $result->num_rows > 0;
+}
+
+$rates = getReportRates($connection);
+$usd_rate = (float) ($rates['USD'] ?? 0.0);
+$eur_rate = (float) ($rates['EUR'] ?? 0.0);
+if ($usd_rate <= 0 || $eur_rate <= 0) {
+    die('Doviz kurlari tanimli degil veya gecersiz. Lutfen ayarlardan dolar/euro kurunu guncelleyin.');
+}
+$has_order_item_currency = reportTableHasColumn($connection, 'siparis_kalemleri', 'para_birimi');
+$has_expense_currency = reportTableHasColumn($connection, 'gider_yonetimi', 'para_birimi');
+
+$order_currency_expr = $has_order_item_currency
+    ? "UPPER(COALESCE(NULLIF(sk.para_birimi, ''), s.para_birimi, 'TRY'))"
+    : "UPPER(COALESCE(s.para_birimi, 'TRY'))";
+$gelir_amount_expr = "COALESCE(sk.toplam_tutar, sk.birim_fiyat * sk.adet) * CASE $order_currency_expr WHEN 'USD' THEN ? WHEN 'EUR' THEN ? WHEN 'TL' THEN 1 WHEN 'TRY' THEN 1 ELSE 1 END";
+
+if ($has_expense_currency) {
+    $expense_currency_expr = "UPPER(COALESCE(NULLIF(gy.para_birimi, ''), 'TRY'))";
+    $gider_amount_expr = "gy.tutar * CASE $expense_currency_expr WHEN 'USD' THEN ? WHEN 'EUR' THEN ? WHEN 'TL' THEN 1 WHEN 'TRY' THEN 1 ELSE 1 END";
+} else {
+    $gider_amount_expr = "gy.tutar";
+}
+
+// Gelir hesaplaması - seçilen tarih aralığı, TL normalize
+$gelir_query = "SELECT SUM($gelir_amount_expr) AS toplam_gelir
+                FROM siparis_kalemleri sk
+                JOIN siparisler s ON sk.siparis_id = s.siparis_id
+                WHERE s.durum != 'iptal_edildi' AND DATE(s.tarih) BETWEEN ? AND ?";
+$gelir_stmt = mysqli_prepare($connection, $gelir_query);
+mysqli_stmt_bind_param($gelir_stmt, 'ddss', $usd_rate, $eur_rate, $baslangic_tarihi, $bitis_tarihi);
+mysqli_stmt_execute($gelir_stmt);
+$gelir_result = mysqli_stmt_get_result($gelir_stmt);
+$gelir_row = mysqli_fetch_assoc($gelir_result);
+$toplam_gelir = (float) ($gelir_row['toplam_gelir'] ?? 0);
+
+// Gider hesaplaması - seçilen tarih aralığı, TL normalize
+if ($has_expense_currency) {
+    $gider_query = "SELECT SUM($gider_amount_expr) AS toplam_gider FROM gider_yonetimi gy WHERE DATE(gy.tarih) BETWEEN ? AND ?";
+    $gider_stmt = mysqli_prepare($connection, $gider_query);
+    mysqli_stmt_bind_param($gider_stmt, 'ddss', $usd_rate, $eur_rate, $baslangic_tarihi, $bitis_tarihi);
+} else {
+    $gider_query = "SELECT SUM(gy.tutar) AS toplam_gider FROM gider_yonetimi gy WHERE DATE(gy.tarih) BETWEEN ? AND ?";
+    $gider_stmt = mysqli_prepare($connection, $gider_query);
+    mysqli_stmt_bind_param($gider_stmt, 'ss', $baslangic_tarihi, $bitis_tarihi);
+}
 mysqli_stmt_execute($gider_stmt);
 $gider_result = mysqli_stmt_get_result($gider_stmt);
 $gider_row = mysqli_fetch_assoc($gider_result);
-$toplam_gider = $gider_row['toplam_gider'] ?? 0;
+$toplam_gider = (float) ($gider_row['toplam_gider'] ?? 0);
 
-// Kar/Zarar hesaplaması
+// Kar/Zarar hesaplaması (TL)
 $kar_zarar = $toplam_gelir - $toplam_gider;
 $durum = $kar_zarar >= 0 ? 'Kar' : 'Zarar';
 
-// Detaylı gider analizi - kategorilere göre
-$gider_detay_query = "SELECT kategori, SUM(tutar) as toplam FROM gider_yonetimi WHERE tarih BETWEEN ? AND ? GROUP BY kategori ORDER BY toplam DESC";
-$gider_detay_stmt = mysqli_prepare($connection, $gider_detay_query);
-mysqli_stmt_bind_param($gider_detay_stmt, 'ss', $baslangic_tarihi, $bitis_tarihi);
+// Detaylı gider analizi - kategorilere göre (TL normalize)
+if ($has_expense_currency) {
+    $gider_detay_query = "SELECT gy.kategori, SUM($gider_amount_expr) as toplam
+                          FROM gider_yonetimi gy
+                          WHERE DATE(gy.tarih) BETWEEN ? AND ?
+                          GROUP BY gy.kategori
+                          ORDER BY toplam DESC";
+    $gider_detay_stmt = mysqli_prepare($connection, $gider_detay_query);
+    mysqli_stmt_bind_param($gider_detay_stmt, 'ddss', $usd_rate, $eur_rate, $baslangic_tarihi, $bitis_tarihi);
+} else {
+    $gider_detay_query = "SELECT gy.kategori, SUM(gy.tutar) as toplam
+                          FROM gider_yonetimi gy
+                          WHERE DATE(gy.tarih) BETWEEN ? AND ?
+                          GROUP BY gy.kategori
+                          ORDER BY toplam DESC";
+    $gider_detay_stmt = mysqli_prepare($connection, $gider_detay_query);
+    mysqli_stmt_bind_param($gider_detay_stmt, 'ss', $baslangic_tarihi, $bitis_tarihi);
+}
 mysqli_stmt_execute($gider_detay_stmt);
 $gider_detay_result = mysqli_stmt_get_result($gider_detay_stmt);
 $gider_kategorileri = [];
@@ -52,9 +132,17 @@ while ($row = mysqli_fetch_assoc($gider_detay_result)) {
     $gider_kategorileri[] = $row;
 }
 
-// Detaylı gelir analizi - ürünlere göre (sadece tamamlanmış siparişler)
-$gelir_detay_query = "SELECT sk.urun_ismi, SUM(sk.toplam_tutar) as toplam_gelir, SUM(sk.adet) as toplam_adet FROM siparis_kalemleri sk JOIN siparisler s ON sk.siparis_id = s.siparis_id WHERE s.durum != 'iptal_edildi' GROUP BY sk.urun_ismi ORDER BY toplam_gelir DESC";
-$gelir_detay_result = mysqli_query($connection, $gelir_detay_query);
+// Detaylı gelir analizi - ürünlere göre (TL normalize)
+$gelir_detay_query = "SELECT sk.urun_ismi, SUM($gelir_amount_expr) as toplam_gelir, SUM(sk.adet) as toplam_adet
+                      FROM siparis_kalemleri sk
+                      JOIN siparisler s ON sk.siparis_id = s.siparis_id
+                      WHERE s.durum != 'iptal_edildi' AND DATE(s.tarih) BETWEEN ? AND ?
+                      GROUP BY sk.urun_ismi
+                      ORDER BY toplam_gelir DESC";
+$gelir_detay_stmt = mysqli_prepare($connection, $gelir_detay_query);
+mysqli_stmt_bind_param($gelir_detay_stmt, 'ddss', $usd_rate, $eur_rate, $baslangic_tarihi, $bitis_tarihi);
+mysqli_stmt_execute($gelir_detay_stmt);
+$gelir_detay_result = mysqli_stmt_get_result($gelir_detay_stmt);
 $gelir_kategorileri = [];
 while ($row = mysqli_fetch_assoc($gelir_detay_result)) {
     $gelir_kategorileri[] = $row;

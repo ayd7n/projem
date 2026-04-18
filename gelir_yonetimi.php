@@ -22,8 +22,28 @@ if (!yetkisi_var('page:view:gider_yonetimi')) { // Using same permission for sim
 // Calculate total income for current month
 $current_month_start = date('Y-m-01');
 $current_month_end = date('Y-m-t');
-$total_result = $connection->query("SELECT SUM(tutar) as total FROM gelir_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
-$total_income = $total_result->fetch_assoc()['total'] ?? 0;
+$overall_income_sums = ['TL' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
+$total_result = $connection->query("SELECT para_birimi, SUM(tutar) as total FROM gelir_yonetimi WHERE DATE(tarih) BETWEEN '$current_month_start' AND '$current_month_end' GROUP BY para_birimi");
+if ($total_result) {
+    while ($row = $total_result->fetch_assoc()) {
+        $currency = strtoupper(trim((string) ($row['para_birimi'] ?? 'TL')));
+        if ($currency === 'TRY' || $currency === '') {
+            $currency = 'TL';
+        }
+        if (!isset($overall_income_sums[$currency])) {
+            $currency = 'TL';
+        }
+        $overall_income_sums[$currency] += (float) ($row['total'] ?? 0);
+    }
+}
+
+$overall_total_parts = [];
+foreach ($overall_income_sums as $currency => $amount) {
+    if ($amount > 0.0001) {
+        $overall_total_parts[] = number_format($amount, 2, ',', '.') . ' ' . $currency;
+    }
+}
+$initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $overall_total_parts) : '0,00 TL';
 
 ?>
 
@@ -441,7 +461,7 @@ $total_income = $total_result->fetch_assoc()['total'] ?? 0;
                 </div>
                 <div class="stat-content">
                     <div class="stat-value" id="overallTotal">
-                        <?php echo number_format($total_income, 2, ',', '.'); ?> TL
+                        <?php echo $initial_overall_total_html; ?>
                     </div>
                     <div class="stat-label">Bu Ay Toplam Tahsilat</div>
                 </div>

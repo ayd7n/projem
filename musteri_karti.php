@@ -139,6 +139,53 @@ if (!$customer) {
     die('Müşteri bulunamadı.');
 }
 
+function normalizeCardCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+    return in_array($currency, ['TRY', 'USD', 'EUR'], true) ? $currency : 'TRY';
+}
+
+function getCardRates($connection)
+{
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
+            } elseif ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
+            }
+        }
+    }
+    return $rates;
+}
+
+function convertCardCurrency($amount, $from, $to, $rates)
+{
+    $amount = (float) $amount;
+    $from = normalizeCardCurrency($from);
+    $to = normalizeCardCurrency($to);
+
+    if ($from === $to) {
+        return $amount;
+    }
+
+    $fromRate = (float) ($rates[$from] ?? 0);
+    $toRate = (float) ($rates[$to] ?? 0);
+    if ($fromRate <= 0 || $toRate <= 0) {
+        return $amount;
+    }
+
+    $tryAmount = $amount * $fromRate;
+    return $tryAmount / $toRate;
+}
+
+$card_rates = getCardRates($connection);
+
 // Get all orders for this customer
 // Sort by date DESC (Newest first) as requested
 $orders_query = "SELECT s.*, 
@@ -156,7 +203,7 @@ $orders_result = $orders_stmt->get_result();
 $plans_query = "SELECT * FROM taksit_planlari WHERE musteri_id = $musteri_id AND durum != 'iptal' ORDER BY baslangic_tarihi DESC";
 $plans_result = $connection->query($plans_query);
 $installment_plans = [];
-$total_plan_debt = 0;
+$plan_debts = ['TRY' => 0.0, 'USD' => 0.0, 'EUR' => 0.0];
 $order_plan_map = []; // Map siparis_id -> plan details
 
 while($plan = $plans_result->fetch_assoc()) {
@@ -167,11 +214,12 @@ while($plan = $plans_result->fetch_assoc()) {
     $plan['kalan_tutar'] = $stats['remaining'] ?? 0;
     $plan['toplam_taksit'] = $stats['total_installments'] ?? 0;
     $plan['odenen_taksit'] = $stats['paid_installments'] ?? 0;
-    
+    $plan['para_birimi'] = normalizeCardCurrency($plan['para_birimi'] ?? 'TRY');
+
     $installment_plans[] = $plan;
-    
-    if($plan['durum'] == 'aktif') {
-        $total_plan_debt += $plan['kalan_tutar'];
+
+    if($plan['durum'] == 'aktif' && (float) $plan['kalan_tutar'] > 0.01) {
+        $plan_debts[$plan['para_birimi']] += (float) $plan['kalan_tutar'];
     }
 
     // Map linked orders to this plan
@@ -181,7 +229,8 @@ while($plan = $plans_result->fetch_assoc()) {
             'plan_status' => $plan['durum'],
             'paid_inst' => $plan['odenen_taksit'],
             'total_inst' => $plan['toplam_taksit'],
-            'remaining_plan' => $plan['kalan_tutar']
+            'remaining_plan' => (float) $plan['kalan_tutar'],
+            'plan_currency' => $plan['para_birimi']
         ];
     }
 }
@@ -203,9 +252,6 @@ $toplamlar = [
 ];
 $odenmemis_siparis_sayisi = 0;
 
-// Taksit borçlarını TL olarak varsayıyoruz (Sistemdeki genel işleyişe göre)
-$toplam_kalan_bakiye_tl = $total_plan_debt;
-
 while ($order = $orders_result->fetch_assoc()) {
     // ... (item fetching logic remains same)
     $items_query = "SELECT * FROM siparis_kalemleri WHERE siparis_id = ?";
@@ -215,26 +261,46 @@ while ($order = $orders_result->fetch_assoc()) {
     $items_result = $items_stmt->get_result();
 
     $order['items'] = [];
-    $order_item_total = 0;
-    $order_currency = 'TRY'; 
+    $order_item_total = 0.0;
+    $order_currency = normalizeCardCurrency($order['para_birimi'] ?? 'TRY');
+    $stored_order_currency = $order_currency;
+    $order_currency_from_items = false;
     $first_item = true;
 
     while ($item = $items_result->fetch_assoc()) {
-        $order['items'][] = $item;
-        if ($first_item) {
-            $order_currency = $item['para_birimi'] ?: 'TRY';
-            $first_item = false;
+        $item_currency = normalizeCardCurrency($item['para_birimi'] ?? $order_currency);
+        if (empty($order['para_birimi']) && !$order_currency_from_items && $first_item) {
+            $order_currency = $item_currency;
+            $order_currency_from_items = true;
         }
+
+        $line_total = isset($item['toplam_tutar']) && $item['toplam_tutar'] !== null
+            ? (float) $item['toplam_tutar']
+            : ((float) ($item['birim_fiyat'] ?? 0) * (float) ($item['adet'] ?? 0));
+        $line_total_in_order_currency = convertCardCurrency($line_total, $item_currency, $order_currency, $card_rates);
+
+        $item['para_birimi'] = $item_currency;
+        $item['toplam_tutar'] = $line_total;
+        $order['items'][] = $item;
         $total_products += $item['adet'];
-        $order_item_total += floatval($item['birim_fiyat']) * floatval($item['adet']);
+        $order_item_total += $line_total_in_order_currency;
+        $first_item = false;
     }
     $items_stmt->close();
-    
+
+    if (empty($order['para_birimi'])) {
+        $stored_order_currency = $order_currency;
+    }
+
+    $odenen_raw = max(0.0, (float) ($order['odenen_tutar'] ?? 0));
+    $odenen = convertCardCurrency($odenen_raw, $stored_order_currency, $order_currency, $card_rates);
+    $kalan = max(0.0, $order_item_total - $odenen);
+
     $order['para_birimi'] = $order_currency;
     $order['hesaplanan_tutar'] = $order_item_total;
-    $odenen = floatval($order['odenen_tutar'] ?? 0);
-    $order['kalan_tutar'] = $order_item_total - $odenen;
-    
+    $order['odenen_tutar'] = $odenen;
+    $order['kalan_tutar'] = $kalan;
+
     $is_in_plan = isset($order_plan_map[$order['siparis_id']]);
     $order['is_in_plan'] = $is_in_plan;
     if($is_in_plan) {
@@ -244,12 +310,12 @@ while ($order = $orders_result->fetch_assoc()) {
     if (in_array($order['durum'], ['onaylandi', 'tamamlandi'])) {
         $pb = $order['para_birimi'];
         if (!isset($toplamlar[$pb])) $toplamlar[$pb] = ['siparis' => 0, 'odenen' => 0, 'kalan' => 0];
-        
+
         $toplamlar[$pb]['siparis'] += $order_item_total;
         $toplamlar[$pb]['odenen'] += $odenen;
-        
-        if (!$is_in_plan && $order['kalan_tutar'] > 0.01) {
-            $toplamlar[$pb]['kalan'] += $order['kalan_tutar'];
+
+        if (!$is_in_plan && $kalan > 0.01) {
+            $toplamlar[$pb]['kalan'] += $kalan;
             $odenmemis_siparis_sayisi++;
         }
     }
@@ -562,9 +628,14 @@ function formatCurrency($value, $currency = 'TRY') {
         }
 
         // Toplam borç var mı kontrol et (Dövizli veya Taksitli)
-        $has_any_debt = ($total_plan_debt > 0.01);
+        $has_any_debt = false;
         foreach($toplamlar as $pb_data) {
             if($pb_data['kalan'] > 0.01) { $has_any_debt = true; break; }
+        }
+        if(!$has_any_debt) {
+            foreach($plan_debts as $plan_debt_amount) {
+                if($plan_debt_amount > 0.01) { $has_any_debt = true; break; }
+            }
         }
 
         if ($has_any_debt): 
@@ -593,7 +664,9 @@ function formatCurrency($value, $currency = 'TRY') {
                     foreach($toplamlar as $pb => $d) {
                         if($d['kalan'] > 0.01) $bakiye_strings[] = formatCurrency($d['kalan'], $pb);
                     }
-                    if($total_plan_debt > 0.01) $bakiye_strings[] = formatCurrency($total_plan_debt, 'TRY') . " (Taksit)";
+                    foreach($plan_debts as $plan_pb => $plan_amount) {
+                        if($plan_amount > 0.01) $bakiye_strings[] = formatCurrency($plan_amount, $plan_pb) . " (Taksit)";
+                    }
                     echo implode(" + ", $bakiye_strings);
                     ?>
                     </strong>
@@ -637,9 +710,11 @@ function formatCurrency($value, $currency = 'TRY') {
                                 $has_balance = true;
                             }
                         }
-                        if($total_plan_debt > 0.01) {
-                            echo formatCurrency($total_plan_debt, 'TRY') . " (Taksit)<br>";
-                            $has_balance = true;
+                        foreach($plan_debts as $plan_pb => $plan_amount) {
+                            if($plan_amount > 0.01) {
+                                echo formatCurrency($plan_amount, $plan_pb) . " (Taksit)<br>";
+                                $has_balance = true;
+                            }
                         }
                         if(!$has_balance) echo "0,00 ₺";
                         ?>
@@ -733,12 +808,12 @@ function formatCurrency($value, $currency = 'TRY') {
                     <td class="text-right" style="color: #dc2626;"><?php echo formatCurrency($degerler['kalan'], $pb); ?></td>
                 </tr>
                 <?php endif; endforeach; ?>
-                <?php if($total_plan_debt > 0.01): ?>
+                <?php foreach($plan_debts as $plan_pb => $plan_amount): if($plan_amount > 0.01): ?>
                 <tr>
-                    <td colspan="6" class="text-right">AKTİF TAKSİT PLANI BAKİYESİ:</td>
-                    <td class="text-right" style="color: #dc2626;"><?php echo formatCurrency($total_plan_debt, 'TRY'); ?></td>
+                    <td colspan="6" class="text-right">AKTİF TAKSİT PLANI BAKİYESİ (<?php echo $plan_pb; ?>):</td>
+                    <td class="text-right" style="color: #dc2626;"><?php echo formatCurrency($plan_amount, $plan_pb); ?></td>
                 </tr>
-                <?php endif; ?>
+                <?php endif; endforeach; ?>
             </tfoot>
             <?php endif; ?>
         </table>
@@ -766,9 +841,9 @@ function formatCurrency($value, $currency = 'TRY') {
                             <td><?php echo $idx + 1; ?></td>
                             <td><?php echo htmlspecialchars($plan['aciklama']); ?></td>
                             <td><?php echo formatDate($plan['olusturma_tarihi']); ?></td>
-                            <td class="text-right"><?php echo formatCurrency($plan['toplam_odenecek']); ?></td>
+                            <td class="text-right"><?php echo formatCurrency($plan['toplam_odenecek'], $plan['para_birimi']); ?></td>
                             <td class="text-right" style="font-weight: bold; color: <?php echo $plan['kalan_tutar'] > 0 ? '#dc2626' : '#059669'; ?>">
-                                <?php echo formatCurrency($plan['kalan_tutar']); ?>
+                                <?php echo formatCurrency($plan['kalan_tutar'], $plan['para_birimi']); ?>
                             </td>
                             <td class="text-center">
                                 <?php echo $plan['odenen_taksit'] . '/' . $plan['toplam_taksit']; ?>
@@ -869,7 +944,7 @@ function formatCurrency($value, $currency = 'TRY') {
                                 <div style="font-size: 11px; font-weight: 600; color: #3b82f6;">
                                     Aktif
                                     <?php if($order['plan_details']['remaining_plan'] > 0): ?>
-                                        (<?php echo formatCurrency($order['plan_details']['remaining_plan']); ?>)
+                                        (<?php echo formatCurrency($order['plan_details']['remaining_plan'], $order['plan_details']['plan_currency'] ?? 'TRY'); ?>)
                                     <?php endif; ?>
                                 </div>
                             </div>

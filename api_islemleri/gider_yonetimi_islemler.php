@@ -125,7 +125,8 @@ function getExpenses() {
 
     $current_month_start = date('Y-m-01');
     $current_month_end = date('Y-m-t');
-    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gider_yonetimi WHERE tarih >= '$current_month_start' AND tarih <= '$current_month_end'");
+    $overallSum = 0.0;
+    $overallResult = $connection->query("SELECT IFNULL(SUM(tutar), 0) AS overall_sum FROM gider_yonetimi WHERE DATE(tarih) BETWEEN '$current_month_start' AND '$current_month_end'");
     if ($overallResult && $overallRow = $overallResult->fetch_assoc()) {
         $overallSum = (float) $overallRow['overall_sum'];
     }
@@ -177,21 +178,19 @@ function getTotalExpenses() {
 function getFinanceRates()
 {
     global $connection;
-    $rates = ['TL' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $rates = ['TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
     $q = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
     $result = $connection->query($q);
     if ($result) {
         while ($row = $result->fetch_assoc()) {
             if ($row['ayar_anahtar'] === 'dolar_kuru') {
-                $rates['USD'] = (float) $row['ayar_deger'];
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
             }
             if ($row['ayar_anahtar'] === 'euro_kuru') {
-                $rates['EUR'] = (float) $row['ayar_deger'];
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
             }
         }
     }
-    $rates['USD'] = max($rates['USD'], 0.000001);
-    $rates['EUR'] = max($rates['EUR'], 0.000001);
     return $rates;
 }
 
@@ -211,9 +210,9 @@ function convertTlToCashCurrency($amountTl, $currency, $rates)
     if ($currency === 'TL') {
         return $amountTl;
     }
-    $rate = (float) ($rates[$currency] ?? 1.0);
+    $rate = (float) ($rates[$currency] ?? 0);
     if ($rate <= 0) {
-        $rate = 1.0;
+        throw new Exception($currency . ' kuru tanimli degil veya 0.');
     }
     return round($amountTl / $rate, 2);
 }
@@ -225,9 +224,9 @@ function convertCurrencyToTl($amount, $currency, $rates)
     if ($currency === 'TL') {
         return round($amount, 2);
     }
-    $rate = (float) ($rates[$currency] ?? 1.0);
+    $rate = (float) ($rates[$currency] ?? 0);
     if ($rate <= 0) {
-        $rate = 1.0;
+        throw new Exception($currency . ' kuru tanimli degil veya 0.');
     }
     return round($amount * $rate, 2);
 }

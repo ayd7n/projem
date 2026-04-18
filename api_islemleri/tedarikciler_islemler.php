@@ -38,7 +38,58 @@ switch ($action) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
 }
 
-function calculateSupplierTotals($row, $dolar_kuru, $euro_kuru) {
+function getSupplierExchangeRates($connection)
+{
+    $rates = ['USD' => 0.0, 'EUR' => 0.0];
+    $kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
+    $kur_result = $connection->query($kur_query);
+    if ($kur_result) {
+        while ($kur_row = $kur_result->fetch_assoc()) {
+            if (($kur_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) ($kur_row['ayar_deger'] ?? 0));
+            } elseif (($kur_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) ($kur_row['ayar_deger'] ?? 0));
+            }
+        }
+    }
+
+    return $rates;
+}
+
+function convertSupplierAmountToTl($amount, $currency, $rates)
+{
+    $amount = (float) $amount;
+    $currency = strtoupper(trim((string) $currency));
+
+    if ($currency === '' || $currency === 'TL' || $currency === 'TRY') {
+        return $amount;
+    }
+    if ($currency === '$') {
+        $currency = 'USD';
+    } elseif ($currency === 'â‚¬') {
+        $currency = 'EUR';
+    }
+
+    if ($currency === 'USD') {
+        $usdRate = (float) ($rates['USD'] ?? 0);
+        if ($usdRate <= 0) {
+            throw new Exception('USD kuru tanimli degil veya 0.');
+        }
+        return $amount * $usdRate;
+    }
+
+    if ($currency === 'EUR') {
+        $eurRate = (float) ($rates['EUR'] ?? 0);
+        if ($eurRate <= 0) {
+            throw new Exception('EUR kuru tanimli degil veya 0.');
+        }
+        return $amount * $eurRate;
+    }
+
+    return $amount;
+}
+
+function calculateSupplierTotals($row, $rates) {
     global $connection;
     
     // Toplam Alım Hesaplama (TL cinsinden)
@@ -49,20 +100,23 @@ function calculateSupplierTotals($row, $dolar_kuru, $euro_kuru) {
         while($p_row = $p_result->fetch_assoc()) {
             $amount = floatval($p_row['total']);
             $currency = strtoupper($p_row['para_birimi']);
-            if($currency == 'USD' || $currency == '$') $total_purchase_tl += $amount * $dolar_kuru;
-            elseif($currency == 'EUR' || $currency == '€') $total_purchase_tl += $amount * $euro_kuru;
-            else $total_purchase_tl += $amount;
+            $total_purchase_tl += convertSupplierAmountToTl($amount, $currency, $rates);
         }
     }
 
-    // Toplam Ödeme Hesaplama
-    $tedarikci_adi_safe = $connection->real_escape_string($row['tedarikci_adi']);
-    $payment_query = "SELECT SUM(tutar) as total FROM gider_yonetimi WHERE odeme_yapilan_firma = '$tedarikci_adi_safe'";
+    // Toplam Ödeme Hesaplama (tedarikci_id bazlı, isim eşleşmesine bağlı değil)
+    $payment_query = "SELECT para_birimi, SUM(toplu_odenen_miktar * birim_fiyat) as total
+                      FROM cerceve_sozlesmeler
+                      WHERE tedarikci_id = " . (int)$row['tedarikci_id'] . "
+                      GROUP BY para_birimi";
     $pay_result = $connection->query($payment_query);
     $total_payment_tl = 0;
     if ($pay_result) {
-        $pay_row = $pay_result->fetch_assoc();
-        $total_payment_tl = floatval($pay_row['total'] ?? 0);
+        while ($pay_row = $pay_result->fetch_assoc()) {
+            $amount = floatval($pay_row['total']);
+            $currency = strtoupper(trim((string)($pay_row['para_birimi'] ?? 'TL')));
+            $total_payment_tl += convertSupplierAmountToTl($amount, $currency, $rates);
+        }
     }
 
     $row['total_purchase'] = $total_purchase_tl;
@@ -80,6 +134,7 @@ function getSuppliers() {
         return;
     }
 
+    try {
     $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
     $limit = isset($_GET['limit']) ? max(1, min(500, (int)$_GET['limit'])) : 10;
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -94,39 +149,41 @@ function getSuppliers() {
 
     $count_query = "SELECT COUNT(*) as total FROM tedarikciler " . $where_clause;
     $result = $connection->query($count_query);
+    if (!$result) {
+        throw new Exception('Tedarikci sayisi alinamadi: ' . $connection->error);
+    }
     $total_suppliers = $result->fetch_assoc()['total'];
 
     $total_pages = $limit > 0 ? ceil($total_suppliers / $limit) : 0;
 
     $query = "SELECT * FROM tedarikciler " . $where_clause . " ORDER BY tedarikci_adi LIMIT $limit OFFSET $offset";
     $result = $connection->query($query);
+    if (!$result) {
+        throw new Exception('Tedarikci listesi alinamadi: ' . $connection->error);
+    }
 
     $suppliers = [];
     
     // Döviz kurlarını al
-    $dolar_kuru = 1;
-    $euro_kuru = 1;
-    $kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
-    $kur_result = $connection->query($kur_query);
-    while ($kur_row = $kur_result->fetch_assoc()) {
-        if ($kur_row['ayar_anahtar'] == 'dolar_kuru') $dolar_kuru = floatval($kur_row['ayar_deger']);
-        elseif ($kur_row['ayar_anahtar'] == 'euro_kuru') $euro_kuru = floatval($kur_row['ayar_deger']);
-    }
+    $rates = getSupplierExchangeRates($connection);
 
     while ($row = $result->fetch_assoc()) {
-        $suppliers[] = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
+        $suppliers[] = calculateSupplierTotals($row, $rates);
     }
 
     // GENEL TOPLAMLARI HESAPLA (Tüm sayfalar için)
     $all_suppliers_query = "SELECT * FROM tedarikciler " . $where_clause;
     $all_result = $connection->query($all_suppliers_query);
+    if (!$all_result) {
+        throw new Exception('Genel toplamlar alinamadi: ' . $connection->error);
+    }
     $total_purchase_sum = 0;
     $total_payment_sum = 0;
     $total_balance_sum = 0;
 
     if ($all_result) {
         while ($row = $all_result->fetch_assoc()) {
-            $row_totals = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
+            $row_totals = calculateSupplierTotals($row, $rates);
             $total_purchase_sum += $row_totals['total_purchase'];
             $total_payment_sum += $row_totals['total_payment'];
             $total_balance_sum += $row_totals['balance'];
@@ -150,6 +207,9 @@ function getSuppliers() {
     ];
 
     echo json_encode($response);
+    } catch (Exception $e) {
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+    }
 }
 
 function exportExcel() {
@@ -160,6 +220,7 @@ function exportExcel() {
         die('Yetkiniz yok.');
     }
 
+    try {
     $search = isset($_GET['search']) ? trim($_GET['search']) : '';
     
     $where_clause = "";
@@ -171,23 +232,19 @@ function exportExcel() {
 
     $query = "SELECT * FROM tedarikciler " . $where_clause . " ORDER BY tedarikci_adi";
     $result = $connection->query($query);
+    if (!$result) {
+        throw new Exception('Tedarikci listesi alinamadi: ' . $connection->error);
+    }
 
     // Döviz kurlarını al
-    $dolar_kuru = 1;
-    $euro_kuru = 1;
-    $kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
-    $kur_result = $connection->query($kur_query);
-    while ($kur_row = $kur_result->fetch_assoc()) {
-        if ($kur_row['ayar_anahtar'] == 'dolar_kuru') $dolar_kuru = floatval($kur_row['ayar_deger']);
-        elseif ($kur_row['ayar_anahtar'] == 'euro_kuru') $euro_kuru = floatval($kur_row['ayar_deger']);
-    }
+    $rates = getSupplierExchangeRates($connection);
 
     $excel_data = [
         ['Tedarikçi Adı', 'Sektör', 'Vergi/TC No', 'Telefon', 'Telefon 2', 'E-posta', 'Yetkili Kişi', 'Açıklama', 'Toplam Alım (TL)', 'Toplam Ödeme (TL)', 'Bakiye (TL)', 'Durum']
     ];
 
     while ($row = $result->fetch_assoc()) {
-        $row = calculateSupplierTotals($row, $dolar_kuru, $euro_kuru);
+        $row = calculateSupplierTotals($row, $rates);
         
         $durum = 'Hesap Kapalı';
         if ($row['balance'] > 0) $durum = 'Borçlu';
@@ -212,6 +269,9 @@ function exportExcel() {
     $xlsx = Shuchkin\SimpleXLSXGen::fromArray($excel_data);
     $xlsx->downloadAs('tedarikciler_' . date('Y-m-d_H-i') . '.xlsx');
     exit;
+    } catch (Exception $e) {
+        die('Excel olusturulamadi: ' . $e->getMessage());
+    }
 }
 
 function getSupplier() {
@@ -376,3 +436,8 @@ function deleteSupplier() {
     $stmt->close();
 }
 ?>
+
+
+
+
+

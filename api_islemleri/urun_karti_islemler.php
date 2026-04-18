@@ -29,7 +29,7 @@ function get_exchange_rates($connection)
         return $cached_rates;
     }
 
-    $rates = ['TRY' => 1.0, 'USD' => 1.0, 'EUR' => 1.0];
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
     $query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
     $result = $connection->query($query);
     if ($result) {
@@ -60,10 +60,10 @@ function convert_currency_amount($amount, $from_currency, $to_currency, $rates)
         return $amount;
     }
 
-    $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 1.0;
-    $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 1.0;
+    $from_rate = isset($rates[$from_currency]) ? (float) $rates[$from_currency] : 0.0;
+    $to_rate = isset($rates[$to_currency]) ? (float) $rates[$to_currency] : 0.0;
     if ($from_rate <= 0 || $to_rate <= 0) {
-        return $amount;
+        throw new Exception('Kur bilgisi eksik veya gecersiz.');
     }
 
     $amount_try = ($from_currency === 'TRY') ? $amount : ($amount * $from_rate);
@@ -190,6 +190,15 @@ if (isset($_GET['action']) && isset($_GET['urun_kodu'])) {
             // 3. Stok Hareketlerini Getir
             $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
             $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 20;
+            if ($page < 1) {
+                $page = 1;
+            }
+            if ($limit < 1) {
+                $limit = 20;
+            }
+            if ($limit > 200) {
+                $limit = 200;
+            }
             $offset = ($page - 1) * $limit;
 
             // Toplam stok hareketi sayısı

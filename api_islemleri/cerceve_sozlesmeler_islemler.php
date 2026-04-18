@@ -16,6 +16,66 @@ if ($_SESSION['taraf'] !== 'personel') {
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
 
+function normalizeContractCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TRY' || $currency === '') {
+        $currency = 'TL';
+    }
+    return in_array($currency, ['TL', 'USD', 'EUR'], true) ? $currency : 'TL';
+}
+
+function getContractRates($connection)
+{
+    $rates = ['TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $rates_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($rates_result) {
+        while ($row = $rates_result->fetch_assoc()) {
+            if (($row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) ($row['ayar_deger'] ?? 0));
+            } elseif (($row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) ($row['ayar_deger'] ?? 0));
+            }
+        }
+    }
+    return $rates;
+}
+
+function convertContractCurrencyAmount($amount, $fromCurrency, $toCurrency, $rates)
+{
+    $amount = (float) $amount;
+    $from = normalizeContractCurrency($fromCurrency);
+    $to = normalizeContractCurrency($toCurrency);
+    if ($from === $to) {
+        return $amount;
+    }
+
+    $usdRate = max(0.0, (float) ($rates['USD'] ?? 0));
+    $eurRate = max(0.0, (float) ($rates['EUR'] ?? 0));
+    if (($from === 'USD' || $to === 'USD') && $usdRate <= 0) {
+        throw new Exception('USD kuru tanimli degil veya 0.');
+    }
+    if (($from === 'EUR' || $to === 'EUR') && $eurRate <= 0) {
+        throw new Exception('EUR kuru tanimli degil veya 0.');
+    }
+
+    if ($from === 'TL') {
+        $tlAmount = $amount;
+    } elseif ($from === 'USD') {
+        $tlAmount = $amount * $usdRate;
+    } else {
+        $tlAmount = $amount * $eurRate;
+    }
+
+    if ($to === 'TL') {
+        return $tlAmount;
+    }
+    if ($to === 'USD') {
+        return $tlAmount / $usdRate;
+    }
+    return $tlAmount / $eurRate;
+}
+
 switch ($action) {
     case 'get_contract':
         $id = $_GET['id'] ?? $_POST['id'] ?? 0;
@@ -119,24 +179,21 @@ switch ($action) {
                 $gider_aciklama = "$malzeme_ismi için $toplu_odenen_miktar adet ön ödeme";
                 $user_id = $_SESSION['user_id'];
 
-                // Get exchange rates
-                $rates_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
-                $rates_result = $connection->query($rates_query);
-                $rates_data = [];
-                while ($row = $rates_result->fetch_assoc()) {
-                    $rates_data[$row['ayar_anahtar']] = $row['ayar_deger'];
-                }
-                $dolar_kuru = $rates_data['dolar_kuru'] ?? 1.0;
-                $euro_kuru = $rates_data['euro_kuru'] ?? 1.0;
-                
-                $final_tl_amount = $amount_in_foreign_currency;
+                $rates = getContractRates($connection);
+                $final_tl_amount = convertContractCurrencyAmount($amount_in_foreign_currency, $para_birimi, 'TL', $rates);
                 $exchange_rate_info = "";
 
                 if ($para_birimi === 'USD') {
-                    $final_tl_amount = $amount_in_foreign_currency * $dolar_kuru;
+                    $dolar_kuru = (float) ($rates['USD'] ?? 0);
+                    if ($dolar_kuru <= 0) {
+                        throw new Exception("USD kuru tanimli degil veya 0.");
+                    }
                     $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " USD @ " . number_format($dolar_kuru, 4, ',', '.') . ")";
                 } elseif ($para_birimi === 'EUR') {
-                    $final_tl_amount = $amount_in_foreign_currency * $euro_kuru;
+                    $euro_kuru = (float) ($rates['EUR'] ?? 0);
+                    if ($euro_kuru <= 0) {
+                        throw new Exception("EUR kuru tanimli degil veya 0.");
+                    }
                     $exchange_rate_info = " (" . number_format($amount_in_foreign_currency, 2, ',', '.') . " EUR @ " . number_format($euro_kuru, 4, ',', '.') . ")";
                 }
                 
@@ -144,7 +201,9 @@ switch ($action) {
 
                 $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
                 $gider_query = "INSERT INTO gider_yonetimi (tarih, kategori, tutar, odeme_tipi, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_yapilan_firma) VALUES ('$gider_tarih', 'Malzeme Gideri', $final_tl_amount, 'Diğer', '$gider_aciklama', $user_id, '$personel_adi', '$tedarikci_adi')";
-                $connection->query($gider_query);
+                if (!$connection->query($gider_query)) {
+                    throw new Exception("Pesin odeme gider kaydi olusturulamadi: " . $connection->error);
+                }
             }
 
             echo json_encode(['status' => 'success', 'message' => 'Çerçeve sözleşme başarıyla oluşturuldu.']);
@@ -298,7 +357,7 @@ switch ($action) {
     case 'make_payment':
         $sozlesme_id = $_POST['sozlesme_id'] ?? 0;
         $payment_quantity = $_POST['quantity'] ?? 0;
-        $kasa_secimi = $_POST['kasa_secimi'] ?? 'TL';
+        $kasa_secimi = normalizeContractCurrency($_POST['kasa_secimi'] ?? 'TL');
         $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Havale/EFT');
 
         if (!$sozlesme_id || !$payment_quantity || $payment_quantity <= 0) {
@@ -319,7 +378,7 @@ switch ($action) {
         
         // Calculate amount in foreign currency
         $amount_in_foreign_currency = $payment_quantity * $contract['birim_fiyat'];
-        $para_birimi = $contract['para_birimi'];
+        $para_birimi = normalizeContractCurrency($contract['para_birimi'] ?? 'TL');
         $tedarikci_adi = $contract['tedarikci_adi'];
         $malzeme_ismi = $contract['malzeme_ismi'];
         
@@ -339,16 +398,11 @@ switch ($action) {
             $user_id = $_SESSION['user_id'];
             
             // Get exchange rates
-            $rates_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
-            $rates_result = $connection->query($rates_query);
-            $rates_data = [];
-            while ($row = $rates_result->fetch_assoc()) {
-                $rates_data[$row['ayar_anahtar']] = $row['ayar_deger'];
-            }
-            $dolar_kuru = $rates_data['dolar_kuru'] ?? 1.0;
-            $euro_kuru = $rates_data['euro_kuru'] ?? 1.0;
-            
-            $final_tl_amount = $amount_in_foreign_currency;
+            $rates = getContractRates($connection);
+            $dolar_kuru = (float) ($rates['USD'] ?? 0);
+            $euro_kuru = (float) ($rates['EUR'] ?? 0);
+
+            $final_tl_amount = convertContractCurrencyAmount($amount_in_foreign_currency, $para_birimi, 'TL', $rates);
             $exchange_rate_info = "";
 
             if ($para_birimi === 'USD') {
@@ -370,27 +424,35 @@ switch ($action) {
             }
             $gider_id = $connection->insert_id;
 
-            // 3. Kasa bakiyesini düşür
-            if (in_array($kasa_secimi, ['TL', 'USD', 'EUR'])) {
-                $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc'");
-                if ($bakiye_check->num_rows > 0) {
-                    // DİKKAT: USD kasasından USD tutarını düşmeliyiz, TL karşılığını değil!
-                    $dusulecek_tutar = ($para_birimi === $kasa_secimi) ? $amount_in_foreign_currency : $final_tl_amount;
-                    
-                    // Eğer Kasa TL ise ve ödeme USD ise, zaten yukarıda hesaplanan final_tl_amount TL'dir.
-                    // Eğer Kasa USD ise ve ödeme USD ise, amount_in_foreign_currency kullanılmalı.
-                    
-                    $connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_tutar WHERE para_birimi = '$kasa_secimi_esc'");
+            // 3. Kasa bakiyesini düşür (kasa para birimine doğru dönüşüm ile)
+            $dusulecek_tutar = convertContractCurrencyAmount($amount_in_foreign_currency, $para_birimi, $kasa_secimi, $rates);
+            $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc' LIMIT 1");
+            if (!$bakiye_check || $bakiye_check->num_rows === 0) {
+                if (!$connection->query("INSERT INTO sirket_kasasi (para_birimi, bakiye) VALUES ('$kasa_secimi_esc', 0)")) {
+                    throw new Exception("Kasa satiri olusturulamadi: " . $connection->error);
                 }
+                $bakiye_check = $connection->query("SELECT bakiye FROM sirket_kasasi WHERE para_birimi = '$kasa_secimi_esc' LIMIT 1");
+            }
+
+            $kasa_row = $bakiye_check ? $bakiye_check->fetch_assoc() : null;
+            $mevcut_bakiye = (float) ($kasa_row['bakiye'] ?? 0);
+            if ($mevcut_bakiye + 0.00001 < $dusulecek_tutar) {
+                throw new Exception("Kasada yeterli bakiye yok.");
+            }
+
+            if (!$connection->query("UPDATE sirket_kasasi SET bakiye = bakiye - $dusulecek_tutar WHERE para_birimi = '$kasa_secimi_esc'")) {
+                throw new Exception("Kasa bakiyesi guncellenemedi: " . $connection->error);
             }
 
             // 4. Kasa hareketi kaydet
-            // Tutar: Orijinal para birimindeki miktar (Kasa USD ise USD miktarı)
-            $kayit_tutar = ($para_birimi === $kasa_secimi) ? $amount_in_foreign_currency : $final_tl_amount;
+            // Tutar: hareketin kasa para birimindeki gerçek düşüm tutarı
+            $kayit_tutar = $dusulecek_tutar;
             
             $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_firma, odeme_tipi)
                 VALUES ('$gider_tarih', 'gider_cikisi', '$kasa_secimi_esc', $kayit_tutar, '$kasa_secimi_esc', $final_tl_amount, 'cerceve_sozlesmeler', $sozlesme_id, '$gider_aciklama', '$personel_adi', '$tedarikci_adi', '$odeme_tipi')";
-            $connection->query($hareket_sql);
+            if (!$connection->query($hareket_sql)) {
+                throw new Exception("Kasa hareketi kaydedilemedi: " . $connection->error);
+            }
 
             $connection->commit();
             echo json_encode(['status' => 'success', 'message' => 'Ödeme başarıyla gerçekleştirildi ve giderlere işlendi.']);

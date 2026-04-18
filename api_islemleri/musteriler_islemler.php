@@ -35,6 +35,62 @@ switch ($action) {
         echo json_encode(['status' => 'error', 'message' => 'Geçersiz işlem.']);
 }
 
+function normalizeCustomerCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === 'TL' || $currency === '') {
+        return 'TRY';
+    }
+    return in_array($currency, ['TRY', 'USD', 'EUR']) ? $currency : 'TRY';
+}
+
+function getCustomerRates()
+{
+    global $connection;
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
+            } elseif ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
+            }
+        }
+    }
+    return $rates;
+}
+
+function convertCustomerCurrency($amount, $from, $to, $rates)
+{
+    $amount = (float) $amount;
+    $from = normalizeCustomerCurrency($from);
+    $to = normalizeCustomerCurrency($to);
+    if ($from === $to) {
+        return $amount;
+    }
+
+    $fromRate = (float) ($rates[$from] ?? 0);
+    $toRate = (float) ($rates[$to] ?? 0);
+    if ($fromRate <= 0 || $toRate <= 0) {
+        return $amount;
+    }
+
+    $tryAmount = $amount * $fromRate;
+    return $tryAmount / $toRate;
+}
+
+function getCustomerCurrencySymbol($currency)
+{
+    $currency = normalizeCustomerCurrency($currency);
+    if ($currency === 'USD') {
+        return '$';
+    }
+    if ($currency === 'EUR') {
+        return '€';
+    }
+    return '₺';
+}
 function getCustomers()
 {
     global $connection;
@@ -74,158 +130,138 @@ function getCustomers()
 
     if (!empty($customer_ids)) {
         $ids_str = implode(',', $customer_ids);
+        $rates = getCustomerRates();
 
-        // 1. Installment Plan Debts (Assuming TRY for now as table structure isn't fully migrated)
-        $plan_debt_query = "SELECT tp.musteri_id, SUM(td.kalan_tutar) as plan_debt 
-                            FROM taksit_detaylari td 
-                            JOIN taksit_planlari tp ON tp.plan_id = td.plan_id 
-                            WHERE tp.musteri_id IN ($ids_str) AND tp.durum != 'iptal'
-                            GROUP BY tp.musteri_id";
+        // 1. Installment plan debts (per plan currency)
+        $plan_debt_query = "SELECT tp.musteri_id, tp.para_birimi, SUM(td.kalan_tutar) as plan_debt
+                            FROM taksit_detaylari td
+                            JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
+                            WHERE tp.musteri_id IN ($ids_str) AND tp.durum != 'iptal' AND td.durum != 'odendi'
+                            GROUP BY tp.musteri_id, tp.para_birimi";
         $plan_debt_res = $connection->query($plan_debt_query);
         $plan_debts = [];
-        while ($p = $plan_debt_res->fetch_assoc()) {
-            $plan_debts[$p['musteri_id']] = floatval($p['plan_debt']);
+        if ($plan_debt_res) {
+            while ($p = $plan_debt_res->fetch_assoc()) {
+                $mid = (int) $p['musteri_id'];
+                $curr = normalizeCustomerCurrency($p['para_birimi'] ?? 'TRY');
+                if (!isset($plan_debts[$mid])) {
+                    $plan_debts[$mid] = [];
+                }
+                if (!isset($plan_debts[$mid][$curr])) {
+                    $plan_debts[$mid][$curr] = 0.0;
+                }
+                $plan_debts[$mid][$curr] += (float) $p['plan_debt'];
+            }
         }
 
-        // 2. Linked Order IDs (to exclude from regular balance)
-        $linked_orders_query = "SELECT tsb.siparis_id 
-                                FROM taksit_siparis_baglantisi tsb 
-                                JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id 
+        // 2. Linked order IDs (exclude from regular balance)
+        $linked_orders_query = "SELECT tsb.siparis_id
+                                FROM taksit_siparis_baglantisi tsb
+                                JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id
                                 WHERE tp.musteri_id IN ($ids_str) AND tp.durum != 'iptal'";
         $linked_res = $connection->query($linked_orders_query);
         $linked_ids = [];
         while ($l = $linked_res->fetch_assoc()) {
-            $linked_ids[] = $l['siparis_id'];
+            $linked_ids[] = (int) $l['siparis_id'];
         }
-        
-        // 3. Regular Orders Balance Per Currency
-        // Fetch order items to get totals per currency
-        // Also fetch payments (odenen_tutar) from orders
-        
-        // Note: odenen_tutar is in orders table. We need to subtract it from the total.
-        // We assume payment is made in the same currency as the order items.
-        // If an order has mixed currencies, we take the currency of the items (grouped).
-        // Since payment is just a number, we subtract it from the first currency found or TRY.
-        
-        $orders_sql = "SELECT s.musteri_id, s.siparis_id, s.odenen_tutar 
-                       FROM siparisler s 
-                       WHERE s.musteri_id IN ($ids_str) 
+
+        // 3. Regular orders balance per currency
+        $orders_sql = "SELECT s.musteri_id, s.siparis_id, s.odenen_tutar, s.para_birimi
+                       FROM siparisler s
+                       WHERE s.musteri_id IN ($ids_str)
                        AND s.durum IN ('onaylandi', 'tamamlandi')";
-        
+
         if (!empty($linked_ids)) {
             $orders_sql .= " AND s.siparis_id NOT IN (" . implode(',', $linked_ids) . ")";
         }
-        
+
         $orders_res = $connection->query($orders_sql);
-        $customer_balances = []; // [musteri_id][currency] = amount
+        $customer_balances = [];
+        $unpaid_counts = [];
 
         while ($ord = $orders_res->fetch_assoc()) {
-            $mid = $ord['musteri_id'];
-            $sid = $ord['siparis_id'];
-            $paid = floatval($ord['odenen_tutar']);
-            
-            // Get items for this order grouped by currency
-            $items_sql = "SELECT para_birimi, SUM(birim_fiyat * adet) as total 
-                          FROM siparis_kalemleri 
-                          WHERE siparis_id = $sid 
+            $mid = (int) $ord['musteri_id'];
+            $sid = (int) $ord['siparis_id'];
+            $order_currency = normalizeCustomerCurrency($ord['para_birimi'] ?? 'TRY');
+            $paid = max(0.0, (float) $ord['odenen_tutar']);
+
+            $items_sql = "SELECT para_birimi, SUM(COALESCE(toplam_tutar, birim_fiyat * adet)) as total
+                          FROM siparis_kalemleri
+                          WHERE siparis_id = $sid
                           GROUP BY para_birimi";
             $items_res = $connection->query($items_sql);
-            
-            $order_currency = 'TRY'; // Fallback
-            $first = true;
-            
-            while ($item = $items_res->fetch_assoc()) {
-                $cur = $item['para_birimi'] ?: 'TRY';
-                $amount = floatval($item['total']);
-                
-                if ($first) {
-                    $order_currency = $cur;
-                    $first = false;
+
+            $order_total = 0.0;
+            if ($items_res) {
+                while ($item = $items_res->fetch_assoc()) {
+                    $item_currency = normalizeCustomerCurrency($item['para_birimi'] ?? $order_currency);
+                    $item_total = (float) ($item['total'] ?? 0);
+                    $order_total += convertCustomerCurrency($item_total, $item_currency, $order_currency, $rates);
                 }
-                
-                if (!isset($customer_balances[$mid][$cur])) {
-                    $customer_balances[$mid][$cur] = 0;
-                }
-                $customer_balances[$mid][$cur] += $amount;
             }
-            
-            // Subtract payment from the main currency of the order
-            if ($paid > 0) {
+
+            $remaining = max(0.0, $order_total - $paid);
+            if ($remaining > 0.01) {
                 if (!isset($customer_balances[$mid][$order_currency])) {
-                    $customer_balances[$mid][$order_currency] = 0;
+                    $customer_balances[$mid][$order_currency] = 0.0;
                 }
-                $customer_balances[$mid][$order_currency] -= $paid;
+                $customer_balances[$mid][$order_currency] += $remaining;
+
+                if (!isset($unpaid_counts[$mid])) {
+                    $unpaid_counts[$mid] = 0;
+                }
+                $unpaid_counts[$mid]++;
             }
         }
 
-        // 4. Count Unpaid Orders
-        // Regular Unpaid
-        $unpaid_sql = "SELECT s.musteri_id, COUNT(*) as cnt 
-                       FROM siparisler s 
-                       WHERE s.musteri_id IN ($ids_str) 
-                       AND s.durum IN ('onaylandi', 'tamamlandi')
-                       AND (
-                           (SELECT COALESCE(SUM(sk.birim_fiyat * sk.adet), 0) FROM siparis_kalemleri sk WHERE sk.siparis_id = s.siparis_id) 
-                           - COALESCE(s.odenen_tutar, 0)
-                       ) > 0.01";
-        if (!empty($linked_ids)) {
-            $unpaid_sql .= " AND s.siparis_id NOT IN (" . implode(',', $linked_ids) . ")";
-        }
-        $unpaid_sql .= " GROUP BY s.musteri_id";
-        $unpaid_res = $connection->query($unpaid_sql);
-        $unpaid_counts = [];
-        while($u = $unpaid_res->fetch_assoc()) {
-            $unpaid_counts[$u['musteri_id']] = intval($u['cnt']);
-        }
-
-        // Active Plan Orders (considered unpaid)
+        // Active plan orders (considered unpaid)
         $plan_orders_sql = "SELECT tp.musteri_id, COUNT(DISTINCT tsb.siparis_id) as cnt
-                            FROM taksit_siparis_baglantisi tsb 
-                            JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id 
+                            FROM taksit_siparis_baglantisi tsb
+                            JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id
                             WHERE tp.musteri_id IN ($ids_str) AND tp.durum = 'aktif'
                             GROUP BY tp.musteri_id";
         $plan_orders_res = $connection->query($plan_orders_sql);
-        while($p = $plan_orders_res->fetch_assoc()) {
-            if(!isset($unpaid_counts[$p['musteri_id']])) $unpaid_counts[$p['musteri_id']] = 0;
-            $unpaid_counts[$p['musteri_id']] += intval($p['cnt']);
+        while ($p = $plan_orders_res->fetch_assoc()) {
+            $mid = (int) $p['musteri_id'];
+            if (!isset($unpaid_counts[$mid])) {
+                $unpaid_counts[$mid] = 0;
+            }
+            $unpaid_counts[$mid] += (int) $p['cnt'];
         }
 
-        // Merge Data into Customers Array
+        // Merge data into customers array
         foreach ($customers as $mid => &$cust) {
             $balances = $customer_balances[$mid] ?? [];
-            
-            // Add Plan Debt (Assuming TRY)
-            $p_debt = $plan_debts[$mid] ?? 0;
-            if ($p_debt > 0) {
-                if (!isset($balances['TRY'])) $balances['TRY'] = 0;
-                $balances['TRY'] += $p_debt;
-            }
-            
-            // Construct Balance String and Total (approx in TRY)
-            $balance_parts = [];
-            $total_approx_try = 0;
-            $has_balance = false;
-            
-            foreach ($balances as $curr => $amount) {
-                if ($amount > 0.01) { // Only show positive balances
-                    $symbol = '₺';
-                    if ($curr === 'USD') { $symbol = '$'; $total_approx_try += $amount * 30; } // Approx rate 30
-                    elseif ($curr === 'EUR') { $symbol = '€'; $total_approx_try += $amount * 33; } // Approx rate 33
-                    else { $total_approx_try += $amount; }
-                    
-                    $balance_parts[] = number_format($amount, 2, ',', '.') . ' ' . $symbol;
-                    $has_balance = true;
+
+            if (!empty($plan_debts[$mid])) {
+                foreach ($plan_debts[$mid] as $curr => $amount) {
+                    if (!isset($balances[$curr])) {
+                        $balances[$curr] = 0.0;
+                    }
+                    $balances[$curr] += (float) $amount;
                 }
             }
-            
-            $cust['bakiye_gosterim'] = empty($balance_parts) ? '<span style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;"><i class="fas fa-check-circle"></i> Temiz</span>' 
-                                                             : '<span style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap; display: inline-block;">' . implode('<br>', $balance_parts) . '</span>';
-            
-            $cust['kalan_bakiye'] = $total_approx_try; // For sorting/filtering logic if needed
+
+            $balance_parts = [];
+            $total_approx_try = 0.0;
+            foreach ($balances as $curr => $amount) {
+                $amount = (float) $amount;
+                if ($amount > 0.01) {
+                    $symbol = getCustomerCurrencySymbol($curr);
+                    $balance_parts[] = number_format($amount, 2, ',', '.') . ' ' . $symbol;
+                    $total_approx_try += convertCustomerCurrency($amount, $curr, 'TRY', $rates);
+                }
+            }
+
+            $cust['bakiye_gosterim'] = empty($balance_parts)
+                ? '<span style="background: #ecfdf5; color: #059669; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap;"><i class="fas fa-check-circle"></i> Temiz</span>'
+                : '<span style="background: #fef2f2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-weight: bold; font-size: 0.75rem; white-space: nowrap; display: inline-block;">' . implode('<br>', $balance_parts) . '</span>';
+
+            $cust['kalan_bakiye'] = $total_approx_try;
             $cust['odenmemis_siparis'] = $unpaid_counts[$mid] ?? 0;
         }
+        unset($cust);
     }
-
     // Convert associative array back to indexed array
     $customers_list = array_values($customers);
 
@@ -428,3 +464,4 @@ function deleteCustomer()
     }
 }
 ?>
+

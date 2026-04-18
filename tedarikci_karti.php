@@ -182,35 +182,106 @@ if (!$supplier) {
     die('Tedarikçi bulunamadı.');
 }
 
+function normalizeSupplierCurrency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+    return in_array($currency, ['TRY', 'USD', 'EUR'], true) ? $currency : 'TRY';
+}
+
+function getSupplierRates($connection)
+{
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($result) {
+        while ($row = $result->fetch_assoc()) {
+            if ($row['ayar_anahtar'] === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) $row['ayar_deger']);
+            } elseif ($row['ayar_anahtar'] === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) $row['ayar_deger']);
+            }
+        }
+    }
+    return $rates;
+}
+
+function convertSupplierCurrency($amount, $from, $to, $rates)
+{
+    $amount = (float) $amount;
+    $from = normalizeSupplierCurrency($from);
+    $to = normalizeSupplierCurrency($to);
+    if ($from === $to) {
+        return $amount;
+    }
+
+    $fromRate = (float) ($rates[$from] ?? 0);
+    $toRate = (float) ($rates[$to] ?? 0);
+    if ($fromRate <= 0 || $toRate <= 0) {
+        return $amount;
+    }
+
+    $tryAmount = $amount * $fromRate;
+    return $tryAmount / $toRate;
+}
+
+function formatSupplierCurrency($amount, $currency = 'TRY')
+{
+    $currency = normalizeSupplierCurrency($currency);
+    $symbol = '₺';
+    if ($currency === 'USD') {
+        $symbol = '$';
+    } elseif ($currency === 'EUR') {
+        $symbol = '€';
+    }
+    return number_format((float) $amount, 2, ',', '.') . ' ' . $symbol;
+}
+
+function supplierTableHasColumn($connection, $table, $column)
+{
+    $tableEsc = $connection->real_escape_string($table);
+    $columnEsc = $connection->real_escape_string($column);
+    $result = $connection->query("SHOW COLUMNS FROM `$tableEsc` LIKE '$columnEsc'");
+    return $result && $result->num_rows > 0;
+}
+
 // Tarih filtresi parametrelerini al
 $baslangic_tarihi = isset($_GET['baslangic']) && !empty($_GET['baslangic']) ? $_GET['baslangic'] : null;
 $bitis_tarihi = isset($_GET['bitis']) && !empty($_GET['bitis']) ? $_GET['bitis'] : null;
+$supplier_rates = getSupplierRates($connection);
+$gider_has_tedarikci_id = supplierTableHasColumn($connection, 'gider_yonetimi', 'tedarikci_id');
+$gider_has_firma_adi = supplierTableHasColumn($connection, 'gider_yonetimi', 'odeme_yapilan_firma');
+$gider_has_para_birimi = supplierTableHasColumn($connection, 'gider_yonetimi', 'para_birimi');
 
 // Get all expenses related to this supplier (with date filter)
-$expenses_query = "SELECT * FROM gider_yonetimi WHERE odeme_yapilan_firma = ?";
+$date_where = '';
 if ($baslangic_tarihi) {
-    $expenses_query .= " AND DATE(tarih) >= ?";
+    $baslangic_esc = $connection->real_escape_string($baslangic_tarihi);
+    $date_where .= " AND DATE(tarih) >= '$baslangic_esc'";
 }
 if ($bitis_tarihi) {
-    $expenses_query .= " AND DATE(tarih) <= ?";
+    $bitis_esc = $connection->real_escape_string($bitis_tarihi);
+    $date_where .= " AND DATE(tarih) <= '$bitis_esc'";
 }
-$expenses_query .= " ORDER BY tarih DESC";
 
-$expenses_stmt = $connection->prepare($expenses_query);
-
-// Parametreleri bind et
-if ($baslangic_tarihi && $bitis_tarihi) {
-    $expenses_stmt->bind_param('sss', $supplier['tedarikci_adi'], $baslangic_tarihi, $bitis_tarihi);
-} elseif ($baslangic_tarihi) {
-    $expenses_stmt->bind_param('ss', $supplier['tedarikci_adi'], $baslangic_tarihi);
-} elseif ($bitis_tarihi) {
-    $expenses_stmt->bind_param('ss', $supplier['tedarikci_adi'], $bitis_tarihi);
+if ($gider_has_tedarikci_id) {
+    $supplier_id = (int) $tedarikci_id;
+    $expenses_query = "SELECT * FROM gider_yonetimi WHERE (tedarikci_id = $supplier_id";
+    if ($gider_has_firma_adi) {
+        $supplier_name_esc = $connection->real_escape_string($supplier['tedarikci_adi']);
+        $expenses_query .= " OR (tedarikci_id IS NULL AND odeme_yapilan_firma = '$supplier_name_esc')";
+    }
+    $expenses_query .= ")" . $date_where . " ORDER BY tarih DESC";
 } else {
-    $expenses_stmt->bind_param('s', $supplier['tedarikci_adi']);
+    $supplier_name_esc = $connection->real_escape_string($supplier['tedarikci_adi']);
+    $expenses_query = "SELECT * FROM gider_yonetimi WHERE odeme_yapilan_firma = '$supplier_name_esc'" . $date_where . " ORDER BY tarih DESC";
 }
 
-$expenses_stmt->execute();
-$expenses_result = $expenses_stmt->get_result();
+$expenses_result = $connection->query($expenses_query);
+if (!$expenses_result) {
+    die('Ödeme kayıtları alınamadı: ' . $connection->error);
+}
 
 $expenses = [];
 $total_expenses = 0;
@@ -218,15 +289,20 @@ $total_expense_amount = 0;
 $last_expense_date = null;
 
 while ($expense = $expenses_result->fetch_assoc()) {
+    $expense_currency = $gider_has_para_birimi
+        ? normalizeSupplierCurrency($expense['para_birimi'] ?? 'TRY')
+        : 'TRY';
+    $expense['para_birimi'] = $expense_currency;
+    $expense['tutar_tl'] = convertSupplierCurrency((float) ($expense['tutar'] ?? 0), $expense_currency, 'TRY', $supplier_rates);
+
     $expenses[] = $expense;
     $total_expenses++;
-    $total_expense_amount += $expense['tutar'];
+    $total_expense_amount += (float) $expense['tutar_tl'];
 
     if (!$last_expense_date || $expense['tarih'] > $last_expense_date) {
         $last_expense_date = $expense['tarih'];
     }
 }
-$expenses_stmt->close();
 
 // Get purchase summary for this supplier
 $purchase_summary_query = "SELECT COUNT(*) as total_purchases, COALESCE(SUM(shs.kullanilan_miktar * shs.birim_fiyat), 0) as total_purchase_amount
@@ -241,19 +317,9 @@ $summary_total_purchases = $purchase_summary['total_purchases'];
 $summary_total_purchase_amount = $purchase_summary['total_purchase_amount'];
 $purchase_summary_stmt->close();
 
-// Get exchange rates from ayarlar table
-$dolar_kuru = 1;
-$euro_kuru = 1;
-
-$kur_query = "SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')";
-$kur_result = $connection->query($kur_query);
-while ($kur_row = $kur_result->fetch_assoc()) {
-    if ($kur_row['ayar_anahtar'] == 'dolar_kuru') {
-        $dolar_kuru = floatval($kur_row['ayar_deger']);
-    } elseif ($kur_row['ayar_anahtar'] == 'euro_kuru') {
-        $euro_kuru = floatval($kur_row['ayar_deger']);
-    }
-}
+// Sayfa genelinde kullanilacak kur degerleri
+$dolar_kuru = (float) ($supplier_rates['USD'] ?? 0.0);
+$euro_kuru = (float) ($supplier_rates['EUR'] ?? 0.0);
 ?>
 <!DOCTYPE html>
 <html lang="tr">
@@ -830,9 +896,11 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         }
 
         // Genel toplamları hesapla
-        $genel_toplam_tl = $toplam_tl + ($toplam_usd * $dolar_kuru) + ($toplam_eur * $euro_kuru);
-        $genel_toplam_usd = $dolar_kuru > 0 ? $genel_toplam_tl / $dolar_kuru : 0;
-        $genel_toplam_eur = $euro_kuru > 0 ? $genel_toplam_tl / $euro_kuru : 0;
+        $genel_toplam_tl = $toplam_tl
+            + convertSupplierCurrency($toplam_usd, 'USD', 'TRY', $supplier_rates)
+            + convertSupplierCurrency($toplam_eur, 'EUR', 'TRY', $supplier_rates);
+        $genel_toplam_usd = convertSupplierCurrency($genel_toplam_tl, 'TRY', 'USD', $supplier_rates);
+        $genel_toplam_eur = convertSupplierCurrency($genel_toplam_tl, 'TRY', 'EUR', $supplier_rates);
         ?>
 
         <?php if (count($acceptance_rows) > 0): ?>
@@ -930,13 +998,10 @@ while ($kur_row = $kur_result->fetch_assoc()) {
 
         <!-- Ödeme Kayıtları -->
         <?php
-        // Ödeme toplamları hesapla (TL olarak alınmış)
-        $odeme_toplam_tl = 0;
-        foreach ($expenses as $expense) {
-            $odeme_toplam_tl += $expense['tutar'];
-        }
-        $odeme_toplam_usd = $dolar_kuru > 0 ? $odeme_toplam_tl / $dolar_kuru : 0;
-        $odeme_toplam_eur = $euro_kuru > 0 ? $odeme_toplam_tl / $euro_kuru : 0;
+        // Ödeme toplamları hesapla (farklı para birimlerinden TL'ye normalize edilmiş)
+        $odeme_toplam_tl = $total_expense_amount;
+        $odeme_toplam_usd = convertSupplierCurrency($odeme_toplam_tl, 'TRY', 'USD', $supplier_rates);
+        $odeme_toplam_eur = convertSupplierCurrency($odeme_toplam_tl, 'TRY', 'EUR', $supplier_rates);
         ?>
 
         <?php if (count($expenses) > 0): ?>
@@ -987,7 +1052,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                 <th class="font-weight-normal"><i class="fas fa-calendar-alt"></i> Tarih</th>
                                 <th class="font-weight-normal"><i class="fas fa-file-invoice"></i> Fatura No</th>
                                 <th class="font-weight-normal"><i class="fas fa-comment"></i> Açıklama</th>
-                                <th class="font-weight-normal text-right"><i class="fas fa-coins"></i> Tutar (TL)
+                                <th class="font-weight-normal text-right"><i class="fas fa-coins"></i> Tutar
                                 </th>
                             </tr>
                         </thead>
@@ -998,7 +1063,7 @@ while ($kur_row = $kur_result->fetch_assoc()) {
                                         <td><?php echo date('d.m.Y', strtotime($expense['tarih'])); ?></td>
                                         <td><?php echo htmlspecialchars($expense['fatura_no'] ?? '-'); ?></td>
                                         <td><?php echo htmlspecialchars($expense['aciklama'] ?? '-'); ?></td>
-                                        <td class="text-right"><?php echo number_format($expense['tutar'], 2, ',', '.'); ?> ₺
+                                        <td class="text-right"><?php echo formatSupplierCurrency($expense['tutar'] ?? 0, $expense['para_birimi'] ?? 'TRY'); ?>
                                         </td>
                                     </tr>
                                 <?php endforeach; ?>
@@ -1020,8 +1085,8 @@ while ($kur_row = $kur_result->fetch_assoc()) {
         // Pozitif bakiye = Tedarikçiye borcumuz var (daha fazla mal aldık, daha az ödedik)
         // Negatif bakiye = Tedarikçiden alacaklıyız (daha fazla ödedik, daha az mal aldık)
         $bakiye_tl = $genel_toplam_tl - $odeme_toplam_tl;
-        $bakiye_usd = $dolar_kuru > 0 ? $bakiye_tl / $dolar_kuru : 0;
-        $bakiye_eur = $euro_kuru > 0 ? $bakiye_tl / $euro_kuru : 0;
+        $bakiye_usd = convertSupplierCurrency($bakiye_tl, 'TRY', 'USD', $supplier_rates);
+        $bakiye_eur = convertSupplierCurrency($bakiye_tl, 'TRY', 'EUR', $supplier_rates);
 
         // Durum belirleme - Tedarikçinin bakış açısından
         if ($bakiye_tl > 0) {

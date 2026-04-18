@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 include '../config.php';
 
 header('Content-Type: application/json');
@@ -57,6 +57,9 @@ if ($request_method === 'GET' && $action) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        if ($page < 1) $page = 1;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 200) $limit = 200;
         $offset = ($page - 1) * $limit;
 
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'urun' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
@@ -91,6 +94,9 @@ if ($request_method === 'GET' && $action) {
         $searchTerm = $connection->real_escape_string($_GET['searchTerm']);
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        if ($page < 1) $page = 1;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 200) $limit = 200;
         $offset = ($page - 1) * $limit;
 
         $query = "SELECT * FROM urun_agaci WHERE agac_turu = 'esans' AND (urun_kodu LIKE '%$searchTerm%' OR urun_ismi LIKE '%$searchTerm%' OR bilesen_kodu LIKE '%$searchTerm%' OR bilesen_ismi LIKE '%$searchTerm%') ORDER BY urun_kodu, bilesen_kodu LIMIT $limit OFFSET $offset";
@@ -232,6 +238,9 @@ if ($request_method === 'GET' && $action) {
     } elseif ($action === 'get_product_trees_paginated') {
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        if ($page < 1) $page = 1;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 200) $limit = 200;
         $offset = ($page - 1) * $limit;
 
         // Fetch paginated product trees
@@ -266,6 +275,9 @@ if ($request_method === 'GET' && $action) {
     } elseif ($action === 'get_essence_trees_paginated') {
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
         $limit = isset($_GET['limit']) ? (int) $_GET['limit'] : 10;
+        if ($page < 1) $page = 1;
+        if ($limit < 1) $limit = 10;
+        if ($limit > 200) $limit = 200;
         $offset = ($page - 1) * $limit;
 
         // Fetch paginated essence trees

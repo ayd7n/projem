@@ -547,6 +547,15 @@ if (!empty($where_clauses)) {
 // Pagination parameters
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 $limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5; // Default 10 items per page
+if ($page < 1) {
+    $page = 1;
+}
+if ($limit < 1) {
+    $limit = 5;
+}
+if ($limit > 200) {
+    $limit = 200;
+}
 $offset = ($page - 1) * $limit;
 
 // Get total count for pagination
