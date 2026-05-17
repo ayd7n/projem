@@ -2,6 +2,8 @@
 include 'config.php';
 
 header('Content-Type: application/json; charset=utf-8');
+require_staff(true);
+require_permission('page:view:navigation', true);
 
 // Sistem varlıklarının genel özetini al
 $result = [];

@@ -29,6 +29,7 @@ function get_all_permissions()
             'page:view:is_merkezleri' => 'İş Merkezleri Sayfası',
             'page:view:raporlar' => 'Raporlar Sayfası',
             'page:view:ayarlar' => 'Ayarlar Sayfası',
+            'page:view:gelir_yonetimi' => 'Gelir Yonetimi Sayfasi',
             'page:view:gider_yonetimi' => 'Gider Yönetimi Sayfası',
             'page:view:cerceve_sozlesmeler' => 'Sözleşmeler Sayfası',
             'page:view:personel_bordro' => 'Personel Bordro Sayfası',
@@ -133,6 +134,13 @@ function get_all_permissions()
             'action:gider_yonetimi:edit' => 'Gider Düzenleme',
             'action:gider_yonetimi:delete' => 'Gider Silme',
             'action:gider_yonetimi:approve' => 'Gider Onaylama',
+        ],
+        'Gelir Yonetimi' => [
+            'action:gelir_yonetimi:create' => 'Yeni Gelir Ekleme',
+            'action:gelir_yonetimi:edit' => 'Gelir Duzenleme',
+            'action:gelir_yonetimi:delete' => 'Gelir Silme',
+            'action:gelir_yonetimi:installment_manage' => 'Taksit Plani Yonetme',
+            'action:gelir_yonetimi:installment_pay' => 'Taksit Odemesi Alma',
         ],
         'Çerçeve Sözleşmeler' => [
             'action:cerceve_sozlesmeler:create' => 'Yeni Sözleşme Ekleme',

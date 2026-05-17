@@ -71,6 +71,30 @@ if (!isset($connection)) {
 
 // Session start
 if (session_status() == PHP_SESSION_NONE) {
+    if (PHP_SAPI !== 'cli') {
+        $cookie_params = session_get_cookie_params();
+        $secure_cookie = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+
+        if (PHP_VERSION_ID >= 70300) {
+            session_set_cookie_params([
+                'lifetime' => $cookie_params['lifetime'],
+                'path' => $cookie_params['path'],
+                'domain' => $cookie_params['domain'],
+                'secure' => $secure_cookie,
+                'httponly' => true,
+                'samesite' => 'Strict',
+            ]);
+        } else {
+            session_set_cookie_params(
+                $cookie_params['lifetime'],
+                $cookie_params['path'] . '; samesite=Strict',
+                $cookie_params['domain'],
+                $secure_cookie,
+                true
+            );
+        }
+    }
+
     session_start();
 }
 
@@ -83,6 +107,8 @@ require_once __DIR__ . '/includes/backup_functions.php';
 require_once __DIR__ . '/includes/auth_functions.php';
 // Include stock guard helpers
 require_once __DIR__ . '/includes/stock_guard.php';
+
+enforce_same_origin_unsafe_request();
 
 try {
     ensure_negative_stock_triggers($connection);

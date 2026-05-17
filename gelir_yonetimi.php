@@ -13,11 +13,16 @@ if ($_SESSION['taraf'] !== 'personel') {
     exit;
 }
 
-// Page-level permission check (assuming same as gider_yonetimi or separate, let's use a new one if possible, or same for now)
-// Ideally we should add 'page:view:gelir_yonetimi' to permissions but for now assuming admin has all access or we skip strict check or reuse
-if (!yetkisi_var('page:view:gider_yonetimi')) { // Using same permission for simplicity or allow all staff
-    // die('Bu sayfayı görüntüleme yetkiniz yok.'); 
+// Page-level permission check
+if (!yetkisi_var('page:view:gelir_yonetimi')) {
+    die('Bu sayfayi goruntuleme yetkiniz yok.');
 }
+
+$can_create_income = yetkisi_var('action:gelir_yonetimi:create');
+$can_edit_income = yetkisi_var('action:gelir_yonetimi:edit');
+$can_delete_income = yetkisi_var('action:gelir_yonetimi:delete');
+$can_manage_installments = yetkisi_var('action:gelir_yonetimi:installment_manage');
+$can_pay_installments = yetkisi_var('action:gelir_yonetimi:installment_pay');
 
 // Calculate total income for current month
 $current_month_start = date('Y-m-01');
@@ -532,9 +537,11 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
                 <div class="content-card">
                     <div class="card-header">
                         <div class="d-flex align-items-center">
+                            <?php if ($can_create_income): ?>
                             <button id="addIncomeBtn" class="btn btn-success">
                                 <i class="fas fa-plus"></i> Yeni Tahsilat Ekle
                             </button>
+                            <?php endif; ?>
                         </div>
 
                         <div class="d-flex align-items-center" style="gap: 15px;">
@@ -599,9 +606,11 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
                 <div class="content-card">
                     <div class="card-header">
                         <div class="d-flex align-items-center">
+                            <?php if ($can_manage_installments): ?>
                             <button id="createPlanBtn" class="btn btn-primary">
                                 <i class="fas fa-folder-plus"></i> Yeni Taksit Planı Oluştur
                             </button>
+                            <?php endif; ?>
                         </div>
                     </div>
                     <div class="card-body p-0">
@@ -849,6 +858,10 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
     <script>
         $(document).ready(function () {
             const api_url = 'api_islemleri/gelir_yonetimi_islemler.php';
+            const canEditIncome = <?= json_encode($can_edit_income) ?>;
+            const canDeleteIncome = <?= json_encode($can_delete_income) ?>;
+            const canManageInstallments = <?= json_encode($can_manage_installments) ?>;
+            const canPayInstallments = <?= json_encode($can_pay_installments) ?>;
             let currentPage = 1;
             let perPage = 10;
             let searchTimeout;
@@ -895,13 +908,16 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
                         const currencySymbols = { 'TL': '₺', 'USD': '$', 'EUR': '€' };
                         const currencySymbol = currencySymbols[currency] || currency;
                         const currencyBadge = currency === 'TL' ? 'badge-success' : (currency === 'USD' ? 'badge-warning' : 'badge-info');
+                        const actions = `
+                            ${canEditIncome ? `<button class="btn btn-warning btn-action edit-btn" data-id="${item.gelir_id}" title="Düzenle"><i class="fas fa-edit"></i></button>` : ''}
+                            ${canDeleteIncome ? `<button class="btn btn-danger btn-action delete-btn" data-id="${item.gelir_id}" title="Sil"><i class="fas fa-trash"></i></button>` : ''}
+                        `;
 
                         html += `
                             <tr>
                                 <td style="width: 120px;">
                                     <div class="d-flex">
-                                        <button class="btn btn-warning btn-action edit-btn" data-id="${item.gelir_id}" title="Düzenle"><i class="fas fa-edit"></i></button>
-                                        <button class="btn btn-danger btn-action delete-btn" data-id="${item.gelir_id}" title="Sil"><i class="fas fa-trash"></i></button>
+                                        ${actions || '-'}
                                     </div>
                                 </td>
                                 <td>${date}</td>
@@ -996,7 +1012,7 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
                                     <tr>
                                         <td>
                                             <button class="btn btn-info btn-sm view-plan-btn" data-id="${p.plan_id}"><i class="fas fa-eye"></i> Detay</button>
-                                            ${p.durum === 'aktif' ? `<button class="btn btn-danger btn-sm cancel-plan-btn" data-id="${p.plan_id}"><i class="fas fa-times"></i> İptal</button>` : ''}
+                                            ${canManageInstallments && p.durum === 'aktif' ? `<button class="btn btn-danger btn-sm cancel-plan-btn" data-id="${p.plan_id}"><i class="fas fa-times"></i> İptal</button>` : ''}
                                         </td>
                                         <td>${p.musteri_adi}</td>
                                         <td class="font-weight-bold">${new Intl.NumberFormat('tr-TR', {minimumFractionDigits:2}).format(p.toplam_odenecek)} ${p.para_birimi}</td>
@@ -1189,10 +1205,12 @@ $initial_overall_total_html = !empty($overall_total_parts) ? implode('<br>', $ov
                         
                         res.installments.forEach(i => {
                             let btn = '';
-                            if(i.durum !== 'odendi') {
+                            if(i.durum !== 'odendi' && canPayInstallments) {
                                 btn = `<button class="btn btn-success btn-sm btn-action pay-installment-btn" data-id="${i.taksit_id}" title="Ödeme Al"><i class="fas fa-check"></i></button>`;
                             } else {
-                                btn = `<i class="fas fa-check-circle text-success"></i> ${new Date(i.odeme_tarihi).toLocaleDateString('tr-TR')}`;
+                                btn = i.durum === 'odendi'
+                                    ? `<i class="fas fa-check-circle text-success"></i> ${new Date(i.odeme_tarihi).toLocaleDateString('tr-TR')}`
+                                    : '-';
                             }
                             
                             // Check overdue

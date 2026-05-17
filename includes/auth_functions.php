@@ -24,6 +24,104 @@ function yetkisi_var($permission_key) {
     return in_array($permission_key, $_SESSION['izinler']);
 }
 
+function request_expects_json() {
+    $accept = $_SERVER['HTTP_ACCEPT'] ?? '';
+    $request_uri = $_SERVER['REQUEST_URI'] ?? '';
+    $path = parse_url($request_uri, PHP_URL_PATH) ?? '';
+    $content_type = $_SERVER['CONTENT_TYPE'] ?? '';
+    $is_php_ajax = pathinfo($path, PATHINFO_EXTENSION) === 'php'
+        && (isset($_SERVER['HTTP_X_REQUESTED_WITH']) || strpos($content_type, 'application/json') !== false);
+
+    return strpos($accept, 'application/json') !== false
+        || strpos($request_uri, '/api_islemleri/') !== false
+        || $is_php_ajax;
+}
+
+function deny_request($message = 'Yetkisiz erisim.', $status_code = 403, $json = null) {
+    http_response_code($status_code);
+    if ($json === null) {
+        $json = request_expects_json();
+    }
+
+    if ($json) {
+        if (!headers_sent()) {
+            header('Content-Type: application/json; charset=utf-8');
+        }
+        echo json_encode(['status' => 'error', 'message' => $message], JSON_UNESCAPED_UNICODE);
+    } else {
+        echo $message;
+    }
+    exit;
+}
+
+function require_login($json = null) {
+    if (!isset($_SESSION['user_id'])) {
+        if ($json === null) {
+            $json = request_expects_json();
+        }
+        if ($json) {
+            deny_request('Oturum acmaniz gerekiyor.', 401, true);
+        }
+
+        header('Location: login.php');
+        exit;
+    }
+}
+
+function require_staff($json = null) {
+    require_login($json);
+    if (($_SESSION['taraf'] ?? '') !== 'personel') {
+        deny_request('Bu islem icin yetkiniz yok.', 403, $json);
+    }
+}
+
+function require_permission($permission_key, $json = null) {
+    if (!yetkisi_var($permission_key)) {
+        deny_request('Bu islem icin yetkiniz yok.', 403, $json);
+    }
+}
+
+function request_origin_matches_host($url) {
+    if (!$url) {
+        return null;
+    }
+
+    $parts = parse_url($url);
+    if (empty($parts['host'])) {
+        return null;
+    }
+
+    $request_host = strtolower($_SERVER['HTTP_HOST'] ?? '');
+    $origin_host = strtolower($parts['host']);
+    $origin_port = isset($parts['port']) ? ':' . $parts['port'] : '';
+
+    return $request_host === $origin_host . $origin_port || $request_host === $origin_host;
+}
+
+function enforce_same_origin_unsafe_request() {
+    if (PHP_SAPI === 'cli') {
+        return;
+    }
+
+    $method = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+    if (in_array($method, ['GET', 'HEAD', 'OPTIONS'], true)) {
+        return;
+    }
+
+    $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
+    $referer = $_SERVER['HTTP_REFERER'] ?? '';
+
+    $origin_ok = request_origin_matches_host($origin);
+    if ($origin_ok === false) {
+        deny_request('Gecersiz istek kaynagi.', 403, null);
+    }
+
+    $referer_ok = request_origin_matches_host($referer);
+    if ($origin_ok === null && $referer_ok === false) {
+        deny_request('Gecersiz istek kaynagi.', 403, null);
+    }
+}
+
 /**
  * Reloads permissions for a given user ID from the database and updates the session.
  *
@@ -74,8 +172,11 @@ function update_setting($connection, $key, $value) {
     $stmt = $connection->prepare("INSERT INTO ayarlar (ayar_anahtar, ayar_deger) VALUES (?, ?) ON DUPLICATE KEY UPDATE ayar_deger = VALUES(ayar_deger)");
     if ($stmt) {
         $stmt->bind_param('ss', $key, $value);
-        $stmt->execute();
+        $success = $stmt->execute();
         $stmt->close();
+        return $success;
     }
+
+    return false;
 }
 ?>

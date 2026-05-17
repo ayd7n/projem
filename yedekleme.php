@@ -12,6 +12,10 @@ if ($_SESSION['taraf'] !== 'personel') {
     header('Location: login.php');
     exit;
 }
+
+if (!yetkisi_var('page:view:yedekleme')) {
+    die('Bu sayfayi goruntuleme yetkiniz yok.');
+}
 ?>
 
 <!DOCTYPE html>

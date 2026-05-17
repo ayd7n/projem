@@ -356,7 +356,7 @@ switch ($action) {
 
     case 'make_payment':
         $sozlesme_id = $_POST['sozlesme_id'] ?? 0;
-        $payment_quantity = $_POST['quantity'] ?? 0;
+        $payment_quantity = (float) ($_POST['quantity'] ?? 0);
         $kasa_secimi = normalizeContractCurrency($_POST['kasa_secimi'] ?? 'TL');
         $odeme_tipi = $connection->real_escape_string($_POST['odeme_tipi'] ?? 'Havale/EFT');
 
@@ -386,6 +386,28 @@ switch ($action) {
         $connection->begin_transaction();
 
         try {
+            $locked_contract_result = $connection->query("SELECT * FROM cerceve_sozlesmeler WHERE sozlesme_id = $sozlesme_id FOR UPDATE");
+            if (!$locked_contract_result || $locked_contract_result->num_rows === 0) {
+                throw new Exception('Sozlesme bulunamadi.');
+            }
+
+            $contract = $locked_contract_result->fetch_assoc();
+            $received_result = $connection->query("SELECT COALESCE(SUM(kullanilan_miktar), 0) AS toplam_mal_kabul_miktari FROM stok_hareketleri_sozlesmeler WHERE sozlesme_id = $sozlesme_id");
+            if (!$received_result) {
+                throw new Exception('Mal kabul miktari okunamadi: ' . $connection->error);
+            }
+            $received_quantity = (float) ($received_result->fetch_assoc()['toplam_mal_kabul_miktari'] ?? 0);
+            $paid_quantity = (float) ($contract['toplu_odenen_miktar'] ?? 0);
+            $remaining_payable_quantity = max(0.0, $received_quantity - $paid_quantity);
+            if ($payment_quantity > $remaining_payable_quantity + 0.00001) {
+                throw new Exception('Odeme miktari mal kabul edilmis ve henuz odenmemis miktari asamaz.');
+            }
+
+            $amount_in_foreign_currency = $payment_quantity * $contract['birim_fiyat'];
+            $para_birimi = normalizeContractCurrency($contract['para_birimi'] ?? 'TL');
+            $tedarikci_adi = $contract['tedarikci_adi'];
+            $malzeme_ismi = $contract['malzeme_ismi'];
+
             // 1. Update contract paid amount
             $update_query = "UPDATE cerceve_sozlesmeler SET toplu_odenen_miktar = toplu_odenen_miktar + $payment_quantity WHERE sozlesme_id = $sozlesme_id";
             if (!$connection->query($update_query)) {

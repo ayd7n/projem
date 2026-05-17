@@ -18,6 +18,7 @@ if (isset($_GET['action'])) {
     $action = $_GET['action'];
 
     if ($action == 'get_employee' && isset($_GET['id'])) {
+        require_permission('page:view:personeller', true);
         $personel_id = (int) $_GET['id'];
         try {
             // Don't include password in the response for security
@@ -38,6 +39,7 @@ if (isset($_GET['action'])) {
             $response = ['status' => 'error', 'message' => 'Veritabanı hatası: ' . $e->getMessage()];
         }
     } elseif ($action == 'get_all_employees') {
+        require_permission('page:view:personeller', true);
         try {
             // Don't include password in the response for security
             $query = "SELECT personel_id, ad_soyad, tc_kimlik_no, dogum_tarihi, ise_giris_tarihi, pozisyon, departman, e_posta, telefon, telefon_2, adres, notlar, bordrolu_calisan_mi, aylik_brut_ucret FROM personeller ORDER BY ad_soyad";
@@ -60,6 +62,7 @@ if (isset($_GET['action'])) {
     $action = $_POST['action'];
 
     if ($action == 'add_employee') {
+        require_permission('action:personeller:create', true);
         $ad_soyad = $connection->real_escape_string($_POST['ad_soyad'] ?? '');
         $tc_kimlik_no = $connection->real_escape_string($_POST['tc_kimlik_no'] ?? '');
         $dogum_tarihi = $connection->real_escape_string($_POST['dogum_tarihi'] ?? '');
@@ -98,6 +101,7 @@ if (isset($_GET['action'])) {
             }
         }
     } elseif ($action == 'update_employee' && isset($_POST['personel_id'])) {
+        require_permission('action:personeller:edit', true);
         $personel_id = (int) $_POST['personel_id'];
 
         // Check if this is the protected user
@@ -160,6 +164,7 @@ if (isset($_GET['action'])) {
             }
         }
     } elseif ($action == 'delete_employee' && isset($_POST['personel_id'])) {
+        require_permission('action:personeller:delete', true);
         $personel_id = (int) $_POST['personel_id'];
 
         // Check if this is the protected user
@@ -199,6 +204,7 @@ if (isset($_GET['action'])) {
         }
 
         $personel_id = (int) $_POST['personel_id'];
+        require_permission('action:personeller:permissions', true);
         $permissions = $_POST['permissions'] ?? [];
 
         // Prevent changing admin's permissions

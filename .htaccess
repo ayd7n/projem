@@ -1,1 +1,19 @@
+Options -Indexes
 ErrorDocument 404 /projem/navigation.php
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^yedekler/ - [F,L]
+    RewriteRule (^|/).*\.(sql|key|bak|backup|tmp|temp|log)$ - [F,L]
+    RewriteRule ^cookie.*\.txt$ - [F,L]
+    RewriteRule ^(login_result|nav_result)\.html$ - [F,L]
+</IfModule>
+
+<FilesMatch "^(sunucukeyi\.key|cookie.*\.txt|.*\.sql|.*\.bak|.*\.backup|.*\.key)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Deny from all
+    </IfModule>
+</FilesMatch>

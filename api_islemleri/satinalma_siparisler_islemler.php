@@ -58,6 +58,51 @@ function resolve_purchase_order_status($durum, $existing_durum = '')
     return $durum;
 }
 
+function normalize_purchase_currency($currency)
+{
+    $currency = strtoupper(trim((string) $currency));
+    if ($currency === '' || $currency === 'TL') {
+        return 'TRY';
+    }
+
+    return in_array($currency, ['TRY', 'USD', 'EUR'], true) ? $currency : 'TRY';
+}
+
+function get_purchase_order_rates($connection)
+{
+    $rates = ['TRY' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+    $rate_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($rate_result) {
+        while ($rate_row = $rate_result->fetch_assoc()) {
+            if (($rate_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                $rates['USD'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+            } elseif (($rate_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                $rates['EUR'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+            }
+        }
+    }
+
+    return $rates;
+}
+
+function convert_purchase_amount($amount, $from, $to, $rates)
+{
+    $amount = (float) $amount;
+    $from = normalize_purchase_currency($from);
+    $to = normalize_purchase_currency($to);
+    if ($from === $to) {
+        return $amount;
+    }
+
+    $from_rate = (float) ($rates[$from] ?? 0);
+    $to_rate = (float) ($rates[$to] ?? 0);
+    if ($from_rate <= 0 || $to_rate <= 0) {
+        throw new Exception('Doviz kuru tanimli degil veya 0.');
+    }
+
+    return ($amount * $from_rate) / $to_rate;
+}
+
 switch ($action) {
     case 'get_all_orders':
         $page = isset($_GET['page']) ? (int) $_GET['page'] : 1;
@@ -179,7 +224,7 @@ switch ($action) {
         $istenen_teslim_tarihi = $_POST['istenen_teslim_tarihi'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
         $durum = resolve_purchase_order_status($_POST['durum'] ?? 'taslak');
-        $para_birimi = $_POST['para_birimi'] ?? 'TRY';
+        $para_birimi = normalize_purchase_currency($_POST['para_birimi'] ?? 'TRY');
         $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
 
         // Validation
@@ -209,10 +254,64 @@ switch ($action) {
         }
         $siparis_no = sprintf("PO-%s-%05d", $year, $next_num);
 
-        // Calculate total
-        $toplam_tutar = 0;
+        $normalized_items = [];
+        $seen_codes = [];
+        $toplam_tutar = 0.0;
+        $normalization_error = '';
         foreach ($kalemler as $kalem) {
-            $toplam_tutar += floatval($kalem['toplam_fiyat'] ?? 0);
+            $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
+            $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
+
+            if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
+                $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
+                $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
+                if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                    $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                }
+            }
+
+            if ($malzeme_kodu <= 0) {
+                $normalization_error = 'Siparis kalemlerinde gecersiz malzeme bulundu.';
+                break;
+            }
+            if (isset($seen_codes[$malzeme_kodu])) {
+                $normalization_error = 'Ayni malzeme ayni satinalma siparisinde birden fazla kez eklenemez.';
+                break;
+            }
+
+            $miktar = (float) ($kalem['miktar'] ?? 0);
+            $birim_fiyat = (float) ($kalem['birim_fiyat'] ?? 0);
+            if ($miktar <= 0 || $birim_fiyat < 0) {
+                $normalization_error = 'Siparis kalemlerinde gecersiz miktar veya fiyat bulundu.';
+                break;
+            }
+
+            $kalem_para_birimi = normalize_purchase_currency($kalem['para_birimi'] ?? $para_birimi);
+            if ($kalem_para_birimi !== $para_birimi) {
+                $normalization_error = 'Satinalma siparisi kalemleri siparis para birimiyle ayni olmalidir.';
+                break;
+            }
+
+            $toplam_fiyat = round($miktar * $birim_fiyat, 2);
+            $toplam_tutar += $toplam_fiyat;
+            $seen_codes[$malzeme_kodu] = true;
+
+            $normalized_items[] = [
+                'malzeme_kodu' => $malzeme_kodu,
+                'malzeme_adi' => $connection->real_escape_string($malzeme_adi_raw),
+                'miktar' => $miktar,
+                'birim' => $connection->real_escape_string($kalem['birim'] ?? 'adet'),
+                'birim_fiyat' => $birim_fiyat,
+                'para_birimi' => $connection->real_escape_string($kalem_para_birimi),
+                'toplam_fiyat' => $toplam_fiyat,
+                'teslim_edilen_miktar' => max(0.0, (float) ($kalem['teslim_edilen_miktar'] ?? 0)),
+                'aciklama' => $connection->real_escape_string($kalem['aciklama'] ?? ''),
+            ];
+        }
+
+        if ($normalization_error !== '') {
+            echo json_encode(['status' => 'error', 'message' => $normalization_error]);
+            break;
         }
 
         $olusturan_id = (int) $_SESSION['user_id'];
@@ -242,39 +341,11 @@ switch ($action) {
 
             $siparis_id = $connection->insert_id;
 
-            $seen_codes = [];
-
             // Insert order items
-            foreach ($kalemler as $kalem) {
-                $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
-                $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
-
-                // Kokpitten gelen kalemlerde kod boş/0 gelebilir; isimden eşleyip kaydet.
-                if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
-                    $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
-                    $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
-                if ($code_result && $code_row = $code_result->fetch_assoc()) {
-                    $malzeme_kodu = (int) $code_row['malzeme_kodu'];
-                }
-            }
-
-                if ($malzeme_kodu > 0 && isset($seen_codes[$malzeme_kodu])) {
-                    throw new Exception('Ayni malzeme ayni satinalma siparisinde birden fazla kez eklenemez.');
-                }
-
-                $malzeme_adi = $connection->real_escape_string($malzeme_adi_raw);
-                $miktar = floatval($kalem['miktar']);
-                $birim = $connection->real_escape_string($kalem['birim'] ?? 'adet');
-                $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);
-                $kalem_para_birimi = $connection->real_escape_string($kalem['para_birimi'] ?? 'TRY');
-                $toplam_fiyat = floatval($kalem['toplam_fiyat'] ?? 0);
-                $kalem_aciklama = $connection->real_escape_string($kalem['aciklama'] ?? '');
-
-                $seen_codes[$malzeme_kodu] = true;
-
+            foreach ($normalized_items as $kalem) {
                 $item_sql = "INSERT INTO satinalma_siparis_kalemleri 
                     (siparis_id, malzeme_kodu, malzeme_adi, miktar, birim, birim_fiyat, para_birimi, toplam_fiyat, aciklama)
-                    VALUES ($siparis_id, $malzeme_kodu, '$malzeme_adi', $miktar, '$birim', $birim_fiyat, '$kalem_para_birimi', $toplam_fiyat, '$kalem_aciklama')";
+                    VALUES ($siparis_id, {$kalem['malzeme_kodu']}, '{$kalem['malzeme_adi']}', {$kalem['miktar']}, '{$kalem['birim']}', {$kalem['birim_fiyat']}, '{$kalem['para_birimi']}', {$kalem['toplam_fiyat']}, '{$kalem['aciklama']}')";
 
                 if (!$connection->query($item_sql)) {
                     throw new Exception('Sipariş kalemi kaydedilemedi: ' . $connection->error);
@@ -296,7 +367,7 @@ switch ($action) {
         $istenen_teslim_tarihi = $_POST['istenen_teslim_tarihi'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
         $durum = $_POST['durum'] ?? 'taslak';
-        $para_birimi = $_POST['para_birimi'] ?? 'TRY';
+        $para_birimi = normalize_purchase_currency($_POST['para_birimi'] ?? 'TRY');
         $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
 
         if (!$siparis_id || empty($kalemler)) {
@@ -325,7 +396,7 @@ switch ($action) {
 
             $normalized_items = [];
             $seen_codes = [];
-            $toplam_tutar = 0;
+            $toplam_tutar = 0.0;
 
             foreach ($kalemler as $kalem) {
                 $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
@@ -354,7 +425,16 @@ switch ($action) {
                 }
 
                 $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);
-                $toplam_fiyat = floatval($kalem['toplam_fiyat'] ?? ($miktar * $birim_fiyat));
+                if ($birim_fiyat < 0) {
+                    throw new Exception('Siparis kalemlerinde gecersiz fiyat bulundu.');
+                }
+
+                $kalem_para_birimi = normalize_purchase_currency($kalem['para_birimi'] ?? $para_birimi);
+                if ($kalem_para_birimi !== $para_birimi) {
+                    throw new Exception('Satinalma siparisi kalemleri siparis para birimiyle ayni olmalidir.');
+                }
+
+                $toplam_fiyat = round($miktar * $birim_fiyat, 2);
                 $toplam_tutar += $toplam_fiyat;
 
                 $normalized_items[] = [
@@ -363,7 +443,7 @@ switch ($action) {
                     'miktar' => $miktar,
                     'birim' => $connection->real_escape_string($kalem['birim'] ?? 'adet'),
                     'birim_fiyat' => $birim_fiyat,
-                    'para_birimi' => $connection->real_escape_string($kalem['para_birimi'] ?? 'TRY'),
+                    'para_birimi' => $connection->real_escape_string($kalem_para_birimi),
                     'toplam_fiyat' => $toplam_fiyat,
                     'teslim_edilen_miktar' => $teslim_edilen,
                     'aciklama' => $connection->real_escape_string($kalem['aciklama'] ?? ''),
@@ -423,7 +503,7 @@ switch ($action) {
         $istenen_teslim_tarihi = $_POST['istenen_teslim_tarihi'] ?? '';
         $aciklama = $_POST['aciklama'] ?? '';
         $durum = $_POST['durum'] ?? 'taslak';
-        $para_birimi = $_POST['para_birimi'] ?? 'TRY';
+        $para_birimi = normalize_purchase_currency($_POST['para_birimi'] ?? 'TRY');
         $kalemler = isset($_POST['kalemler']) ? json_decode($_POST['kalemler'], true) : [];
 
         if (!$siparis_id) {
@@ -431,10 +511,64 @@ switch ($action) {
             break;
         }
 
-        // Calculate total
-        $toplam_tutar = 0;
+        $normalized_items = [];
+        $seen_codes = [];
+        $toplam_tutar = 0.0;
+        $normalization_error = '';
         foreach ($kalemler as $kalem) {
-            $toplam_tutar += floatval($kalem['toplam_fiyat'] ?? 0);
+            $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
+            $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
+
+            if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
+                $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
+                $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
+                if ($code_result && $code_row = $code_result->fetch_assoc()) {
+                    $malzeme_kodu = (int) $code_row['malzeme_kodu'];
+                }
+            }
+
+            if ($malzeme_kodu <= 0) {
+                $normalization_error = 'Siparis kalemlerinde gecersiz malzeme bulundu.';
+                break;
+            }
+            if (isset($seen_codes[$malzeme_kodu])) {
+                $normalization_error = 'Ayni malzeme ayni satinalma siparisinde birden fazla kez eklenemez.';
+                break;
+            }
+
+            $miktar = (float) ($kalem['miktar'] ?? 0);
+            $birim_fiyat = (float) ($kalem['birim_fiyat'] ?? 0);
+            if ($miktar <= 0 || $birim_fiyat < 0) {
+                $normalization_error = 'Siparis kalemlerinde gecersiz miktar veya fiyat bulundu.';
+                break;
+            }
+
+            $kalem_para_birimi = normalize_purchase_currency($kalem['para_birimi'] ?? $para_birimi);
+            if ($kalem_para_birimi !== $para_birimi) {
+                $normalization_error = 'Satinalma siparisi kalemleri siparis para birimiyle ayni olmalidir.';
+                break;
+            }
+
+            $toplam_fiyat = round($miktar * $birim_fiyat, 2);
+            $toplam_tutar += $toplam_fiyat;
+            $seen_codes[$malzeme_kodu] = true;
+
+            $normalized_items[] = [
+                'malzeme_kodu' => $malzeme_kodu,
+                'malzeme_adi' => $connection->real_escape_string($malzeme_adi_raw),
+                'miktar' => $miktar,
+                'birim' => $connection->real_escape_string($kalem['birim'] ?? 'adet'),
+                'birim_fiyat' => $birim_fiyat,
+                'para_birimi' => $connection->real_escape_string($kalem_para_birimi),
+                'toplam_fiyat' => $toplam_fiyat,
+                'teslim_edilen_miktar' => max(0.0, (float) ($kalem['teslim_edilen_miktar'] ?? 0)),
+                'aciklama' => $connection->real_escape_string($kalem['aciklama'] ?? ''),
+            ];
+        }
+
+        if ($normalization_error !== '') {
+            echo json_encode(['status' => 'error', 'message' => $normalization_error]);
+            break;
         }
 
         // Escape values
@@ -463,30 +597,11 @@ switch ($action) {
             $connection->query("DELETE FROM satinalma_siparis_kalemleri WHERE siparis_id = $siparis_id");
 
             // Insert order items
-            foreach ($kalemler as $kalem) {
-                $malzeme_kodu = (int) ($kalem['malzeme_kodu'] ?? 0);
-                $malzeme_adi_raw = trim((string) ($kalem['malzeme_adi'] ?? ''));
-
-                if ($malzeme_kodu <= 0 && $malzeme_adi_raw !== '') {
-                    $malzeme_adi_lookup = $connection->real_escape_string($malzeme_adi_raw);
-                    $code_result = $connection->query("SELECT malzeme_kodu FROM malzemeler WHERE malzeme_ismi = '$malzeme_adi_lookup' LIMIT 1");
-                    if ($code_result && $code_row = $code_result->fetch_assoc()) {
-                        $malzeme_kodu = (int) $code_row['malzeme_kodu'];
-                    }
-                }
-
-                $malzeme_adi = $connection->real_escape_string($malzeme_adi_raw);
-                $miktar = floatval($kalem['miktar']);
-                $birim = $connection->real_escape_string($kalem['birim'] ?? 'adet');
-                $birim_fiyat = floatval($kalem['birim_fiyat'] ?? 0);
-                $kalem_para_birimi = $connection->real_escape_string($kalem['para_birimi'] ?? 'TRY');
-                $toplam_fiyat = floatval($kalem['toplam_fiyat'] ?? 0);
+            foreach ($normalized_items as $kalem) {
                 $teslim_edilen = floatval($kalem['teslim_edilen_miktar'] ?? 0);
-                $kalem_aciklama = $connection->real_escape_string($kalem['aciklama'] ?? '');
-
                 $item_sql = "INSERT INTO satinalma_siparis_kalemleri 
                     (siparis_id, malzeme_kodu, malzeme_adi, miktar, birim, birim_fiyat, para_birimi, toplam_fiyat, teslim_edilen_miktar, aciklama)
-                    VALUES ($siparis_id, $malzeme_kodu, '$malzeme_adi', $miktar, '$birim', $birim_fiyat, '$kalem_para_birimi', $toplam_fiyat, $teslim_edilen, '$kalem_aciklama')";
+                    VALUES ($siparis_id, {$kalem['malzeme_kodu']}, '{$kalem['malzeme_adi']}', {$kalem['miktar']}, '{$kalem['birim']}', {$kalem['birim_fiyat']}, '{$kalem['para_birimi']}', {$kalem['toplam_fiyat']}, $teslim_edilen, '{$kalem['aciklama']}')";
 
                 if (!$connection->query($item_sql)) {
                     throw new Exception('Sipariş kalemi kaydedilemedi: ' . $connection->error);
@@ -767,15 +882,30 @@ switch ($action) {
             break;
         }
 
-        // Find the best price for this material in VALID contracts, excluding the current supplier
-        // Use cerceve_sozlesmeler directly with date validity check
-        $query = "SELECT birim_fiyat, para_birimi, tedarikci_adi 
+        $rates = get_purchase_order_rates($connection);
+        $usd_rate = (float) ($rates['USD'] ?? 0);
+        $eur_rate = (float) ($rates['EUR'] ?? 0);
+        if ($usd_rate <= 0 || $eur_rate <= 0) {
+            echo json_encode(['status' => 'error', 'message' => 'Doviz kurlari tanimli degil veya 0.']);
+            break;
+        }
+
+        // Find the best price for this material in VALID contracts, excluding the current supplier.
+        // Prices are compared in TRY so USD/EUR contracts are not treated as if they were TRY.
+        $query = "SELECT birim_fiyat, para_birimi, tedarikci_adi,
+                         birim_fiyat * CASE UPPER(COALESCE(NULLIF(para_birimi, ''), 'TRY'))
+                             WHEN 'USD' THEN $usd_rate
+                             WHEN 'EUR' THEN $eur_rate
+                             WHEN 'TL' THEN 1
+                             WHEN 'TRY' THEN 1
+                             ELSE 1
+                         END AS birim_fiyat_try
                   FROM cerceve_sozlesmeler 
                   WHERE malzeme_kodu = $malzeme_kodu 
                   AND tedarikci_id != $current_tedarikci_id
                   AND (baslangic_tarihi IS NULL OR baslangic_tarihi <= CURDATE())
                   AND (bitis_tarihi IS NULL OR bitis_tarihi >= CURDATE())
-                  ORDER BY birim_fiyat ASC 
+                  ORDER BY birim_fiyat_try ASC
                   LIMIT 1";
 
         $result = $connection->query($query);

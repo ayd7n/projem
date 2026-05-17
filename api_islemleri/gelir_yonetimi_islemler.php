@@ -1,6 +1,8 @@
 <?php
 include '../config.php';
 
+require_staff(true);
+
 // Check if user is logged in
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(['status' => 'error', 'message' => 'Oturum aÃ§manÄ±z gerekiyor.']);
@@ -14,6 +16,10 @@ if ($_SESSION['taraf'] !== 'personel') {
 }
 
 $action = $_REQUEST['action'] ?? '';
+$required_permission = incomeRequiredPermissionForAction($action);
+if ($required_permission !== null) {
+    require_permission($required_permission, true);
+}
 
 switch ($action) {
     case 'get_incomes':
@@ -64,6 +70,36 @@ switch ($action) {
         break;
     default:
         echo json_encode(['status' => 'error', 'message' => 'GeÃ§ersiz iÅŸlem.']);
+}
+
+function incomeRequiredPermissionForAction($action)
+{
+    $read_actions = [
+        'get_incomes',
+        'get_income',
+        'get_total_income',
+        'get_pending_orders',
+        'get_pending_stats',
+        'get_customers_with_debt',
+        'get_customer_orders_for_plan',
+        'get_installment_plans',
+        'get_plan_details',
+    ];
+
+    if (in_array($action, $read_actions, true)) {
+        return 'page:view:gelir_yonetimi';
+    }
+
+    $action_permissions = [
+        'add_income' => 'action:gelir_yonetimi:create',
+        'update_income' => 'action:gelir_yonetimi:edit',
+        'delete_income' => 'action:gelir_yonetimi:delete',
+        'create_installment_plan' => 'action:gelir_yonetimi:installment_manage',
+        'cancel_installment_plan' => 'action:gelir_yonetimi:installment_manage',
+        'pay_installment' => 'action:gelir_yonetimi:installment_pay',
+    ];
+
+    return $action_permissions[$action] ?? null;
 }
 
 function getIncomes()
@@ -377,6 +413,28 @@ function incomeGetPaidTotalInCurrency($siparis_id, $target_currency, $rates, $fa
         }
     }
 
+    $installment_query = "SELECT gy.para_birimi,
+                                 IFNULL(SUM(gy.tutar * tsb.tutar_katkisi / NULLIF(COALESCE(NULLIF(tp.toplam_odenecek, 0), tp.toplam_anapara), 0)), 0) AS total
+                          FROM gelir_yonetimi gy
+                          JOIN taksit_detaylari td ON td.taksit_id = gy.taksit_id
+                          JOIN taksit_planlari tp ON tp.plan_id = td.plan_id
+                          JOIN taksit_siparis_baglantisi tsb ON tsb.plan_id = tp.plan_id
+                          WHERE tsb.siparis_id = $siparis_id
+                            AND gy.taksit_id IS NOT NULL
+                            AND tp.durum != 'iptal'
+                          GROUP BY gy.para_birimi";
+    $installment_result = $connection->query($installment_query);
+    if ($installment_result) {
+        while ($row = $installment_result->fetch_assoc()) {
+            $line_currency = incomeNormalizeCurrency($row['para_birimi'] ?: $fallback_currency);
+            $line_total = (float) ($row['total'] ?? 0);
+            if ($line_total == 0.0) {
+                continue;
+            }
+            $total_paid += incomeConvertCurrency($line_total, $line_currency, $target_currency, $rates);
+        }
+    }
+
     return $total_paid;
 }
 
@@ -472,8 +530,10 @@ function addIncome()
     $personel_id = $_SESSION['user_id'];
     $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
 
-    $siparis_id = !empty($_POST['siparis_id']) ? (int) $_POST['siparis_id'] : 'NULL';
-    $musteri_id = !empty($_POST['musteri_id']) ? (int) $_POST['musteri_id'] : 'NULL';
+    $siparis_id = !empty($_POST['siparis_id']) ? (int) $_POST['siparis_id'] : 0;
+    $musteri_id = !empty($_POST['musteri_id']) ? (int) $_POST['musteri_id'] : 0;
+    $siparis_id_sql = $siparis_id > 0 ? (string) $siparis_id : 'NULL';
+    $musteri_id_sql = $musteri_id > 0 ? (string) $musteri_id : 'NULL';
 
     $cek_no = $connection->real_escape_string($_POST['cek_no'] ?? '');
     $cek_sahibi = $connection->real_escape_string($_POST['cek_sahibi'] ?? '');
@@ -512,7 +572,7 @@ function addIncome()
         $cek_col = ($cek_secimi !== 'NULL') ? ", cek_secimi" : "";
         $cek_val = ($cek_secimi !== 'NULL') ? ", $cek_secimi" : "";
         $query = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, siparis_id, odeme_tipi, musteri_id, musteri_adi, kasa_secimi $cek_col)
-              VALUES ('$tarih', $tutar, '$para_birimi', '$kategori', '$aciklama', $personel_id, '$personel_adi', $siparis_id, '$odeme_tipi', $musteri_id, '$musteri_adi', '$kasa_secimi' $cek_val)";
+              VALUES ('$tarih', $tutar, '$para_birimi', '$kategori', '$aciklama', $personel_id, '$personel_adi', $siparis_id_sql, '$odeme_tipi', $musteri_id_sql, '$musteri_adi', '$kasa_secimi' $cek_val)";
 
         if (!$connection->query($query))
             throw new Exception('Gelir eklenemedi: ' . $connection->error);
@@ -713,7 +773,7 @@ function deleteIncome()
         if ($siparis_id > 0) {
             updateOrderPaymentStatus($siparis_id);
             $check_order = $connection->query("SELECT siparis_id, odeme_durumu FROM siparisler WHERE siparis_id = $siparis_id");
-            if ($check_order->num_rows > 0) {
+            if ($check_order && $check_order->num_rows > 0) {
                 $ord = $check_order->fetch_assoc();
                 $extra_msg = " Bagli Siparis Durumu: " . $ord['odeme_durumu'] . " olarak guncellendi.";
             }
@@ -721,20 +781,26 @@ function deleteIncome()
 
         if ($taksit_id > 0) {
             $revert_inst = "UPDATE taksit_detaylari SET durum = 'bekliyor', odenen_tutar = 0, kalan_tutar = tutar, odeme_tarihi = NULL WHERE taksit_id = $taksit_id";
-            $connection->query($revert_inst);
+            if (!$connection->query($revert_inst)) {
+                throw new Exception('Taksit odemesi geri alinamadi: ' . $connection->error);
+            }
             $plan_q = $connection->query("SELECT plan_id FROM taksit_detaylari WHERE taksit_id = $taksit_id");
+            if (!$plan_q) {
+                throw new Exception('Taksit plani alinamadi: ' . $connection->error);
+            }
             $plan_id = $plan_q->fetch_assoc()['plan_id'] ?? 0;
             if ($plan_id > 0) {
                 $plan_check = $connection->query("SELECT durum FROM taksit_planlari WHERE plan_id = $plan_id");
+                if (!$plan_check) {
+                    throw new Exception('Taksit plani durumu alinamadi: ' . $connection->error);
+                }
                 $plan_status = $plan_check->fetch_assoc()['durum'] ?? '';
                 if ($plan_status === 'tamamlandi') {
-                    $connection->query("UPDATE taksit_planlari SET durum = 'aktif' WHERE plan_id = $plan_id");
-                    $linked_orders = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = $plan_id");
-                    while ($lo = $linked_orders->fetch_assoc()) {
-                        $lsid = $lo['siparis_id'];
-                        $connection->query("UPDATE siparisler SET odeme_durumu = 'kismi_odendi' WHERE siparis_id = $lsid");
+                    if (!$connection->query("UPDATE taksit_planlari SET durum = 'aktif' WHERE plan_id = $plan_id")) {
+                        throw new Exception('Taksit plani aktif duruma alinamadi: ' . $connection->error);
                     }
                 }
+                updateInstallmentPlanLinkedOrders($plan_id);
                 $extra_msg .= " Taksit odenmemis olarak isaretlendi.";
             }
         }
@@ -793,6 +859,7 @@ function updateOrderPaymentStatus($siparis_id)
     $summary = incomeGetOrderFinancialSummary($siparis_id, $rates);
     $total_paid = (float) $summary['total_paid'];
     $order_total = (float) $summary['order_total'];
+    $stored_paid = min($total_paid, $order_total);
     $order_currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
 
     $new_status = 'bekliyor';
@@ -804,8 +871,27 @@ function updateOrderPaymentStatus($siparis_id)
 
     $status_esc = $connection->real_escape_string($new_status);
     $currency_esc = $connection->real_escape_string($order_currency);
-    $update = "UPDATE siparisler SET odeme_durumu = '$status_esc', odenen_tutar = $total_paid, para_birimi = '$currency_esc' WHERE siparis_id = $siparis_id";
+    $update = "UPDATE siparisler SET odeme_durumu = '$status_esc', odenen_tutar = $stored_paid, para_birimi = '$currency_esc' WHERE siparis_id = $siparis_id";
     $connection->query($update);
+}
+
+function updateInstallmentPlanLinkedOrders($plan_id)
+{
+    global $connection;
+
+    $plan_id = (int) $plan_id;
+    if ($plan_id <= 0) {
+        return;
+    }
+
+    $linked_orders = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = $plan_id");
+    if (!$linked_orders) {
+        throw new Exception('Taksit planina bagli siparisler alinamadi: ' . $connection->error);
+    }
+
+    while ($linked_order = $linked_orders->fetch_assoc()) {
+        updateOrderPaymentStatus((int) $linked_order['siparis_id']);
+    }
 }
 
 function getPendingStats()
@@ -952,84 +1038,141 @@ function getCustomerOrdersForPlan() {
 
 function createInstallmentPlan() {
     global $connection;
-    
+
     $musteri_id = (int)($_POST['musteri_id'] ?? 0);
-    $siparis_ids = $_POST['siparis_ids'] ?? []; 
+    $siparis_ids = $_POST['siparis_ids'] ?? [];
+    if (!is_array($siparis_ids)) {
+        $siparis_ids = [$siparis_ids];
+    }
+    $siparis_ids = array_values(array_unique(array_filter(array_map('intval', $siparis_ids), function ($sid) {
+        return $sid > 0;
+    })));
+
     $taksit_sayisi = (int)($_POST['taksit_sayisi'] ?? 1);
     $vade_farki_orani = floatval($_POST['vade_farki_orani'] ?? 0);
-    $baslangic_tarihi = $_POST['baslangic_tarihi'] ?? date('Y-m-d');
+    $baslangic_tarihi = trim((string)($_POST['baslangic_tarihi'] ?? date('Y-m-d')));
     $aciklama = $connection->real_escape_string($_POST['aciklama'] ?? '');
-    $kaydeden_id = $_SESSION['user_id'];
-    
-    if(!$musteri_id || empty($siparis_ids) || $taksit_sayisi < 1) {
+    $kaydeden_id = (int) $_SESSION['user_id'];
+
+    if (!$musteri_id || empty($siparis_ids) || $taksit_sayisi < 1) {
         echo json_encode(['status' => 'error', 'message' => 'Eksik bilgi.']);
         return;
     }
-
-    $rates = getIncomeRates();
-    $total_principal = 0;
-    $order_contributions = [];
-    $first_order_curr = '';
-    
-    foreach($siparis_ids as $sid) {
-        $sid = (int)$sid;
-        $summary = incomeGetOrderFinancialSummary($sid, $rates);
-        $order_currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
-        
-        if(!$first_order_curr) $first_order_curr = $order_currency;
-        if($order_currency !== $first_order_curr) {
-             echo json_encode(['status' => 'error', 'message' => 'SeÃ§ilen sipariÅŸlerin para birimleri aynÄ± olmalÄ±dÄ±r.']);
-             return;
-        }
-        
-        $rem = floatval($summary['remaining']);
-        if($rem > 0) {
-            $total_principal += $rem;
-            $order_contributions[$sid] = $rem;
-        }
-    }
-    if ($total_principal <= 0) {
-        echo json_encode(['status' => 'error', 'message' => 'SeÃ§ilen sipariÅŸlerde taksitlendirilecek kalan tutar bulunamadÄ±.']);
+    if ($vade_farki_orani < 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Vade farki negatif olamaz.']);
         return;
     }
-    $currency = $first_order_curr;
 
-    $interest_amount = $total_principal * ($vade_farki_orani / 100);
-    $total_payable = $total_principal + $interest_amount;
-    $monthly_amount = $total_payable / $taksit_sayisi;
+    $date_check = DateTime::createFromFormat('Y-m-d', $baslangic_tarihi);
+    if (!$date_check || $date_check->format('Y-m-d') !== $baslangic_tarihi) {
+        echo json_encode(['status' => 'error', 'message' => 'Baslangic tarihi gecersiz.']);
+        return;
+    }
 
-    $musteri_adi_q = $connection->query("SELECT musteri_adi FROM musteriler WHERE musteri_id = $musteri_id");
-    $musteri_adi = $musteri_adi_q->fetch_assoc()['musteri_adi'] ?? '';
+    $connection->begin_transaction();
+    try {
+        $customer_result = $connection->query("SELECT musteri_adi FROM musteriler WHERE musteri_id = $musteri_id FOR UPDATE");
+        if (!$customer_result) {
+            throw new Exception('Musteri bilgisi alinamadi: ' . $connection->error);
+        }
+        $customer = $customer_result->fetch_assoc();
+        if (!$customer) {
+            throw new Exception('Musteri bulunamadi.');
+        }
 
-    $ins_plan = "INSERT INTO taksit_planlari (musteri_id, musteri_adi, toplam_anapara, vade_farki_orani, vade_farki_tutari, toplam_odenecek, para_birimi, taksit_sayisi, baslangic_tarihi, aciklama, kaydeden_personel_id)
-                 VALUES ($musteri_id, '$musteri_adi', $total_principal, $vade_farki_orani, $interest_amount, $total_payable, '$currency', $taksit_sayisi, '$baslangic_tarihi', '$aciklama', $kaydeden_id)";
-    
-    if($connection->query($ins_plan)) {
-        $plan_id = $connection->insert_id;
-        
-        foreach($order_contributions as $sid => $amt) {
-            $connection->query("INSERT INTO taksit_siparis_baglantisi (plan_id, siparis_id, tutar_katkisi) VALUES ($plan_id, $sid, $amt)");
+        $musteri_adi = $connection->real_escape_string($customer['musteri_adi'] ?? '');
+        $rates = getIncomeRates();
+        $total_principal = 0.0;
+        $order_contributions = [];
+        $first_order_curr = '';
+
+        foreach ($siparis_ids as $sid) {
+            $order_result = $connection->query("SELECT siparis_id, musteri_id, durum FROM siparisler WHERE siparis_id = $sid FOR UPDATE");
+            if (!$order_result) {
+                throw new Exception('Siparis bilgisi alinamadi: ' . $connection->error);
+            }
+            $order = $order_result->fetch_assoc();
+            if (!$order || (int) $order['musteri_id'] !== $musteri_id) {
+                throw new Exception("Secilen siparis bu musteriye ait degil: #$sid");
+            }
+            if (!in_array($order['durum'], ['onaylandi', 'tamamlandi'], true)) {
+                throw new Exception("Siparis taksitlendirilemez durumda: #$sid");
+            }
+
+            $active_plan_result = $connection->query("SELECT COUNT(*) AS c
+                FROM taksit_siparis_baglantisi tsb
+                JOIN taksit_planlari tp ON tp.plan_id = tsb.plan_id
+                WHERE tsb.siparis_id = $sid AND tp.durum != 'iptal'");
+            if (!$active_plan_result) {
+                throw new Exception('Siparis taksit baglantisi kontrol edilemedi: ' . $connection->error);
+            }
+            $active_plan_count = (int) ($active_plan_result->fetch_assoc()['c'] ?? 0);
+            if ($active_plan_count > 0) {
+                throw new Exception("Siparis zaten aktif bir taksit planina bagli: #$sid");
+            }
+
+            $summary = incomeGetOrderFinancialSummary($sid, $rates);
+            $order_currency = incomeNormalizeCurrency($summary['currency'] ?? 'TL');
+
+            if (!$first_order_curr) {
+                $first_order_curr = $order_currency;
+            }
+            if ($order_currency !== $first_order_curr) {
+                throw new Exception('Secilen siparislerin para birimleri ayni olmalidir.');
+            }
+
+            $remaining = round((float) $summary['remaining'], 2);
+            if ($remaining > 0.01) {
+                $total_principal += $remaining;
+                $order_contributions[$sid] = $remaining;
+            }
+        }
+
+        if ($total_principal <= 0) {
+            throw new Exception('Secilen siparislerde taksitlendirilecek kalan tutar bulunamadi.');
+        }
+
+        $currency = $connection->real_escape_string($first_order_curr ?: 'TL');
+        $interest_amount = round($total_principal * ($vade_farki_orani / 100), 2);
+        $total_payable = round($total_principal + $interest_amount, 2);
+        $monthly_amount = $total_payable / $taksit_sayisi;
+
+        $ins_plan = "INSERT INTO taksit_planlari (musteri_id, musteri_adi, toplam_anapara, vade_farki_orani, vade_farki_tutari, toplam_odenecek, para_birimi, taksit_sayisi, baslangic_tarihi, aciklama, kaydeden_personel_id)
+                     VALUES ($musteri_id, '$musteri_adi', $total_principal, $vade_farki_orani, $interest_amount, $total_payable, '$currency', $taksit_sayisi, '$baslangic_tarihi', '$aciklama', $kaydeden_id)";
+        if (!$connection->query($ins_plan)) {
+            throw new Exception('Plan olusturulamadi: ' . $connection->error);
+        }
+
+        $plan_id = (int) $connection->insert_id;
+
+        foreach ($order_contributions as $sid => $amount) {
+            if (!$connection->query("INSERT INTO taksit_siparis_baglantisi (plan_id, siparis_id, tutar_katkisi) VALUES ($plan_id, $sid, $amount)")) {
+                throw new Exception('Plan-siparis baglantisi olusturulamadi: ' . $connection->error);
+            }
         }
 
         $current_date = new DateTime($baslangic_tarihi);
-        
-        for($i = 1; $i <= $taksit_sayisi; $i++) {
+        for ($i = 1; $i <= $taksit_sayisi; $i++) {
             $vade = $current_date->format('Y-m-d');
             $this_amount = round($monthly_amount, 2);
-            if ($i == $taksit_sayisi) {
+            if ($i === $taksit_sayisi) {
                 $so_far = round($monthly_amount, 2) * ($taksit_sayisi - 1);
-                $this_amount = $total_payable - $so_far;
+                $this_amount = round($total_payable - $so_far, 2);
             }
 
-            $connection->query("INSERT INTO taksit_detaylari (plan_id, sira_no, vade_tarihi, tutar, kalan_tutar) 
-                              VALUES ($plan_id, $i, '$vade', $this_amount, $this_amount)");
-            
+            if (!$connection->query("INSERT INTO taksit_detaylari (plan_id, sira_no, vade_tarihi, tutar, kalan_tutar)
+                                    VALUES ($plan_id, $i, '$vade', $this_amount, $this_amount)")) {
+                throw new Exception('Taksit detayi olusturulamadi: ' . $connection->error);
+            }
+
             $current_date->modify('+1 month');
         }
 
-        echo json_encode(['status' => 'success', 'message' => 'Taksit planÄ± baÅŸarÄ±yla oluÅŸturuldu.', 'plan_id' => $plan_id]);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Plan oluÅŸturulamadÄ±: ' . $connection->error]);
+        $connection->commit();
+        echo json_encode(['status' => 'success', 'message' => 'Taksit plani basariyla olusturuldu.', 'plan_id' => $plan_id]);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }
 
@@ -1041,16 +1184,22 @@ function getInstallmentPlans() {
     
     $q = "SELECT * FROM taksit_planlari ORDER BY olusturma_tarihi DESC LIMIT $per_page OFFSET $offset";
     $res = $connection->query($q);
+    if (!$res) {
+        echo json_encode(['status' => 'error', 'message' => 'Planlar alinamadi: ' . $connection->error]);
+        return;
+    }
     $plans = [];
     while($row = $res->fetch_assoc()) {
         $pid = $row['plan_id'];
-        $stats = $connection->query("SELECT COUNT(*) as total, SUM(CASE WHEN durum='odendi' THEN 1 ELSE 0 END) as paid_count FROM taksit_detaylari WHERE plan_id=$pid")->fetch_assoc();
+        $stats_result = $connection->query("SELECT COUNT(*) as total, SUM(CASE WHEN durum='odendi' THEN 1 ELSE 0 END) as paid_count FROM taksit_detaylari WHERE plan_id=$pid");
+        $stats = $stats_result ? $stats_result->fetch_assoc() : ['total' => 0, 'paid_count' => 0];
         $row['odenen_taksit'] = $stats['paid_count'];
         $row['toplam_taksit_sayisi'] = $stats['total'];
         $plans[] = $row;
     }
     
-    $total = $connection->query("SELECT COUNT(*) as t FROM taksit_planlari")->fetch_assoc()['t'];
+    $total_result = $connection->query("SELECT COUNT(*) as t FROM taksit_planlari");
+    $total = $total_result ? ($total_result->fetch_assoc()['t'] ?? 0) : 0;
     
     echo json_encode(['status' => 'success', 'data' => $plans, 'total' => $total, 'page' => $page]);
 }
@@ -1059,10 +1208,28 @@ function getPlanDetails() {
     global $connection;
     $plan_id = (int)$_GET['plan_id'];
     
-    $plan = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = $plan_id")->fetch_assoc();
+    if ($plan_id <= 0) {
+        echo json_encode(['status' => 'error', 'message' => 'Gecersiz plan ID.']);
+        return;
+    }
+
+    $plan_result = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = $plan_id");
+    if (!$plan_result) {
+        echo json_encode(['status' => 'error', 'message' => 'Plan alinamadi: ' . $connection->error]);
+        return;
+    }
+    $plan = $plan_result->fetch_assoc();
+    if (!$plan) {
+        echo json_encode(['status' => 'error', 'message' => 'Plan bulunamadi.']);
+        return;
+    }
     
     $inst = [];
     $res = $connection->query("SELECT * FROM taksit_detaylari WHERE plan_id = $plan_id ORDER BY sira_no ASC");
+    if (!$res) {
+        echo json_encode(['status' => 'error', 'message' => 'Taksit detaylari alinamadi: ' . $connection->error]);
+        return;
+    }
     while($r = $res->fetch_assoc()) $inst[] = $r;
     
     $orders = [];
@@ -1070,6 +1237,10 @@ function getPlanDetails() {
                                FROM taksit_siparis_baglantisi tsb 
                                JOIN siparisler s ON s.siparis_id = tsb.siparis_id 
                                WHERE tsb.plan_id = $plan_id");
+    if (!$res2) {
+        echo json_encode(['status' => 'error', 'message' => 'Plan siparisleri alinamadi: ' . $connection->error]);
+        return;
+    }
     while($r = $res2->fetch_assoc()) $orders[] = $r;
 
     echo json_encode(['status' => 'success', 'plan' => $plan, 'installments' => $inst, 'orders' => $orders]);
@@ -1087,14 +1258,26 @@ function payInstallment() {
 
     $connection->begin_transaction();
     try {
-        $td = $connection->query("SELECT * FROM taksit_detaylari WHERE taksit_id = $taksit_id FOR UPDATE")->fetch_assoc();
+        $td_result = $connection->query("SELECT * FROM taksit_detaylari WHERE taksit_id = $taksit_id FOR UPDATE");
+        if (!$td_result) {
+            throw new Exception('Taksit bilgisi alinamadi: ' . $connection->error);
+        }
+        $td = $td_result->fetch_assoc();
         if (!$td || floatval($td['kalan_tutar']) <= 0) {
             throw new Exception('Taksit bulunamadi veya zaten odenmis.');
         }
 
-        $plan = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = {$td['plan_id']} FOR UPDATE")->fetch_assoc();
+        $plan_id = (int) $td['plan_id'];
+        $plan_result = $connection->query("SELECT * FROM taksit_planlari WHERE plan_id = $plan_id FOR UPDATE");
+        if (!$plan_result) {
+            throw new Exception('Taksit plani alinamadi: ' . $connection->error);
+        }
+        $plan = $plan_result->fetch_assoc();
         if (!$plan) {
             throw new Exception('Taksit plani bulunamadi.');
+        }
+        if (($plan['durum'] ?? '') === 'iptal') {
+            throw new Exception('Iptal edilmis taksit planina odeme alinamaz.');
         }
 
         $amount_to_pay = floatval($td['kalan_tutar']);
@@ -1111,11 +1294,13 @@ function payInstallment() {
         }
 
         $desc = "Taksit Odemesi - Taksit {$td['sira_no']}/{$plan['taksit_sayisi']} - {$plan['musteri_adi']}";
+        $desc_esc = $connection->real_escape_string($desc);
         $personel_id = $_SESSION['user_id'];
-        $personel_adi = $_SESSION['kullanici_adi'];
+        $personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
+        $plan_musteri_adi = $connection->real_escape_string($plan['musteri_adi'] ?? '');
         
         $ins_inc = "INSERT INTO gelir_yonetimi (tarih, tutar, para_birimi, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, musteri_id, musteri_adi, taksit_id, kasa_secimi)
-                    VALUES ('$tarih', $amount_to_pay, '$plan_currency', 'Siparis Odemesi', '$desc', $personel_id, '$personel_adi', '$odeme_tipi', {$plan['musteri_id']}, '{$plan['musteri_adi']}', $taksit_id, '$kasa_secimi')";
+                    VALUES ('$tarih', $amount_to_pay, '$plan_currency', 'Siparis Odemesi', '$desc_esc', $personel_id, '$personel_adi', '$odeme_tipi', {$plan['musteri_id']}, '$plan_musteri_adi', $taksit_id, '$kasa_secimi')";
         if (!$connection->query($ins_inc)) {
             throw new Exception('Gelir kaydi olusturulamadi: ' . $connection->error);
         }
@@ -1127,21 +1312,22 @@ function payInstallment() {
         incomeAdjustCash($kasa_secimi, $hareket_tutar);
 
         $hareket_sql = "INSERT INTO kasa_hareketleri (tarih, islem_tipi, kasa_adi, tutar, para_birimi, tl_karsiligi, kaynak_tablo, kaynak_id, aciklama, kaydeden_personel, ilgili_musteri, odeme_tipi)
-                        VALUES ('$tarih', 'gelir_girisi', '$kasa_secimi', $hareket_tutar, '$kasa_secimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$desc', '$personel_adi', '{$plan['musteri_adi']}', '$odeme_tipi')";
+                        VALUES ('$tarih', 'gelir_girisi', '$kasa_secimi', $hareket_tutar, '$kasa_secimi', $tl_karsiligi, 'gelir_yonetimi', $gelir_id, '$desc_esc', '$personel_adi', '$plan_musteri_adi', '$odeme_tipi')";
         if (!$connection->query($hareket_sql)) {
             throw new Exception('Kasa hareketi kaydedilemedi: ' . $connection->error);
         }
         
-        $check = $connection->query("SELECT COUNT(*) as rem FROM taksit_detaylari WHERE plan_id = {$plan['plan_id']} AND durum != 'odendi'")->fetch_assoc();
-        if ($check['rem'] == 0) {
-            $connection->query("UPDATE taksit_planlari SET durum = 'tamamlandi' WHERE plan_id = {$plan['plan_id']}");
-            
-             $linked = $connection->query("SELECT siparis_id FROM taksit_siparis_baglantisi WHERE plan_id = {$plan['plan_id']}");
-             while($l = $linked->fetch_assoc()) {
-                 $sid = (int) $l['siparis_id'];
-                 updateOrderPaymentStatus($sid);
-             }
+        $check_result = $connection->query("SELECT COUNT(*) as rem FROM taksit_detaylari WHERE plan_id = {$plan['plan_id']} AND durum != 'odendi'");
+        if (!$check_result) {
+            throw new Exception('Taksit durumu kontrol edilemedi: ' . $connection->error);
         }
+        $check = $check_result->fetch_assoc();
+        if ($check['rem'] == 0) {
+            if (!$connection->query("UPDATE taksit_planlari SET durum = 'tamamlandi' WHERE plan_id = {$plan['plan_id']}")) {
+                throw new Exception('Taksit plani tamamlandi olarak isaretlenemedi: ' . $connection->error);
+            }
+        }
+        updateInstallmentPlanLinkedOrders((int) $plan['plan_id']);
         
         $connection->commit();
         echo json_encode(['status' => 'success', 'message' => 'Taksit odendi, gelir ve kasa kayitlari olusturuldu.']);
@@ -1160,11 +1346,38 @@ function cancelInstallmentPlan() {
         return;
     }
 
-    $upd = "UPDATE taksit_planlari SET durum = 'iptal' WHERE plan_id = $plan_id";
-    if($connection->query($upd)) {
+    $connection->begin_transaction();
+    try {
+        $plan_result = $connection->query("SELECT plan_id, durum FROM taksit_planlari WHERE plan_id = $plan_id FOR UPDATE");
+        if (!$plan_result) {
+            throw new Exception('Plan bilgisi alinamadi: ' . $connection->error);
+        }
+        $plan = $plan_result->fetch_assoc();
+        if (!$plan) {
+            throw new Exception('Plan bulunamadi.');
+        }
+        if (($plan['durum'] ?? '') === 'iptal') {
+            throw new Exception('Plan zaten iptal edilmis.');
+        }
+
+        $paid_result = $connection->query("SELECT COUNT(*) AS c FROM taksit_detaylari WHERE plan_id = $plan_id AND (durum = 'odendi' OR odenen_tutar > 0)");
+        if (!$paid_result) {
+            throw new Exception('Plan odeme durumu kontrol edilemedi: ' . $connection->error);
+        }
+        $paid_count = (int) ($paid_result->fetch_assoc()['c'] ?? 0);
+        if ($paid_count > 0) {
+            throw new Exception('Odemesi alinmis plan iptal edilemez. Once ilgili odeme gelir kayitlarini silin.');
+        }
+
+        if (!$connection->query("UPDATE taksit_planlari SET durum = 'iptal' WHERE plan_id = $plan_id")) {
+            throw new Exception('Plan iptal edilemedi: ' . $connection->error);
+        }
+        updateInstallmentPlanLinkedOrders($plan_id);
+        $connection->commit();
         log_islem($connection, $_SESSION['kullanici_adi'], "Taksit PlanÄ± #$plan_id iptal edildi.", 'UPDATE');
-        echo json_encode(['status' => 'success', 'message' => 'Plan iptal edildi. SipariÅŸler tekrar tahsilat listesine dÃ¼ÅŸecektir.']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => 'Hata: ' . $connection->error]);
+        echo json_encode(['status' => 'success', 'message' => 'Plan iptal edildi. Siparisler tekrar tahsilat listesine dusecektir.']);
+    } catch (Exception $e) {
+        $connection->rollback();
+        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
     }
 }

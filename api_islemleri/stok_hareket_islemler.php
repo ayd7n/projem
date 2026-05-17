@@ -470,6 +470,35 @@ if ($_SESSION['taraf'] !== 'personel') {
 }
 
 $action = $_GET['action'] ?? $_POST['action'] ?? '';
+require_permission('page:view:manuel_stok_hareket', true);
+
+function require_stock_movement_action_permission($hareket_turu, $yon = null)
+{
+    $hareket_turu = trim((string) $hareket_turu);
+    $yon = normalize_stock_direction($yon);
+
+    if ($hareket_turu === 'sayim_fazlasi') {
+        require_permission('action:manuel_stok_hareket:sayim_fazlasi', true);
+        return;
+    }
+
+    if (($hareket_turu === 'fire' || $hareket_turu === 'sayim_eksigi') && ($yon === null || $yon === 'cikis')) {
+        require_permission('action:manuel_stok_hareket:fire_sayim_eksigi', true);
+        return;
+    }
+
+    if ($hareket_turu === 'transfer') {
+        require_permission('action:manuel_stok_hareket:transfer', true);
+        return;
+    }
+
+    if ($hareket_turu === 'mal_kabul') {
+        require_permission('action:manuel_stok_hareket:mal_kabul', true);
+        return;
+    }
+
+    deny_request('Bu stok hareketi icin yetkiniz yok.', 403, true);
+}
 
 switch ($action) {
     case 'get_locations':
@@ -790,6 +819,7 @@ switch ($action) {
             echo json_encode(['status' => 'error', 'message' => 'Gecersiz yon bilgisi.', 'error_code' => 'INVALID_DIRECTION']);
             break;
         }
+        require_stock_movement_action_permission($hareket_turu, $yon);
 
         // Validation
         if (!$stok_turu || !$kod || !$miktar || !$yon || !$hareket_turu || !$aciklama) {
@@ -1012,6 +1042,7 @@ switch ($action) {
             echo json_encode(['status' => 'error', 'message' => 'Gecersiz yon bilgisi.', 'error_code' => 'INVALID_DIRECTION']);
             break;
         }
+        require_stock_movement_action_permission($hareket_turu, $yon);
 
         // Validation
         if (!$hareket_id || !$stok_turu || !$kod || !$miktar || !$yon || !$hareket_turu || !$aciklama) {
@@ -1159,6 +1190,7 @@ switch ($action) {
         break;
 
     case 'delete_movement':
+        require_permission('action:manuel_stok_hareket:delete', true);
         $hareket_id = $_POST['hareket_id'] ?? 0;
 
         if (!$hareket_id) {
@@ -1315,6 +1347,7 @@ switch ($action) {
 
 
     case 'transfer_stock':
+        require_permission('action:manuel_stok_hareket:transfer', true);
         // Get transfer parameters
         $stok_turu = $_POST['stok_turu'] ?? '';
         $kod = $_POST['kod'] ?? '';
@@ -1727,6 +1760,7 @@ switch ($action) {
         break;
 
     case 'add_mal_kabul':
+        require_permission('action:manuel_stok_hareket:mal_kabul', true);
         $stok_turu = $_POST['stok_turu'] ?? '';
         $kod = $_POST['kod'] ?? '';
         $miktar = floatval($_POST['miktar'] ?? 0);

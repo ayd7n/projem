@@ -67,6 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($customer['giris_yetkisi'] != 1) {
                 $error_message = 'Giriş yetkiniz yok!';
             } else {
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $customer['user_id'];
                 $_SESSION['taraf'] = $customer['taraf'];
                 $_SESSION['id'] = $customer['user_id'];
@@ -97,6 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $staff = $staff_result->fetch_assoc();
 
             if (password_verify($password, $staff['sifre'])) {
+                session_regenerate_id(true);
                 $_SESSION['user_id'] = $staff['user_id'];
                 $_SESSION['taraf'] = $staff['taraf'];
                 $_SESSION['id'] = $staff['user_id'];

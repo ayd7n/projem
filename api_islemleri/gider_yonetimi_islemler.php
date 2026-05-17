@@ -17,21 +17,27 @@ $action = $_REQUEST['action'] ?? '';
 
 switch ($action) {
     case 'get_expenses':
+        require_permission('page:view:gider_yonetimi', true);
         getExpenses();
         break;
     case 'get_expense':
+        require_permission('page:view:gider_yonetimi', true);
         getExpense();
         break;
     case 'get_total_expenses':
+        require_permission('page:view:gider_yonetimi', true);
         getTotalExpenses();
         break;
     case 'add_expense':
+        require_permission('action:gider_yonetimi:create', true);
         addExpense();
         break;
     case 'update_expense':
+        require_permission('action:gider_yonetimi:edit', true);
         updateExpense();
         break;
     case 'delete_expense':
+        require_permission('action:gider_yonetimi:delete', true);
         deleteExpense();
         break;
     default:

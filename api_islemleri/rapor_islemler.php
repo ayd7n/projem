@@ -2,6 +2,8 @@
 include '../config.php';
 
 header('Content-Type: application/json');
+require_staff(true);
+require_permission('page:view:raporlar', true);
 
 function getReportRates($connection)
 {

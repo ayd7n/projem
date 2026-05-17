@@ -1,5 +1,6 @@
 <?php
 include '../config.php';
+require_login(true);
 
 // --- Search & Pagination Logic ---
 $search_term = $_GET['search'] ?? '';

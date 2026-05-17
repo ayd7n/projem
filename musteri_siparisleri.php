@@ -29,9 +29,6 @@ $user_info = $user_info_result->fetch_assoc();
 $user_name = ($user_info && !empty($user_info['ad_soyad'])) ? $user_info['ad_soyad'] : $_SESSION['kullanici_adi']; // Fallback to session name if not found in database or if ad_soyad is empty
 $user_info_stmt->close();
 
-// Debug logging to check what user_name contains
-error_log("DEBUG - user_id: $user_id, user_info: " . print_r($user_info, true) . ", user_name: $user_name, session_kullanici_adi: " . $_SESSION['kullanici_adi']);
-
 $message = '';
 $error = '';
 
@@ -167,8 +164,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $error = "Sipariş silinirken hata oluştu: " . $connection->error;
             }
             $delete_order_stmt->close();
-
-            error_log("DEBUG - Order deleted successfully: siparis_id=$siparis_id");
         } else {
             $error = "Only cancelled orders can be deleted.";
         }
@@ -305,16 +300,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
     } elseif (false && isset($_POST['update'])) {
-        // Debug logging for form submission
-        error_log("DEBUG - Form submission initiated");
-
         // Update order status
         $siparis_id = $_POST['siparis_id'];
         $durum = $_POST['durum'];
-
-        // More detailed debug logging for form submission
-        error_log("DEBUG - Form submission: siparis_id=$siparis_id, durum=$durum, user_id=" . $_SESSION['user_id']);
-        error_log("DEBUG - POST data: " . print_r($_POST, true));
 
         // Get the current status before update
         $current_query = "SELECT durum FROM siparisler WHERE siparis_id = ?";
@@ -364,7 +352,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_islem($connection, $_SESSION['kullanici_adi'], "$customer_name müşterisine ait $order_num nolu siparişin yeni durumu: $durum_adi", 'UPDATE');
 
             $message = "Sipariş başarıyla güncellendi.";
-            error_log("DEBUG - Database update successful for siparis_id: $siparis_id, new status: $durum");
 
             // If the order is completed, update stock and add movement records
             // Handle stock movements based on status changes
@@ -474,7 +461,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         } else {
             $error = "Sipariş güncellenirken hata oluştu: " . $connection->error;
-            error_log("DEBUG - Database update failed for siparis_id: $siparis_id, error: " . $connection->error);
         }
         $stmt->close();
     }

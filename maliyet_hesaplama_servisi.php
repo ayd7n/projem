@@ -6,6 +6,8 @@
 include 'config.php';
 
 header('Content-Type: application/json');
+require_staff(true);
+require_permission('action:malzemeler:edit', true);
 
 if (!isset($_GET['malzeme_kodu'])) {
     echo json_encode(['status' => 'error', 'message' => 'Malzeme kodu belirtilmedi.']);
@@ -39,6 +41,18 @@ $material_data = $stock_result->fetch_assoc();
 $current_stock = (float)$material_data['stok_miktari'];
 $malzeme_ismi = $material_data['malzeme_ismi'];
 
+$rates = ['TRY' => 1.0, 'TL' => 1.0, 'USD' => 0.0, 'EUR' => 0.0];
+$rate_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+if ($rate_result) {
+    while ($rate_row = $rate_result->fetch_assoc()) {
+        if (($rate_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+            $rates['USD'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+        } elseif (($rate_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+            $rates['EUR'] = max(0.0, (float) ($rate_row['ayar_deger'] ?? 0));
+        }
+    }
+}
+
 
 if ($current_stock <= 0) {
     // If stock is zero or negative, cost is zero.
@@ -58,7 +72,7 @@ if ($current_stock <= 0) {
 }
 
 // Get goods receipts from stok_hareketleri_sozlesmeler
-$receipts_query = "SELECT kullanilan_miktar, birim_fiyat FROM stok_hareketleri_sozlesmeler WHERE malzeme_kodu = $malzeme_kodu ORDER BY tarih DESC";
+$receipts_query = "SELECT kullanilan_miktar, birim_fiyat, para_birimi FROM stok_hareketleri_sozlesmeler WHERE malzeme_kodu = $malzeme_kodu ORDER BY tarih DESC";
 $receipts_result = $connection->query($receipts_query);
 
 if (!$receipts_result) {
@@ -73,6 +87,19 @@ $remaining_stock_to_cover = $current_stock;
 while ($row = $receipts_result->fetch_assoc()) {
     $receipt_quantity = (float)$row['kullanilan_miktar'];
     $receipt_unit_price = (float)$row['birim_fiyat'];
+    $receipt_currency = strtoupper(trim((string)($row['para_birimi'] ?? 'TRY')));
+    if ($receipt_currency === '') {
+        $receipt_currency = 'TRY';
+    }
+    if ($receipt_currency === 'TL') {
+        $receipt_currency = 'TRY';
+    }
+    $receipt_rate = (float)($rates[$receipt_currency] ?? 0);
+    if ($receipt_rate <= 0) {
+        echo json_encode(['status' => 'error', 'message' => $receipt_currency . ' kuru tanimli degil veya 0.']);
+        exit;
+    }
+    $receipt_unit_price_try = $receipt_unit_price * $receipt_rate;
 
     if ($remaining_stock_to_cover <= 0) {
         break; // Covered all current stock
@@ -89,7 +116,7 @@ while ($row = $receipts_result->fetch_assoc()) {
         $remaining_stock_to_cover -= $receipt_quantity;
     }
     
-    $accumulated_cost += ($quantity_to_use * $receipt_unit_price);
+    $accumulated_cost += ($quantity_to_use * $receipt_unit_price_try);
     $accumulated_quantity += $quantity_to_use;
 }
 

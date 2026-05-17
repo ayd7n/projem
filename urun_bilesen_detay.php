@@ -2,6 +2,8 @@
 include 'config.php'; // Veritabanı bağlantı ayarlarınız
 
 header('Content-Type: application/json; charset=utf-8');
+require_staff(true);
+require_permission('page:view:urunler', true);
 
 // Ürün kodu parametresini al
 $urun_kodu = isset($_GET['urun_kodu']) ? (int)$_GET['urun_kodu'] : null;

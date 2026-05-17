@@ -7,6 +7,8 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, DELETE');
 header('Access-Control-Allow-Headers: Content-Type');
 
+require_staff(true);
+
 function normalizeMaterialType($materialType) {
     return strtolower(trim((string) ($materialType ?? '')));
 }
@@ -73,6 +75,35 @@ function calculateMaxProducibleQuantity($connection, $agacTuru, $urunKodu) {
     return $maxProducible === null ? 0 : $maxProducible;
 }
 
+function esansWorkOrderRequiredPermissionForAction($action) {
+    $readActions = [
+        'get_work_orders',
+        'get_work_order',
+        'get_essences',
+        'get_materials',
+        'get_tanks',
+        'calculate_components',
+        'get_components',
+        'get_work_order_components',
+    ];
+
+    if (in_array($action, $readActions, true)) {
+        return 'page:view:esans_is_emirleri';
+    }
+
+    $actionPermissions = [
+        'create_work_order' => 'action:esans_is_emirleri:create',
+        'update_work_order' => 'action:esans_is_emirleri:edit',
+        'delete_work_order' => 'action:esans_is_emirleri:delete',
+        'start_work_order' => 'action:esans_is_emirleri:start',
+        'revert_work_order' => 'action:esans_is_emirleri:start',
+        'complete_work_order' => 'action:esans_is_emirleri:complete',
+        'revert_completion' => 'action:esans_is_emirleri:complete',
+    ];
+
+    return $actionPermissions[$action] ?? null;
+}
+
 // Get the action from the request (handle both form data and JSON)
 $action = isset($_GET['action']) ? $_GET['action'] : (isset($_POST['action']) ? $_POST['action'] : '');
 if (!$action) {
@@ -81,6 +112,11 @@ if (!$action) {
     if ($input && isset($input['action'])) {
         $action = $input['action'];
     }
+}
+
+$requiredPermission = esansWorkOrderRequiredPermissionForAction($action);
+if ($requiredPermission !== null) {
+    require_permission($requiredPermission, true);
 }
 
 // Handle different actions

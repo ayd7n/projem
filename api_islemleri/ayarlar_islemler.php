@@ -36,6 +36,7 @@ if (isset($_POST['action'])) {
     }
 
     if ($_POST['action'] == 'update_settings') {
+        require_permission('action:ayarlar:currency', true);
         if (isset($_POST['dolar_kuru']) && isset($_POST['euro_kuru'])) {
             $dolar_kuru = $_POST['dolar_kuru'];
             $euro_kuru = $_POST['euro_kuru'];
@@ -65,6 +66,7 @@ if (isset($_POST['action'])) {
     }
 
     if ($_POST['action'] == 'update_maintenance_mode') {
+        require_permission('action:ayarlar:maintenance_mode', true);
         if (isset($_POST['mode'])) {
             $mode = $_POST['mode'];
             // Validate the input
@@ -87,6 +89,7 @@ if (isset($_POST['action'])) {
     }
 
     if ($_POST['action'] == 'update_telegram_settings') {
+        require_permission('action:ayarlar:telegram', true);
         if (isset($_POST['telegram_bot_token']) && isset($_POST['telegram_chat_id'])) {
             $bot_token = $_POST['telegram_bot_token'];
             $chat_id = $_POST['telegram_chat_id'];

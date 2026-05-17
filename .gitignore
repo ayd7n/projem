@@ -2,6 +2,9 @@
 *.tmp
 *.temp
 cookies.txt
+cookie*.txt
+*_result.html
+*.key
 
 # PHP session files
 *.sess

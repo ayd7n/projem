@@ -1,4 +1,9 @@
 <?php
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit('Forbidden');
+}
+
 include 'config.php';
 
 // Admin kullanıcı oturumu oluşturmak için kullanıcı adını ve ID'sini belirle

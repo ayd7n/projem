@@ -54,6 +54,7 @@ try {
         $action = $_GET['action'];
 
         if ($action == 'list_backups') {
+            require_permission('page:view:yedekleme', true);
             if (!is_dir($backup_dir)) {
                 $response = ['status' => 'success', 'backups' => []]; // Return empty if dir doesn't exist
             } else {
@@ -76,6 +77,7 @@ try {
 
     if (isset($_POST['action'])) {
         $action = $_POST['action'];
+        require_permission('action:ayarlar:backup', true);
 
         if ($action == 'create_backup') {
             // The function from backup_functions.php now handles the backup and settings update
