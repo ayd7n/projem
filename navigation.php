@@ -830,6 +830,12 @@ $kullanici_adi = isset($_SESSION['kullanici_adi']) ? htmlspecialchars($_SESSION[
 </head>
 
 <body>
+    <?php if ($is_admin && !empty($GLOBALS['negatif_stok_korumasi_hatasi'])): ?>
+    <div style="position:fixed;top:0;left:0;right:0;z-index:9999;background:#b00020;color:#fff;padding:10px 16px;font-weight:600;text-align:center;box-shadow:0 2px 6px rgba(0,0,0,.3);">
+        <i class="fas fa-exclamation-triangle"></i>
+        Uyarı: Negatif stok koruması (DB trigger'ları) aktif değil. Stok hareketleri uygulama seviyesinde korunuyor ancak veritabanı güvenlik ağı devre dışı. Lütfen DB kullanıcısının TRIGGER yetkisini kontrol edin.
+    </div>
+    <?php endif; ?>
     <header class="top-bar-wrapper">
         <div class="top-bar">
             <div class="logo">

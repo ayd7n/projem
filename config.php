@@ -110,9 +110,14 @@ require_once __DIR__ . '/includes/stock_guard.php';
 
 enforce_same_origin_unsafe_request();
 
+$GLOBALS['negatif_stok_korumasi_hatasi'] = null;
 try {
     ensure_negative_stock_triggers($connection);
 } catch (Throwable $e) {
+    // Trigger kurulamadiysa (ornegin DB kullanicisinda TRIGGER yetkisi yoksa) negatif stok
+    // koruma agi devre disi kalir. Sessizce gecmek yerine durumu isaretle; navigation.php
+    // bunu admin'e gorunur bir uyari olarak gosterir.
+    $GLOBALS['negatif_stok_korumasi_hatasi'] = $e->getMessage();
     error_log("Negatif stok trigger kontrolu basarisiz oldu: " . $e->getMessage());
 }
 

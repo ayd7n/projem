@@ -169,7 +169,7 @@ function getAylikBordroOzeti()
                     p.departman,
                     p.aylik_brut_ucret,
                     COALESCE(a.avans_toplami, 0) as avans_toplami,
-                    (p.aylik_brut_ucret - COALESCE(a.avans_toplami, 0)) as net_odenecek,
+                    GREATEST(p.aylik_brut_ucret - COALESCE(a.avans_toplami, 0), 0) as net_odenecek,
                     o.odeme_id,
                     COALESCE(o.net_odenen, 0) as net_odenen,
                     COALESCE(o.kullanilan_avans, 0) as kullanilan_avans,
@@ -339,7 +339,7 @@ function kaydetMaasOdemesi()
     $kaydeden_personel_id = $_SESSION['user_id'];
     $kaydeden_personel_adi = $connection->real_escape_string($_SESSION['kullanici_adi'] ?? '');
 
-    if ($personel_id <= 0 || empty($personel_adi) || $aylik_brut_ucret <= 0) {
+    if ($personel_id <= 0) {
         echo json_encode(['status' => 'error', 'message' => 'Gerekli alanlar eksik veya hatali.']);
         return;
     }
@@ -356,6 +356,37 @@ function kaydetMaasOdemesi()
     $connection->begin_transaction();
 
     try {
+        $personel_query = "SELECT ad_soyad, aylik_brut_ucret
+                           FROM personeller
+                           WHERE personel_id = $personel_id
+                             AND bordrolu_calisan_mi = 1
+                           FOR UPDATE";
+        $personel_result = $connection->query($personel_query);
+        if (!$personel_result || $personel_result->num_rows === 0) {
+            throw new Exception('Bordrolu personel bulunamadi.');
+        }
+        $personel_row = $personel_result->fetch_assoc();
+        $personel_adi = $connection->real_escape_string($personel_row['ad_soyad']);
+        $aylik_brut_ucret = (float) $personel_row['aylik_brut_ucret'];
+
+        $avans_toplami = 0.0;
+        $avans_result = $connection->query("SELECT avans_tutari
+                                            FROM personel_avanslar
+                                            WHERE personel_id = $personel_id
+                                              AND donem_yil = $donem_yil
+                                              AND donem_ay = $donem_ay
+                                              AND maas_odemesinde_kullanildi = 0
+                                            FOR UPDATE");
+        if ($avans_result) {
+            while ($avans_row = $avans_result->fetch_assoc()) {
+                $avans_toplami += (float) $avans_row['avans_tutari'];
+            }
+        }
+        if ($avans_toplami > $aylik_brut_ucret + 0.00001) {
+            throw new Exception('Bu donemdeki avans toplami brut maasi asiyor. Bu kayit kismi avans kapatma desteklemedigi icin maas odemesi yapilamaz.');
+        }
+        $net_odenen = max(0, $aylik_brut_ucret - $avans_toplami);
+
         $gider_query = "INSERT INTO gider_yonetimi 
                         (tarih, tutar, kategori, aciklama, kaydeden_personel_id, kaydeden_personel_ismi, odeme_tipi, odeme_yapilan_firma, kasa_secimi) 
                         VALUES 
@@ -419,7 +450,11 @@ function kaydetMaasOdemesi()
 
     } catch (Exception $e) {
         $connection->rollback();
-        echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        // Yaris kosulu: ayni donem icin ikinci kayit UNIQUE index'e takilir (hata kodu 1062).
+        $mesaj = ((int) $e->getCode() === 1062)
+            ? 'Bu personel icin bu donemde zaten maas odemesi yapilmis.'
+            : $e->getMessage();
+        echo json_encode(['status' => 'error', 'message' => $mesaj]);
     }
 }
 function kaydetAvans()
