@@ -63,7 +63,7 @@ $stats_query = "SELECT
     SUM(CASE WHEN durum IN ('uretimde', 'onay_bekliyor') THEN 1 ELSE 0 END) as active_orders,
     SUM(CASE WHEN durum = 'tamamlandi' THEN 1 ELSE 0 END) as completed_orders,
     SUM(CASE WHEN durum = 'iptal' THEN 1 ELSE 0 END) as cancelled_orders,
-    COALESCE(SUM(tamamlanan_miktar), 0) as total_produced_qty
+    COALESCE(SUM(CASE WHEN durum = 'tamamlandi' THEN tamamlanan_miktar ELSE 0 END), 0) as total_produced_qty
 " . $wo_query_base;
 
 $stats_stmt = $connection->prepare($stats_query);
@@ -78,7 +78,7 @@ $prod_summary_query = "SELECT
     birim,
     COUNT(*) as order_count,
     SUM(planlanan_miktar) as total_planned,
-    SUM(tamamlanan_miktar) as total_completed
+    SUM(CASE WHEN durum = 'tamamlandi' THEN tamamlanan_miktar ELSE 0 END) as total_completed
 " . $wo_query_base . " GROUP BY urun_kodu, urun_ismi, birim ORDER BY total_completed DESC";
 
 $prod_stmt = $connection->prepare($prod_summary_query);

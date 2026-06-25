@@ -26,7 +26,7 @@ function getSupplyChainData($connection) {
                               GROUP_CONCAT(DISTINCT ss.siparis_no SEPARATOR ', ') as po_list
                        FROM satinalma_siparisler ss
                        JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
-                       WHERE ss.durum IN ('taslak', 'onaylandi', 'olusturuldu', 'gonderildi', 'kismen_teslim', 'yollandi')
+                       WHERE ss.durum IN ('onaylandi', 'gonderildi', 'kismen_teslim')
                        GROUP BY ssk.malzeme_kodu, ssk.malzeme_adi
                        HAVING bekleyen > 0";
     $p_orders_result = $connection->query($p_orders_query);
@@ -235,12 +235,32 @@ function getSupplyChainData($connection) {
 
     // 4.5 Gecerli Sozlesmeleri Onbellege Al (Tüm tedarikçiler fiyat sıralı)
     $valid_contracts = [];
-    $vc_query = "SELECT cs.malzeme_kodu, t.tedarikci_adi, t.tedarikci_id, cs.birim_fiyat, cs.para_birimi
+    $kokpit_rates = ['USD' => 0.0, 'EUR' => 0.0];
+    $kokpit_rate_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+    if ($kokpit_rate_result) {
+        while ($rate_row = $kokpit_rate_result->fetch_assoc()) {
+            if (($rate_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+                $kokpit_rates['USD'] = max(0.0, (float) $rate_row['ayar_deger']);
+            } elseif (($rate_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+                $kokpit_rates['EUR'] = max(0.0, (float) $rate_row['ayar_deger']);
+            }
+        }
+    }
+    $usd_rate_for_sort = $kokpit_rates['USD'] > 0 ? $kokpit_rates['USD'] : 999999999;
+    $eur_rate_for_sort = $kokpit_rates['EUR'] > 0 ? $kokpit_rates['EUR'] : 999999999;
+
+    $vc_query = "SELECT cs.malzeme_kodu, t.tedarikci_adi, t.tedarikci_id, cs.birim_fiyat, cs.para_birimi,
+                        cs.birim_fiyat *
+                        CASE UPPER(COALESCE(NULLIF(cs.para_birimi, ''), 'TL'))
+                            WHEN 'USD' THEN $usd_rate_for_sort
+                            WHEN 'EUR' THEN $eur_rate_for_sort
+                            ELSE 1
+                        END AS birim_fiyat_try
                  FROM cerceve_sozlesmeler cs
                  JOIN cerceve_sozlesmeler_gecerlilik csg ON cs.sozlesme_id = csg.sozlesme_id
                  JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id
                  WHERE csg.gecerli_mi = 1
-                 ORDER BY cs.malzeme_kodu, cs.birim_fiyat ASC";
+                 ORDER BY cs.malzeme_kodu, birim_fiyat_try ASC";
     $vc_result = $connection->query($vc_query);
     if ($vc_result) {
         while ($vc = $vc_result->fetch_assoc()) {
@@ -251,7 +271,8 @@ function getSupplyChainData($connection) {
                         'tedarikci_adi' => $vc['tedarikci_adi'],
                         'tedarikci_id' => $vc['tedarikci_id'],
                         'birim_fiyat' => $vc['birim_fiyat'],
-                        'para_birimi' => $vc['para_birimi']
+                        'para_birimi' => $vc['para_birimi'],
+                        'birim_fiyat_try' => $vc['birim_fiyat_try']
                     ],
                     'tum_tedarikciler' => []
                 ];
@@ -261,7 +282,8 @@ function getSupplyChainData($connection) {
                 'adi' => $vc['tedarikci_adi'],
                 'tedarikci_id' => $vc['tedarikci_id'],
                 'fiyat' => $vc['birim_fiyat'],
-                'para_birimi' => $vc['para_birimi']
+                'para_birimi' => $vc['para_birimi'],
+                'fiyat_try' => $vc['birim_fiyat_try']
             ];
         }
     }
@@ -584,7 +606,13 @@ function getSupplyChainData($connection) {
                 $esans_malz_query = "SELECT ua.bilesen_kodu, m.malzeme_ismi 
                                      FROM urun_agaci ua
                                      JOIN malzemeler m ON ua.bilesen_kodu = m.malzeme_kodu
-                                     WHERE ua.agac_turu = 'esans' AND ua.urun_kodu = ?";
+                                     LEFT JOIN esanslar e ON e.esans_kodu = ?
+                                     WHERE ua.agac_turu = 'esans'
+                                       AND (
+                                           ua.urun_kodu = e.esans_id
+                                           OR ua.urun_kodu = e.esans_kodu
+                                           OR ua.urun_ismi = e.esans_ismi
+                                       )";
                 $esans_malz_stmt = $connection->prepare($esans_malz_query);
                 $esans_malz_stmt->bind_param('s', $esans_kodu);
                 $esans_malz_stmt->execute();
@@ -833,7 +861,7 @@ function getSupplyChainData($connection) {
                                 ssk.miktar, ssk.teslim_edilen_miktar
                          FROM satinalma_siparisler ss
                          JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
-                         WHERE ss.durum IN ('gonderildi', 'kismen_teslim')";
+                         WHERE ss.durum IN ('onaylandi', 'gonderildi', 'kismen_teslim')";
     $siparisler_result = $connection->query($siparisler_query);
     while ($siparis = $siparisler_result->fetch_assoc()) {
         $bekleyen_miktar = $siparis['miktar'] - $siparis['teslim_edilen_miktar'];
@@ -874,7 +902,7 @@ function getSupplyChainData($connection) {
                             FROM satinalma_siparisler ss
                             JOIN satinalma_siparis_kalemleri ssk ON ss.siparis_id = ssk.siparis_id
                             JOIN esanslar e ON ssk.malzeme_adi = e.esans_ismi
-                            WHERE ss.durum IN ('gonderildi', 'kismen_teslim')";
+                            WHERE ss.durum IN ('onaylandi', 'gonderildi', 'kismen_teslim')";
     $esans_siparis_result = $connection->query($esans_siparis_query);
     while ($siparis = $esans_siparis_result->fetch_assoc()) {
         $bekleyen_miktar = $siparis['miktar'] - $siparis['teslim_edilen_miktar'];
@@ -1324,6 +1352,20 @@ function getAksiyonOnerisi($p) {
 }
 
 $supply_chain_data = getSupplyChainData($connection);
+
+$kokpit_view_rates = ['USD' => 0.0, 'EUR' => 0.0];
+$kokpit_view_rate_result = $connection->query("SELECT ayar_anahtar, ayar_deger FROM ayarlar WHERE ayar_anahtar IN ('dolar_kuru', 'euro_kuru')");
+if ($kokpit_view_rate_result) {
+    while ($rate_row = $kokpit_view_rate_result->fetch_assoc()) {
+        if (($rate_row['ayar_anahtar'] ?? '') === 'dolar_kuru') {
+            $kokpit_view_rates['USD'] = max(0.0, (float) $rate_row['ayar_deger']);
+        } elseif (($rate_row['ayar_anahtar'] ?? '') === 'euro_kuru') {
+            $kokpit_view_rates['EUR'] = max(0.0, (float) $rate_row['ayar_deger']);
+        }
+    }
+}
+$usd_rate_for_sort = $kokpit_view_rates['USD'] > 0 ? $kokpit_view_rates['USD'] : 999999999;
+$eur_rate_for_sort = $kokpit_view_rates['EUR'] > 0 ? $kokpit_view_rates['EUR'] : 999999999;
 
 // Calculate statistics for the compact view
 $kotu_count = 0; $iyi_count = 0; $belirsiz_count = 0;
@@ -2154,12 +2196,18 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                                             // Malzeme kodu varsa sorgula
                                             if (!empty($malzeme_kodu)) {
                                                 $kodu_safe = $connection->real_escape_string($malzeme_kodu);
-                                                $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi 
+                                                $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi,
+                                                                       cs.birim_fiyat *
+                                                                       CASE UPPER(COALESCE(NULLIF(cs.para_birimi, ''), 'TL'))
+                                                                           WHEN 'USD' THEN $usd_rate_for_sort
+                                                                           WHEN 'EUR' THEN $eur_rate_for_sort
+                                                                           ELSE 1
+                                                                       END AS birim_fiyat_try
                                                                 FROM cerceve_sozlesmeler cs 
                                                                 JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id 
                                                                 WHERE cs.malzeme_kodu = '$kodu_safe' 
                                                                 AND cs.bitis_tarihi >= CURDATE()
-                                                                ORDER BY cs.birim_fiyat ASC LIMIT 1";
+                                                                ORDER BY birim_fiyat_try ASC LIMIT 1";
                                                 $t_res = $connection->query($sql_tedarik);
                                                 if ($t_res && $t_row = $t_res->fetch_assoc()) {
                                                     $tedarikci_bilgi = [
@@ -2232,12 +2280,18 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
 
                                                     if (!empty($malzeme_kodu_h)) {
                                                         $kodu_safe_h = $connection->real_escape_string($malzeme_kodu_h);
-                                                        $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi 
+                                                        $sql_tedarik = "SELECT t.tedarikci_adi, cs.birim_fiyat, cs.para_birimi,
+                                                                               cs.birim_fiyat *
+                                                                               CASE UPPER(COALESCE(NULLIF(cs.para_birimi, ''), 'TL'))
+                                                                                   WHEN 'USD' THEN $usd_rate_for_sort
+                                                                                   WHEN 'EUR' THEN $eur_rate_for_sort
+                                                                                   ELSE 1
+                                                                               END AS birim_fiyat_try
                                                                         FROM cerceve_sozlesmeler cs 
                                                                         JOIN tedarikciler t ON cs.tedarikci_id = t.tedarikci_id 
                                                                         WHERE cs.malzeme_kodu = '$kodu_safe_h' 
                                                                         AND cs.bitis_tarihi >= CURDATE()
-                                                                        ORDER BY cs.birim_fiyat ASC LIMIT 1";
+                                                                        ORDER BY birim_fiyat_try ASC LIMIT 1";
                                                         $t_res = $connection->query($sql_tedarik);
                                                         if ($t_res && $t_row = $t_res->fetch_assoc()) {
                                                             $tedarikci_bilgi = [
@@ -4091,14 +4145,15 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
     };
     
     // Satınalma Siparişi Oluştur
-    window.siparisOlustur = function(tedarikciAdi, tedarikciId) {
+    window.siparisOlustur = function(tedarikciAdi, tedarikciId, paraBirimi) {
         var data = window.globalSiparisData || [];
         var kalemler = [];
         
         // Seçili tedarikçiye ait malzemeleri topla
         data.forEach(function(item) {
             var secili = item.secili_tedarikci || item.tedarikci;
-            if (secili && secili.adi === tedarikciAdi) {
+            var seciliParaBirimi = (secili && secili.para_birimi) ? secili.para_birimi : 'TRY';
+            if (secili && secili.adi === tedarikciAdi && String(secili.tedarikci_id) === String(tedarikciId) && (!paraBirimi || seciliParaBirimi === paraBirimi)) {
                 kalemler.push({
                     malzeme_kodu: item.malzeme_kodu || 0,
                     malzeme_adi: item.malzeme_adi,
@@ -4162,7 +4217,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                 .then(response => {
                     if (response.status === 'success') {
                         // Butonu disable et ve güncelle
-                        var btn = document.getElementById('siparis-btn-' + tedarikciId);
+                        var btn = document.getElementById('siparis-btn-' + tedarikciId + '-' + ((paraBirimi || 'TRY').replace(/[^A-Za-z0-9]/g, '')));
                         if (btn) {
                             btn.disabled = true;
                             btn.innerHTML = '<i class="fas fa-check-circle mr-1"></i> ' + response.siparis_no;
@@ -4221,24 +4276,28 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
             // Seçili tedarikçi varsa onu kullan, yoksa varsayılan tedarikçiyi
             var secili = item.secili_tedarikci || item.tedarikci;
             var tedarikciAdi = (secili && secili.adi && secili.adi !== '-') ? secili.adi : 'Tedarikçisi Belirsiz';
-            if (!groups[tedarikciAdi]) {
-                groups[tedarikciAdi] = { 
-                    items: [], 
-                    totalCost: 0, 
-                    currency: (secili ? secili.para_birimi : ''),
+            var paraBirimi = (secili && secili.para_birimi) ? secili.para_birimi : '';
+            var groupKey = tedarikciAdi + '|' + paraBirimi;
+            if (!groups[groupKey]) {
+                groups[groupKey] = {
+                    tedarikci_adi: tedarikciAdi,
+                    items: [],
+                    totalCost: 0,
+                    currency: paraBirimi,
                     tedarikci_id: (secili ? secili.tedarikci_id : null)
                 };
             }
-            groups[tedarikciAdi].items.push(item);
+            groups[groupKey].items.push(item);
             if (secili && secili.fiyat > 0) {
-                groups[tedarikciAdi].totalCost += (parseFloat(item.net_siparis) * parseFloat(secili.fiyat));
+                groups[groupKey].totalCost += (parseFloat(item.net_siparis) * parseFloat(secili.fiyat));
             }
         });
 
         var html = '<div class="row">';
         
-        Object.keys(groups).sort().forEach(function(tedarikciName) {
-            var group = groups[tedarikciName];
+        Object.keys(groups).sort().forEach(function(groupKey) {
+            var group = groups[groupKey];
+            var tedarikciName = group.tedarikci_adi;
             var isUnknown = tedarikciName === 'Tedarikçisi Belirsiz';
             var totalStr = group.totalCost > 0 ? group.totalCost.toLocaleString('tr-TR', {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' ' + group.currency : '-';
             
@@ -4259,7 +4318,7 @@ foreach ($supply_chain_data['uretilebilir_urunler'] as $p) {
                             </div>
                             ${!isUnknown && group.tedarikci_id ? `
                             <div class="mt-2">
-                                <button id="siparis-btn-${group.tedarikci_id}" class="btn btn-outline-secondary btn-sm w-100" onclick="siparisOlustur('${tedarikciName.replace(/'/g, "\\'")}', ${group.tedarikci_id})" 
+                                <button id="siparis-btn-${group.tedarikci_id}-${(group.currency || 'TRY').replace(/[^A-Za-z0-9]/g, '')}" class="btn btn-outline-secondary btn-sm w-100" onclick="siparisOlustur('${tedarikciName.replace(/'/g, "\\'")}', ${group.tedarikci_id}, '${(group.currency || 'TRY').replace(/'/g, "\\'")}')"
                                     style="border: 1px dashed #adb5bd; border-radius: 6px; padding: 8px 12px; font-size: 11px; font-weight: 500; color: #6c757d; background: transparent; transition: all 0.2s;">
                                     <i class="fas fa-shopping-cart mr-1"></i> Sipariş Oluştur
                                 </button>

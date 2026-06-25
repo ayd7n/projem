@@ -40,7 +40,8 @@ function getMetrics()
         // 2. Calculate Total Produced Quantity (Last 1 Month)
         $production_query = "SELECT IFNULL(SUM(tamamlanan_miktar), 0) as total_produced
                              FROM montaj_is_emirleri
-                             WHERE gerceklesen_bitis_tarihi >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)";
+                             WHERE durum = 'tamamlandi'
+                               AND gerceklesen_bitis_tarihi >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)";
 
         $production_result = $connection->query($production_query);
         if (!$production_result) {

@@ -220,6 +220,9 @@ function approveWorkOrderInternal($connection, $isEmriNumarasi, $tamamlananMikta
         }
 
         $planlananMiktar = floatval($workOrder['planlanan_miktar']);
+        if ($yeniTamamlanan > $planlananMiktar + 0.00001) {
+            throw new Exception('Tamamlanan miktar planlanan miktari asamaz.');
+        }
         $eksikMiktar = max(0, $planlananMiktar - $yeniTamamlanan);
         $user = getMontajCurrentUser();
         $onayNotu = trim((string) $onayNotu);
@@ -673,18 +676,11 @@ function createWorkOrder() {
             throw new Exception('Planlanan başlangıç tarihi geçerli bir tarih olmalıdır (YYYY-MM-DD formatında).');
         }
         
-        // Set default values for optional fields
-        $work_order['durum'] = $work_order['durum'] ?? 'olusturuldu';
-        $work_order['tamamlanan_miktar'] = $work_order['tamamlanan_miktar'] ?? 0;
-        $work_order['eksik_miktar_toplami'] = $work_order['eksik_miktar_toplami'] ?? 0;
+        // New work orders must always start without stock movement.
+        $work_order['durum'] = 'olusturuldu';
+        $work_order['tamamlanan_miktar'] = 0;
         $work_order['aciklama'] = $work_order['aciklama'] ?? '';
         $work_order['birim'] = $work_order['birim'] ?? 'adet';
-        
-        // Validate status
-        $valid_statuses = ['olusturuldu', 'uretimde', 'onay_bekliyor', 'tamamlandi', 'iptal'];
-        if (!in_array($work_order['durum'], $valid_statuses)) {
-            throw new Exception('Geçersiz durum değeri. Geçerli durumlar: ' . implode(', ', $valid_statuses));
-        }
         
         // Set planlanan_bitis_tarihi same as planlanan_baslangic_tarihi for assembly orders
         $work_order['planlanan_bitis_tarihi'] = $work_order['planlanan_baslangic_tarihi'];
@@ -760,13 +756,34 @@ function updateWorkOrder() {
         $work_order = $input['work_order'] ?? [];
         $components = $input['components'] ?? [];
         $user = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        if (empty($work_order['is_emri_numarasi']) || empty($work_order['urun_kodu'])) {
+            throw new Exception('Is emri numarasi ve urun kodu gereklidir.');
+        }
+        if (!is_numeric($work_order['planlanan_miktar'] ?? null) || (float) $work_order['planlanan_miktar'] <= 0) {
+            throw new Exception('Planlanan miktar pozitif bir sayi olmalidir.');
+        }
+        if (!validateDate($work_order['planlanan_baslangic_tarihi'] ?? '')) {
+            throw new Exception('Planlanan baslangic tarihi gecerli bir tarih olmalidir.');
+        }
+        $work_order['planlanan_bitis_tarihi'] = $work_order['planlanan_baslangic_tarihi'];
         
         // Begin transaction
         $connection->begin_transaction();
 
-        // Update work order - calculate eksik_miktar_toplami based on current status
-        // If status is 'olusturuldu' or 'uretimde', eksik_miktar_toplami should be the planned amount minus completed amount
-        // If status is 'tamamlandi', it should have been set during completion
+        $current_status_query = "SELECT durum FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($work_order['is_emri_numarasi']) . "' FOR UPDATE";
+        $current_status_result = $connection->query($current_status_query);
+        if (!$current_status_result || $current_status_result->num_rows === 0) {
+            throw new Exception('Montaj is emri bulunamadi.');
+        }
+        $current_status = $current_status_result->fetch_assoc();
+        if (($current_status['durum'] ?? '') !== 'olusturuldu') {
+            throw new Exception('Stok hareketi baslamis montaj is emirleri guncellenemez. Once ilgili geri alma islemini yapin.');
+        }
+
+        $work_order['durum'] = 'olusturuldu';
+        $work_order['tamamlanan_miktar'] = 0;
+
         $query = "UPDATE montaj_is_emirleri
                   SET olusturan = '" . $connection->real_escape_string($user) . "',
                       urun_kodu = '" . $connection->real_escape_string($work_order['urun_kodu']) . "',
@@ -776,11 +793,9 @@ function updateWorkOrder() {
                       planlanan_baslangic_tarihi = '" . $connection->real_escape_string($work_order['planlanan_baslangic_tarihi']) . "',
                       planlanan_bitis_tarihi = '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "',
                       aciklama = '" . $connection->real_escape_string($work_order['aciklama'] ?? '') . "',
-                      durum = '" . $connection->real_escape_string($work_order['durum']) . "',
-                      eksik_miktar_toplami = CASE
-                          WHEN durum = 'tamamlandi' THEN '" . $connection->real_escape_string($work_order['eksik_miktar_toplami']) . "'
-                          ELSE planlanan_miktar - tamamlanan_miktar
-                      END,
+                      durum = 'olusturuldu',
+                      tamamlanan_miktar = 0,
+                      eksik_miktar_toplami = '" . $connection->real_escape_string($work_order['planlanan_miktar']) . "',
                       is_merkezi_id = '" . $connection->real_escape_string($work_order['is_merkezi_id'] ?? $work_order['montaj_alani_kodu']) . "'
                   WHERE is_emri_numarasi = '" . $connection->real_escape_string($work_order['is_emri_numarasi']) . "'";
         
@@ -838,7 +853,18 @@ function deleteWorkOrder() {
         
         // Begin transaction
         $connection->begin_transaction();
-        
+
+        $get_product_query = "SELECT urun_ismi, durum FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "' FOR UPDATE";
+        $get_product_result = $connection->query($get_product_query);
+        if (!$get_product_result || $get_product_result->num_rows === 0) {
+            throw new Exception('Montaj is emri bulunamadi.');
+        }
+        $row = $get_product_result->fetch_assoc();
+        if (($row['durum'] ?? '') !== 'olusturuldu') {
+            throw new Exception('Stok hareketi olan montaj is emirleri silinemez. Once ilgili geri alma islemini yapin.');
+        }
+        $product_ismi = $row['urun_ismi'];
+
         // Delete components first
         $delete_components_query = "DELETE FROM montaj_is_emri_malzeme_listesi WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         $connection->query($delete_components_query);
@@ -846,14 +872,6 @@ function deleteWorkOrder() {
         // Then delete work order
         $delete_work_order_query = "DELETE FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         
-        // Silinen iş emrinin ürün ismini al
-        $get_product_query = "SELECT urun_ismi FROM montaj_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
-        $get_product_result = $connection->query($get_product_query);
-        $product_ismi = "Bilinmeyen Ürün";
-        if ($get_product_result && $row = $get_product_result->fetch_assoc()) {
-            $product_ismi = $row['urun_ismi'];
-        }
-
         if ($connection->query($delete_work_order_query)) {
             // Log ekleme
             log_islem($connection, $_SESSION['kullanici_adi'], "$product_ismi ürünü için montaj iş emri silindi", 'DELETE');
@@ -1214,8 +1232,7 @@ function completeWorkOrder() {
     $input = getRequestPayload();
 
     $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
-    $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
-    $eksik_miktar_toplami = $input['eksik_miktar_toplami'] ?? 0;
+    $tamamlanan_miktar = is_numeric($input['tamamlanan_miktar'] ?? null) ? (float) $input['tamamlanan_miktar'] : -1;
     $aciklama = trim((string) ($input['aciklama'] ?? ''));
 
     if (!$is_emri_numarasi || $tamamlanan_miktar < 0) {
@@ -1237,9 +1254,11 @@ function completeWorkOrder() {
         $work_order = $work_order_result->fetch_assoc();
 
         $today = date('Y-m-d');
-        if ($eksik_miktar_toplami === null || $eksik_miktar_toplami < 0) {
-            $eksik_miktar_toplami = max(0, floatval($work_order['planlanan_miktar']) - floatval($tamamlanan_miktar));
+        $planlanan_miktar = (float) $work_order['planlanan_miktar'];
+        if ($tamamlanan_miktar > $planlanan_miktar + 0.00001) {
+            throw new Exception('Tamamlanan miktar planlanan miktari asamaz.');
         }
+        $eksik_miktar_toplami = max(0, $planlanan_miktar - $tamamlanan_miktar);
 
         $user = getMontajCurrentUser();
         $aciklamaUpdateSql = '';

@@ -39,8 +39,8 @@ function getMontajReportData() {
             SELECT
                 COUNT(*) AS total_orders,
                 SUM(CASE WHEN durum IN ('uretimde', 'onay_bekliyor') THEN 1 ELSE 0 END) AS active_orders,
-                SUM(planlanan_miktar) AS total_planned,
-                SUM(tamamlanan_miktar) AS total_completed,
+                SUM(CASE WHEN durum = 'tamamlandi' THEN planlanan_miktar ELSE 0 END) AS total_planned,
+                SUM(CASE WHEN durum = 'tamamlandi' THEN tamamlanan_miktar ELSE 0 END) AS total_completed,
                 (
                     SELECT COUNT(*) 
                     FROM montaj_is_emirleri 

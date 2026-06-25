@@ -80,7 +80,7 @@ if ($has_expense_currency) {
 $gelir_query = "SELECT SUM($gelir_amount_expr) AS toplam_gelir
                 FROM siparis_kalemleri sk
                 JOIN siparisler s ON sk.siparis_id = s.siparis_id
-                WHERE s.durum IN ('onaylandi', 'tamamlandi') AND DATE(s.tarih) BETWEEN ? AND ?";
+                WHERE s.durum = 'tamamlandi' AND DATE(s.tarih) BETWEEN ? AND ?";
 $gelir_stmt = mysqli_prepare($connection, $gelir_query);
 mysqli_stmt_bind_param($gelir_stmt, 'ddss', $usd_rate, $eur_rate, $baslangic_tarihi, $bitis_tarihi);
 mysqli_stmt_execute($gelir_stmt);
@@ -136,7 +136,7 @@ while ($row = mysqli_fetch_assoc($gider_detay_result)) {
 $gelir_detay_query = "SELECT sk.urun_ismi, SUM($gelir_amount_expr) as toplam_gelir, SUM(sk.adet) as toplam_adet
                       FROM siparis_kalemleri sk
                       JOIN siparisler s ON sk.siparis_id = s.siparis_id
-                      WHERE s.durum IN ('onaylandi', 'tamamlandi') AND DATE(s.tarih) BETWEEN ? AND ?
+                      WHERE s.durum = 'tamamlandi' AND DATE(s.tarih) BETWEEN ? AND ?
                       GROUP BY sk.urun_ismi
                       ORDER BY toplam_gelir DESC";
 $gelir_detay_stmt = mysqli_prepare($connection, $gelir_detay_query);

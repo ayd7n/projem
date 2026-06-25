@@ -51,7 +51,7 @@ if (isset($_GET['action'])) {
                 FROM siparisler s
                 JOIN siparis_kalemleri sk ON s.siparis_id = sk.siparis_id
                 WHERE YEAR(s.tarih) = ?
-                  AND s.durum IN ('onaylandi', 'tamamlandi')
+                  AND s.durum = 'tamamlandi'
                 GROUP BY MONTH(s.tarih)
                 ORDER BY ay ASC";
 

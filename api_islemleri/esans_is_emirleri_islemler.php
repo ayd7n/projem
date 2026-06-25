@@ -9,6 +9,27 @@ header('Access-Control-Allow-Headers: Content-Type');
 
 require_staff(true);
 
+function validateDate($date, $format = 'Y-m-d') {
+    $d = DateTime::createFromFormat($format, (string) $date);
+    return $d && $d->format($format) === (string) $date;
+}
+
+function calculatePlannedEndDate($startDate, $demlenmeSuresiGun) {
+    if (!validateDate($startDate)) {
+        throw new Exception('Planlanan baslangic tarihi gecerli bir tarih olmalidir.');
+    }
+    if (!is_numeric($demlenmeSuresiGun)) {
+        throw new Exception('Demlenme suresi sayisal olmalidir.');
+    }
+
+    $duration = (int) $demlenmeSuresiGun;
+    if ((float) $demlenmeSuresiGun != (float) $duration || $duration < 0) {
+        throw new Exception('Demlenme suresi negatif olmayan tam gun olmalidir.');
+    }
+
+    return (new DateTimeImmutable($startDate))->modify("+{$duration} days")->format('Y-m-d');
+}
+
 function normalizeMaterialType($materialType) {
     return strtolower(trim((string) ($materialType ?? '')));
 }
@@ -338,6 +359,30 @@ function createWorkOrder() {
         $work_order = $input['work_order'] ?? [];
         $components = $input['components'] ?? [];
         $user = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        if (empty($work_order['esans_kodu'])) {
+            throw new Exception('Esans kodu bos olamaz.');
+        }
+        if (empty($work_order['tank_kodu'])) {
+            throw new Exception('Tank kodu bos olamaz.');
+        }
+        if (!is_numeric($work_order['planlanan_miktar'] ?? null) || (float) $work_order['planlanan_miktar'] <= 0) {
+            throw new Exception('Planlanan miktar pozitif bir sayi olmalidir.');
+        }
+        if (!validateDate($work_order['olusturulma_tarihi'] ?? '')) {
+            throw new Exception('Olusturulma tarihi gecerli bir tarih olmalidir.');
+        }
+        if (!validateDate($work_order['planlanan_baslangic_tarihi'] ?? '')) {
+            throw new Exception('Planlanan baslangic tarihi gecerli bir tarih olmalidir.');
+        }
+
+        $work_order['durum'] = 'olusturuldu';
+        $work_order['tamamlanan_miktar'] = 0;
+        $work_order['eksik_miktar_toplami'] = (float) $work_order['planlanan_miktar'];
+        $work_order['planlanan_bitis_tarihi'] = calculatePlannedEndDate(
+            $work_order['planlanan_baslangic_tarihi'],
+            $work_order['demlenme_suresi_gun'] ?? 0
+        );
         
         // Begin transaction
         $connection->begin_transaction();
@@ -420,10 +465,38 @@ function updateWorkOrder() {
         $work_order = $input['work_order'] ?? [];
         $components = $input['components'] ?? [];
         $user = $_SESSION['kullanici_adi'] ?? 'Sistem';
+
+        if (empty($work_order['is_emri_numarasi']) || empty($work_order['esans_kodu'])) {
+            throw new Exception('Is emri numarasi ve esans kodu gereklidir.');
+        }
+        if (!is_numeric($work_order['planlanan_miktar'] ?? null) || (float) $work_order['planlanan_miktar'] <= 0) {
+            throw new Exception('Planlanan miktar pozitif bir sayi olmalidir.');
+        }
+        if (!validateDate($work_order['planlanan_baslangic_tarihi'] ?? '')) {
+            throw new Exception('Planlanan baslangic tarihi gecerli bir tarih olmalidir.');
+        }
         
         // Begin transaction
         $connection->begin_transaction();
-        
+
+        $current_status_query = "SELECT durum FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($work_order['is_emri_numarasi']) . "' FOR UPDATE";
+        $current_status_result = $connection->query($current_status_query);
+        if (!$current_status_result || $current_status_result->num_rows === 0) {
+            throw new Exception('Esans is emri bulunamadi.');
+        }
+        $current_status = $current_status_result->fetch_assoc();
+        if (($current_status['durum'] ?? '') !== 'olusturuldu') {
+            throw new Exception('Stok hareketi baslamis esans is emirleri guncellenemez. Once ilgili geri alma islemini yapin.');
+        }
+
+        $work_order['durum'] = 'olusturuldu';
+        $work_order['tamamlanan_miktar'] = 0;
+        $work_order['eksik_miktar_toplami'] = (float) $work_order['planlanan_miktar'];
+        $work_order['planlanan_bitis_tarihi'] = calculatePlannedEndDate(
+            $work_order['planlanan_baslangic_tarihi'],
+            $work_order['demlenme_suresi_gun'] ?? 0
+        );
+
         // Update work order
         $query = "UPDATE esans_is_emirleri 
                   SET olusturan = '" . $connection->real_escape_string($user) . "', 
@@ -437,7 +510,9 @@ function updateWorkOrder() {
                       demlenme_suresi_gun = '" . $connection->real_escape_string($work_order['demlenme_suresi_gun']) . "', 
                       planlanan_bitis_tarihi = '" . $connection->real_escape_string($work_order['planlanan_bitis_tarihi']) . "', 
                       aciklama = '" . $connection->real_escape_string($work_order['aciklama'] ?? '') . "', 
-                      durum = '" . $connection->real_escape_string($work_order['durum']) . "' 
+                      durum = 'olusturuldu',
+                      tamamlanan_miktar = 0,
+                      eksik_miktar_toplami = '" . $connection->real_escape_string($work_order['eksik_miktar_toplami']) . "'
                   WHERE is_emri_numarasi = '" . $connection->real_escape_string($work_order['is_emri_numarasi']) . "'";
         
         if ($connection->query($query)) {
@@ -494,7 +569,18 @@ function deleteWorkOrder() {
         
         // Begin transaction
         $connection->begin_transaction();
-        
+
+        $get_esans_query = "SELECT esans_ismi, durum FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "' FOR UPDATE";
+        $get_esans_result = $connection->query($get_esans_query);
+        if (!$get_esans_result || $get_esans_result->num_rows === 0) {
+            throw new Exception('Esans is emri bulunamadi.');
+        }
+        $row = $get_esans_result->fetch_assoc();
+        if (($row['durum'] ?? '') !== 'olusturuldu') {
+            throw new Exception('Stok hareketi olan esans is emirleri silinemez. Once ilgili geri alma islemini yapin.');
+        }
+        $esans_ismi = $row['esans_ismi'];
+
         // Delete components first
         $delete_components_query = "DELETE FROM esans_is_emri_malzeme_listesi WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         $connection->query($delete_components_query);
@@ -502,14 +588,6 @@ function deleteWorkOrder() {
         // Then delete work order
         $delete_work_order_query = "DELETE FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
         
-        // Silinen iş emrinin esans ismini al
-        $get_esans_query = "SELECT esans_ismi FROM esans_is_emirleri WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'";
-        $get_esans_result = $connection->query($get_esans_query);
-        $esans_ismi = "Bilinmeyen Esans";
-        if ($get_esans_result && $row = $get_esans_result->fetch_assoc()) {
-            $esans_ismi = $row['esans_ismi'];
-        }
-
         if ($connection->query($delete_work_order_query)) {
             // Log ekleme
             log_islem($connection, $_SESSION['kullanici_adi'], "$esans_ismi esansı için iş emri silindi", 'DELETE');
@@ -722,7 +800,8 @@ function startWorkOrder() {
         $today = date('Y-m-d');
         $update_wo_query = "UPDATE esans_is_emirleri 
                             SET durum = 'uretimde', 
-                                gerceklesen_baslangic_tarihi = '$today'
+                                gerceklesen_baslangic_tarihi = '$today',
+                                eksik_miktar_toplami = planlanan_miktar
                             WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
                             AND durum = 'olusturuldu'";
         
@@ -814,7 +893,8 @@ function revertWorkOrder() {
         // 1. Update work order status
         $update_wo_query = "UPDATE esans_is_emirleri 
                             SET durum = 'olusturuldu', 
-                                gerceklesen_baslangic_tarihi = NULL
+                                gerceklesen_baslangic_tarihi = NULL,
+                                eksik_miktar_toplami = planlanan_miktar
                             WHERE is_emri_numarasi = '" . $connection->real_escape_string($id) . "'
                             AND durum = 'uretimde'";
         
@@ -883,8 +963,7 @@ function completeWorkOrder() {
     $input = json_decode(file_get_contents('php://input'), true);
     
     $is_emri_numarasi = $input['is_emri_numarasi'] ?? null;
-    $tamamlanan_miktar = $input['tamamlanan_miktar'] ?? 0;
-    $eksik_miktar_toplami = $input['eksik_miktar_toplami'] ?? 0;
+    $tamamlanan_miktar = is_numeric($input['tamamlanan_miktar'] ?? null) ? (float) $input['tamamlanan_miktar'] : 0;
     $aciklama = $input['aciklama'] ?? '';
     
     if (!$is_emri_numarasi || $tamamlanan_miktar <= 0) {
@@ -903,6 +982,12 @@ function completeWorkOrder() {
             throw new Exception('İş emri bulunamadı veya durumu "Üretimde" değil.');
         }
         $work_order = $work_order_result->fetch_assoc();
+
+        $planlanan_miktar = (float) $work_order['planlanan_miktar'];
+        if ($tamamlanan_miktar > $planlanan_miktar + 0.00001) {
+            throw new Exception('Tamamlanan miktar planlanan miktari asamaz.');
+        }
+        $eksik_miktar_toplami = max(0, $planlanan_miktar - $tamamlanan_miktar);
 
         // 2. Update work order status
         $today = date('Y-m-d');
@@ -1023,6 +1108,7 @@ function revertCompletion() {
         $update_wo_query = "UPDATE esans_is_emirleri SET 
                             durum = 'uretimde', 
                             tamamlanan_miktar = 0,
+                            eksik_miktar_toplami = planlanan_miktar,
                             gerceklesen_bitis_tarihi = NULL
                           WHERE is_emri_numarasi = '" . $connection->real_escape_string($is_emri_numarasi) . "'";
         if (!$connection->query($update_wo_query)) {

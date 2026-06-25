@@ -68,7 +68,10 @@ try {
     while ($row = $result->fetch_assoc()) {
         $tedarikci_id = $row['tedarikci_id'];
         $tedarikci_adi = $row['tedarikci_adi'];
-        $para_birimi = $row['para_birimi'];
+        $para_birimi = strtoupper(trim((string) $row['para_birimi']));
+        if ($para_birimi === 'TRY') {
+            $para_birimi = 'TL';
+        }
         $toplam_odeme = floatval($row['toplam_odeme']);
         
         // Convert to TL based on currency

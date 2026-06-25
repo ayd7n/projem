@@ -37,9 +37,29 @@ if (!$urun) {
     exit;
 }
 
+function getBekleyenSatinalmaMiktari($connection, $malzeme_kodu, $malzeme_adi) {
+    $kod = is_numeric($malzeme_kodu) ? (int) $malzeme_kodu : 0;
+    $adi = trim((string) $malzeme_adi);
+
+    $stmt = $connection->prepare("
+        SELECT COALESCE(SUM(GREATEST(ssk.miktar - COALESCE(ssk.teslim_edilen_miktar, 0), 0)), 0) AS siparis_verilen_miktar
+        FROM satinalma_siparis_kalemleri ssk
+        JOIN satinalma_siparisler ss ON ss.siparis_id = ssk.siparis_id
+        WHERE ss.durum IN ('onaylandi', 'gonderildi', 'kismen_teslim')
+          AND (ssk.malzeme_kodu = ? OR ssk.malzeme_adi = ?)
+    ");
+    $stmt->bind_param('is', $kod, $adi);
+    $stmt->execute();
+    $result = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return (float) ($result['siparis_verilen_miktar'] ?? 0);
+}
+
 // Ürünün bileşenleri
 $stmt = $connection->prepare("
     SELECT
+        ua.bilesen_kodu,
         ua.bilesen_ismi,
         ua.bilesenin_malzeme_turu,
         ua.bilesen_miktari,
@@ -71,22 +91,7 @@ while ($row = $result->fetch_assoc()) {
 // Her bileşen için ekstra bilgileri al
 foreach ($bilesenler as $key => $bilesen) {
     if ($bilesen['bilesenin_malzeme_turu'] != 'esans') {
-        // Malzeme ise sipariş verilen miktarı al
-        $stmt = $connection->prepare("
-            SELECT
-                COALESCE(SUM(miktar), 0) AS siparis_verilen_miktar
-            FROM
-                malzeme_siparisler
-            WHERE
-                malzeme_ismi = ?
-                AND durum = 'siparis_verildi'
-        ");
-        $stmt->bind_param('s', $bilesen['bilesen_ismi']);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $siparis_verilen = $result->fetch_assoc();
-
-        $bilesenler[$key]['siparis_verilen_miktar'] = (float)$siparis_verilen['siparis_verilen_miktar'];
+        $bilesenler[$key]['siparis_verilen_miktar'] = getBekleyenSatinalmaMiktari($connection, $bilesen['bilesen_kodu'], $bilesen['bilesen_ismi']);
     } else {
         // Esans ise üretimdeki miktarı ve alt bileşenleri al
         $stmt = $connection->prepare("
@@ -122,6 +127,7 @@ foreach ($bilesenler as $key => $bilesen) {
         if ($esans_id) {
             $stmt = $connection->prepare("
                 SELECT
+                    ua.bilesen_kodu AS malzeme_kodu,
                     ua.bilesen_ismi AS malzeme_ismi,
                     ua.bilesen_miktari AS malzeme_miktari,
                     COALESCE(m.stok_miktari, 0) AS stok_miktari
@@ -142,23 +148,8 @@ foreach ($bilesenler as $key => $bilesen) {
                 $esans_bilesenleri[] = $row;
             }
 
-            // Esans alt bileşenleri için sipariş verilen miktarları al
             foreach ($esans_bilesenleri as $ek => $esans_bilesen) {
-                $stmt = $connection->prepare("
-                    SELECT
-                        COALESCE(SUM(miktar), 0) AS siparis_verilen_miktar
-                    FROM
-                        malzeme_siparisler
-                    WHERE
-                        malzeme_ismi = ?
-                        AND durum = 'siparis_verildi'
-                ");
-                $stmt->bind_param('s', $esans_bilesen['malzeme_ismi']);
-                $stmt->execute();
-                $result = $stmt->get_result();
-                $siparis_verilen = $result->fetch_assoc();
-
-                $esans_bilesenleri[$ek]['siparis_verilen_miktar'] = (float)$siparis_verilen['siparis_verilen_miktar'];
+                $esans_bilesenleri[$ek]['siparis_verilen_miktar'] = getBekleyenSatinalmaMiktari($connection, $esans_bilesen['malzeme_kodu'], $esans_bilesen['malzeme_ismi']);
             }
 
             $bilesenler[$key]['esans_bilesenleri'] = $esans_bilesenleri;
